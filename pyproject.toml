@@ -25,11 +25,13 @@ python_files = ["test_*.py"]
 addopts = "-ra -q"
 
 [tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "I"]
 ignore = []
 fixable = ["ALL"]
 unfixable = []
-line-length = 88
 
 [tool.mypy]
 python_version = "3.12"
