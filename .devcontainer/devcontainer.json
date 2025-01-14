@@ -1,0 +1,32 @@
+{
+  "name": "Python",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": "true",
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000",
+      "upgradePackages": "true"
+    },
+    "ghcr.io/lukewiwa/features/shellcheck:0": {}
+  },
+  "postCreateCommand": "uv sync --all-extras && uv run pre-commit install",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "GitHub.vscode-github-actions",
+        "eamodio.gitlens",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff",
+        "ms-python.isort",
+        "task.vscode-task"
+      ]
+    }
+  }
+}
