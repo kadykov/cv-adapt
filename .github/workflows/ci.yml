@@ -26,7 +26,7 @@ jobs:
       - run: uv run pre-commit run --all-files
 
   lint:
-    name: Run Pytest
+    name: Linting checks
     runs-on: ubuntu-latest
     needs: pre_commit
     steps:
