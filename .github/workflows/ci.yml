@@ -8,11 +8,6 @@ on:
     tags: ['v*.*.*']
   workflow_dispatch:
 
-env:
-  IMAGE: ghcr.io/kadykov/fontbyte:latest
-  OUTPUT_DIR: public
-  OUTPUT_ARTIFACTS_NAME: website
-
 jobs:
   pre_commit:
     name: Pre-commit checks
@@ -27,6 +22,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
+      # Synchronize dependencies and extras
       - run: uv sync --all-extras
       - run: uv run pre-commit run --all-files
 
