@@ -8,6 +8,7 @@ dependencies = [
     "pydantic>=2.5.2",
     "pydantic-ai>=0.0.18",
     "rich>=13.7.0",
+    "types-pyyaml>=6.0.12.20241230",
 ]
 
 [project.optional-dependencies]
