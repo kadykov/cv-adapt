@@ -3,7 +3,8 @@ default:
 
 # Install dependencies
 install:
-    uv pip install -e ".[dev]"
+    uv sync --frozen --group dev
+    uv run pre-commit install
 
 # Run tests
 test:
@@ -13,12 +14,23 @@ test:
 test-cov:
     uv run pytest --cov=cv_adapter
 
-# Format and lint code
-fmt:
-    uv run ruff --fix .
-    uv run mypy .
-
 # Run linting checks
 lint:
-    uv run ruff check .
+    uv run ruff check --fix .
     uv run mypy .
+
+# Format code
+format:
+    uv run ruff format .
+    uv run isort .
+
+# Run pre-commit checks
+pre-commit:
+    uv run pre-commit run --all-files
+
+# Run all checks
+all:
+    just lint
+    just format
+    just pre-commit
+    just test

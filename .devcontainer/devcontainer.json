@@ -13,7 +13,7 @@
     },
     "ghcr.io/lukewiwa/features/shellcheck:0": {}
   },
-  "postCreateCommand": "uv sync --all-extras && uv run pre-commit install",
+  "postCreateCommand": "just install",
   "remoteUser": "vscode",
   "customizations": {
     "vscode": {
