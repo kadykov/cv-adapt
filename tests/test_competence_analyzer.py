@@ -78,26 +78,27 @@ def test_analyze_competences_matches_job_requirements(
     job_description: str,
     test_model: TestModel,
 ) -> None:
-    analyzer = CompetenceAnalyzer(ai_model=test_model)
-    competences = analyzer.analyze(
-        cv_text=sample_cv_markdown, job_description=job_description
-    )
+    analyzer = CompetenceAnalyzer(ai_model="test")
+    with analyzer.agent.override(model=test_model):
+        competences = analyzer.analyze(
+            cv_text=sample_cv_markdown, job_description=job_description
+        )
 
-    # Verify we got the expected number of competences (4-6)
-    assert 4 <= len(competences) <= 6
+        # Verify we got the expected number of competences (4-6)
+        assert 4 <= len(competences) <= 6
 
-    # Verify each competence has required fields
-    for comp in competences.items:
-        assert isinstance(comp, CoreCompetence)
-        assert comp.text
-        # Verify each competence is 1-5 words
-        assert 1 <= len(comp.text.split()) <= 5
+        # Verify each competence has required fields
+        for comp in competences.items:
+            assert isinstance(comp, CoreCompetence)
+            assert comp.text
+            # Verify each competence is 1-5 words
+            assert 1 <= len(comp.text.split()) <= 5
 
-    # Verify we got the expected competences
-    assert any(comp.text == "Backend Development" for comp in competences.items)
-    assert any(comp.text == "Cloud Architecture" for comp in competences.items)
-    assert any(comp.text == "Team Leadership" for comp in competences.items)
-    assert any(comp.text == "Python Development" for comp in competences.items)
+        # Verify we got the expected competences
+        assert any(comp.text == "Backend Development" for comp in competences.items)
+        assert any(comp.text == "Cloud Architecture" for comp in competences.items)
+        assert any(comp.text == "Team Leadership" for comp in competences.items)
+        assert any(comp.text == "Python Development" for comp in competences.items)
 
 
 def test_analyze_competences_with_user_notes(
@@ -105,37 +106,39 @@ def test_analyze_competences_with_user_notes(
     job_description: str,
     test_model: TestModel,
 ) -> None:
-    analyzer = CompetenceAnalyzer(ai_model=test_model)
+    analyzer = CompetenceAnalyzer(ai_model="test")
     user_notes = """
     - Emphasize cloud architecture experience
     - Focus on team leadership skills
     """
 
-    competences = analyzer.analyze(
-        cv_text=sample_cv_markdown,
-        job_description=job_description,
-        user_notes=user_notes,
-    )
+    with analyzer.agent.override(model=test_model):
+        competences = analyzer.analyze(
+            cv_text=sample_cv_markdown,
+            job_description=job_description,
+            user_notes=user_notes,
+        )
 
-    # Verify we got the expected number of competences (4-6)
-    assert 4 <= len(competences) <= 6
+        # Verify we got the expected number of competences (4-6)
+        assert 4 <= len(competences) <= 6
 
-    # Verify each competence has required fields
-    for comp in competences.items:
-        assert isinstance(comp, CoreCompetence)
-        assert comp.text
-        # Verify each competence is 1-5 words
-        assert 1 <= len(comp.text.split()) <= 5
+        # Verify each competence has required fields
+        for comp in competences.items:
+            assert isinstance(comp, CoreCompetence)
+            assert comp.text
+            # Verify each competence is 1-5 words
+            assert 1 <= len(comp.text.split()) <= 5
 
 
 def test_analyze_competences_validates_input(
     sample_cv_markdown: str,
     test_model: TestModel,
 ) -> None:
-    analyzer = CompetenceAnalyzer(ai_model=test_model)
+    analyzer = CompetenceAnalyzer(ai_model="test")
 
-    with pytest.raises(ValueError, match="CV text is required"):
-        analyzer.analyze(cv_text="", job_description="test")
+    with analyzer.agent.override(model=test_model):
+        with pytest.raises(ValueError, match="CV text is required"):
+            analyzer.analyze(cv_text="", job_description="test")
 
-    with pytest.raises(ValueError, match="Job description is required"):
-        analyzer.analyze(cv_text=sample_cv_markdown, job_description="")
+        with pytest.raises(ValueError, match="Job description is required"):
+            analyzer.analyze(cv_text=sample_cv_markdown, job_description="")
