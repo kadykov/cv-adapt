@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from cv_adapter.models.cv import (CV, CoreCompetence, CoreCompetences,
-                                  Experience)
+from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """

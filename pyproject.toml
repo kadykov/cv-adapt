@@ -24,6 +24,9 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 
+[tool.isort]
+profile = "black"
+
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
