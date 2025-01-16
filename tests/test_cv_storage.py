@@ -93,12 +93,14 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
         full_name="Jane Smith",
         title="Data Scientist",
         summary="Experienced data scientist",
-        core_competences=CoreCompetences(items=[
-            CoreCompetence(text="Machine Learning"),
-            CoreCompetence(text="Data Analysis"),
-            CoreCompetence(text="Python Development"),
-            CoreCompetence(text="Team Leadership"),
-        ]),
+        core_competences=CoreCompetences(
+            items=[
+                CoreCompetence(text="Machine Learning"),
+                CoreCompetence(text="Data Analysis"),
+                CoreCompetence(text="Python Development"),
+                CoreCompetence(text="Team Leadership"),
+            ]
+        ),
         experiences=[
             Experience(
                 company="AI Corp",

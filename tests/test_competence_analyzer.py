@@ -1,53 +1,40 @@
-from datetime import date
-
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
+from cv_adapter.models.cv import CoreCompetence
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 
 
 @pytest.fixture
-def sample_cv() -> CV:
-    return CV(
-        full_name="John Doe",
-        title="Senior Software Engineer",
-        summary="Experienced software engineer focused on Python and cloud tech",
-        core_competences=CoreCompetences(items=[
-            CoreCompetence(text="Backend Development"),
-            CoreCompetence(text="Cloud Architecture"),
-            CoreCompetence(text="Team Leadership"),
-            CoreCompetence(text="Python Development"),
-        ]),
-        experiences=[
-            Experience(
-                company="Tech Corp",
-                position="Senior Software Engineer",
-                start_date=date(2020, 1, 1),
-                end_date=date(2023, 12, 31),
-                description="Led development of cloud-native applications",
-                achievements=[
-                    "Reduced deployment time by 70%",
-                    "Implemented CI/CD pipeline",
-                ],
-                technologies=["Python", "Docker", "AWS", "FastAPI"],
-            ),
-            Experience(
-                company="StartUp Inc",
-                position="Software Developer",
-                start_date=date(2018, 1, 1),
-                end_date=date(2019, 12, 31),
-                description="Full-stack development of web applications",
-                achievements=[
-                    "Developed new customer portal",
-                    "Improved application performance by 50%",
-                ],
-                technologies=["Python", "React", "PostgreSQL", "Django"],
-            ),
-        ],
-        education=["MSc in Computer Science, University of Technology, 2018"],
-        contacts={"email": "john.doe@example.com"},
-    )
+def sample_cv_markdown() -> str:
+    return """
+# John Doe
+## Senior Software Engineer
+
+Experienced software engineer focused on Python and cloud tech.
+
+### Experience
+
+#### Tech Corp (2020-01 to 2023-12)
+Senior Software Engineer
+- Led development of cloud-native applications
+- Reduced deployment time by 70%
+- Implemented CI/CD pipeline
+Technologies: Python, Docker, AWS, FastAPI
+
+#### StartUp Inc (2018-01 to 2019-12)
+Software Developer
+- Full-stack development of web applications
+- Developed new customer portal
+- Improved application performance by 50%
+Technologies: Python, React, PostgreSQL, Django
+
+### Education
+- MSc in Computer Science, University of Technology, 2018
+
+### Contact
+- Email: john.doe@example.com
+"""
 
 
 @pytest.fixture
@@ -79,9 +66,10 @@ def test_model() -> TestModel:
     # Define expected response for core competence generation
     model.custom_result_args = {
         "response": [
-            CoreCompetence(text="Backend Development"),
-            CoreCompetence(text="Cloud Architecture"),
-            CoreCompetence(text="Team Leadership"),
+            {"text": "Backend Development"},
+            {"text": "Cloud Architecture"},
+            {"text": "Team Leadership"},
+            {"text": "Python Development"},
         ]
     }
 
@@ -89,29 +77,34 @@ def test_model() -> TestModel:
 
 
 def test_analyze_competences_matches_job_requirements(
-    sample_cv: CV,
+    sample_cv_markdown: str,
     job_description: str,
     test_model: TestModel,
 ) -> None:
     analyzer = CompetenceAnalyzer(ai_model=test_model)
-    competences = analyzer.analyze(cv=sample_cv, job_description=job_description)
+    competences = analyzer.analyze(
+        cv_text=sample_cv_markdown, job_description=job_description
+    )
 
-    # Verify we got the expected number of competences
-    assert len(competences) == 3
+    # Verify we got the expected number of competences (4-6)
+    assert 4 <= len(competences) <= 6
 
     # Verify each competence has required fields
     for comp in competences:
         assert isinstance(comp, CoreCompetence)
         assert comp.text
+        # Verify each competence is 1-5 words
+        assert 1 <= len(comp.text.split()) <= 5
 
     # Verify we got the expected competences
     assert any(comp.text == "Backend Development" for comp in competences)
     assert any(comp.text == "Cloud Architecture" for comp in competences)
     assert any(comp.text == "Team Leadership" for comp in competences)
+    assert any(comp.text == "Python Development" for comp in competences)
 
 
 def test_analyze_competences_with_user_notes(
-    sample_cv: CV,
+    sample_cv_markdown: str,
     job_description: str,
     test_model: TestModel,
 ) -> None:
@@ -122,7 +115,7 @@ def test_analyze_competences_with_user_notes(
     """
 
     competences = analyzer.analyze(
-        cv=sample_cv,
+        cv_text=sample_cv_markdown,
         job_description=job_description,
         user_notes=user_notes,
     )
@@ -133,13 +126,13 @@ def test_analyze_competences_with_user_notes(
 
 
 def test_analyze_competences_validates_input(
-    sample_cv: CV,
+    sample_cv_markdown: str,
     test_model: TestModel,
 ) -> None:
     analyzer = CompetenceAnalyzer(ai_model=test_model)
 
-    with pytest.raises(ValueError, match="CV is required"):
-        analyzer.analyze(cv=None, job_description="test")  # type: ignore
+    with pytest.raises(ValueError, match="CV text is required"):
+        analyzer.analyze(cv_text="", job_description="test")
 
     with pytest.raises(ValueError, match="Job description is required"):
-        analyzer.analyze(cv=sample_cv, job_description="")
+        analyzer.analyze(cv_text=sample_cv_markdown, job_description="")

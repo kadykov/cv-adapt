@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import CV, CoreCompetence
+from cv_adapter.models.cv import CoreCompetence
 
 
 class CompetenceResponse(BaseModel):
@@ -23,20 +23,22 @@ class CompetenceAnalyzer:
         self.agent = Agent(
             ai_model or "openai:gpt-4",
             system_prompt=(
-                "An expert CV analyst that helps identify and describe core competences"
+                "An expert CV analyst that helps identify and describe core competences. "
+                "Each competence should be a concise phrase (1-5 words) that represents "
+                "a key skill or area of expertise."
             ),
         )
 
     def analyze(
         self,
-        cv: CV,
+        cv_text: str,
         job_description: str,
         user_notes: Optional[str] = None,
     ) -> List[CoreCompetence]:
         """Analyze CV and job description to generate relevant core competences.
 
         Args:
-            cv: The detailed CV to analyze
+            cv_text: The CV text in Markdown format
             job_description: The job description to match against
             user_notes: Optional notes from the user to guide the analysis
 
@@ -46,23 +48,18 @@ class CompetenceAnalyzer:
         Raises:
             ValueError: If required inputs are missing or invalid
         """
-        if not cv:
-            raise ValueError("CV is required")
+        if not cv_text.strip():
+            raise ValueError("CV text is required")
         if not job_description.strip():
             raise ValueError("Job description is required")
 
         # Prepare context for the AI
         context = (
-            f"Based on the CV and job description below, identify 3-4 core competences "
-            f"that best match the requirements.\n"
-            f"Include a name, description, and keywords for each competence.\n\n"
-            f"CV Details:\n"
-            f"- Name: {cv.full_name}\n"
-            f"- Current Title: {cv.title}\n"
-            f"- Experience:\n"
-            f"{self._format_experiences(cv)}\n"
-            f"Job Description:\n"
-            f"{job_description}\n"
+            f"Based on the CV and job description below, identify 4-6 core competences "
+            f"that best match the requirements. Each competence should be a concise "
+            f"phrase (1-5 words) that represents a key skill or area of expertise.\n\n"
+            f"CV:\n{cv_text}\n\n"
+            f"Job Description:\n{job_description}\n"
         )
         if user_notes:
             context += f"\nUser Notes for Consideration:\n{user_notes}"
@@ -73,21 +70,3 @@ class CompetenceAnalyzer:
             result_type=CompetenceResponse,
         )
         return result.data.response
-
-    def _format_experiences(self, cv: CV) -> str:
-        """Format CV experiences for the prompt."""
-        experiences = []
-        for exp in cv.experiences:
-            date_range = (
-                f"{exp.start_date.strftime('%Y-%m')} to "
-                f"{exp.end_date.strftime('%Y-%m') if exp.end_date else 'Present'}"
-            )
-            exp_text = (
-                f"  * {exp.position} at {exp.company} ({date_range})\n"
-                f"    - {exp.description}\n"
-                f"    - Technologies: {', '.join(exp.technologies)}\n"
-                f"    - Achievements:\n"
-                "".join(f"      - {a}\n" for a in exp.achievements)
-            )
-            experiences.append(exp_text)
-        return "\n".join(experiences)
