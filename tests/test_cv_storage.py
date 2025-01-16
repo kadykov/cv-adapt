@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from cv_adapter.models.cv import CV, CoreCompetence, Experience
+from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
@@ -11,20 +11,11 @@ full_name: John Doe
 title: Senior Software Engineer
 summary: Experienced software engineer with a focus on Python and cloud technologies
 core_competences:
-  - name: Python Development
-    description: Expert in Python development with focus on web and data processing
-    keywords:
-      - Python
-      - FastAPI
-      - Django
-      - pytest
-  - name: Cloud Architecture
-    description: Experienced in designing and implementing cloud-native solutions
-    keywords:
-      - AWS
-      - Docker
-      - Kubernetes
-      - Microservices
+  items:
+    - text: Python Development
+    - text: Cloud Architecture
+    - text: System Design
+    - text: Team Leadership
 experiences:
   - company: Tech Corp
     position: Senior Software Engineer
@@ -77,7 +68,7 @@ def test_load_cv_from_yaml(cv_storage: CVStorage, sample_cv_file: Path) -> None:
     cv = cv_storage.load_cv(sample_cv_file)
     assert isinstance(cv, CV)
     assert cv.full_name == "John Doe"
-    assert len(cv.core_competences) == 2
+    assert len(cv.core_competences) == 4
     assert len(cv.experiences) == 2
     assert len(cv.education) == 2
     assert cv.contacts["email"] == "john.doe@example.com"
@@ -102,13 +93,12 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
         full_name="Jane Smith",
         title="Data Scientist",
         summary="Experienced data scientist",
-        core_competences=[
-            CoreCompetence(
-                name="Machine Learning",
-                description="Expert in ML algorithms",
-                keywords=["Python", "scikit-learn", "TensorFlow"],
-            )
-        ],
+        core_competences=CoreCompetences(items=[
+            CoreCompetence(text="Machine Learning"),
+            CoreCompetence(text="Data Analysis"),
+            CoreCompetence(text="Python Development"),
+            CoreCompetence(text="Team Leadership"),
+        ]),
         experiences=[
             Experience(
                 company="AI Corp",
@@ -131,7 +121,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
     loaded_cv = cv_storage.load_cv(output_file)
     assert loaded_cv.full_name == cv.full_name
     assert len(loaded_cv.core_competences) == len(cv.core_competences)
-    assert loaded_cv.core_competences[0].name == cv.core_competences[0].name
+    assert loaded_cv.core_competences[0] == cv.core_competences[0]
 
 
 def test_cv_storage_handles_missing_file(cv_storage: CVStorage, tmp_path: Path) -> None:

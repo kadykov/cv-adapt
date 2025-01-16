@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import CV, CoreCompetence, Experience
+from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 
 
@@ -13,7 +13,12 @@ def sample_cv() -> CV:
         full_name="John Doe",
         title="Senior Software Engineer",
         summary="Experienced software engineer focused on Python and cloud tech",
-        core_competences=[],  # Empty as we'll generate these
+        core_competences=CoreCompetences(items=[
+            CoreCompetence(text="Backend Development"),
+            CoreCompetence(text="Cloud Architecture"),
+            CoreCompetence(text="Team Leadership"),
+            CoreCompetence(text="Python Development"),
+        ]),
         experiences=[
             Experience(
                 company="Tech Corp",
@@ -74,21 +79,9 @@ def test_model() -> TestModel:
     # Define expected response for core competence generation
     model.custom_result_args = {
         "response": [
-            CoreCompetence(
-                name="Backend Development",
-                description="Expert in designing and implementing backend services",
-                keywords=["Python", "FastAPI", "Django", "REST APIs"],
-            ),
-            CoreCompetence(
-                name="Cloud Architecture",
-                description="Expert in cloud-native development and DevOps",
-                keywords=["AWS", "Docker", "CI/CD", "Microservices"],
-            ),
-            CoreCompetence(
-                name="Team Leadership",
-                description="Proven track record in leading teams and architecture",
-                keywords=["Team Leadership", "Architecture Design", "Mentoring"],
-            ),
+            CoreCompetence(text="Backend Development"),
+            CoreCompetence(text="Cloud Architecture"),
+            CoreCompetence(text="Team Leadership"),
         ]
     }
 
@@ -109,14 +102,12 @@ def test_analyze_competences_matches_job_requirements(
     # Verify each competence has required fields
     for comp in competences:
         assert isinstance(comp, CoreCompetence)
-        assert comp.name
-        assert comp.description
-        assert len(comp.keywords) >= 2
+        assert comp.text
 
     # Verify we got the expected competences
-    assert any(comp.name == "Backend Development" for comp in competences)
-    assert any(comp.name == "Cloud Architecture" for comp in competences)
-    assert any(comp.name == "Team Leadership" for comp in competences)
+    assert any(comp.text == "Backend Development" for comp in competences)
+    assert any(comp.text == "Cloud Architecture" for comp in competences)
+    assert any(comp.text == "Team Leadership" for comp in competences)
 
 
 def test_analyze_competences_with_user_notes(
@@ -137,8 +128,8 @@ def test_analyze_competences_with_user_notes(
     )
 
     # Verify competences reflect user notes
-    assert any(comp.name == "Cloud Architecture" for comp in competences)
-    assert any(comp.name == "Team Leadership" for comp in competences)
+    assert any(comp.text == "Cloud Architecture" for comp in competences)
+    assert any(comp.text == "Team Leadership" for comp in competences)
 
 
 def test_analyze_competences_validates_input(
