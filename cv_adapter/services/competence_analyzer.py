@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic_ai import Agent
-from pydantic_ai.models import Model
+from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CoreCompetences
 
@@ -9,14 +9,14 @@ from cv_adapter.models.cv import CoreCompetences
 class CompetenceAnalyzer:
     """Analyzes CV and job description to generate relevant core competences."""
 
-    def __init__(self, ai_model: Optional[Model] = None) -> None:
-        """Initialize the analyzer with an optional AI model.
+    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
+        """Initialize the analyzer with an AI model.
 
         Args:
-            ai_model: Optional AI model to use. If not provided, uses OpenAI GPT-4o.
+            ai_model: AI model to use. Defaults to OpenAI GPT-4o.
         """
         self.agent = Agent(
-            ai_model or "openai:gpt-4o",
+            ai_model,
             system_prompt=(
                 "An expert CV analyst that helps identify and describe core"
                 " competences. Each competence should be a concise phrase (1-5 words)"
