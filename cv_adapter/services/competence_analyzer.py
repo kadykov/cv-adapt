@@ -13,10 +13,10 @@ class CompetenceAnalyzer:
         """Initialize the analyzer with an optional AI model.
 
         Args:
-            ai_model: Optional AI model to use. If not provided, uses OpenAI GPT-4.
+            ai_model: Optional AI model to use. If not provided, uses OpenAI GPT-4o.
         """
         self.agent = Agent(
-            ai_model or "openai:gpt-4",
+            ai_model or "openai:gpt-4o",
             system_prompt=(
                 "An expert CV analyst that helps identify and describe core"
                 " competences. Each competence should be a concise phrase (1-5 words)"

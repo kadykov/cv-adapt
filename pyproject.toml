@@ -39,4 +39,5 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.9.1",
     "isort>=5.13.2",
+    "ipykernel>=6.29.5",
 ]
