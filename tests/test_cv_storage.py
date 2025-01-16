@@ -123,7 +123,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
     loaded_cv = cv_storage.load_cv(output_file)
     assert loaded_cv.full_name == cv.full_name
     assert len(loaded_cv.core_competences) == len(cv.core_competences)
-    assert loaded_cv.core_competences[0] == cv.core_competences[0]
+    assert loaded_cv.core_competences.items[0] == cv.core_competences.items[0]
 
 
 def test_cv_storage_handles_missing_file(cv_storage: CVStorage, tmp_path: Path) -> None:

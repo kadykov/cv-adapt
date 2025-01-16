@@ -65,7 +65,7 @@ def test_model() -> TestModel:
 
     # Define expected response for core competence generation
     model.custom_result_args = {
-        "response": [
+        "items": [
             {"text": "Backend Development"},
             {"text": "Cloud Architecture"},
             {"text": "Team Leadership"},
@@ -90,17 +90,17 @@ def test_analyze_competences_matches_job_requirements(
     assert 4 <= len(competences) <= 6
 
     # Verify each competence has required fields
-    for comp in competences:
+    for comp in competences.items:
         assert isinstance(comp, CoreCompetence)
         assert comp.text
         # Verify each competence is 1-5 words
         assert 1 <= len(comp.text.split()) <= 5
 
     # Verify we got the expected competences
-    assert any(comp.text == "Backend Development" for comp in competences)
-    assert any(comp.text == "Cloud Architecture" for comp in competences)
-    assert any(comp.text == "Team Leadership" for comp in competences)
-    assert any(comp.text == "Python Development" for comp in competences)
+    assert any(comp.text == "Backend Development" for comp in competences.items)
+    assert any(comp.text == "Cloud Architecture" for comp in competences.items)
+    assert any(comp.text == "Team Leadership" for comp in competences.items)
+    assert any(comp.text == "Python Development" for comp in competences.items)
 
 
 def test_analyze_competences_with_user_notes(
@@ -121,8 +121,8 @@ def test_analyze_competences_with_user_notes(
     )
 
     # Verify competences reflect user notes
-    assert any(comp.text == "Cloud Architecture" for comp in competences)
-    assert any(comp.text == "Team Leadership" for comp in competences)
+    assert any(comp.text == "Cloud Architecture" for comp in competences.items)
+    assert any(comp.text == "Team Leadership" for comp in competences.items)
 
 
 def test_analyze_competences_validates_input(

@@ -29,14 +29,8 @@ class CoreCompetences(BaseModel):
             raise ValueError("core competences must be unique")
         return v
 
-    def __iter__(self):
-        return iter(self.items)
-
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.items)
-
-    def __getitem__(self, idx):
-        return self.items[idx]
 
 
 class Experience(BaseModel):

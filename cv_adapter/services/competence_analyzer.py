@@ -1,14 +1,9 @@
-from typing import List, Optional
+from typing import Optional
 
-from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import CoreCompetence
-
-
-class CompetenceResponse(BaseModel):
-    response: List[CoreCompetence]
+from cv_adapter.models.cv import CoreCompetences
 
 
 class CompetenceAnalyzer:
@@ -23,9 +18,9 @@ class CompetenceAnalyzer:
         self.agent = Agent(
             ai_model or "openai:gpt-4",
             system_prompt=(
-                "An expert CV analyst that helps identify and describe core competences. "
-                "Each competence should be a concise phrase (1-5 words) that represents "
-                "a key skill or area of expertise."
+                "An expert CV analyst that helps identify and describe core"
+                " competences. Each competence should be a concise phrase (1-5 words)"
+                " that represents a key skill or area of expertise."
             ),
         )
 
@@ -34,7 +29,7 @@ class CompetenceAnalyzer:
         cv_text: str,
         job_description: str,
         user_notes: Optional[str] = None,
-    ) -> List[CoreCompetence]:
+    ) -> CoreCompetences:
         """Analyze CV and job description to generate relevant core competences.
 
         Args:
@@ -67,6 +62,6 @@ class CompetenceAnalyzer:
         # Use the agent to generate competences
         result = self.agent.run_sync(
             context,
-            result_type=CompetenceResponse,
+            result_type=CoreCompetences,
         )
-        return result.data.response
+        return result.data

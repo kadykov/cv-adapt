@@ -18,7 +18,7 @@ class CVAdapterApplication:
         """
         Analyze the CV and suggest potential core competences.
         """
-        return self.competence_analyzer.analyze(cv, job_description)
+        return self.competence_analyzer.analyze(str(cv), job_description).items
 
     def validate_competences(self, competences: CompetenceList) -> List[str]:
         """
