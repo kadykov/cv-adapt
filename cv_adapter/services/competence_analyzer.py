@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic_ai import Agent
-from pydantic_ai.models.test import TestModel
+from pydantic_ai.models import Model
 
 from cv_adapter.models.cv import CoreCompetences
 
@@ -9,7 +9,7 @@ from cv_adapter.models.cv import CoreCompetences
 class CompetenceAnalyzer:
     """Analyzes CV and job description to generate relevant core competences."""
 
-    def __init__(self, ai_model: Optional[TestModel] = None) -> None:
+    def __init__(self, ai_model: Optional[Model] = None) -> None:
         """Initialize the analyzer with an optional AI model.
 
         Args:

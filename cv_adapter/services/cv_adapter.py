@@ -1,6 +1,7 @@
 from typing import List
 
-from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
+from cv_adapter.models.cv import (CV, CoreCompetence, CoreCompetences,
+                                  Experience)
 
 
 class CVAdapter:
