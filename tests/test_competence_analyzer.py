@@ -76,7 +76,7 @@ def test_model() -> TestModel:
 def test_analyze_competences_matches_job_requirements(
     sample_cv_markdown: str,
     job_description: str,
-    test_model: "test",
+    test_model: TestModel,
 ) -> None:
     analyzer = CompetenceAnalyzer(ai_model=test_model)
     competences = analyzer.analyze(
@@ -103,7 +103,7 @@ def test_analyze_competences_matches_job_requirements(
 def test_analyze_competences_with_user_notes(
     sample_cv_markdown: str,
     job_description: str,
-    test_model: "test",
+    test_model: TestModel,
 ) -> None:
     analyzer = CompetenceAnalyzer(ai_model=test_model)
     user_notes = """
@@ -130,7 +130,7 @@ def test_analyze_competences_with_user_notes(
 
 def test_analyze_competences_validates_input(
     sample_cv_markdown: str,
-    test_model: "test",
+    test_model: TestModel,
 ) -> None:
     analyzer = CompetenceAnalyzer(ai_model=test_model)
 
