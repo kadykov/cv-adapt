@@ -20,5 +20,7 @@ Guidelines:
 - Run `just lint` for running linting checks
 - Run `just test` for running all tests
 - Before commiting anything run `just all` and fix errors if necessary
+- This project uses `uv` for package management, avoid using `pip`
 - When adding new packages, always use `uv add` instead of `uv pip install`
-- This project uses `pydantic-ai` Python pakcage for type-safe interaction with LLMs
+- This project uses `pydantic-ai` Python package for type-safe interactions with LLMs
+- When dealing with Pydantic-AI agents, use `run_sync()` instead of `run()` to avoid dealing with `async` function calls
