@@ -16,6 +16,7 @@ test-cov:
 
 # Run linting checks
 lint:
+    just format
     uv run ruff check --fix .
     uv run mypy .
 
