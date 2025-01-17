@@ -57,11 +57,19 @@ Setup Instructions:
    ```
 
 Development Guidelines:
-1. Code Quality:
-   - Run `just lint` for code style checks
-   - Run `just test` for running tests
-   - Run `just all` before committing (combines all checks)
+1. Code Quality and Pre-commit Process:
+   - IMPORTANT: Always run `just all` before committing changes. This command:
+     * Runs code formatting with ruff and isort
+     * Performs static type checking with mypy
+     * Runs pre-commit hooks for various checks
+     * Executes all tests with pytest
+   - Individual commands are available but should not replace the full check:
+     * `just lint`: Code style and type checks
+     * `just format`: Code formatting only
+     * `just test`: Run tests only
+     * `just pre-commit`: Run pre-commit hooks only
    - Follow type hints and enable strict type checking
+   - All functions (including tests) must have type annotations
 
 2. Package Management:
    - Use `uv add <package>` for adding new dependencies
