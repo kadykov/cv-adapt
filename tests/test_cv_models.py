@@ -4,7 +4,7 @@ from pydantic import ValidationError
 from cv_adapter.models.cv import CoreCompetence, CoreCompetences
 
 
-def test_core_competence_validation():
+def test_core_competence_validation() -> None:
     # Valid competence
     competence = CoreCompetence(text="Python Development")
     assert competence.text == "Python Development"
@@ -14,7 +14,9 @@ def test_core_competence_validation():
     assert competence.text == "Python Development"
 
     # Too many words
-    with pytest.raises(ValueError, match="core competence must not be longer than 5 words"):
+    with pytest.raises(
+        ValueError, match="core competence must not be longer than 5 words"
+    ):
         CoreCompetence(text="This has more than five words here")
 
     # Contains newline
@@ -22,7 +24,7 @@ def test_core_competence_validation():
         CoreCompetence(text="Python\nDevelopment")
 
 
-def test_core_competences_validation():
+def test_core_competences_validation() -> None:
     # Valid competences
     competences = CoreCompetences(
         items=[
@@ -69,7 +71,7 @@ def test_core_competences_validation():
         )
 
 
-def test_core_competences_to_list():
+def test_core_competences_to_list() -> None:
     # Create test data
     competences = CoreCompetences(
         items=[
