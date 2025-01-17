@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
@@ -54,19 +53,19 @@ class ExperienceGenerator:
 
         # Prepare context for the AI
         context = (
-            "Generate a list of professional experiences tailored to the job description. "
-            "The experiences should be selected and adapted from the provided CV to match "
+            "Generate a list of professional experiences tailored to the job. "
+            "The experiences should be selected from the CV and adapted to match "
             "the job requirements and prove the core competences.\n\n"
             "Guidelines for generating experiences:\n"
-            "1. Select only relevant experiences that demonstrate skills and competences required for the job\n"
+            "1. Select only relevant experiences that demonstrate required skills\n"
             "2. For each experience, write a description that:\n"
-            "   - Focuses on achievements and responsibilities that align with the job requirements\n"
+            "   - Focuses on achievements and responsibilities matching requirements\n"
             "   - Demonstrates the core competences provided\n"
             "   - Uses action verbs and quantifies results where possible\n"
             "   - Is clear and concise\n"
             "3. Keep descriptions focused and relevant, avoiding unnecessary details\n"
-            "4. Ensure all dates, company names and positions are preserved as in the original CV\n"
-            "5. Include only technologies that were actually used in each role and are relevant to the job\n\n"
+            "4. Ensure all dates, company names and positions match the original CV\n"
+            "5. Include only technologies actually used and relevant to the job\n\n"
             f"CV:\n{cv_markdown}\n\n"
             f"Job Description:\n{job_description_markdown}\n\n"
             f"Core Competences to Prove:\n"

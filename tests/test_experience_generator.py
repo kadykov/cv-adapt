@@ -1,10 +1,9 @@
 from datetime import date
-from typing import List
 
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import Company, Experience
+from cv_adapter.models.cv import Experience
 from cv_adapter.services.experience_generator import ExperienceGenerator
 
 
@@ -23,9 +22,9 @@ def test_model() -> TestModel:
             "start_date": date(2020, 1, 1),
             "end_date": date(2023, 12, 31),
             "description": (
-                "Led development of cloud-native applications using Python and Kubernetes. "
-                "Improved system performance by 40% through microservices architecture redesign. "
-                "Mentored junior developers and implemented CI/CD best practices."
+                "Led cloud app development using Python and Kubernetes. Improved "
+                "system performance by 40% through microservices redesign. Mentored "
+                "junior developers and implemented CI/CD best practices."
             ),
             "technologies": ["Python", "Kubernetes", "Docker", "AWS"],
         },
@@ -55,7 +54,9 @@ def test_experience_generator(test_model: TestModel) -> None:
     with generator.agent.override(model=test_model):
         experiences = generator.generate(
             cv_markdown="# CV\n\nDetailed professional experience...",
-            job_description_markdown="# Job Description\n\nSeeking a senior developer...",
+            job_description_markdown=(
+                "# Job Description\n\nSeeking a senior developer..."
+            ),
             core_competences=[
                 "Python Development",
                 "Cloud Architecture",
@@ -92,7 +93,9 @@ def test_experience_generator_with_notes(test_model: TestModel) -> None:
     with generator.agent.override(model=test_model):
         experiences = generator.generate(
             cv_markdown="# CV\n\nDetailed professional experience...",
-            job_description_markdown="# Job Description\n\nSeeking a senior developer...",
+            job_description_markdown=(
+                "# Job Description\n\nSeeking a senior developer..."
+            ),
             core_competences=[
                 "Python Development",
                 "Cloud Architecture",
@@ -113,7 +116,9 @@ def test_experience_validation(test_model: TestModel) -> None:
         with pytest.raises(ValueError, match="CV text is required"):
             generator.generate(
                 cv_markdown="",
-                job_description_markdown="# Job Description\n\nSeeking a senior developer...",
+                job_description_markdown=(
+                    "# Job Description\n\nSeeking a senior developer..."
+                ),
                 core_competences=["Python Development"],
             )
 
@@ -127,6 +132,8 @@ def test_experience_validation(test_model: TestModel) -> None:
         with pytest.raises(ValueError, match="Core competences are required"):
             generator.generate(
                 cv_markdown="# CV\n\nDetailed professional experience...",
-                job_description_markdown="# Job Description\n\nSeeking a senior developer...",
+                job_description_markdown=(
+                    "# Job Description\n\nSeeking a senior developer..."
+                ),
                 core_competences=[],
             )

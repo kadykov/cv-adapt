@@ -34,7 +34,10 @@ experiences:
     position: Senior Software Engineer
     start_date: 2020-01-01
     end_date: 2023-12-31
-    description: Led development of cloud-native applications using Python and Kubernetes. Improved system performance by 40% through microservices architecture redesign. Mentored junior developers and implemented CI/CD best practices.
+    description: >-
+      Led development of cloud-native applications using Python and Kubernetes.
+      Improved system performance by 40% through microservices architecture redesign.
+      Mentored junior developers and implemented CI/CD best practices.
     technologies:
       - Python
       - Docker
@@ -46,7 +49,10 @@ experiences:
     position: Software Developer
     start_date: 2018-01-01
     end_date: 2019-12-31
-    description: Full-stack development of web applications. Developed new customer portal increasing user engagement by 35%. Improved application performance by 50% through database optimization and caching.
+    description: >-
+      Full-stack development of web applications. Developed new customer portal
+      increasing user engagement by 35%. Improved application performance by 50%
+      through database optimization and caching.
     technologies:
       - Python
       - React
@@ -126,7 +132,11 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                 position="Data Scientist",
                 start_date=date(2020, 1, 1),
                 end_date=date(2023, 12, 31),
-                description="Led machine learning research team developing state-of-the-art models. Improved model accuracy by 20% and reduced training time by 35%. Implemented automated model deployment pipeline.",
+                description=(
+                    "Led ML research team developing state-of-the-art models. "
+                    "Improved model accuracy by 20% and reduced training time by 35%. "
+                    "Implemented automated model deployment pipeline."
+                ),
                 technologies=["Python", "TensorFlow", "PyTorch"],
             )
         ],
