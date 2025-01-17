@@ -25,16 +25,16 @@ class ExperienceGenerator:
 
     def generate(
         self,
-        cv_markdown: str,
-        job_description_markdown: str,
+        cv_text: str,
+        job_description: str,
         core_competences: List[str],
         notes: Optional[str] = None,
     ) -> List[Experience]:
         """Generate a list of professional experiences tailored to a job description.
 
         Args:
-            cv_markdown: CV in Markdown format containing all professional experiences
-            job_description_markdown: Job description in Markdown format
+            cv_text: CV in Markdown format containing all professional experiences
+            job_description: Job description in Markdown format
             core_competences: List of core competences that should be proven
             notes: Optional user notes about how to adapt experiences
 
@@ -44,9 +44,9 @@ class ExperienceGenerator:
         Raises:
             ValueError: If required inputs are missing or invalid
         """
-        if not cv_markdown.strip():
+        if not cv_text.strip():
             raise ValueError("CV text is required")
-        if not job_description_markdown.strip():
+        if not job_description.strip():
             raise ValueError("Job description is required")
         if not core_competences:
             raise ValueError("Core competences are required")
@@ -66,8 +66,8 @@ class ExperienceGenerator:
             "3. Keep descriptions focused and relevant, avoiding unnecessary details\n"
             "4. Ensure all dates, company names and positions match the original CV\n"
             "5. Include only technologies actually used and relevant to the job\n\n"
-            f"CV:\n{cv_markdown}\n\n"
-            f"Job Description:\n{job_description_markdown}\n\n"
+            f"CV:\n{cv_text}\n\n"
+            f"Job Description:\n{job_description}\n\n"
             f"Core Competences to Prove:\n"
             + "\n".join(f"- {comp}" for comp in core_competences)
             + "\n"
