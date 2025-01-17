@@ -83,3 +83,14 @@ Development Guidelines:
    - All function definitions must be typed
    - Use mypy for static type checking
    - Project has strict type checking enabled
+
+Important Note for AI Agents:
+- This documentation file (`.openhands/microagents/repo.md`) must be kept up to date
+- When you create new files, modify project structure, or add new features:
+  - Update the Project Structure section accordingly
+  - Document any new patterns or conventions introduced
+  - Add relevant guidelines for new components
+- If you notice any discrepancies between this documentation and the actual project state:
+  - Update the documentation to reflect the current state
+  - Include explanations for any significant changes
+  - Ensure all sections remain accurate and useful
