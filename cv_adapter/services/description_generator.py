@@ -18,10 +18,10 @@ class DescriptionGenerator:
         self.agent = Agent(
             ai_model,
             system_prompt=(
-                "An expert CV writer that creates concise and impactful CV descriptions. "
-                "Each description should be a single paragraph of no more than 50 words "
-                "that highlights the candidate's key strengths and experience in relation "
-                "to the job requirements."
+                "An expert CV writer that creates concise and impactful CV "
+                "descriptions. Each description should be a single paragraph of no "
+                "more than 50 words that highlights the candidate's key strengths "
+                "and experience in relation to the job requirements."
             ),
         )
 
@@ -51,10 +51,10 @@ class DescriptionGenerator:
 
         # Prepare context for the AI
         context = (
-            f"Based on the CV and job description below, create a concise and impactful "
-            f"CV description. The description should be a single paragraph of no more than "
-            f"50 words that highlights the candidate's key strengths and experience in "
-            f"relation to the job requirements.\n\n"
+            f"Based on the CV and job description below, create a concise and "
+            f"impactful CV description. The description should be a single paragraph "
+            f"of no more than 50 words that highlights the candidate's key strengths "
+            f"and experience in relation to the job requirements.\n\n"
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n"
         )

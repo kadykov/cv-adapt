@@ -64,9 +64,10 @@ def test_model() -> TestModel:
     model = TestModel()
     model.custom_result_args = {
         "text": (
-            "Senior Software Engineer with 5+ years of experience in Python development "
-            "and cloud technologies. Proven track record in leading cloud-native "
-            "applications and implementing CI/CD pipelines, reducing deployment time by 70%."
+            "Senior Software Engineer with 5+ years of experience in Python "
+            "development and cloud technologies. Proven track record in leading "
+            "cloud-native applications and implementing CI/CD pipelines, reducing "
+            "deployment time by 70%."
         )
     }
     return model

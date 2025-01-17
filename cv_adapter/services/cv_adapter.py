@@ -1,6 +1,12 @@
 from typing import List
 
-from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
+from cv_adapter.models.cv import (
+    CV,
+    CoreCompetence,
+    CoreCompetences,
+    CVDescription,
+    Experience,
+)
 
 
 class CVAdapter:
@@ -29,7 +35,9 @@ class CVAdapter:
         This includes generating a new summary and adapting all experiences.
         """
         adapted_cv = cv.model_copy()
-        adapted_cv.summary = self.generate_summary(core_competences)
+        adapted_cv.description = CVDescription(
+            text=self.generate_summary(core_competences)
+        )
         adapted_cv.core_competences = CoreCompetences(items=core_competences)
         adapted_cv.experiences = [
             self.adapt_experience(exp, core_competences) for exp in cv.experiences

@@ -16,7 +16,9 @@ SAMPLE_CV_YAML = """
 full_name: John Doe
 title: Senior Software Engineer
 description:
-  text: Senior Software Engineer with 5+ years of experience in Python and cloud technologies, specializing in cloud-native applications and CI/CD.
+  text: >-
+    Senior Software Engineer with 5+ years of experience in Python and cloud
+    technologies, specializing in cloud-native applications and CI/CD.
 core_competences:
   items:
     - text: Python Development
@@ -100,7 +102,10 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
         full_name="Jane Smith",
         title="Data Scientist",
         description=CVDescription(
-            text="Data Scientist with PhD and industry experience in machine learning, specializing in model development and optimization.",
+            text=(
+                "Data Scientist with PhD and industry experience in machine learning, "
+                "specializing in model development and optimization."
+            ),
         ),
         core_competences=CoreCompetences(
             items=[
