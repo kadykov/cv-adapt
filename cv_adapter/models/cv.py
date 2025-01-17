@@ -33,13 +33,28 @@ class CoreCompetences(BaseModel):
         return len(self.items)
 
 
+class Company(BaseModel):
+    name: str = Field(..., max_length=80)
+    description: Optional[str] = Field(None, max_length=80)
+    location: Optional[str] = Field(None, max_length=50)
+
+    @field_validator("name", "description", "location")
+    @classmethod
+    def validate_single_line(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        v = v.strip()
+        if "\n" in v:
+            raise ValueError("field must be a single line")
+        return v
+
+
 class Experience(BaseModel):
-    company: str
-    position: str
+    company: Company
+    position: str = Field(..., max_length=80)
     start_date: date
     end_date: Optional[date]
-    description: str
-    achievements: List[str]
+    description: str = Field(..., max_length=1200)
     technologies: List[str]
 
 

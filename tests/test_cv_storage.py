@@ -5,6 +5,7 @@ import pytest
 
 from cv_adapter.models.cv import (
     CV,
+    Company,
     CoreCompetence,
     CoreCompetences,
     CVDescription,
@@ -26,26 +27,26 @@ core_competences:
     - text: System Design
     - text: Team Leadership
 experiences:
-  - company: Tech Corp
+  - company:
+      name: Tech Corp
+      description: Leading cloud technology company
+      location: San Francisco, CA
     position: Senior Software Engineer
     start_date: 2020-01-01
     end_date: 2023-12-31
-    description: Led development of cloud-native applications
-    achievements:
-      - Reduced deployment time by 70%
-      - Implemented CI/CD pipeline
+    description: Led development of cloud-native applications using Python and Kubernetes. Improved system performance by 40% through microservices architecture redesign. Mentored junior developers and implemented CI/CD best practices.
     technologies:
       - Python
       - Docker
       - AWS
-  - company: StartUp Inc
+  - company:
+      name: StartUp Inc
+      description: Innovative web development startup
+      location: New York, NY
     position: Software Developer
     start_date: 2018-01-01
     end_date: 2019-12-31
-    description: Full-stack development of web applications
-    achievements:
-      - Developed new customer portal
-      - Improved application performance by 50%
+    description: Full-stack development of web applications. Developed new customer portal increasing user engagement by 35%. Improved application performance by 50% through database optimization and caching.
     technologies:
       - Python
       - React
@@ -117,13 +118,16 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
         ),
         experiences=[
             Experience(
-                company="AI Corp",
+                company=Company(
+                    name="AI Corp",
+                    description="Leading AI research company",
+                    location="Boston, MA",
+                ),
                 position="Data Scientist",
                 start_date=date(2020, 1, 1),
                 end_date=date(2023, 12, 31),
-                description="Developed ML models",
-                achievements=["Improved model accuracy by 20%"],
-                technologies=["Python", "TensorFlow"],
+                description="Led machine learning research team developing state-of-the-art models. Improved model accuracy by 20% and reduced training time by 35%. Implemented automated model deployment pipeline.",
+                technologies=["Python", "TensorFlow", "PyTorch"],
             )
         ],
         education=["PhD in Data Science, Tech University, 2020"],
