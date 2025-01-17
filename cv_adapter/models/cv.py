@@ -33,7 +33,7 @@ class CoreCompetences(BaseModel):
         return len(self.items)
 
 
-class Company(BaseModel):
+class Institution(BaseModel):
     name: str = Field(..., max_length=80)
     description: Optional[str] = Field(None, max_length=80)
     location: Optional[str] = Field(None, max_length=50)
@@ -49,6 +49,14 @@ class Company(BaseModel):
         return v
 
 
+class Company(Institution):
+    pass
+
+
+class University(Institution):
+    pass
+
+
 class Experience(BaseModel):
     company: Company
     position: str = Field(..., max_length=80)
@@ -56,6 +64,22 @@ class Experience(BaseModel):
     end_date: Optional[date]
     description: str = Field(..., max_length=1200)
     technologies: List[str]
+
+
+class Education(BaseModel):
+    university: University
+    degree: str = Field(..., max_length=80)
+    start_date: date
+    end_date: Optional[date]
+    description: str = Field(..., max_length=1200)
+
+    @field_validator("degree")
+    @classmethod
+    def validate_degree(cls, v: str) -> str:
+        v = v.strip()
+        if "\n" in v:
+            raise ValueError("degree must be a single line")
+        return v
 
 
 class CVDescription(BaseModel):
@@ -78,5 +102,5 @@ class CV(BaseModel):
     description: CVDescription
     core_competences: CoreCompetences
     experiences: List[Experience]
-    education: List[str]  # We can expand this later if needed
+    education: List[Education]
     contacts: dict[str, str]  # email, phone, linkedin, etc.

@@ -9,7 +9,9 @@ from cv_adapter.models.cv import (
     CoreCompetence,
     CoreCompetences,
     CVDescription,
+    Education,
     Experience,
+    University,
 )
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
@@ -58,8 +60,27 @@ experiences:
       - React
       - PostgreSQL
 education:
-  - "MSc in Computer Science, University of Technology, 2018"
-  - "BSc in Software Engineering, Tech University, 2016"
+  - university:
+      name: University of Technology
+      description: Leading technical university
+      location: San Francisco, CA
+    degree: MSc in Computer Science
+    start_date: 2016-09-01
+    end_date: 2018-06-30
+    description: >-
+      Specialized in distributed systems and cloud computing. Developed scalable
+      data processing systems as part of thesis. Collaborated on research projects
+      with industry partners.
+  - university:
+      name: Tech University
+      description: Top engineering school
+      location: Boston, MA
+    degree: BSc in Software Engineering
+    start_date: 2012-09-01
+    end_date: 2016-06-30
+    description: >-
+      Focus on software engineering principles and practices. Led team projects in
+      agile development. Completed internship at major tech company.
 contacts:
   email: john.doe@example.com
   phone: "+1234567890"
@@ -140,7 +161,23 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                 technologies=["Python", "TensorFlow", "PyTorch"],
             )
         ],
-        education=["PhD in Data Science, Tech University, 2020"],
+        education=[
+            Education(
+                university=University(
+                    name="Tech University",
+                    description="Leading research university",
+                    location="Boston, MA",
+                ),
+                degree="PhD in Data Science",
+                start_date=date(2017, 9, 1),
+                end_date=date(2020, 6, 30),
+                description=(
+                    "Conducted research in machine learning and deep learning. "
+                    "Published papers in top conferences. Developed novel algorithms "
+                    "for large-scale data processing and analysis."
+                ),
+            )
+        ],
         contacts={"email": "jane@example.com"},
     )
 
