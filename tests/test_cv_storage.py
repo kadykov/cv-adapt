@@ -3,13 +3,20 @@ from pathlib import Path
 
 import pytest
 
-from cv_adapter.models.cv import CV, CoreCompetence, CoreCompetences, Experience
+from cv_adapter.models.cv import (
+    CV,
+    CoreCompetence,
+    CoreCompetences,
+    CVDescription,
+    Experience,
+)
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
 full_name: John Doe
 title: Senior Software Engineer
-summary: Experienced software engineer with a focus on Python and cloud technologies
+description:
+  text: Senior Software Engineer with 5+ years of experience in Python and cloud technologies, specializing in cloud-native applications and CI/CD.
 core_competences:
   items:
     - text: Python Development
@@ -92,7 +99,9 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
     cv = CV(
         full_name="Jane Smith",
         title="Data Scientist",
-        summary="Experienced data scientist",
+        description=CVDescription(
+            text="Data Scientist with PhD and industry experience in machine learning, specializing in model development and optimization.",
+        ),
         core_competences=CoreCompetences(
             items=[
                 CoreCompetence(text="Machine Learning"),

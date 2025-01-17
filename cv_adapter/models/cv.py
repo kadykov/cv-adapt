@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class CoreCompetence(BaseModel):
@@ -43,10 +43,24 @@ class Experience(BaseModel):
     technologies: List[str]
 
 
+class CVDescription(BaseModel):
+    text: str = Field(..., max_length=500)
+
+    @model_validator(mode="after")
+    def validate_text(self) -> "CVDescription":
+        text = self.text.strip()
+        if len(text.split()) > 50:
+            raise ValueError("CV description must not be longer than 50 words")
+        if "\n" in text:
+            raise ValueError("CV description must be a single paragraph")
+        self.text = text
+        return self
+
+
 class CV(BaseModel):
     full_name: str
     title: str
-    summary: str
+    description: CVDescription
     core_competences: CoreCompetences
     experiences: List[Experience]
     education: List[str]  # We can expand this later if needed
