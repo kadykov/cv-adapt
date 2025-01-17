@@ -32,6 +32,9 @@ class CoreCompetences(BaseModel):
     def __len__(self) -> int:
         return len(self.items)
 
+    def to_list(self) -> List[str]:
+        return [item.text for item in self.items]
+
 
 class Institution(BaseModel):
     name: str = Field(..., max_length=80)
