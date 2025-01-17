@@ -53,10 +53,8 @@ def test_experience_generator(test_model: TestModel) -> None:
 
     with generator.agent.override(model=test_model):
         experiences = generator.generate(
-            cv_markdown="# CV\n\nDetailed professional experience...",
-            job_description_markdown=(
-                "# Job Description\n\nSeeking a senior developer..."
-            ),
+            cv_text="# CV\n\nDetailed professional experience...",
+            job_description=("# Job Description\n\nSeeking a senior developer..."),
             core_competences=[
                 "Python Development",
                 "Cloud Architecture",
@@ -92,10 +90,8 @@ def test_experience_generator_with_notes(test_model: TestModel) -> None:
 
     with generator.agent.override(model=test_model):
         experiences = generator.generate(
-            cv_markdown="# CV\n\nDetailed professional experience...",
-            job_description_markdown=(
-                "# Job Description\n\nSeeking a senior developer..."
-            ),
+            cv_text="# CV\n\nDetailed professional experience...",
+            job_description=("# Job Description\n\nSeeking a senior developer..."),
             core_competences=[
                 "Python Development",
                 "Cloud Architecture",
@@ -115,25 +111,21 @@ def test_experience_validation(test_model: TestModel) -> None:
     with generator.agent.override(model=test_model):
         with pytest.raises(ValueError, match="CV text is required"):
             generator.generate(
-                cv_markdown="",
-                job_description_markdown=(
-                    "# Job Description\n\nSeeking a senior developer..."
-                ),
+                cv_text="",
+                job_description=("# Job Description\n\nSeeking a senior developer..."),
                 core_competences=["Python Development"],
             )
 
         with pytest.raises(ValueError, match="Job description is required"):
             generator.generate(
-                cv_markdown="# CV\n\nDetailed professional experience...",
-                job_description_markdown="",
+                cv_text="# CV\n\nDetailed professional experience...",
+                job_description="",
                 core_competences=["Python Development"],
             )
 
         with pytest.raises(ValueError, match="Core competences are required"):
             generator.generate(
-                cv_markdown="# CV\n\nDetailed professional experience...",
-                job_description_markdown=(
-                    "# Job Description\n\nSeeking a senior developer..."
-                ),
+                cv_text="# CV\n\nDetailed professional experience...",
+                job_description=("# Job Description\n\nSeeking a senior developer..."),
                 core_competences=[],
             )
