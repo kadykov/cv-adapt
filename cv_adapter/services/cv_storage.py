@@ -5,6 +5,7 @@ import yaml
 from pydantic import ValidationError
 
 from cv_adapter.models.cv import CV
+from cv_adapter.renderers import RendererError, YAMLRenderer
 
 
 class CVStorageError(Exception):
@@ -23,6 +24,7 @@ class CVStorage:
             cv_dir: Directory path where CV files are stored
         """
         self.cv_dir = Path(cv_dir)
+        self._yaml_renderer = YAMLRenderer()
 
     def load_cv(self, file_path: Union[str, Path]) -> CV:
         """Load a CV from a YAML file.
@@ -61,15 +63,7 @@ class CVStorage:
         Raises:
             CVStorageError: If there's an error writing the file
         """
-        file_path = Path(file_path)
         try:
-            with open(file_path, "w") as f:
-                yaml.safe_dump(
-                    cv.model_dump(mode="json"),
-                    f,
-                    default_flow_style=False,
-                    allow_unicode=True,
-                    sort_keys=False,
-                )
-        except Exception as e:
+            self._yaml_renderer.render_to_file(cv, file_path)
+        except RendererError as e:
             raise CVStorageError(f"Error saving CV: {e}")

@@ -21,6 +21,10 @@ Project Structure:
      - `education_generator.py`: Generates education sections
      - `experience_generator.py`: Generates experience sections
      - `skills_generator.py`: Generates and organizes skills based on CV content and job requirements
+   - `renderers/`: CV rendering implementations
+     - `base.py`: Abstract base class for renderers
+     - `markdown_renderer.py`: Renders CV to Markdown format
+     - `yaml_renderer.py`: Renders CV to YAML format
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
@@ -93,7 +97,19 @@ Development Guidelines:
    - Use mypy for static type checking
    - Project has strict type checking enabled
 
-6. Documentation Maintenance:
+6. Working with Renderers:
+   - Use the rendering system in `cv_adapter/renderers/` for CV output
+   - All renderers must implement the BaseRenderer interface
+   - Available renderers:
+     * YAMLRenderer: For data storage and interchange
+     * MarkdownRenderer: For human-readable output
+   - When adding new renderers:
+     * Create a new file in `renderers/` directory
+     * Implement BaseRenderer interface
+     * Add comprehensive tests
+     * Update documentation
+
+7. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
    - When creating new files, modifying project structure, or adding features:
      * Update the Project Structure section accordingly
