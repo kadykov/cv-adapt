@@ -3,7 +3,8 @@ default:
 
 # Install dependencies
 install:
-    uv sync --frozen --group dev
+    uv sync --frozen --group dev --quiet
+    bash -c 'source ./.venv/bin/activate'
     uv run pre-commit install
 
 # Run tests
@@ -22,8 +23,8 @@ lint:
 
 # Format code
 format:
-    uv run ruff format .
-    uv run isort .
+    uv run ruff format . --silent
+    uv run isort . --quiet
 
 # Run pre-commit checks
 pre-commit:
