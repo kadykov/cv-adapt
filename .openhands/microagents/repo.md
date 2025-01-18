@@ -20,6 +20,7 @@ Project Structure:
      - `description_generator.py`: Generates descriptions
      - `education_generator.py`: Generates education sections
      - `experience_generator.py`: Generates experience sections
+     - `skills_generator.py`: Generates and organizes skills based on CV content and job requirements
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
