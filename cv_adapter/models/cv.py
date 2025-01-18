@@ -99,6 +99,49 @@ class CVDescription(BaseModel):
         return self
 
 
+class Skill(BaseModel):
+    text: str = Field(..., max_length=40)
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, v: str) -> str:
+        v = v.strip()
+        if "\n" in v:
+            raise ValueError("skill must be a single line")
+        return v
+
+
+class SkillGroup(BaseModel):
+    name: str = Field(..., max_length=40)
+    skills: List[Skill] = Field(..., min_length=1)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if "\n" in v:
+            raise ValueError("group name must be a single line")
+        return v
+
+    @model_validator(mode="after")
+    def validate_unique_skills(self) -> "SkillGroup":
+        texts = [skill.text for skill in self.skills]
+        if len(set(texts)) != len(texts):
+            raise ValueError("skills within a group must be unique")
+        return self
+
+
+class Skills(BaseModel):
+    groups: List[SkillGroup] = Field(..., min_length=1)
+
+    @model_validator(mode="after")
+    def validate_unique_skills_across_groups(self) -> "Skills":
+        all_skills = [skill.text for group in self.groups for skill in group.skills]
+        if len(set(all_skills)) != len(all_skills):
+            raise ValueError("skills must be unique across all groups")
+        return self
+
+
 class CV(BaseModel):
     full_name: str
     title: str
@@ -107,3 +150,4 @@ class CV(BaseModel):
     experiences: List[Experience]
     education: List[Education]
     contacts: dict[str, str]  # email, phone, linkedin, etc.
+    skills: Skills
