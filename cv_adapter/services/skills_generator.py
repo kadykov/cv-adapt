@@ -7,7 +7,9 @@ from cv_adapter.models.cv import Skills
 
 
 class SkillsGenerator:
-    """Generates a list of skills organized in groups and tailored to a job description."""
+    """Generates a list of skills organized in groups and tailored to a job description.
+
+    Organizes skills into logical groups based on CV content and job requirements."""
 
     def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
         """Initialize the generator with an AI model.
@@ -30,7 +32,7 @@ class SkillsGenerator:
         core_competences: List[str],
         notes: Optional[str] = None,
     ) -> Skills:
-        """Generate a list of skills organized in groups and tailored to a job description.
+        """Generate a list of skills organized in groups and tailored to a job.
 
         Args:
             cv_text: CV in Markdown format containing all professional experiences
@@ -58,7 +60,7 @@ class SkillsGenerator:
             "the core competences and match the job requirements.\n\n"
             "Guidelines for generating skills:\n"
             "1. Extract skills from CV experiences and education\n"
-            "2. Organize skills in logical groups (e.g., 'Programming', 'Data Analysis')\n"
+            "2. Organize skills in logical groups (e.g., 'Programming', 'Analytics')\n"
             "3. Ensure each skill:\n"
             "   - Is relevant to the job requirements\n"
             "   - Helps demonstrate the core competences\n"

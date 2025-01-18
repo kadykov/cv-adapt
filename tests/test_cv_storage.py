@@ -11,6 +11,9 @@ from cv_adapter.models.cv import (
     CVDescription,
     Education,
     Experience,
+    Skill,
+    SkillGroup,
+    Skills,
     University,
 )
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
@@ -85,6 +88,18 @@ contacts:
   email: john.doe@example.com
   phone: "+1234567890"
   linkedin: "linkedin.com/in/johndoe"
+skills:
+  groups:
+    - name: Programming
+      skills:
+        - text: Python
+        - text: Docker
+        - text: AWS
+    - name: Leadership
+      skills:
+        - text: Team Management
+        - text: Mentoring
+        - text: Agile
 """
 
 
@@ -179,6 +194,25 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
             )
         ],
         contacts={"email": "jane@example.com"},
+        skills=Skills(
+            groups=[
+                SkillGroup(
+                    name="Machine Learning",
+                    skills=[
+                        Skill(text="TensorFlow"),
+                        Skill(text="PyTorch"),
+                        Skill(text="Deep Learning"),
+                    ],
+                ),
+                SkillGroup(
+                    name="Programming",
+                    skills=[
+                        Skill(text="Python"),
+                        Skill(text="SQL"),
+                    ],
+                ),
+            ],
+        ),
     )
 
     output_file = tmp_path / "jane_smith.yaml"
