@@ -174,7 +174,9 @@ def test_generate_cv(
     mock_services["experience_generator"].generate.return_value = experiences
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
-    mock_services["description_generator"].generate.return_value = description
+    mock_services["description_generator"].generate.return_value = CVDescription(
+        text=description
+    )
     mock_services["title_generator"].generate.return_value = Title(
         text="Senior Python Developer"
     )
