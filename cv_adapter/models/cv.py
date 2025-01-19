@@ -3,15 +3,34 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+# Text field length constraints
+SINGLE_LINE_TEXT_LENGTH = 80  # Standard length for most single-line text fields
+SHORT_TEXT_LENGTH = 40  # For shorter text fields like skills and group names
+LOCATION_TEXT_LENGTH = 50  # For location fields
+CORE_COMPETENCE_LENGTH = 100  # For core competence items
+
+# Description length constraints
+EXPERIENCE_DESCRIPTION_LENGTH = 1200  # For detailed experience/education descriptions
+CV_DESCRIPTION_LENGTH = 500  # For the main CV description
+
+# List length constraints
+MIN_CORE_COMPETENCES = 4
+MAX_CORE_COMPETENCES = 6
+MIN_SKILLS_IN_GROUP = 1
+
+# Word count limits
+MAX_CORE_COMPETENCE_WORDS = 5
+MAX_CV_DESCRIPTION_WORDS = 50
+
 
 class CoreCompetence(BaseModel):
-    text: str = Field(..., max_length=100)
+    text: str = Field(..., max_length=CORE_COMPETENCE_LENGTH)
 
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str) -> str:
         v = v.strip()
-        if len(v.split()) > 5:
+        if len(v.split()) > MAX_CORE_COMPETENCE_WORDS:
             raise ValueError("core competence must not be longer than 5 words")
         if "\n" in v:
             raise ValueError("core competence must be a single line")
@@ -19,7 +38,7 @@ class CoreCompetence(BaseModel):
 
 
 class CoreCompetences(BaseModel):
-    items: List[CoreCompetence] = Field(..., min_length=4, max_length=6)
+    items: List[CoreCompetence] = Field(..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES)
 
     @field_validator("items")
     @classmethod
@@ -37,9 +56,9 @@ class CoreCompetences(BaseModel):
 
 
 class Institution(BaseModel):
-    name: str = Field(..., max_length=80)
-    description: Optional[str] = Field(None, max_length=80)
-    location: Optional[str] = Field(None, max_length=50)
+    name: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
+    description: Optional[str] = Field(None, max_length=SINGLE_LINE_TEXT_LENGTH)
+    location: Optional[str] = Field(None, max_length=LOCATION_TEXT_LENGTH)
 
     @field_validator("name", "description", "location")
     @classmethod
@@ -62,19 +81,19 @@ class University(Institution):
 
 class Experience(BaseModel):
     company: Company
-    position: str = Field(..., max_length=80)
+    position: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=1200)
+    description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
     technologies: List[str]
 
 
 class Education(BaseModel):
     university: University
-    degree: str = Field(..., max_length=80)
+    degree: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=1200)
+    description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
 
     @field_validator("degree")
     @classmethod
@@ -86,12 +105,12 @@ class Education(BaseModel):
 
 
 class CVDescription(BaseModel):
-    text: str = Field(..., max_length=500)
+    text: str = Field(..., max_length=CV_DESCRIPTION_LENGTH)
 
     @model_validator(mode="after")
     def validate_text(self) -> "CVDescription":
         text = self.text.strip()
-        if len(text.split()) > 50:
+        if len(text.split()) > MAX_CV_DESCRIPTION_WORDS:
             raise ValueError("CV description must not be longer than 50 words")
         if "\n" in text:
             raise ValueError("CV description must be a single paragraph")
@@ -100,7 +119,7 @@ class CVDescription(BaseModel):
 
 
 class Skill(BaseModel):
-    text: str = Field(..., max_length=40)
+    text: str = Field(..., max_length=SHORT_TEXT_LENGTH)
 
     @field_validator("text")
     @classmethod
@@ -112,8 +131,8 @@ class Skill(BaseModel):
 
 
 class SkillGroup(BaseModel):
-    name: str = Field(..., max_length=40)
-    skills: List[Skill] = Field(..., min_length=1)
+    name: str = Field(..., max_length=SHORT_TEXT_LENGTH)
+    skills: List[Skill] = Field(..., min_length=MIN_SKILLS_IN_GROUP)
 
     @field_validator("name")
     @classmethod
