@@ -57,7 +57,14 @@ class CVAdapterApplication:
         )
 
         # 2. Create minimal CV for description generation
+        title = self.title_generator.generate(
+            cv_text,
+            job_description,
+            core_competences.to_list(),
+            notes=notes,
+        )
         minimal_cv = MinimalCV(
+            title=title,
             core_competences=core_competences,
             experiences=experiences,
             education=education,
@@ -75,12 +82,7 @@ class CVAdapterApplication:
 
         return CV(
             full_name=cv_model.full_name,
-            title=self.title_generator.generate(
-                cv_text,
-                job_description,
-                core_competences.to_list(),
-                notes=notes,
-            ),
+            title=title,
             description=CVDescription(text=str(description)),
             core_competences=core_competences,
             experiences=experiences,

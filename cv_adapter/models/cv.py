@@ -201,6 +201,7 @@ class MinimalCV(BaseModel):
     Used by DescriptionGenerator to create a focused input for LLM.
     """
 
+    title: Title
     core_competences: CoreCompetences
     experiences: List[Experience]
     education: List[Education]

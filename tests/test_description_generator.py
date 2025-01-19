@@ -14,6 +14,7 @@ from cv_adapter.models.cv import (
     Skill,
     SkillGroup,
     Skills,
+    Title,
     University,
 )
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
@@ -23,6 +24,7 @@ from cv_adapter.services.description_generator import DescriptionGenerator
 @pytest.fixture
 def sample_minimal_cv() -> MinimalCV:
     return MinimalCV(
+        title=Title(text="Senior Software Engineer"),
         core_competences=CoreCompetences(
             items=[
                 CoreCompetence(text="Python Development"),
