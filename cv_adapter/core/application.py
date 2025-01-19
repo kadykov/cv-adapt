@@ -7,6 +7,7 @@ from cv_adapter.services.description_generator import DescriptionGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
+from cv_adapter.services.title_generator import TitleGenerator
 
 
 class CVAdapterApplication:
@@ -25,6 +26,7 @@ class CVAdapterApplication:
         self.description_generator = DescriptionGenerator(
             MinimalMarkdownRenderer(), ai_model=ai_model
         )
+        self.title_generator = TitleGenerator(ai_model=ai_model)
 
     def generate_cv(
         self, cv_text: str, job_description: str, notes: str | None = None
@@ -73,7 +75,12 @@ class CVAdapterApplication:
 
         return CV(
             full_name=cv_model.full_name,
-            title=cv_model.title,
+            title=self.title_generator.generate(
+                cv_text,
+                job_description,
+                core_competences.to_list(),
+                notes=notes,
+            ),
             description=CVDescription(text=str(description)),
             core_competences=core_competences,
             experiences=experiences,

@@ -23,6 +23,7 @@ from cv_adapter.services.description_generator import DescriptionGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
+from cv_adapter.services.title_generator import TitleGenerator
 
 
 @pytest.fixture
@@ -33,6 +34,7 @@ def mock_services() -> Dict[str, Mock]:
         "education_generator": Mock(),
         "skills_generator": Mock(),
         "description_generator": Mock(),
+        "title_generator": Mock(),
     }
 
 
@@ -45,6 +47,7 @@ def app(mock_services: Dict[str, Mock]) -> CVAdapterApplication:
         app.education_generator = mock_services["education_generator"]
         app.skills_generator = mock_services["skills_generator"]
         app.description_generator = mock_services["description_generator"]
+        app.title_generator = mock_services["title_generator"]
         return app
 
 
@@ -57,6 +60,7 @@ def test_init_with_custom_ai_model() -> None:
         assert isinstance(app.education_generator, EducationGenerator)
         assert isinstance(app.skills_generator, SkillsGenerator)
         assert isinstance(app.description_generator, DescriptionGenerator)
+        assert isinstance(app.title_generator, TitleGenerator)
 
 
 @pytest.fixture
@@ -170,6 +174,7 @@ def test_generate_cv(
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
     mock_services["description_generator"].generate.return_value = description
+    mock_services["title_generator"].generate.return_value = "Senior Python Developer"
 
     # Execute
     result = app.generate_cv(cv_text, job_description, notes)
@@ -184,7 +189,7 @@ def test_generate_cv(
     assert result.skills == skills
     assert result.contacts == detailed_cv.contacts
     assert result.full_name == detailed_cv.full_name
-    assert result.title == detailed_cv.title
+    assert result.title == "Senior Python Developer"
 
     # Verify service calls
     mock_services["competence_analyzer"].analyze.assert_called_once_with(
@@ -203,6 +208,12 @@ def test_generate_cv(
         notes=notes,
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
+        cv_text,
+        job_description,
+        ["Python", "JavaScript", "TypeScript", "React"],
+        notes=notes,
+    )
+    mock_services["title_generator"].generate.assert_called_once_with(
         cv_text,
         job_description,
         ["Python", "JavaScript", "TypeScript", "React"],

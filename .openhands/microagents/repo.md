@@ -16,7 +16,8 @@ Project Structure:
          1. Generate components (core competences, experiences, education, skills)
          2. Create minimal CV for description generation
          3. Generate description using LLM
-         4. Create final CV with all components
+         4. Generate professional title using LLM
+         5. Create final CV with all components
    - `models/`: Data models and schemas
      - `cv.py`: CV-related data structures:
        * `CV`: Complete CV model with all fields
@@ -29,6 +30,7 @@ Project Structure:
      - `education_generator.py`: Generates education sections
      - `experience_generator.py`: Generates experience sections
      - `skills_generator.py`: Generates and organizes skills based on CV content and job requirements
+     - `title_generator.py`: Generates professional titles tailored to job descriptions
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic

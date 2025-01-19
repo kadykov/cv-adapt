@@ -79,9 +79,10 @@ class TitleGenerator:
         title = result.data.strip()
 
         # Validate title length
-        if len(title) > TITLE_LINE_LENGTH * 2:
+        max_length = TITLE_LINE_LENGTH * 2
+        if len(title) > max_length:
             raise ValueError(
-                f"Generated title exceeds maximum length of {TITLE_LINE_LENGTH * 2} characters"
+                f"Generated title exceeds maximum length of {max_length} chars"
             )
         if len(title.split("\n")) > 2:
             raise ValueError("Generated title must not exceed 2 lines")
