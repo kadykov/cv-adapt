@@ -185,7 +185,12 @@ def test_generate_cv(
     )
 
     # Execute
-    result = app.generate_cv(cv_text, job_description, notes)
+    result = app.generate_cv(
+        cv_text,
+        job_description,
+        personal_info=detailed_cv.personal_info,
+        notes=notes,
+    )
 
     # Verify
     assert isinstance(result.description, CVDescription)

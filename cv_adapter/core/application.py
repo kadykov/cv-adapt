@@ -30,7 +30,11 @@ class CVAdapterApplication:
         self.title_generator = TitleGenerator(ai_model=ai_model)
 
     def generate_cv(
-        self, cv_text: str, job_description: str, notes: str | None = None
+        self,
+        cv_text: str,
+        job_description: str,
+        personal_info: PersonalInfo,
+        notes: str | None = None,
     ) -> CV:
         """
         Generate a new CV adapted to the job description.
@@ -38,6 +42,7 @@ class CVAdapterApplication:
         Args:
             cv_text: The original detailed CV text
             job_description: The job description to adapt the CV for
+            personal_info: Personal information to include in the CV
             notes: Optional user notes to guide the generation process
 
         Returns:
@@ -73,19 +78,12 @@ class CVAdapterApplication:
         )
 
         # 3. Generate description and create final CV
-        # Parse the original CV text to get the CV model
-        cv_model = CV.model_validate_json(cv_text)
-
-        # Generate description with notes
         description = self.description_generator.generate(
             minimal_cv, job_description, user_notes=notes
         )
 
         return CV(
-            personal_info=PersonalInfo(
-                full_name=cv_model.personal_info.full_name,
-                contacts=cv_model.personal_info.contacts,
-            ),
+            personal_info=personal_info,
             title=title,
             description=description,
             core_competences=core_competences,
