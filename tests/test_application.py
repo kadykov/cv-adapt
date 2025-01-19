@@ -18,6 +18,11 @@ from cv_adapter.models.cv import (
     Skills,
     University,
 )
+from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
+from cv_adapter.services.description_generator import DescriptionGenerator
+from cv_adapter.services.education_generator import EducationGenerator
+from cv_adapter.services.experience_generator import ExperienceGenerator
+from cv_adapter.services.skills_generator import SkillsGenerator
 
 
 @pytest.fixture
@@ -34,13 +39,24 @@ def mock_services() -> Dict[str, Mock]:
 @pytest.fixture
 def app(mock_services: Dict[str, Mock]) -> CVAdapterApplication:
     with patch("pydantic_ai.models.openai.AsyncOpenAI"):
-        app = CVAdapterApplication()
+        app = CVAdapterApplication(ai_model="openai:gpt-4")
         app.competence_analyzer = mock_services["competence_analyzer"]
         app.experience_generator = mock_services["experience_generator"]
         app.education_generator = mock_services["education_generator"]
         app.skills_generator = mock_services["skills_generator"]
         app.description_generator = mock_services["description_generator"]
         return app
+
+
+def test_init_with_custom_ai_model() -> None:
+    """Test that the application can be initialized with a custom AI model."""
+    with patch("pydantic_ai.models.openai.AsyncOpenAI"):
+        app = CVAdapterApplication(ai_model="openai:gpt-3.5-turbo")
+        assert isinstance(app.competence_analyzer, CompetenceAnalyzer)
+        assert isinstance(app.experience_generator, ExperienceGenerator)
+        assert isinstance(app.education_generator, EducationGenerator)
+        assert isinstance(app.skills_generator, SkillsGenerator)
+        assert isinstance(app.description_generator, DescriptionGenerator)
 
 
 @pytest.fixture

@@ -1,3 +1,5 @@
+from pydantic_ai.models import KnownModelName
+
 from cv_adapter.models.cv import CV, CVDescription, MinimalCV
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
@@ -10,13 +12,19 @@ from cv_adapter.services.skills_generator import SkillsGenerator
 class CVAdapterApplication:
     """Main application class that orchestrates the CV adaptation workflow."""
 
-    def __init__(self) -> None:
-        self.competence_analyzer = CompetenceAnalyzer()
+    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
+        """Initialize the application with an AI model.
 
-        self.experience_generator = ExperienceGenerator()
-        self.education_generator = EducationGenerator()
-        self.skills_generator = SkillsGenerator()
-        self.description_generator = DescriptionGenerator(MinimalMarkdownRenderer())
+        Args:
+            ai_model: AI model to use for all generators. Defaults to OpenAI GPT-4o.
+        """
+        self.competence_analyzer = CompetenceAnalyzer(ai_model=ai_model)
+        self.experience_generator = ExperienceGenerator(ai_model=ai_model)
+        self.education_generator = EducationGenerator(ai_model=ai_model)
+        self.skills_generator = SkillsGenerator(ai_model=ai_model)
+        self.description_generator = DescriptionGenerator(
+            MinimalMarkdownRenderer(), ai_model=ai_model
+        )
 
     def generate_cv(
         self, cv_text: str, job_description: str, notes: str | None = None
