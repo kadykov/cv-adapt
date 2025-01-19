@@ -3,7 +3,6 @@ from typing import List
 from cv_adapter.models.cv import (
     CV,
     CoreCompetence,
-    CoreCompetences,
     CVDescription,
     MinimalCV,
 )
@@ -44,10 +43,9 @@ class CVAdapterApplication:
             A new CV instance adapted to the job description
         """
         # 1. Generate components
-        core_competences_list = self.competence_analyzer.analyze(
+        core_competences = self.competence_analyzer.analyze(
             cv_text, job_description, user_notes=notes
-        ).items
-        core_competences = CoreCompetences(items=core_competences_list)
+        )
         experiences = self.experience_generator.generate(
             cv_text, job_description, core_competences.to_list(), notes=notes
         )

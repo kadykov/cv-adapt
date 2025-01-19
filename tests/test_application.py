@@ -147,7 +147,9 @@ def test_generate_cv(
     )
     description = "Generated description"
 
-    mock_services["competence_analyzer"].analyze.return_value.items = core_competences
+    mock_services["competence_analyzer"].analyze.return_value = CoreCompetences(
+        items=core_competences
+    )
     mock_services["experience_generator"].generate.return_value = experiences
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
