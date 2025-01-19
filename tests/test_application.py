@@ -101,6 +101,9 @@ def test_generate_cv(
 ) -> None:
     # Setup mock returns
     job_description = "Looking for a Python developer"
+    notes = "Focus on Python experience"
+    cv_text = detailed_cv.model_dump_json()
+
     core_competences = [
         CoreCompetence(text="Python"),
         CoreCompetence(text="JavaScript"),
@@ -151,7 +154,7 @@ def test_generate_cv(
     mock_services["description_generator"].generate.return_value = description
 
     # Execute
-    result = app.generate_cv(detailed_cv, job_description)
+    result = app.generate_cv(cv_text, job_description, notes)
 
     # Verify
     assert isinstance(result.description, CVDescription)
@@ -167,20 +170,23 @@ def test_generate_cv(
 
     # Verify service calls
     mock_services["competence_analyzer"].analyze.assert_called_once_with(
-        str(detailed_cv), job_description
+        cv_text, job_description, user_notes=notes
     )
     mock_services["experience_generator"].generate.assert_called_once_with(
-        str(detailed_cv),
+        cv_text,
         job_description,
         ["Python", "JavaScript", "TypeScript", "React"],
+        notes=notes,
     )
     mock_services["education_generator"].generate.assert_called_once_with(
-        str(detailed_cv),
+        cv_text,
         job_description,
         ["Python", "JavaScript", "TypeScript", "React"],
+        notes=notes,
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
-        str(detailed_cv),
+        cv_text,
         job_description,
         ["Python", "JavaScript", "TypeScript", "React"],
+        notes=notes,
     )

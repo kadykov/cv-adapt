@@ -29,30 +29,33 @@ class CVAdapterApplication:
         self.skills_generator = SkillsGenerator()
         self.description_generator = DescriptionGenerator(MinimalMarkdownRenderer())
 
-    def generate_cv(self, detailed_cv: CV, job_description: str) -> CV:
+    def generate_cv(
+        self, cv_text: str, job_description: str, notes: str | None = None
+    ) -> CV:
         """
         Generate a new CV adapted to the job description.
 
         Args:
-            detailed_cv: The original detailed CV
+            cv_text: The original detailed CV text
             job_description: The job description to adapt the CV for
+            notes: Optional user notes to guide the generation process
 
         Returns:
             A new CV instance adapted to the job description
         """
         # 1. Generate components
         core_competences_list = self.competence_analyzer.analyze(
-            str(detailed_cv), job_description
+            cv_text, job_description, user_notes=notes
         ).items
         core_competences = CoreCompetences(items=core_competences_list)
         experiences = self.experience_generator.generate(
-            str(detailed_cv), job_description, core_competences.to_list()
+            cv_text, job_description, core_competences.to_list(), notes=notes
         )
         education = self.education_generator.generate(
-            str(detailed_cv), job_description, core_competences.to_list()
+            cv_text, job_description, core_competences.to_list(), notes=notes
         )
         skills = self.skills_generator.generate(
-            str(detailed_cv), job_description, core_competences.to_list()
+            cv_text, job_description, core_competences.to_list(), notes=notes
         )
 
         # 2. Create minimal CV for description generation
@@ -64,19 +67,23 @@ class CVAdapterApplication:
         )
 
         # 3. Generate description and create final CV
+        # Parse the original CV text to get the CV model
+        cv_model = CV.model_validate_json(cv_text)
+
+        # Generate description with notes
+        description = self.description_generator.generate(
+            minimal_cv, job_description, user_notes=notes
+        )
+
         return CV(
-            full_name=detailed_cv.full_name,
-            title=detailed_cv.title,
-            description=CVDescription(
-                text=str(
-                    self.description_generator.generate(minimal_cv, job_description)
-                )
-            ),
+            full_name=cv_model.full_name,
+            title=cv_model.title,
+            description=CVDescription(text=str(description)),
             core_competences=core_competences,
             experiences=experiences,
             education=education,
             skills=skills,
-            contacts=detailed_cv.contacts,
+            contacts=cv_model.contacts,
         )
 
     def suggest_core_competences(self, cv: CV, job_description: str) -> CompetenceList:
