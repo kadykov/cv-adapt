@@ -3,28 +3,37 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-# Text field length constraints
-SINGLE_LINE_TEXT_LENGTH = 80  # Standard length for most single-line text fields
-SHORT_TEXT_LENGTH = 40  # For shorter text fields like skills and group names
-LOCATION_TEXT_LENGTH = 50  # For location fields
-CORE_COMPETENCE_LENGTH = 100  # For core competence items
+# Typography-based line length constraints
+BODY_LINE_LENGTH = 80  # Standard length for body text
+TITLE_LINE_LENGTH = 100  # H1 - Main titles (like full name)
+SUBTITLE_LINE_LENGTH = 80  # H2 - Section titles, company/university names
+SUBSUBTITLE_LINE_LENGTH = 60  # H3 - Position titles, degrees
+HALF_LINE_LENGTH = BODY_LINE_LENGTH // 2  # For short items like skills, locations
 
-# Description length constraints
-EXPERIENCE_DESCRIPTION_LENGTH = 1200  # For detailed experience/education descriptions
-CV_DESCRIPTION_LENGTH = 500  # For the main CV description
+# Word and character ratios
+AVG_CHARS_PER_WORD = 6  # Average number of characters per word including space
+MAX_WORDS_PER_LINE = BODY_LINE_LENGTH // AVG_CHARS_PER_WORD  # ~13 words per line
+
+# Description lengths in number of lines
+EXPERIENCE_DESCRIPTION_LINES = 15  # 15 lines for detailed descriptions
+CV_DESCRIPTION_LINES = 6  # 6 lines for CV summary
+
+# Derived length constraints
+EXPERIENCE_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * EXPERIENCE_DESCRIPTION_LINES
+CV_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * CV_DESCRIPTION_LINES
+MAX_CV_DESCRIPTION_WORDS = MAX_WORDS_PER_LINE * CV_DESCRIPTION_LINES
 
 # List length constraints
 MIN_CORE_COMPETENCES = 4
 MAX_CORE_COMPETENCES = 6
 MIN_SKILLS_IN_GROUP = 1
 
-# Word count limits
-MAX_CORE_COMPETENCE_WORDS = 5
-MAX_CV_DESCRIPTION_WORDS = 50
+# Word limits for specific fields
+MAX_CORE_COMPETENCE_WORDS = 5  # Keep core competences concise
 
 
 class CoreCompetence(BaseModel):
-    text: str = Field(..., max_length=CORE_COMPETENCE_LENGTH)
+    text: str = Field(..., max_length=BODY_LINE_LENGTH)
 
     @field_validator("text")
     @classmethod
@@ -56,9 +65,9 @@ class CoreCompetences(BaseModel):
 
 
 class Institution(BaseModel):
-    name: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
-    description: Optional[str] = Field(None, max_length=SINGLE_LINE_TEXT_LENGTH)
-    location: Optional[str] = Field(None, max_length=LOCATION_TEXT_LENGTH)
+    name: str = Field(..., max_length=SUBTITLE_LINE_LENGTH)  # H2 - Company/University name
+    description: Optional[str] = Field(None, max_length=BODY_LINE_LENGTH)
+    location: Optional[str] = Field(None, max_length=HALF_LINE_LENGTH)
 
     @field_validator("name", "description", "location")
     @classmethod
@@ -81,7 +90,7 @@ class University(Institution):
 
 class Experience(BaseModel):
     company: Company
-    position: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
+    position: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Position title
     start_date: date
     end_date: Optional[date]
     description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
@@ -90,7 +99,7 @@ class Experience(BaseModel):
 
 class Education(BaseModel):
     university: University
-    degree: str = Field(..., max_length=SINGLE_LINE_TEXT_LENGTH)
+    degree: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Degree title
     start_date: date
     end_date: Optional[date]
     description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
@@ -111,7 +120,7 @@ class CVDescription(BaseModel):
     def validate_text(self) -> "CVDescription":
         text = self.text.strip()
         if len(text.split()) > MAX_CV_DESCRIPTION_WORDS:
-            raise ValueError("CV description must not be longer than 50 words")
+            raise ValueError(f"CV description must not be longer than {MAX_CV_DESCRIPTION_WORDS} words")
         if "\n" in text:
             raise ValueError("CV description must be a single paragraph")
         self.text = text
@@ -119,7 +128,7 @@ class CVDescription(BaseModel):
 
 
 class Skill(BaseModel):
-    text: str = Field(..., max_length=SHORT_TEXT_LENGTH)
+    text: str = Field(..., max_length=HALF_LINE_LENGTH)
 
     @field_validator("text")
     @classmethod
@@ -131,7 +140,7 @@ class Skill(BaseModel):
 
 
 class SkillGroup(BaseModel):
-    name: str = Field(..., max_length=SHORT_TEXT_LENGTH)
+    name: str = Field(..., max_length=HALF_LINE_LENGTH)
     skills: List[Skill] = Field(..., min_length=MIN_SKILLS_IN_GROUP)
 
     @field_validator("name")
