@@ -15,6 +15,7 @@ from cv_adapter.models.cv import (
     Skill,
     SkillGroup,
     Skills,
+    Title,
     University,
 )
 from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
@@ -24,7 +25,7 @@ from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
 def sample_cv() -> CV:
     return CV(
         full_name="John Doe",
-        title="Senior Software Engineer",
+        title=Title(text="Senior Software Engineer"),
         description=CVDescription(
             text="Experienced software engineer with a focus on Python development"
         ),
@@ -88,7 +89,7 @@ def test_yaml_renderer_to_string(sample_cv: CV, tmp_path: Path) -> None:
     # Verify it's valid YAML and can be parsed back
     data = yaml.safe_load(yaml_str)
     assert data["full_name"] == "John Doe"
-    assert data["title"] == "Senior Software Engineer"
+    assert data["title"]["text"] == "Senior Software Engineer"
 
 
 def test_yaml_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:

@@ -14,13 +14,15 @@ from cv_adapter.models.cv import (
     Skill,
     SkillGroup,
     Skills,
+    Title,
     University,
 )
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
 full_name: John Doe
-title: Senior Software Engineer
+title:
+  text: Senior Software Engineer
 description:
   text: >-
     Senior Software Engineer with 5+ years of experience in Python and cloud
@@ -143,7 +145,7 @@ def test_load_cv_validates_data(cv_storage: CVStorage, tmp_path: Path) -> None:
 def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
     cv = CV(
         full_name="Jane Smith",
-        title="Data Scientist",
+        title=Title(text="Data Scientist"),
         description=CVDescription(
             text=(
                 "Data Scientist with PhD and industry experience in machine learning, "

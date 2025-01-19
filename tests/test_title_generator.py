@@ -1,6 +1,7 @@
 import pytest
 from pydantic_ai.models.test import TestModel
 
+from cv_adapter.models.cv import Title
 from cv_adapter.services.title_generator import TitleGenerator
 
 
@@ -27,10 +28,10 @@ def test_title_generator(test_model: TestModel) -> None:
             ],
         )
 
-        assert isinstance(title, str)
-        assert len(title.split("\n")) <= 2
-        assert all(len(line) <= 50 for line in title.split("\n"))
-        assert "Software" in title or "Engineer" in title
+        assert isinstance(title, Title)
+        assert len(title.text.split("\n")) <= 2
+        assert all(len(line) <= 50 for line in title.text.split("\n"))
+        assert "Software" in title.text or "Engineer" in title.text
 
 
 def test_title_generator_with_notes(test_model: TestModel) -> None:
@@ -52,10 +53,10 @@ def test_title_generator_with_notes(test_model: TestModel) -> None:
             notes="Focus on DevOps expertise",
         )
 
-        assert isinstance(title, str)
-        assert len(title.split("\n")) <= 2
-        assert all(len(line) <= 50 for line in title.split("\n"))
-        assert "DevOps" in title
+        assert isinstance(title, Title)
+        assert len(title.text.split("\n")) <= 2
+        assert all(len(line) <= 50 for line in title.text.split("\n"))
+        assert "DevOps" in title.text
 
 
 def test_title_validation(test_model: TestModel) -> None:

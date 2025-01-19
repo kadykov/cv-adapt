@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import TITLE_LINE_LENGTH
+from cv_adapter.models.cv import Title
 
 
 class TitleGenerator:
@@ -29,7 +29,7 @@ class TitleGenerator:
         job_description: str,
         core_competences: List[str],
         notes: Optional[str] = None,
-    ) -> str:
+    ) -> Title:
         """Generate a professional title tailored to a job description.
 
         Args:
@@ -39,7 +39,7 @@ class TitleGenerator:
             notes: Optional user notes about how to adapt the title
 
         Returns:
-            A professional title string
+            A Title model instance containing the generated title
 
         Raises:
             ValueError: If required inputs are missing or invalid
@@ -76,15 +76,7 @@ class TitleGenerator:
             context,
             result_type=str,
         )
-        title = result.data.strip()
+        title_text = result.data.strip()
 
-        # Validate title length
-        max_length = TITLE_LINE_LENGTH * 2
-        if len(title) > max_length:
-            raise ValueError(
-                f"Generated title exceeds maximum length of {max_length} chars"
-            )
-        if len(title.split("\n")) > 2:
-            raise ValueError("Generated title must not exceed 2 lines")
-
-        return title
+        # Create and validate Title model
+        return Title(text=title_text)

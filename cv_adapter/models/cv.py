@@ -119,6 +119,23 @@ class Education(BaseModel):
         return v
 
 
+class Title(BaseModel):
+    text: str = Field(..., max_length=TITLE_LINE_LENGTH * 2)  # Allow up to 2 lines
+
+    @model_validator(mode="after")
+    def validate_text(self) -> "Title":
+        text = self.text.strip()
+        if len(text.split("\n")) > 2:
+            raise ValueError("title must not exceed 2 lines")
+        for line in text.split("\n"):
+            if len(line.strip()) > TITLE_LINE_LENGTH:
+                raise ValueError(
+                    f"each line in title must not exceed {TITLE_LINE_LENGTH} chars"
+                )
+        self.text = text
+        return self
+
+
 class CVDescription(BaseModel):
     text: str = Field(..., max_length=MAX_CV_DESCRIPTION_LENGTH)
 
@@ -191,11 +208,19 @@ class MinimalCV(BaseModel):
 
 
 class CV(BaseModel):
-    full_name: str
-    title: str
+    full_name: str = Field(..., max_length=TITLE_LINE_LENGTH)
+    title: Title
     description: CVDescription
     core_competences: CoreCompetences
     experiences: List[Experience]
     education: List[Education]
     contacts: dict[str, str]  # email, phone, linkedin, etc.
     skills: Skills
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v: str) -> str:
+        v = v.strip()
+        if "\n" in v:
+            raise ValueError("full name must be a single line")
+        return v

@@ -16,6 +16,7 @@ from cv_adapter.models.cv import (
     Skill,
     SkillGroup,
     Skills,
+    Title,
     University,
 )
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
@@ -67,7 +68,7 @@ def test_init_with_custom_ai_model() -> None:
 def detailed_cv() -> CV:
     return CV(
         full_name="John Doe",
-        title="Senior Developer",
+        title=Title(text="Senior Developer"),
         description=CVDescription(text="Original description"),
         core_competences=CoreCompetences(
             items=[
@@ -174,7 +175,9 @@ def test_generate_cv(
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
     mock_services["description_generator"].generate.return_value = description
-    mock_services["title_generator"].generate.return_value = "Senior Python Developer"
+    mock_services["title_generator"].generate.return_value = Title(
+        text="Senior Python Developer"
+    )
 
     # Execute
     result = app.generate_cv(cv_text, job_description, notes)
@@ -189,7 +192,7 @@ def test_generate_cv(
     assert result.skills == skills
     assert result.contacts == detailed_cv.contacts
     assert result.full_name == detailed_cv.full_name
-    assert result.title == "Senior Python Developer"
+    assert result.title.text == "Senior Python Developer"
 
     # Verify service calls
     mock_services["competence_analyzer"].analyze.assert_called_once_with(
