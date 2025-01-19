@@ -4,43 +4,41 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Typography-based line length constraints
-BODY_LINE_LENGTH = 80  # Standard length for body text
-TITLE_LINE_LENGTH = 100  # H1 - Main titles (like full name)
-SUBTITLE_LINE_LENGTH = 80  # H2 - Section titles, company/university names
-SUBSUBTITLE_LINE_LENGTH = 60  # H3 - Position titles, degrees
+BODY_LINE_LENGTH = 100  # Standard length for body text
+TITLE_LINE_LENGTH = 50  # H1 - Main titles (like full name)
+SUBTITLE_LINE_LENGTH = 60  # H2 - Section titles, company/university names
+SUBSUBTITLE_LINE_LENGTH = 80  # H3 - Position titles, degrees, core competences
 HALF_LINE_LENGTH = BODY_LINE_LENGTH // 2  # For short items like skills, locations
 
 # Word and character ratios
 AVG_CHARS_PER_WORD = 6  # Average number of characters per word including space
-MAX_WORDS_PER_LINE = BODY_LINE_LENGTH // AVG_CHARS_PER_WORD  # ~13 words per line
+MAX_WORDS_PER_LINE = BODY_LINE_LENGTH // AVG_CHARS_PER_WORD  # ~16 words per line
+MAX_WORDS_PER_SUBSUBTITLE = SUBSUBTITLE_LINE_LENGTH // AVG_CHARS_PER_WORD  # ~13 words
 
 # Description lengths in number of lines
-EXPERIENCE_DESCRIPTION_LINES = 15  # 15 lines for detailed descriptions
-CV_DESCRIPTION_LINES = 6  # 6 lines for CV summary
+MAX_EXPERIENCE_DESCRIPTION_LINES = 15  # 15 lines for detailed descriptions
+MAX_CV_DESCRIPTION_LINES = 6  # 6 lines for CV summary
 
 # Derived length constraints
-EXPERIENCE_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * EXPERIENCE_DESCRIPTION_LINES
-CV_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * CV_DESCRIPTION_LINES
-MAX_CV_DESCRIPTION_WORDS = MAX_WORDS_PER_LINE * CV_DESCRIPTION_LINES
+MAX_EXPERIENCE_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * MAX_EXPERIENCE_DESCRIPTION_LINES
+MAX_CV_DESCRIPTION_LENGTH = BODY_LINE_LENGTH * MAX_CV_DESCRIPTION_LINES
+MAX_CV_DESCRIPTION_WORDS = MAX_WORDS_PER_LINE * MAX_CV_DESCRIPTION_LINES
 
 # List length constraints
 MIN_CORE_COMPETENCES = 4
 MAX_CORE_COMPETENCES = 6
 MIN_SKILLS_IN_GROUP = 1
 
-# Word limits for specific fields
-MAX_CORE_COMPETENCE_WORDS = 5  # Keep core competences concise
-
 
 class CoreCompetence(BaseModel):
-    text: str = Field(..., max_length=BODY_LINE_LENGTH)
+    text: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)
 
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str) -> str:
         v = v.strip()
-        if len(v.split()) > MAX_CORE_COMPETENCE_WORDS:
-            raise ValueError("core competence must not be longer than 5 words")
+        if len(v.split()) > MAX_WORDS_PER_SUBSUBTITLE:
+            raise ValueError(f"core competence must not be longer than {MAX_WORDS_PER_SUBSUBTITLE} words")
         if "\n" in v:
             raise ValueError("core competence must be a single line")
         return v
@@ -93,7 +91,7 @@ class Experience(BaseModel):
     position: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Position title
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
+    description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
     technologies: List[str]
 
 
@@ -102,7 +100,7 @@ class Education(BaseModel):
     degree: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Degree title
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=EXPERIENCE_DESCRIPTION_LENGTH)
+    description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
 
     @field_validator("degree")
     @classmethod
@@ -114,7 +112,7 @@ class Education(BaseModel):
 
 
 class CVDescription(BaseModel):
-    text: str = Field(..., max_length=CV_DESCRIPTION_LENGTH)
+    text: str = Field(..., max_length=MAX_CV_DESCRIPTION_LENGTH)
 
     @model_validator(mode="after")
     def validate_text(self) -> "CVDescription":
