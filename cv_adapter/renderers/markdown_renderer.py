@@ -1,78 +1,43 @@
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
-from cv_adapter.models.cv import CV, Education, Experience, SkillGroup
-from cv_adapter.renderers.base import BaseRenderer, RendererError
+from cv_adapter.models.cv import CV
+from cv_adapter.renderers.base import RendererError
+from cv_adapter.renderers.base_markdown_renderer import BaseMarkdownRenderer
 
 
-class MarkdownRenderer(BaseRenderer):
+class MarkdownRenderer(BaseMarkdownRenderer[CV]):
     """Renderer for CV in Markdown format."""
 
-    def _render_header(self, cv: CV) -> str:
-        return f"# {cv.full_name}\n\n## {cv.title}\n\n{cv.description.text}\n\n"
+    def _render_header(self, cv: CV) -> List[str]:
+        """Render header section with name, title and description.
 
-    def _render_core_competences(self, cv: CV) -> str:
-        return (
-            "## Core Competences\n\n"
-            + "\n".join(f"* {comp.text}" for comp in cv.core_competences.items)
-            + "\n\n"
-        )
+        Args:
+            cv: CV object to render
 
-    def _render_experience(self, exp: Experience) -> str:
-        company_info = exp.company.name
-        if exp.company.location:
-            company_info += f" ({exp.company.location})"
+        Returns:
+            List of lines in Markdown format
+        """
+        return [
+            f"# {cv.full_name}",
+            f"## {cv.title}",
+            cv.description.text,
+            "",
+        ]
 
-        date_range = f"{exp.start_date.strftime('%b %Y')} - "
-        date_range += exp.end_date.strftime("%b %Y") if exp.end_date else "Present"
+    def _render_contacts(self, cv: CV) -> List[str]:
+        """Render contacts section.
 
-        return (
-            f"### {exp.position} at {company_info}\n"
-            f"_{date_range}_\n\n"
-            f"{exp.description}\n\n"
-            "**Technologies:** " + ", ".join(exp.technologies) + "\n\n"
-        )
+        Args:
+            cv: CV object to render
 
-    def _render_experiences(self, cv: CV) -> str:
-        return "## Professional Experience\n\n" + "".join(
-            self._render_experience(exp) for exp in cv.experiences
-        )
-
-    def _render_education(self, edu: Education) -> str:
-        uni_info = edu.university.name
-        if edu.university.location:
-            uni_info += f" ({edu.university.location})"
-
-        date_range = f"{edu.start_date.strftime('%b %Y')} - "
-        date_range += edu.end_date.strftime("%b %Y") if edu.end_date else "Present"
-
-        return (
-            f"### {edu.degree}\n_{uni_info}_\n_{date_range}_\n\n{edu.description}\n\n"
-        )
-
-    def _render_educations(self, cv: CV) -> str:
-        return "## Education\n\n" + "".join(
-            self._render_education(edu) for edu in cv.education
-        )
-
-    def _render_skill_group(self, group: SkillGroup) -> str:
-        return (
-            f"### {group.name}\n"
-            + ", ".join(skill.text for skill in group.skills)
-            + "\n\n"
-        )
-
-    def _render_skills(self, cv: CV) -> str:
-        return "## Skills\n\n" + "".join(
-            self._render_skill_group(group) for group in cv.skills.groups
-        )
-
-    def _render_contacts(self, cv: CV) -> str:
-        return (
-            "## Contacts\n\n"
-            + "\n".join(f"* {k}: {v}" for k, v in cv.contacts.items())
-            + "\n"
-        )
+        Returns:
+            List of lines in Markdown format
+        """
+        sections = ["## Contacts\n"]
+        sections.extend(f"* {k}: {v}" for k, v in cv.contacts.items())
+        sections.append("")
+        return sections
 
     def render_to_string(self, cv: CV) -> str:
         """Render CV to Markdown string.
@@ -87,15 +52,28 @@ class MarkdownRenderer(BaseRenderer):
             RendererError: If rendering fails
         """
         try:
-            sections = [
-                self._render_header(cv),
-                self._render_core_competences(cv),
-                self._render_experiences(cv),
-                self._render_educations(cv),
-                self._render_skills(cv),
-                self._render_contacts(cv),
-            ]
-            return "".join(sections)
+            sections = []
+
+            # Header
+            sections.extend(self._render_header(cv))
+
+            # Core Competences
+            sections.extend(self._render_core_competences(cv.core_competences))
+
+            # Experience
+            sections.extend(self._render_experiences(cv.experiences))
+
+            # Education
+            sections.extend(self._render_education(cv.education))
+
+            # Skills
+            sections.extend(self._render_skills(cv.skills))
+
+            # Contacts
+            sections.extend(self._render_contacts(cv))
+
+            return "\n".join(sections)
+
         except Exception as e:
             raise RendererError(f"Error rendering CV to Markdown: {e}")
 
@@ -110,7 +88,8 @@ class MarkdownRenderer(BaseRenderer):
             RendererError: If rendering or saving fails
         """
         try:
-            with open(file_path, "w") as f:
-                f.write(self.render_to_string(cv))
+            markdown = self.render_to_string(cv)
+            path = Path(file_path)
+            path.write_text(markdown, encoding="utf-8")
         except Exception as e:
             raise RendererError(f"Error saving CV to Markdown file: {e}")

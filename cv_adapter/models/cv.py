@@ -142,6 +142,18 @@ class Skills(BaseModel):
         return self
 
 
+class MinimalCV(BaseModel):
+    """A minimal CV model containing only the essential parts needed for description.
+
+    Used by DescriptionGenerator to create a focused input for LLM.
+    """
+
+    core_competences: CoreCompetences
+    experiences: List[Experience]
+    education: List[Education]
+    skills: Skills
+
+
 class CV(BaseModel):
     full_name: str
     title: str

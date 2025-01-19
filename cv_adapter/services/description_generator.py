@@ -3,18 +3,25 @@ from typing import Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CVDescription
+from cv_adapter.models.cv import CVDescription, MinimalCV
+from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 
 
 class DescriptionGenerator:
     """Generates a concise CV description based on CV content and job description."""
 
-    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
-        """Initialize the generator with an AI model.
+    def __init__(
+        self,
+        renderer: MinimalMarkdownRenderer,
+        ai_model: KnownModelName = "openai:gpt-4o",
+    ) -> None:
+        """Initialize the generator with a renderer and AI model.
 
         Args:
+            renderer: MinimalMarkdownRenderer instance to use for CV rendering
             ai_model: AI model to use. Defaults to OpenAI GPT-4o.
         """
+        self.renderer = renderer
         self.agent = Agent(
             ai_model,
             system_prompt=(
@@ -27,14 +34,14 @@ class DescriptionGenerator:
 
     def generate(
         self,
-        cv_text: str,
+        minimal_cv: MinimalCV,
         job_description: str,
         user_notes: Optional[str] = None,
     ) -> CVDescription:
-        """Generate a CV description based on CV content and job requirements.
+        """Generate a CV description based on minimal CV and job requirements.
 
         Args:
-            cv_text: The CV text in Markdown format
+            minimal_cv: MinimalCV instance containing essential CV parts
             job_description: The job description to match against
             user_notes: Optional notes from the user to guide the generation
 
@@ -43,11 +50,13 @@ class DescriptionGenerator:
 
         Raises:
             ValueError: If required inputs are missing or invalid
+            RendererError: If CV rendering fails
         """
-        if not cv_text.strip():
-            raise ValueError("CV text is required")
         if not job_description.strip():
             raise ValueError("Job description is required")
+
+        # Convert minimal CV to Markdown
+        cv_text = self.renderer.render_to_string(minimal_cv)
 
         # Prepare context for the AI
         context = (

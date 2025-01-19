@@ -111,7 +111,7 @@ def test_markdown_renderer_to_string(sample_cv: CV) -> None:
     assert "## Senior Software Engineer" in md_str
     assert "## Core Competences" in md_str
     assert "* Python" in md_str
-    assert "## Professional Experience" in md_str
+    assert "## Experience" in md_str
     assert "### Senior Software Engineer at Tech Corp" in md_str
     assert "## Education" in md_str
     assert "### Master of Computer Science" in md_str

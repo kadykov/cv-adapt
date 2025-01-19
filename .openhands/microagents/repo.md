@@ -12,7 +12,9 @@ Project Structure:
    - `core/`: Core application components
      - `application.py`: Main application logic
    - `models/`: Data models and schemas
-     - `cv.py`: CV-related data structures
+     - `cv.py`: CV-related data structures:
+       * `CV`: Complete CV model with all fields
+       * `MinimalCV`: Minimal CV model for description generation
    - `services/`: Business logic services
      - `competence_analyzer.py`: Analyzes competencies in CVs
      - `cv_adapter.py`: CV adaptation service
@@ -23,7 +25,9 @@ Project Structure:
      - `skills_generator.py`: Generates and organizes skills based on CV content and job requirements
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
+     - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
      - `markdown_renderer.py`: Renders CV to Markdown format
+     - `minimal_markdown_renderer.py`: Renders MinimalCV to Markdown format
      - `yaml_renderer.py`: Renders CV to YAML format
    - `py.typed`: Marker file for type checking
 
@@ -100,14 +104,21 @@ Development Guidelines:
 6. Working with Renderers:
    - Use the rendering system in `cv_adapter/renderers/` for CV output
    - All renderers must implement the BaseRenderer interface
-   - Available renderers:
+   - Renderer hierarchy:
+     * BaseRenderer[CVType]: Generic base class for all renderers
+     * BaseMarkdownRenderer[CVType]: Base class for Markdown renderers with common logic
+     * MarkdownRenderer: Renders complete CV to Markdown
+     * MinimalMarkdownRenderer: Renders minimal CV for description generation
      * YAMLRenderer: For data storage and interchange
-     * MarkdownRenderer: For human-readable output
    - When adding new renderers:
      * Create a new file in `renderers/` directory
-     * Implement BaseRenderer interface
+     * Implement appropriate base class
      * Add comprehensive tests
      * Update documentation
+   - Type safety:
+     * Use generic types to ensure type safety
+     * BaseRenderer and BaseMarkdownRenderer are generic over CV type
+     * Concrete renderers specify their CV type (CV or MinimalCV)
 
 7. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
