@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List, Union
 
+import yaml
+
 from cv_adapter.models.cv import CV
 from cv_adapter.renderers.base import RendererError
 from cv_adapter.renderers.base_markdown_renderer import BaseMarkdownRenderer
@@ -9,8 +11,24 @@ from cv_adapter.renderers.base_markdown_renderer import BaseMarkdownRenderer
 class MarkdownRenderer(BaseMarkdownRenderer[CV]):
     """Renderer for CV in Markdown format."""
 
+    def _render_yaml_header(self, cv: CV) -> List[str]:
+        """Render YAML header with personal information.
+
+        Args:
+            cv: CV object to render
+
+        Returns:
+            List of lines in YAML format
+        """
+        personal_info = {
+            "full_name": cv.personal_info.full_name,
+            "contacts": cv.personal_info.contacts,
+        }
+        yaml_str = yaml.safe_dump(personal_info, default_flow_style=False)
+        return ["---", yaml_str.rstrip(), "---", ""]
+
     def _render_header(self, cv: CV) -> List[str]:
-        """Render header section with name, title and description.
+        """Render header section with title and description.
 
         Args:
             cv: CV object to render
@@ -19,25 +37,10 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
             List of lines in Markdown format
         """
         return [
-            f"# {cv.full_name}",
             f"## {cv.title}",
             cv.description.text,
             "",
         ]
-
-    def _render_contacts(self, cv: CV) -> List[str]:
-        """Render contacts section.
-
-        Args:
-            cv: CV object to render
-
-        Returns:
-            List of lines in Markdown format
-        """
-        sections = ["## Contacts\n"]
-        sections.extend(f"* {k}: {v}" for k, v in cv.contacts.items())
-        sections.append("")
-        return sections
 
     def render_to_string(self, cv: CV) -> str:
         """Render CV to Markdown string.
@@ -54,6 +57,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
         try:
             sections = []
 
+            # YAML Header with Personal Info
+            sections.extend(self._render_yaml_header(cv))
+
             # Header
             sections.extend(self._render_header(cv))
 
@@ -68,9 +74,6 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
 
             # Skills
             sections.extend(self._render_skills(cv.skills))
-
-            # Contacts
-            sections.extend(self._render_contacts(cv))
 
             return "\n".join(sections)
 

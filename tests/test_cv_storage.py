@@ -17,10 +17,16 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
-full_name: John Doe
+personal_info:
+  full_name: John Doe
+  contacts:
+    email: john.doe@example.com
+    phone: "+1234567890"
+    linkedin: "linkedin.com/in/johndoe"
 title:
   text: Senior Software Engineer
 description:
@@ -86,10 +92,7 @@ education:
     description: >-
       Focus on software engineering principles and practices. Led team projects in
       agile development. Completed internship at major tech company.
-contacts:
-  email: john.doe@example.com
-  phone: "+1234567890"
-  linkedin: "linkedin.com/in/johndoe"
+
 skills:
   groups:
     - name: Programming
@@ -121,16 +124,19 @@ def sample_cv_file(tmp_path: Path) -> Path:
 def test_load_cv_from_yaml(cv_storage: CVStorage, sample_cv_file: Path) -> None:
     cv = cv_storage.load_cv(sample_cv_file)
     assert isinstance(cv, CV)
-    assert cv.full_name == "John Doe"
+    assert cv.personal_info.full_name == "John Doe"
+    assert cv.personal_info.contacts["email"] == "john.doe@example.com"
     assert len(cv.core_competences) == 4
     assert len(cv.experiences) == 2
     assert len(cv.education) == 2
-    assert cv.contacts["email"] == "john.doe@example.com"
 
 
 def test_load_cv_validates_data(cv_storage: CVStorage, tmp_path: Path) -> None:
     invalid_cv = """
-    full_name: John Doe
+    personal_info:
+      full_name: John Doe
+      contacts:
+        email: john@example.com
     title: Senior Engineer
     # Missing required fields
     """
@@ -144,7 +150,10 @@ def test_load_cv_validates_data(cv_storage: CVStorage, tmp_path: Path) -> None:
 
 def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
     cv = CV(
-        full_name="Jane Smith",
+        personal_info=PersonalInfo(
+            full_name="Jane Smith",
+            contacts={"email": "jane@example.com"},
+        ),
         title=Title(text="Data Scientist"),
         description=CVDescription(
             text=(
@@ -195,7 +204,6 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                 ),
             )
         ],
-        contacts={"email": "jane@example.com"},
         skills=Skills(
             groups=[
                 SkillGroup(
@@ -222,7 +230,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
 
     # Verify we can load it back
     loaded_cv = cv_storage.load_cv(output_file)
-    assert loaded_cv.full_name == cv.full_name
+    assert loaded_cv.personal_info.full_name == cv.personal_info.full_name
     assert len(loaded_cv.core_competences) == len(cv.core_competences)
     assert loaded_cv.core_competences.items[0] == cv.core_competences.items[0]
 

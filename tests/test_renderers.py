@@ -18,13 +18,20 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
 
 
 @pytest.fixture
 def sample_cv() -> CV:
     return CV(
-        full_name="John Doe",
+        personal_info=PersonalInfo(
+            full_name="John Doe",
+            contacts={
+                "email": "john@example.com",
+                "phone": "+1234567890",
+            },
+        ),
         title=Title(text="Senior Software Engineer"),
         description=CVDescription(
             text="Experienced software engineer with a focus on Python development"
@@ -64,10 +71,6 @@ def sample_cv() -> CV:
                 description="Focus on distributed systems",
             )
         ],
-        contacts={
-            "email": "john@example.com",
-            "phone": "+1234567890",
-        },
         skills=Skills(
             groups=[
                 SkillGroup(
@@ -88,7 +91,7 @@ def test_yaml_renderer_to_string(sample_cv: CV, tmp_path: Path) -> None:
 
     # Verify it's valid YAML and can be parsed back
     data = yaml.safe_load(yaml_str)
-    assert data["full_name"] == "John Doe"
+    assert data["personal_info"]["full_name"] == "John Doe"
     assert data["title"]["text"] == "Senior Software Engineer"
 
 
@@ -100,7 +103,7 @@ def test_yaml_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:
     assert file_path.exists()
     with open(file_path) as f:
         data = yaml.safe_load(f)
-    assert data["full_name"] == "John Doe"
+    assert data["personal_info"]["full_name"] == "John Doe"
 
 
 def test_markdown_renderer_to_string(sample_cv: CV) -> None:
@@ -108,7 +111,12 @@ def test_markdown_renderer_to_string(sample_cv: CV) -> None:
     md_str = renderer.render_to_string(sample_cv)
 
     # Verify key sections are present
-    assert "# John Doe" in md_str
+    assert "---" in md_str
+    assert "full_name: John Doe" in md_str
+    assert "contacts:" in md_str
+    assert "  email: john@example.com" in md_str
+    assert "  phone: '+1234567890'" in md_str
+    assert "---" in md_str
     assert "## Senior Software Engineer" in md_str
     assert "## Core Competences" in md_str
     assert "* Python" in md_str
@@ -118,8 +126,6 @@ def test_markdown_renderer_to_string(sample_cv: CV) -> None:
     assert "### Master of Computer Science" in md_str
     assert "## Skills" in md_str
     assert "### Programming Languages" in md_str
-    assert "## Contacts" in md_str
-    assert "* email: john@example.com" in md_str
 
 
 def test_markdown_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:
@@ -129,7 +135,7 @@ def test_markdown_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:
 
     assert file_path.exists()
     content = file_path.read_text()
-    assert "# John Doe" in content
+    assert "full_name: John Doe" in content
 
 
 def test_yaml_renderer_error_handling(sample_cv: CV, tmp_path: Path) -> None:

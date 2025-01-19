@@ -19,6 +19,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 from cv_adapter.services.description_generator import DescriptionGenerator
 from cv_adapter.services.education_generator import EducationGenerator
@@ -67,7 +68,10 @@ def test_init_with_custom_ai_model() -> None:
 @pytest.fixture
 def detailed_cv() -> CV:
     return CV(
-        full_name="John Doe",
+        personal_info=PersonalInfo(
+            full_name="John Doe",
+            contacts={"email": "john@example.com", "phone": "+1234567890"},
+        ),
         title=Title(text="Senior Developer"),
         description=CVDescription(text="Original description"),
         core_competences=CoreCompetences(
@@ -113,7 +117,6 @@ def detailed_cv() -> CV:
                 )
             ]
         ),
-        contacts={"email": "john@example.com", "phone": "+1234567890"},
     )
 
 
@@ -192,8 +195,8 @@ def test_generate_cv(
     assert result.experiences == experiences
     assert result.education == education
     assert result.skills == skills
-    assert result.contacts == detailed_cv.contacts
-    assert result.full_name == detailed_cv.full_name
+    assert result.personal_info.contacts == detailed_cv.personal_info.contacts
+    assert result.personal_info.full_name == detailed_cv.personal_info.full_name
     assert result.title.text == "Senior Python Developer"
 
     # Verify service calls

@@ -22,6 +22,8 @@ Project Structure:
      - `cv.py`: CV-related data structures:
        * `CV`: Complete CV model with all fields
        * `MinimalCV`: Minimal CV model for description generation
+     - `personal_info.py`: Personal information models:
+       * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
      - `competence_analyzer.py`: Analyzes competencies in CVs
      - `cv_adapter.py`: CV adaptation service

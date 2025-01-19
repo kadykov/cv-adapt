@@ -1,6 +1,7 @@
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
+from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 from cv_adapter.services.description_generator import DescriptionGenerator
@@ -81,12 +82,14 @@ class CVAdapterApplication:
         )
 
         return CV(
-            full_name=cv_model.full_name,
+            personal_info=PersonalInfo(
+                full_name=cv_model.personal_info.full_name,
+                contacts=cv_model.personal_info.contacts,
+            ),
             title=title,
             description=description,
             core_competences=core_competences,
             experiences=experiences,
             education=education,
             skills=skills,
-            contacts=cv_model.contacts,
         )
