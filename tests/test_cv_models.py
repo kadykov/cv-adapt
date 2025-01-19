@@ -14,10 +14,13 @@ def test_core_competence_validation() -> None:
     assert competence.text == "Python Development"
 
     # Too many words
-    with pytest.raises(
-        ValueError, match=r"core competence must not be longer than \d+ words"
-    ):
-        CoreCompetence(text="This has more than the maximum number of words allowed in a subsubtitle line")
+    with pytest.raises(ValueError, match=r"core competence must not exceed \d+ words"):
+        CoreCompetence(
+            text=(
+                "One two three four five six seven eight nine ten eleven twelve "
+                "thirteen fourteen"
+            )
+        )
 
     # Contains newline
     with pytest.raises(ValueError, match="core competence must be a single line"):

@@ -38,14 +38,18 @@ class CoreCompetence(BaseModel):
     def validate_text(cls, v: str) -> str:
         v = v.strip()
         if len(v.split()) > MAX_WORDS_PER_SUBSUBTITLE:
-            raise ValueError(f"core competence must not be longer than {MAX_WORDS_PER_SUBSUBTITLE} words")
+            raise ValueError(
+                f"core competence must not exceed {MAX_WORDS_PER_SUBSUBTITLE} words"
+            )
         if "\n" in v:
             raise ValueError("core competence must be a single line")
         return v
 
 
 class CoreCompetences(BaseModel):
-    items: List[CoreCompetence] = Field(..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES)
+    items: List[CoreCompetence] = Field(
+        ..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES
+    )
 
     @field_validator("items")
     @classmethod
@@ -63,7 +67,9 @@ class CoreCompetences(BaseModel):
 
 
 class Institution(BaseModel):
-    name: str = Field(..., max_length=SUBTITLE_LINE_LENGTH)  # H2 - Company/University name
+    name: str = Field(
+        ..., max_length=SUBTITLE_LINE_LENGTH
+    )  # H2 - Company/University name
     description: Optional[str] = Field(None, max_length=BODY_LINE_LENGTH)
     location: Optional[str] = Field(None, max_length=HALF_LINE_LENGTH)
 
@@ -88,7 +94,9 @@ class University(Institution):
 
 class Experience(BaseModel):
     company: Company
-    position: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Position title
+    position: str = Field(
+        ..., max_length=SUBSUBTITLE_LINE_LENGTH
+    )  # H3 - Position title
     start_date: date
     end_date: Optional[date]
     description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
@@ -118,7 +126,9 @@ class CVDescription(BaseModel):
     def validate_text(self) -> "CVDescription":
         text = self.text.strip()
         if len(text.split()) > MAX_CV_DESCRIPTION_WORDS:
-            raise ValueError(f"CV description must not be longer than {MAX_CV_DESCRIPTION_WORDS} words")
+            raise ValueError(
+                f"CV description must not exceed {MAX_CV_DESCRIPTION_WORDS} words"
+            )
         if "\n" in text:
             raise ValueError("CV description must be a single paragraph")
         self.text = text
