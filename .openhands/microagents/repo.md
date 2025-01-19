@@ -11,6 +11,12 @@ Project Structure:
 1. Main Application Code (`cv_adapter/`):
    - `core/`: Core application components
      - `application.py`: Main application logic
+       * `CVAdapterApplication`: Orchestrates CV generation workflow
+       * Workflow steps:
+         1. Generate components (core competences, experiences, education, skills)
+         2. Create minimal CV for description generation
+         3. Generate description using LLM
+         4. Create final CV with all components
    - `models/`: Data models and schemas
      - `cv.py`: CV-related data structures:
        * `CV`: Complete CV model with all fields
