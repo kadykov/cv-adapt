@@ -37,7 +37,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
             List of lines in Markdown format
         """
         return [
-            f"## {cv.title}",
+            f"## {cv.title.text}",
             cv.description.text,
             "",
         ]
