@@ -24,9 +24,6 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
@@ -41,6 +38,5 @@ dev = [
     "pytest>=8.3.4",
     "pytest-cov>=4.1.0",
     "ruff>=0.9.1",
-    "isort>=5.13.2",
     "ipykernel>=6.29.5",
 ]

@@ -23,8 +23,8 @@ lint:
 
 # Format code
 format:
+    uv run ruff check --select I --fix . --silent
     uv run ruff format . --silent
-    uv run isort . --quiet
 
 # Run pre-commit checks
 pre-commit:
