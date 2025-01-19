@@ -9,7 +9,9 @@ from cv_adapter.services.title_generator import TitleGenerator
 def test_model() -> TestModel:
     """Create a test model."""
     model = TestModel()
-    model.custom_result_text = "Senior Software Architect\nCloud & AI Solutions Expert"
+    model.custom_result_args = {
+        "text": "Senior Software Architect\nCloud & AI Solutions Expert"
+    }
     return model
 
 
@@ -38,7 +40,7 @@ def test_title_generator_with_notes(test_model: TestModel) -> None:
     generator = TitleGenerator(ai_model="test")
 
     # Override test model with DevOps-focused title
-    test_model.custom_result_text = "DevOps Team Lead & Python Expert"
+    test_model.custom_result_args = {"text": "DevOps Team Lead & Python Expert"}
 
     with generator.agent.override(model=test_model):
         title = generator.generate(

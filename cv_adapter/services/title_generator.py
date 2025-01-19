@@ -74,9 +74,6 @@ class TitleGenerator:
         # Use the agent to generate title
         result = self.agent.run_sync(
             context,
-            result_type=str,
+            result_type=Title,
         )
-        title_text = result.data.strip()
-
-        # Create and validate Title model
-        return Title(text=title_text)
+        return result.data
