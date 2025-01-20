@@ -26,6 +26,8 @@ Project Structure:
        * `CoreCompetences`: Collection of core competences
        * `Skill`: Single skill with validation
        * `Skills`: Collection of skill groups
+     - `generators.py`: Input models for generator services:
+       * `ExperienceGeneratorInput`: Input validation for experience generation
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
