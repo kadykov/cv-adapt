@@ -54,12 +54,7 @@ def test_education_generator(test_model: TestModel) -> None:
         education = generator.generate(
             cv_text="# CV\n\nDetailed educational experience...",
             job_description=("# Job Description\n\nSeeking a ML researcher..."),
-            core_competences=[
-                "Machine Learning",
-                "Distributed Systems",
-                "Research",
-                "Teaching",
-            ],
+            core_competences="Machine Learning, Distributed Systems, Research, Teaching",
         )
 
         assert len(education) == 2
@@ -91,12 +86,7 @@ def test_education_generator_with_notes(test_model: TestModel) -> None:
         education = generator.generate(
             cv_text="# CV\n\nDetailed educational experience...",
             job_description=("# Job Description\n\nSeeking a ML researcher..."),
-            core_competences=[
-                "Machine Learning",
-                "Distributed Systems",
-                "Research",
-                "Teaching",
-            ],
+            core_competences="Machine Learning, Distributed Systems, Research, Teaching",
             notes="Focus on research experience",
         )
 
@@ -112,19 +102,19 @@ def test_education_validation(test_model: TestModel) -> None:
             generator.generate(
                 cv_text="",
                 job_description=("# Job Description\n\nSeeking a ML researcher..."),
-                core_competences=["Machine Learning"],
+                core_competences="Machine Learning",
             )
 
         with pytest.raises(ValueError, match="Job description is required"):
             generator.generate(
                 cv_text="# CV\n\nDetailed educational experience...",
                 job_description="",
-                core_competences=["Machine Learning"],
+                core_competences="Machine Learning",
             )
 
         with pytest.raises(ValueError, match="Core competences are required"):
             generator.generate(
                 cv_text="# CV\n\nDetailed educational experience...",
                 job_description=("# Job Description\n\nSeeking a ML researcher..."),
-                core_competences=[],
+                core_competences="",
             )
