@@ -1,9 +1,8 @@
-from typing import Optional
-
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import Title
+from cv_adapter.models.generators import TitleGeneratorInput
 
 
 class TitleGenerator:
@@ -23,34 +22,16 @@ class TitleGenerator:
             ),
         )
 
-    def generate(
-        self,
-        cv_text: str,
-        job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
-    ) -> Title:
+    def generate(self, input_data: TitleGeneratorInput) -> Title:
         """Generate a professional title tailored to a job description.
 
         Args:
-            cv_text: CV in Markdown format containing professional background
-            job_description: Job description in Markdown format
-            core_competences: Core competences to highlight (Markdown format)
-            notes: Optional user notes about how to adapt the title
+            input_data: Input data containing CV text, job description, core competences
+                and optional notes.
 
         Returns:
             A Title model instance containing the generated title
-
-        Raises:
-            ValueError: If required inputs are missing or invalid
         """
-        if not cv_text.strip():
-            raise ValueError("CV text is required")
-        if not job_description.strip():
-            raise ValueError("Job description is required")
-        if not core_competences:
-            raise ValueError("Core competences are required")
-
         # Prepare context for the AI
         context = (
             "Generate a professional title that effectively represents the candidate "
@@ -62,12 +43,12 @@ class TitleGenerator:
             "3. Incorporate key expertise areas that match job requirements\n"
             "4. Ensure it reflects the seniority level appropriately\n"
             "5. Make it memorable but professional\n\n"
-            f"CV:\n{cv_text}\n\n"
-            f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Highlight:\n" + core_competences + "\n"
+            f"CV:\n{input_data.cv_text}\n\n"
+            f"Job Description:\n{input_data.job_description}\n\n"
+            f"Core Competences to Highlight:\n{input_data.core_competences}\n"
         )
-        if notes:
-            context += f"\nUser Notes for Consideration:\n{notes}"
+        if input_data.notes:
+            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
         # Use the agent to generate title
         result = self.agent.run_sync(

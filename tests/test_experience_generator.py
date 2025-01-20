@@ -1,7 +1,6 @@
 from datetime import date
 
 import pytest
-
 from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Experience
@@ -57,8 +56,7 @@ def test_experience_generator(test_model: TestModel) -> None:
         cv_text="# CV\n\nDetailed professional experience...",
         job_description="# Job Description\n\nSeeking a senior developer...",
         core_competences=(
-            "Python Development, Cloud Architecture, "
-            "Team Leadership, Data Engineering"
+            "Python Development, Cloud Architecture, Team Leadership, Data Engineering"
         ),
     )
 
@@ -85,8 +83,7 @@ def test_experience_generator_with_notes(test_model: TestModel) -> None:
         cv_text="# CV\n\nDetailed professional experience...",
         job_description="# Job Description\n\nSeeking a senior developer...",
         core_competences=(
-            "Python Development, Cloud Architecture, "
-            "Team Leadership, Data Engineering"
+            "Python Development, Cloud Architecture, Team Leadership, Data Engineering"
         ),
         notes="Focus on cloud architecture experience",
     )
@@ -95,9 +92,6 @@ def test_experience_generator_with_notes(test_model: TestModel) -> None:
         experiences = generator.generate(input_data)
         assert len(experiences) == 2
         assert "cloud" in experiences[0].description.lower()
-
-
-
 
 
 def test_empty_experience_list(test_model: TestModel) -> None:
@@ -113,5 +107,7 @@ def test_empty_experience_list(test_model: TestModel) -> None:
     test_model.custom_result_args = []
 
     with generator.agent.override(model=test_model):
-        with pytest.raises(ValueError, match="At least one experience must be generated"):
+        with pytest.raises(
+            ValueError, match="At least one experience must be generated"
+        ):
             generator.generate(input_data)

@@ -27,7 +27,11 @@ Project Structure:
        * `Skill`: Single skill with validation
        * `Skills`: Collection of skill groups
      - `generators.py`: Input models for generator services:
+       * `GeneratorInputBase`: Base model for all generator inputs with common fields
        * `ExperienceGeneratorInput`: Input validation for experience generation
+       * `TitleGeneratorInput`: Input validation for title generation
+       * `EducationGeneratorInput`: Input validation for education generation
+       * `SkillsGeneratorInput`: Input validation for skills generation
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
@@ -35,10 +39,10 @@ Project Structure:
      - `cv_adapter.py`: CV adaptation service
      - `cv_storage.py`: CV storage management
      - `description_generator.py`: Generates descriptions
-     - `education_generator.py`: Generates education sections
-     - `experience_generator.py`: Generates experience sections
-     - `skills_generator.py`: Generates and organizes skills based on CV content and job requirements
-     - `title_generator.py`: Generates professional titles tailored to job descriptions
+     - `education_generator.py`: Generates education sections using validated input
+     - `experience_generator.py`: Generates experience sections using validated input
+     - `skills_generator.py`: Generates and organizes skills using validated input
+     - `title_generator.py`: Generates professional titles using validated input
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
@@ -125,13 +129,20 @@ Development Guidelines:
    - Use protocols for type-safe interfaces between models and renderers
    - Models can implement string representation for debugging
    - Example model hierarchy:
-     * Base models: CoreCompetence, Skill
+     * Base models: CoreCompetence, Skill, GeneratorInputBase
      * Collection models: CoreCompetences, Skills
      * Complex models: CV, MinimalCV
+     * Input models: ExperienceGeneratorInput, TitleGeneratorInput, etc.
    - Validation rules:
      * Use Pydantic field validators for complex validation
      * Keep validation close to the data structure
      * Validate both individual items and collections
+     * Use base models for common validation logic
+   - Generator Input Models:
+     * All generator inputs inherit from GeneratorInputBase
+     * Common fields: cv_text, job_description, core_competences, notes
+     * Input validation is handled by models, not services
+     * Services focus on business logic, not validation
 
 7. Working with Renderers:
    - Use the rendering system in `cv_adapter/renderers/` for CV output

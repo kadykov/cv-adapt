@@ -1,6 +1,12 @@
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
+from cv_adapter.models.generators import (
+    EducationGeneratorInput,
+    ExperienceGeneratorInput,
+    SkillsGeneratorInput,
+    TitleGeneratorInput,
+)
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
@@ -56,23 +62,42 @@ class CVAdapterApplication:
         core_competences_md = CoreCompetencesRenderer.render_to_markdown(
             core_competences
         )
+
+        # Generate components
         experiences = self.experience_generator.generate(
-            cv_text, job_description, core_competences_md, notes=notes
+            ExperienceGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+            )
         )
         education = self.education_generator.generate(
-            cv_text, job_description, core_competences_md, notes=notes
+            EducationGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+            )
         )
         skills = self.skills_generator.generate(
-            cv_text, job_description, core_competences_md, notes=notes
+            SkillsGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+            )
+        )
+        title = self.title_generator.generate(
+            TitleGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+            )
         )
 
         # 2. Create minimal CV for description generation
-        title = self.title_generator.generate(
-            cv_text,
-            job_description,
-            core_competences_md,
-            notes=notes,
-        )
         minimal_cv = MinimalCV(
             title=title,
             core_competences=core_competences,

@@ -19,6 +19,12 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.generators import (
+    EducationGeneratorInput,
+    ExperienceGeneratorInput,
+    SkillsGeneratorInput,
+    TitleGeneratorInput,
+)
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 from cv_adapter.services.description_generator import DescriptionGenerator
@@ -211,26 +217,34 @@ def test_generate_cv(
 
     core_competences_md = "* Python\n* JavaScript\n* TypeScript\n* React"
     mock_services["experience_generator"].generate.assert_called_once_with(
-        cv_text,
-        job_description,
-        core_competences_md,
-        notes=notes,
+        ExperienceGeneratorInput(
+            cv_text=cv_text,
+            job_description=job_description,
+            core_competences=core_competences_md,
+            notes=notes,
+        )
     )
     mock_services["education_generator"].generate.assert_called_once_with(
-        cv_text,
-        job_description,
-        core_competences_md,
-        notes=notes,
+        EducationGeneratorInput(
+            cv_text=cv_text,
+            job_description=job_description,
+            core_competences=core_competences_md,
+            notes=notes,
+        )
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
-        cv_text,
-        job_description,
-        core_competences_md,
-        notes=notes,
+        SkillsGeneratorInput(
+            cv_text=cv_text,
+            job_description=job_description,
+            core_competences=core_competences_md,
+            notes=notes,
+        )
     )
     mock_services["title_generator"].generate.assert_called_once_with(
-        cv_text,
-        job_description,
-        core_competences_md,
-        notes=notes,
+        TitleGeneratorInput(
+            cv_text=cv_text,
+            job_description=job_description,
+            core_competences=core_competences_md,
+            notes=notes,
+        )
     )

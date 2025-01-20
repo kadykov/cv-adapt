@@ -1,9 +1,8 @@
-from typing import Optional
-
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import Skills
+from cv_adapter.models.generators import SkillsGeneratorInput
 
 
 class SkillsGenerator:
@@ -25,34 +24,19 @@ class SkillsGenerator:
             ),
         )
 
-    def generate(
-        self,
-        cv_text: str,
-        job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
-    ) -> Skills:
+    def generate(self, input_data: SkillsGeneratorInput) -> Skills:
         """Generate a list of skills organized in groups and tailored to a job.
 
         Args:
-            cv_text: CV in Markdown format containing all professional experiences
-            job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven (Markdown format)
-            notes: Optional user notes about how to adapt skills
+            input_data: Input data containing CV text, job description, core competences
+                and optional notes.
 
         Returns:
             Skills object containing groups of skills tailored to the job description
 
         Raises:
-            ValueError: If required inputs are missing or invalid
+            ValueError: If no skill groups are generated
         """
-        if not cv_text.strip():
-            raise ValueError("CV text is required")
-        if not job_description.strip():
-            raise ValueError("Job description is required")
-        if not core_competences:
-            raise ValueError("Core competences are required")
-
         # Prepare context for the AI
         context = (
             "Generate a list of skills organized in logical groups based on the CV "
@@ -68,12 +52,12 @@ class SkillsGenerator:
             "   - Is mentioned or implied in the CV\n"
             "4. Keep skills concise (max 40 characters)\n"
             "5. Ensure all skills are unique across all groups\n\n"
-            f"CV:\n{cv_text}\n\n"
-            f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Prove:\n" + core_competences + "\n"
+            f"CV:\n{input_data.cv_text}\n\n"
+            f"Job Description:\n{input_data.job_description}\n\n"
+            f"Core Competences to Prove:\n{input_data.core_competences}\n"
         )
-        if notes:
-            context += f"\nUser Notes for Consideration:\n{notes}"
+        if input_data.notes:
+            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
         # Use the agent to generate skills
         result = self.agent.run_sync(

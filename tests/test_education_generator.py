@@ -4,6 +4,7 @@ import pytest
 from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Education
+from cv_adapter.models.generators import EducationGeneratorInput
 from cv_adapter.services.education_generator import EducationGenerator
 
 
@@ -48,16 +49,18 @@ def test_model() -> TestModel:
 
 
 def test_education_generator(test_model: TestModel) -> None:
+    """Test education generation with valid input."""
     generator = EducationGenerator(ai_model="test")
 
     with generator.agent.override(model=test_model):
-        education = generator.generate(
+        input_data = EducationGeneratorInput(
             cv_text="# CV\n\nDetailed educational experience...",
             job_description=("# Job Description\n\nSeeking a ML researcher..."),
             core_competences=(
                 "Machine Learning, Distributed Systems, Research, Teaching"
             ),
         )
+        education = generator.generate(input_data)
 
         assert len(education) == 2
         assert all(isinstance(edu, Education) for edu in education)
@@ -82,10 +85,11 @@ def test_education_generator(test_model: TestModel) -> None:
 
 
 def test_education_generator_with_notes(test_model: TestModel) -> None:
+    """Test education generation with notes."""
     generator = EducationGenerator(ai_model="test")
 
     with generator.agent.override(model=test_model):
-        education = generator.generate(
+        input_data = EducationGeneratorInput(
             cv_text="# CV\n\nDetailed educational experience...",
             job_description=("# Job Description\n\nSeeking a ML researcher..."),
             core_competences=(
@@ -93,32 +97,7 @@ def test_education_generator_with_notes(test_model: TestModel) -> None:
             ),
             notes="Focus on research experience",
         )
+        education = generator.generate(input_data)
 
         assert len(education) == 2
         assert "research" in education[0].description.lower()
-
-
-def test_education_validation(test_model: TestModel) -> None:
-    generator = EducationGenerator(ai_model="test")
-
-    with generator.agent.override(model=test_model):
-        with pytest.raises(ValueError, match="CV text is required"):
-            generator.generate(
-                cv_text="",
-                job_description=("# Job Description\n\nSeeking a ML researcher..."),
-                core_competences="Machine Learning",
-            )
-
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(
-                cv_text="# CV\n\nDetailed educational experience...",
-                job_description="",
-                core_competences="Machine Learning",
-            )
-
-        with pytest.raises(ValueError, match="Core competences are required"):
-            generator.generate(
-                cv_text="# CV\n\nDetailed educational experience...",
-                job_description=("# Job Description\n\nSeeking a ML researcher..."),
-                core_competences="",
-            )
