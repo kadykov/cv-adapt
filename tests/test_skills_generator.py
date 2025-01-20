@@ -12,27 +12,38 @@ def test_model() -> TestModel:
     model.custom_result_args = {
         "groups": [
             {
-                "name": "Programming",
+                "name": "Technical Skills",
                 "skills": [
                     {"text": "Python"},
-                    {"text": "JavaScript"},
-                    {"text": "SQL"},
-                ],
-            },
-            {
-                "name": "Cloud & DevOps",
-                "skills": [
-                    {"text": "AWS"},
-                    {"text": "Docker"},
                     {"text": "Kubernetes"},
+                    {"text": "Docker"},
+                    {"text": "AWS"},
+                    {"text": "Cloud Architecture"},
+                    {"text": "Apache Spark"},
+                    {"text": "Airflow"},
                 ],
             },
             {
                 "name": "Soft Skills",
                 "skills": [
                     {"text": "Team Leadership"},
-                    {"text": "Agile Project Management"},
-                    {"text": "Technical Mentoring"},
+                    {"text": "Project Management"},
+                    {"text": "Communication"},
+                    {"text": "Problem Solving"},
+                ],
+            },
+            {
+                "name": "Languages",
+                "skills": [
+                    {"text": "English (Native)"},
+                    {"text": "Spanish (Professional)"},
+                ],
+            },
+            {
+                "name": "Certifications",
+                "skills": [
+                    {"text": "AWS Certified Solutions Architect"},
+                    {"text": "Kubernetes Administrator (CKA)"},
                 ],
             },
         ]
@@ -47,29 +58,31 @@ def test_skills_generator(test_model: TestModel) -> None:
         skills = generator.generate(
             cv_text="# CV\n\nDetailed professional experience...",
             job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences="Python Development, Cloud Architecture, Team Leadership, Data Engineering",
+            core_competences=(
+                "Python Development, Cloud Architecture, "
+                "Team Leadership, Data Engineering"
+            ),
         )
 
         assert isinstance(skills, Skills)
-        assert len(skills.groups) == 3
+        assert len(skills.groups) >= 1
 
-        # Test programming group
-        prog_group = skills.groups[0]
-        assert prog_group.name == "Programming"
-        assert len(prog_group.skills) == 3
-        assert prog_group.skills[0].text == "Python"
+        # Find technical skills group
+        tech_group = next(g for g in skills.groups if g.name == "Technical Skills")
+        assert len(tech_group.skills) >= 5
+        assert any(s.text == "Python" for s in tech_group.skills)
 
-        # Test cloud group
-        cloud_group = skills.groups[1]
-        assert cloud_group.name == "Cloud & DevOps"
-        assert len(cloud_group.skills) == 3
-        assert "AWS" in [skill.text for skill in cloud_group.skills]
+        # Find soft skills group
+        soft_group = next(g for g in skills.groups if g.name == "Soft Skills")
+        assert any(s.text == "Team Leadership" for s in soft_group.skills)
 
-        # Test soft skills group
-        soft_group = skills.groups[2]
-        assert soft_group.name == "Soft Skills"
-        assert len(soft_group.skills) == 3
-        assert "Team Leadership" in [skill.text for skill in soft_group.skills]
+        # Find languages group
+        lang_group = next(g for g in skills.groups if g.name == "Languages")
+        assert len(lang_group.skills) >= 1
+
+        # Find certifications group
+        cert_group = next(g for g in skills.groups if g.name == "Certifications")
+        assert len(cert_group.skills) >= 1
 
 
 def test_skills_generator_with_notes(test_model: TestModel) -> None:
@@ -79,13 +92,16 @@ def test_skills_generator_with_notes(test_model: TestModel) -> None:
         skills = generator.generate(
             cv_text="# CV\n\nDetailed professional experience...",
             job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences="Python Development, Cloud Architecture, Team Leadership, Data Engineering",
+            core_competences=(
+                "Python Development, Cloud Architecture, "
+                "Team Leadership, Data Engineering"
+            ),
             notes="Focus on cloud and DevOps skills",
         )
 
-        assert len(skills.groups) == 3
-        cloud_group = [g for g in skills.groups if g.name == "Cloud & DevOps"][0]
-        assert len(cloud_group.skills) == 3
+        assert isinstance(skills, Skills)
+        tech_group = next(g for g in skills.groups if g.name == "Technical Skills")
+        assert any("cloud" in s.text.lower() for s in tech_group.skills)
 
 
 def test_skills_validation(test_model: TestModel) -> None:

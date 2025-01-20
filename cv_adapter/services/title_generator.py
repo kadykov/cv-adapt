@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
@@ -35,7 +35,7 @@ class TitleGenerator:
         Args:
             cv_text: CV in Markdown format containing professional background
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be highlighted (in Markdown format)
+            core_competences: Core competences to highlight (Markdown format)
             notes: Optional user notes about how to adapt the title
 
         Returns:
@@ -64,9 +64,7 @@ class TitleGenerator:
             "5. Make it memorable but professional\n\n"
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Highlight:\n"
-            + core_competences
-            + "\n"
+            f"Core Competences to Highlight:\n" + core_competences + "\n"
         )
         if notes:
             context += f"\nUser Notes for Consideration:\n{notes}"

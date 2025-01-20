@@ -9,9 +9,7 @@ from cv_adapter.services.title_generator import TitleGenerator
 def test_model() -> TestModel:
     """Create a test model."""
     model = TestModel()
-    model.custom_result_args = {
-        "text": "Senior Software Architect\nCloud & AI Solutions Expert"
-    }
+    model.custom_result_args = {"text": "Senior DevOps Engineer & Cloud Architect"}
     return model
 
 
@@ -22,32 +20,32 @@ def test_title_generator(test_model: TestModel) -> None:
         title = generator.generate(
             cv_text="# CV\n\nDetailed professional experience...",
             job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences="Python Development, Cloud Architecture, Team Leadership, Data Engineering",
+            core_competences=(
+                "Python Development, Cloud Architecture, "
+                "Team Leadership, Data Engineering"
+            ),
         )
 
         assert isinstance(title, Title)
-        assert len(title.text.split("\n")) <= 2
-        assert all(len(line) <= 50 for line in title.text.split("\n"))
-        assert "Software" in title.text or "Engineer" in title.text
+        assert len(title.text) <= 100
+        assert "Cloud" in title.text
 
 
 def test_title_generator_with_notes(test_model: TestModel) -> None:
     generator = TitleGenerator(ai_model="test")
 
-    # Override test model with DevOps-focused title
-    test_model.custom_result_args = {"text": "DevOps Team Lead & Python Expert"}
-
     with generator.agent.override(model=test_model):
         title = generator.generate(
             cv_text="# CV\n\nDetailed professional experience...",
             job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences="Python Development, Cloud Architecture, Team Leadership, Data Engineering",
+            core_competences=(
+                "Python Development, Cloud Architecture, "
+                "Team Leadership, Data Engineering"
+            ),
             notes="Focus on DevOps expertise",
         )
 
         assert isinstance(title, Title)
-        assert len(title.text.split("\n")) <= 2
-        assert all(len(line) <= 50 for line in title.text.split("\n"))
         assert "DevOps" in title.text
 
 

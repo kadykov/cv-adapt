@@ -72,32 +72,3 @@ def test_core_competences_validation() -> None:
                 CoreCompetence(text="System Design"),
             ]
         )
-
-
-def test_core_competences_to_list() -> None:
-    # Create test data
-    competences = CoreCompetences(
-        items=[
-            CoreCompetence(text="Python Development"),
-            CoreCompetence(text="Team Leadership"),
-            CoreCompetence(text="Project Management"),
-            CoreCompetence(text="System Design"),
-        ]
-    )
-
-    # Test to_list() method
-    result = competences.to_list()
-
-    # Verify the result
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)
-    assert result == [
-        "Python Development",
-        "Team Leadership",
-        "Project Management",
-        "System Design",
-    ]
-
-    # Verify the order is preserved
-    for i, item in enumerate(competences.items):
-        assert item.text == result[i]

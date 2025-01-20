@@ -35,7 +35,7 @@ class EducationGenerator:
         Args:
             cv_text: CV in Markdown format containing all educational experiences
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven (in Markdown format)
+            core_competences: Core competences that should be proven (Markdown format)
             notes: Optional user notes about how to adapt education section
 
         Returns:
@@ -68,9 +68,7 @@ class EducationGenerator:
             "5. Do not modify the official degree titles\n\n"
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Prove:\n"
-            + core_competences
-            + "\n"
+            f"Core Competences to Prove:\n" + core_competences + "\n"
         )
         if notes:
             context += f"\nUser Notes for Consideration:\n{notes}"

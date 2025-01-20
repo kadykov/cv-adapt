@@ -53,7 +53,9 @@ class CVAdapterApplication:
         core_competences = self.competence_analyzer.analyze(
             cv_text, job_description, user_notes=notes
         )
-        core_competences_md = CoreCompetencesRenderer.render_to_markdown(core_competences)
+        core_competences_md = CoreCompetencesRenderer.render_to_markdown(
+            core_competences
+        )
         experiences = self.experience_generator.generate(
             cv_text, job_description, core_competences_md, notes=notes
         )

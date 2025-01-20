@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
@@ -37,7 +37,7 @@ class SkillsGenerator:
         Args:
             cv_text: CV in Markdown format containing all professional experiences
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven (in Markdown format)
+            core_competences: Core competences that should be proven (Markdown format)
             notes: Optional user notes about how to adapt skills
 
         Returns:
@@ -70,9 +70,7 @@ class SkillsGenerator:
             "5. Ensure all skills are unique across all groups\n\n"
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Prove:\n"
-            + core_competences
-            + "\n"
+            f"Core Competences to Prove:\n" + core_competences + "\n"
         )
         if notes:
             context += f"\nUser Notes for Consideration:\n{notes}"

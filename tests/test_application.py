@@ -208,27 +208,29 @@ def test_generate_cv(
     mock_services["competence_analyzer"].analyze.assert_called_once_with(
         cv_text, job_description, user_notes=notes
     )
+
+    core_competences_md = "* Python\n* JavaScript\n* TypeScript\n* React"
     mock_services["experience_generator"].generate.assert_called_once_with(
         cv_text,
         job_description,
-        ["Python", "JavaScript", "TypeScript", "React"],
+        core_competences_md,
         notes=notes,
     )
     mock_services["education_generator"].generate.assert_called_once_with(
         cv_text,
         job_description,
-        ["Python", "JavaScript", "TypeScript", "React"],
+        core_competences_md,
         notes=notes,
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
         cv_text,
         job_description,
-        ["Python", "JavaScript", "TypeScript", "React"],
+        core_competences_md,
         notes=notes,
     )
     mock_services["title_generator"].generate.assert_called_once_with(
         cv_text,
         job_description,
-        ["Python", "JavaScript", "TypeScript", "React"],
+        core_competences_md,
         notes=notes,
     )
