@@ -27,7 +27,8 @@ Project Structure:
        * `Skill`: Single skill with validation
        * `Skills`: Collection of skill groups
      - `generators.py`: Input models for generator services:
-       * `GeneratorInputBase`: Base model for all generator inputs with common fields
+       * `CompetenceGeneratorInput`: Input validation for competence generation (first step)
+       * `GeneratorInputBase`: Base model for all subsequent generator inputs with common fields
        * `ExperienceGeneratorInput`: Input validation for experience generation
        * `TitleGeneratorInput`: Input validation for title generation
        * `EducationGeneratorInput`: Input validation for education generation
@@ -36,7 +37,7 @@ Project Structure:
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
-     - `competence_analyzer.py`: Analyzes competencies in CVs
+     - `competence_generator.py`: Generates core competences using validated input
      - `cv_adapter.py`: CV adaptation service
      - `cv_storage.py`: CV storage management
      - `summary_generator.py`: Generates professional CV summaries using validated input
@@ -142,6 +143,8 @@ Development Guidelines:
    - Generator Input Models:
      * All generator inputs inherit from GeneratorInputBase
      * Common fields: cv_text, job_description, core_competences, notes
+     * CompetenceGeneratorInput has a different structure as it's the first step
+     * All other generators require core_competences from the first step
      * Input validation is handled by models, not services
      * Services focus on business logic, not validation
 

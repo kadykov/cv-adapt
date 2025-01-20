@@ -2,6 +2,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
 from cv_adapter.models.generators import (
+    CompetenceGeneratorInput,
     EducationGeneratorInput,
     ExperienceGeneratorInput,
     SkillsGeneratorInput,
@@ -11,7 +12,7 @@ from cv_adapter.models.generators import (
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
-from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
+from cv_adapter.services.competence_generator import CompetenceGenerator
 from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
@@ -28,7 +29,7 @@ class CVAdapterApplication:
         Args:
             ai_model: AI model to use for all generators. Defaults to OpenAI GPT-4o.
         """
-        self.competence_analyzer = CompetenceAnalyzer(ai_model=ai_model)
+        self.competence_generator = CompetenceGenerator(ai_model=ai_model)
         self.experience_generator = ExperienceGenerator(ai_model=ai_model)
         self.education_generator = EducationGenerator(ai_model=ai_model)
         self.skills_generator = SkillsGenerator(ai_model=ai_model)
@@ -57,8 +58,12 @@ class CVAdapterApplication:
             A new CV instance adapted to the job description
         """
         # 1. Generate components
-        core_competences = self.competence_analyzer.analyze(
-            cv_text, job_description, user_notes=notes
+        core_competences = self.competence_generator.generate(
+            CompetenceGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                notes=notes,
+            )
         )
         core_competences_md = CoreCompetencesRenderer.render_to_markdown(
             core_competences

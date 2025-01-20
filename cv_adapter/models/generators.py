@@ -5,6 +5,36 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
+class CompetenceGeneratorInput(BaseModel):
+    """Input model for competence generation, which is the first step in CV generation.
+
+    Unlike other generators, this one doesn't require core_competences as they are
+    the output of this generator.
+    """
+
+    cv_text: Annotated[str, Field(min_length=1)]
+    job_description: Annotated[str, Field(min_length=1)]
+    notes: Optional[str] = None
+
+    @field_validator("cv_text", "job_description", "notes")
+    @classmethod
+    def strip_whitespace(cls, v: Optional[str]) -> Optional[str]:
+        """Strip whitespace from all string fields."""
+        if v is not None:
+            v = v.strip()
+            if not v:
+                return None
+        return v
+
+    @field_validator("cv_text", "job_description")
+    @classmethod
+    def validate_required(cls, v: Optional[str]) -> str:
+        """Validate required fields after stripping whitespace."""
+        if not v:
+            raise ValueError("This field is required")
+        return v
+
+
 class GeneratorInputBase(BaseModel):
     """Base model for all generator inputs with common fields."""
 
