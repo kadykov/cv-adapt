@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic_ai import Agent
-from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CoreCompetence, CoreCompetences
 from cv_adapter.models.generators import CompetenceGeneratorInput
@@ -23,7 +22,9 @@ def mock_agent(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
             CoreCompetence(text="System Design"),
         ]
     )
-    monkeypatch.setattr("cv_adapter.services.competence_generator.Agent", lambda *args, **kwargs: mock)
+    monkeypatch.setattr(
+        "cv_adapter.services.competence_generator.Agent", lambda *args, **kwargs: mock
+    )
     return mock
 
 

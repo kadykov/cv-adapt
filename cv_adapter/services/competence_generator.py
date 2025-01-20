@@ -29,7 +29,7 @@ class CompetenceGenerator:
         """Generate core competences based on CV and job description.
 
         Args:
-            input_data: Input data containing CV text, job description and optional notes
+            input_data: Input data with CV text, job description, and optional notes
 
         Returns:
             List of core competences relevant for the job

@@ -10,7 +10,6 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-
     Education,
     Experience,
     Skill,
@@ -27,12 +26,12 @@ from cv_adapter.models.generators import (
     TitleGeneratorInput,
 )
 from cv_adapter.models.personal_info import PersonalInfo
-from cv_adapter.services.competence_generator import CompetenceGenerator
-from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.models.summary import CVSummary
+from cv_adapter.services.competence_generator import CompetenceGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
+from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.services.title_generator import TitleGenerator
 
 
@@ -185,9 +184,7 @@ def test_generate_cv(
     mock_services["experience_generator"].generate.return_value = experiences
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
-    mock_services["summary_generator"].generate.return_value = CVSummary(
-        text=summary
-    )
+    mock_services["summary_generator"].generate.return_value = CVSummary(text=summary)
     mock_services["title_generator"].generate.return_value = Title(
         text="Senior Python Developer"
     )

@@ -125,9 +125,6 @@ class Title(BaseModel):
         return self
 
 
-
-
-
 class Skill(BaseModel):
     text: str = Field(..., max_length=HALF_LINE_LENGTH)
 
@@ -175,7 +172,7 @@ class Skills(BaseModel):
 
 
 class MinimalCV(BaseModel):
-    """A minimal CV model containing only the essential parts needed for summary generation.
+    """A minimal CV model containing only the essential parts for summary generation.
 
     Used by SummaryGenerator to create a focused input for LLM. Contains only the
     key components needed to generate an impactful CV summary, excluding personal

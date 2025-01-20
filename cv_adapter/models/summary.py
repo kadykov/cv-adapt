@@ -14,9 +14,7 @@ class CVSummary(BaseModel):
     def validate_text(self) -> "CVSummary":
         text = self.text.strip()
         if len(text.split()) > MAX_CV_SUMMARY_WORDS:
-            raise ValueError(
-                f"CV summary must not exceed {MAX_CV_SUMMARY_WORDS} words"
-            )
+            raise ValueError(f"CV summary must not exceed {MAX_CV_SUMMARY_WORDS} words")
         if "\n" in text:
             raise ValueError("CV summary must be a single paragraph")
         self.text = text

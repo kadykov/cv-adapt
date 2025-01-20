@@ -8,7 +8,6 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-
     Education,
     Experience,
     Skill,

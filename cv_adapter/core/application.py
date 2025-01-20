@@ -13,10 +13,10 @@ from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 from cv_adapter.services.competence_generator import CompetenceGenerator
-from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
+from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.services.title_generator import TitleGenerator
 
 
