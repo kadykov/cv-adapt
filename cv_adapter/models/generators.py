@@ -1,16 +1,16 @@
 """Models for generator inputs and intermediate data structures."""
 
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, constr, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ExperienceGeneratorInput(BaseModel):
     """Input model for experience generation containing all required data."""
 
-    cv_text: constr(strip_whitespace=True, min_length=1)
-    job_description: constr(strip_whitespace=True, min_length=1)
-    core_competences: constr(strip_whitespace=True, min_length=1)
+    cv_text: Annotated[str, Field(min_length=1, strip_whitespace=True)]
+    job_description: Annotated[str, Field(min_length=1, strip_whitespace=True)]
+    core_competences: Annotated[str, Field(min_length=1, strip_whitespace=True)]
     notes: Optional[str] = None
 
     @field_validator("notes")
