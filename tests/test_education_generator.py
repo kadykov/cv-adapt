@@ -5,7 +5,7 @@ from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Education
 from cv_adapter.models.generators import EducationGeneratorInput
-from cv_adapter.services.education_generator import EducationGenerator
+from cv_adapter.services.generators.education_generator import EducationGenerator
 
 
 @pytest.fixture

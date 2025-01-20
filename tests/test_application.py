@@ -27,12 +27,12 @@ from cv_adapter.models.generators import (
 )
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.services.competence_generator import CompetenceGenerator
-from cv_adapter.services.education_generator import EducationGenerator
-from cv_adapter.services.experience_generator import ExperienceGenerator
-from cv_adapter.services.skills_generator import SkillsGenerator
-from cv_adapter.services.summary_generator import SummaryGenerator
-from cv_adapter.services.title_generator import TitleGenerator
+from cv_adapter.services.generators.competence_generator import CompetenceGenerator
+from cv_adapter.services.generators.education_generator import EducationGenerator
+from cv_adapter.services.generators.experience_generator import ExperienceGenerator
+from cv_adapter.services.generators.skills_generator import SkillsGenerator
+from cv_adapter.services.generators.summary_generator import SummaryGenerator
+from cv_adapter.services.generators.title_generator import TitleGenerator
 
 
 @pytest.fixture

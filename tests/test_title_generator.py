@@ -3,7 +3,7 @@ from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Title
 from cv_adapter.models.generators import TitleGeneratorInput
-from cv_adapter.services.title_generator import TitleGenerator
+from cv_adapter.services.generators.title_generator import TitleGenerator
 
 
 @pytest.fixture

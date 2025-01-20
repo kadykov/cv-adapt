@@ -3,7 +3,7 @@ from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Skills
 from cv_adapter.models.generators import SkillsGeneratorInput
-from cv_adapter.services.skills_generator import SkillsGenerator
+from cv_adapter.services.generators.skills_generator import SkillsGenerator
 
 
 @pytest.fixture

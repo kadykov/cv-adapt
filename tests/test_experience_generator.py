@@ -5,7 +5,7 @@ from pydantic_ai.models.test import TestModel
 
 from cv_adapter.models.cv import Experience
 from cv_adapter.models.generators import ExperienceGeneratorInput
-from cv_adapter.services.experience_generator import ExperienceGenerator
+from cv_adapter.services.generators.experience_generator import ExperienceGenerator
 
 
 @pytest.fixture

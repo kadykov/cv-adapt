@@ -37,14 +37,15 @@ Project Structure:
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
-     - `competence_generator.py`: Generates core competences using validated input
      - `cv_adapter.py`: CV adaptation service
      - `cv_storage.py`: CV storage management
-     - `summary_generator.py`: Generates professional CV summaries using validated input
-     - `education_generator.py`: Generates education sections using validated input
-     - `experience_generator.py`: Generates experience sections using validated input
-     - `skills_generator.py`: Generates and organizes skills using validated input
-     - `title_generator.py`: Generates professional titles using validated input
+     - `generators/`: Specialized generator services
+       * `competence_generator.py`: Generates core competences using validated input
+       * `summary_generator.py`: Generates professional CV summaries using validated input
+       * `education_generator.py`: Generates education sections using validated input
+       * `experience_generator.py`: Generates experience sections using validated input
+       * `skills_generator.py`: Generates and organizes skills using validated input
+       * `title_generator.py`: Generates professional titles using validated input
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
