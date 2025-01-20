@@ -3,7 +3,8 @@ from typing import List, Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import Title
+from cv_adapter.models.cv import CoreCompetences, Title
+from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 
 
 class TitleGenerator:
@@ -27,7 +28,7 @@ class TitleGenerator:
         self,
         cv_text: str,
         job_description: str,
-        core_competences: List[str],
+        core_competences: CoreCompetences,
         notes: Optional[str] = None,
     ) -> Title:
         """Generate a professional title tailored to a job description.
@@ -35,7 +36,7 @@ class TitleGenerator:
         Args:
             cv_text: CV in Markdown format containing professional background
             job_description: Job description in Markdown format
-            core_competences: List of core competences that should be highlighted
+            core_competences: Core competences that should be highlighted
             notes: Optional user notes about how to adapt the title
 
         Returns:
@@ -65,7 +66,7 @@ class TitleGenerator:
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
             f"Core Competences to Highlight:\n"
-            + "\n".join(f"- {comp}" for comp in core_competences)
+            + CoreCompetencesRenderer.render_to_markdown(core_competences)
             + "\n"
         )
         if notes:

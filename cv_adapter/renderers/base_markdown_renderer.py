@@ -10,6 +10,7 @@ from cv_adapter.models.cv import (
     Skills,
 )
 from cv_adapter.renderers.base import BaseRenderer, RendererError
+from cv_adapter.renderers.markdown_list_renderer import MarkdownListRenderer
 
 CVType = TypeVar("CVType", CV, MinimalCV)
 
@@ -27,7 +28,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVType]):
             List of lines in Markdown format
         """
         sections = ["## Core Competences\n"]
-        sections.extend(f"* {comp.text}" for comp in core_competences.items)
+        sections.extend(MarkdownListRenderer.render_bullet_list(core_competences.items))
         sections.append("")
         return sections
 
@@ -90,7 +91,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVType]):
         sections = ["## Skills\n"]
         for group in skills.groups:
             sections.append(f"### {group.name}")
-            sections.extend(f"* {skill.text}" for skill in group.skills)
+            sections.extend(MarkdownListRenderer.render_bullet_list(group.skills))
             sections.append("")
         return sections
 

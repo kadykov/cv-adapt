@@ -35,6 +35,9 @@ class CoreCompetence(BaseModel):
             raise ValueError("core competence must be a single line")
         return v
 
+    def __str__(self) -> str:
+        return self.text
+
 
 class CoreCompetences(BaseModel):
     items: List[CoreCompetence] = Field(
@@ -51,9 +54,6 @@ class CoreCompetences(BaseModel):
 
     def __len__(self) -> int:
         return len(self.items)
-
-    def to_list(self) -> List[str]:
-        return [item.text for item in self.items]
 
 
 class Institution(BaseModel):
@@ -152,6 +152,9 @@ class Skill(BaseModel):
         if "\n" in v:
             raise ValueError("skill must be a single line")
         return v
+
+    def __str__(self) -> str:
+        return self.text
 
 
 class SkillGroup(BaseModel):
