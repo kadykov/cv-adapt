@@ -3,8 +3,7 @@ from typing import List, Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CoreCompetences, Education
-from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
+from cv_adapter.models.cv import Education
 
 
 class EducationGenerator:
@@ -28,7 +27,7 @@ class EducationGenerator:
         self,
         cv_text: str,
         job_description: str,
-        core_competences: CoreCompetences,
+        core_competences: str,
         notes: Optional[str] = None,
     ) -> List[Education]:
         """Generate a list of educational experiences tailored to a job description.
@@ -36,7 +35,7 @@ class EducationGenerator:
         Args:
             cv_text: CV in Markdown format containing all educational experiences
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven
+            core_competences: Core competences that should be proven (in Markdown format)
             notes: Optional user notes about how to adapt education section
 
         Returns:
@@ -70,7 +69,7 @@ class EducationGenerator:
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
             f"Core Competences to Prove:\n"
-            + CoreCompetencesRenderer.render_to_markdown(core_competences)
+            + core_competences
             + "\n"
         )
         if notes:

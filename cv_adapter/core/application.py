@@ -2,6 +2,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
 from cv_adapter.models.personal_info import PersonalInfo
+from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
 from cv_adapter.services.description_generator import DescriptionGenerator
@@ -52,21 +53,22 @@ class CVAdapterApplication:
         core_competences = self.competence_analyzer.analyze(
             cv_text, job_description, user_notes=notes
         )
+        core_competences_md = CoreCompetencesRenderer.render_to_markdown(core_competences)
         experiences = self.experience_generator.generate(
-            cv_text, job_description, core_competences.to_list(), notes=notes
+            cv_text, job_description, core_competences_md, notes=notes
         )
         education = self.education_generator.generate(
-            cv_text, job_description, core_competences.to_list(), notes=notes
+            cv_text, job_description, core_competences_md, notes=notes
         )
         skills = self.skills_generator.generate(
-            cv_text, job_description, core_competences.to_list(), notes=notes
+            cv_text, job_description, core_competences_md, notes=notes
         )
 
         # 2. Create minimal CV for description generation
         title = self.title_generator.generate(
             cv_text,
             job_description,
-            core_competences.to_list(),
+            core_competences_md,
             notes=notes,
         )
         minimal_cv = MinimalCV(

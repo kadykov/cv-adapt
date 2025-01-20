@@ -3,8 +3,7 @@ from typing import List, Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CoreCompetences, Experience
-from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
+from cv_adapter.models.cv import Experience
 
 
 class ExperienceGenerator:
@@ -28,7 +27,7 @@ class ExperienceGenerator:
         self,
         cv_text: str,
         job_description: str,
-        core_competences: CoreCompetences,
+        core_competences: str,
         notes: Optional[str] = None,
     ) -> List[Experience]:
         """Generate a list of professional experiences tailored to a job description.
@@ -36,7 +35,7 @@ class ExperienceGenerator:
         Args:
             cv_text: CV in Markdown format containing all professional experiences
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven
+            core_competences: Core competences that should be proven (in Markdown format)
             notes: Optional user notes about how to adapt experiences
 
         Returns:
@@ -70,7 +69,7 @@ class ExperienceGenerator:
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
             f"Core Competences to Prove:\n"
-            + CoreCompetencesRenderer.render_to_markdown(core_competences)
+            + core_competences
             + "\n"
         )
         if notes:

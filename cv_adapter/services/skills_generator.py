@@ -3,8 +3,7 @@ from typing import List, Optional
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CoreCompetences, Skills
-from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
+from cv_adapter.models.cv import Skills
 
 
 class SkillsGenerator:
@@ -30,7 +29,7 @@ class SkillsGenerator:
         self,
         cv_text: str,
         job_description: str,
-        core_competences: CoreCompetences,
+        core_competences: str,
         notes: Optional[str] = None,
     ) -> Skills:
         """Generate a list of skills organized in groups and tailored to a job.
@@ -38,7 +37,7 @@ class SkillsGenerator:
         Args:
             cv_text: CV in Markdown format containing all professional experiences
             job_description: Job description in Markdown format
-            core_competences: Core competences that should be proven
+            core_competences: Core competences that should be proven (in Markdown format)
             notes: Optional user notes about how to adapt skills
 
         Returns:
@@ -72,7 +71,7 @@ class SkillsGenerator:
             f"CV:\n{cv_text}\n\n"
             f"Job Description:\n{job_description}\n\n"
             f"Core Competences to Prove:\n"
-            + CoreCompetencesRenderer.render_to_markdown(core_competences)
+            + core_competences
             + "\n"
         )
         if notes:
