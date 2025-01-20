@@ -1,14 +1,15 @@
-from typing import Optional
+"""Service for generating CV summaries."""
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CVDescription, MinimalCV
+from cv_adapter.models.generators import SummaryGeneratorInput
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 
 
-class DescriptionGenerator:
-    """Generates a concise CV description based on CV content and job description."""
+class SummaryGenerator:
+    """Generates a concise CV summary based on CV content and job description."""
 
     def __init__(
         self,
@@ -26,53 +27,41 @@ class DescriptionGenerator:
             ai_model,
             system_prompt=(
                 "An expert CV writer that creates concise and impactful CV "
-                "descriptions. Each description should be a single paragraph of no "
+                "summaries. Each summary should be a single paragraph of no "
                 "more than 50 words that highlights the candidate's key strengths "
                 "and experience in relation to the job requirements."
             ),
         )
 
-    def generate(
-        self,
-        minimal_cv: MinimalCV,
-        job_description: str,
-        user_notes: Optional[str] = None,
-    ) -> CVDescription:
-        """Generate a CV description based on minimal CV and job requirements.
+    def generate(self, input_data: SummaryGeneratorInput) -> CVSummary:
+        """Generate a CV summary based on CV content and job requirements.
 
         Args:
-            minimal_cv: MinimalCV instance containing essential CV parts
-            job_description: The job description to match against
-            user_notes: Optional notes from the user to guide the generation
+            input_data: SummaryGeneratorInput containing all required data
 
         Returns:
-            A concise CV description
+            A concise CV summary
 
         Raises:
             ValueError: If required inputs are missing or invalid
             RendererError: If CV rendering fails
         """
-        if not job_description.strip():
-            raise ValueError("Job description is required")
-
-        # Convert minimal CV to Markdown
-        cv_text = self.renderer.render_to_string(minimal_cv)
-
         # Prepare context for the AI
         context = (
             f"Based on the CV and job description below, create a concise and "
-            f"impactful CV description. The description should be a single paragraph "
+            f"impactful CV summary. The summary should be a single paragraph "
             f"of no more than 50 words that highlights the candidate's key strengths "
             f"and experience in relation to the job requirements.\n\n"
-            f"CV:\n{cv_text}\n\n"
-            f"Job Description:\n{job_description}\n"
+            f"CV:\n{input_data.cv_text}\n\n"
+            f"Job Description:\n{input_data.job_description}\n\n"
+            f"Core Competences:\n{input_data.core_competences}\n"
         )
-        if user_notes:
-            context += f"\nUser Notes for Consideration:\n{user_notes}"
+        if input_data.notes:
+            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate description
+        # Use the agent to generate summary
         result = self.agent.run_sync(
             context,
-            result_type=CVDescription,
+            result_type=CVSummary,
         )
         return result.data

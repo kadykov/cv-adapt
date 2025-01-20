@@ -5,13 +5,14 @@ from cv_adapter.models.generators import (
     EducationGeneratorInput,
     ExperienceGeneratorInput,
     SkillsGeneratorInput,
+    SummaryGeneratorInput,
     TitleGeneratorInput,
 )
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
-from cv_adapter.services.description_generator import DescriptionGenerator
+from cv_adapter.services.summary_generator import SummaryGenerator
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
@@ -31,7 +32,7 @@ class CVAdapterApplication:
         self.experience_generator = ExperienceGenerator(ai_model=ai_model)
         self.education_generator = EducationGenerator(ai_model=ai_model)
         self.skills_generator = SkillsGenerator(ai_model=ai_model)
-        self.description_generator = DescriptionGenerator(
+        self.summary_generator = SummaryGenerator(
             MinimalMarkdownRenderer(), ai_model=ai_model
         )
         self.title_generator = TitleGenerator(ai_model=ai_model)
@@ -106,15 +107,21 @@ class CVAdapterApplication:
             skills=skills,
         )
 
-        # 3. Generate description and create final CV
-        description = self.description_generator.generate(
-            minimal_cv, job_description, user_notes=notes
+        # 3. Generate summary and create final CV
+        cv_text = MinimalMarkdownRenderer().render_to_string(minimal_cv)
+        summary = self.summary_generator.generate(
+            SummaryGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+            )
         )
 
         return CV(
             personal_info=personal_info,
             title=title,
-            description=description,
+            summary=summary,
             core_competences=core_competences,
             experiences=experiences,
             education=education,

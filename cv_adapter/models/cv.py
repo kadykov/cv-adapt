@@ -7,8 +7,6 @@ from .constants import (
     BODY_LINE_LENGTH,
     HALF_LINE_LENGTH,
     MAX_CORE_COMPETENCES,
-    MAX_CV_DESCRIPTION_LENGTH,
-    MAX_CV_DESCRIPTION_WORDS,
     MAX_EXPERIENCE_DESCRIPTION_LENGTH,
     MAX_WORDS_PER_SUBSUBTITLE,
     MIN_CORE_COMPETENCES,
@@ -18,6 +16,7 @@ from .constants import (
     TITLE_LINE_LENGTH,
 )
 from .personal_info import PersonalInfo
+from .summary import CVSummary
 
 
 class CoreCompetence(BaseModel):
@@ -126,20 +125,7 @@ class Title(BaseModel):
         return self
 
 
-class CVDescription(BaseModel):
-    text: str = Field(..., max_length=MAX_CV_DESCRIPTION_LENGTH)
 
-    @model_validator(mode="after")
-    def validate_text(self) -> "CVDescription":
-        text = self.text.strip()
-        if len(text.split()) > MAX_CV_DESCRIPTION_WORDS:
-            raise ValueError(
-                f"CV description must not exceed {MAX_CV_DESCRIPTION_WORDS} words"
-            )
-        if "\n" in text:
-            raise ValueError("CV description must be a single paragraph")
-        self.text = text
-        return self
 
 
 class Skill(BaseModel):
@@ -189,9 +175,11 @@ class Skills(BaseModel):
 
 
 class MinimalCV(BaseModel):
-    """A minimal CV model containing only the essential parts needed for description.
+    """A minimal CV model containing only the essential parts needed for summary generation.
 
-    Used by DescriptionGenerator to create a focused input for LLM.
+    Used by SummaryGenerator to create a focused input for LLM. Contains only the
+    key components needed to generate an impactful CV summary, excluding personal
+    information and other non-essential details.
     """
 
     title: Title
@@ -202,9 +190,16 @@ class MinimalCV(BaseModel):
 
 
 class CV(BaseModel):
+    """Complete CV model containing all components of a professional CV.
+
+    This model represents a fully-formed CV with all necessary sections, including
+    personal information, professional summary, and detailed experience sections.
+    The components are organized in the order they should appear in the final CV.
+    """
+
     personal_info: PersonalInfo
     title: Title
-    description: CVDescription
+    summary: CVSummary
     core_competences: CoreCompetences
     experiences: List[Experience]
     education: List[Education]

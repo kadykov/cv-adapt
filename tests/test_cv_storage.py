@@ -8,7 +8,7 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-    CVDescription,
+
     Education,
     Experience,
     Skill,
@@ -18,6 +18,7 @@ from cv_adapter.models.cv import (
     University,
 )
 from cv_adapter.models.personal_info import PersonalInfo
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
@@ -29,7 +30,7 @@ personal_info:
     linkedin: "linkedin.com/in/johndoe"
 title:
   text: Senior Software Engineer
-description:
+summary:
   text: >-
     Senior Software Engineer with 5+ years of experience in Python and cloud
     technologies, specializing in cloud-native applications and CI/CD.
@@ -155,7 +156,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
             contacts={"email": "jane@example.com"},
         ),
         title=Title(text="Data Scientist"),
-        description=CVDescription(
+        summary=CVSummary(
             text=(
                 "Data Scientist with PhD and industry experience in machine learning, "
                 "specializing in model development and optimization."

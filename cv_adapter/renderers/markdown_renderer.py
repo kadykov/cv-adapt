@@ -28,7 +28,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
         return ["---", yaml_str.rstrip(), "---", ""]
 
     def _render_header(self, cv: CV) -> List[str]:
-        """Render header section with title and description.
+        """Render header section with title and professional summary.
 
         Args:
             cv: CV object to render
@@ -38,7 +38,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
         """
         return [
             f"## {cv.title.text}",
-            cv.description.text,
+            cv.summary.text,
             "",
         ]
 

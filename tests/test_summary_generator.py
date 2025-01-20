@@ -7,7 +7,6 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-    CVDescription,
     Education,
     Experience,
     MinimalCV,
@@ -17,8 +16,10 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.generators import SummaryGeneratorInput
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
-from cv_adapter.services.description_generator import DescriptionGenerator
+from cv_adapter.services.summary_generator import SummaryGenerator
 
 
 @pytest.fixture
@@ -148,73 +149,98 @@ def test_model() -> TestModel:
     return model
 
 
-def test_generate_description_matches_job_requirements(
+def test_generate_summary_matches_job_requirements(
     sample_minimal_cv: MinimalCV,
     job_description: str,
     test_model: TestModel,
 ) -> None:
     renderer = MinimalMarkdownRenderer()
-    generator = DescriptionGenerator(renderer=renderer, ai_model="test")
+    generator = SummaryGenerator(renderer=renderer, ai_model="test")
+    cv_text = renderer.render_to_string(sample_minimal_cv)
+    core_competences = "\n".join(
+        f"- {comp.text}" for comp in sample_minimal_cv.core_competences.items
+    )
 
     with generator.agent.override(model=test_model):
-        description = generator.generate(
-            minimal_cv=sample_minimal_cv, job_description=job_description
+        summary = generator.generate(
+            SummaryGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences,
+            )
         )
 
-        # Verify we got a valid description
-        assert isinstance(description, CVDescription)
-        assert description.text
+        # Verify we got a valid summary
+        assert isinstance(summary, CVSummary)
+        assert summary.text
 
-        # Verify description is a single paragraph
-        assert "\n" not in description.text
+        # Verify summary is a single paragraph
+        assert "\n" not in summary.text
 
-        # Verify description is not too long
-        assert len(description.text.split()) <= 50
+        # Verify summary is not too long
+        assert len(summary.text.split()) <= 50
 
-        # Verify description contains key elements
-        assert "Software Engineer" in description.text
-        assert "Python" in description.text
-        assert "cloud" in description.text
-        assert "CI/CD" in description.text
+        # Verify summary contains key elements
+        assert "Software Engineer" in summary.text
+        assert "Python" in summary.text
+        assert "cloud" in summary.text
+        assert "CI/CD" in summary.text
 
 
-def test_generate_description_with_user_notes(
+def test_generate_summary_with_user_notes(
     sample_minimal_cv: MinimalCV,
     job_description: str,
     test_model: TestModel,
 ) -> None:
     renderer = MinimalMarkdownRenderer()
-    generator = DescriptionGenerator(renderer=renderer, ai_model="test")
+    generator = SummaryGenerator(renderer=renderer, ai_model="test")
+    cv_text = renderer.render_to_string(sample_minimal_cv)
+    core_competences = "\n".join(
+        f"- {comp.text}" for comp in sample_minimal_cv.core_competences.items
+    )
     user_notes = """
     - Emphasize cloud architecture experience
     - Focus on team leadership skills
     """
 
     with generator.agent.override(model=test_model):
-        description = generator.generate(
-            minimal_cv=sample_minimal_cv,
-            job_description=job_description,
-            user_notes=user_notes,
+        summary = generator.generate(
+            SummaryGeneratorInput(
+                cv_text=cv_text,
+                job_description=job_description,
+                core_competences=core_competences,
+                notes=user_notes,
+            )
         )
 
-        # Verify we got a valid description
-        assert isinstance(description, CVDescription)
-        assert description.text
+        # Verify we got a valid summary
+        assert isinstance(summary, CVSummary)
+        assert summary.text
 
-        # Verify description is a single paragraph
-        assert "\n" not in description.text
+        # Verify summary is a single paragraph
+        assert "\n" not in summary.text
 
-        # Verify description is not too long
-        assert len(description.text.split()) <= 50
+        # Verify summary is not too long
+        assert len(summary.text.split()) <= 50
 
 
-def test_generate_description_validates_input(
+def test_generate_summary_validates_input(
     sample_minimal_cv: MinimalCV,
     test_model: TestModel,
 ) -> None:
     renderer = MinimalMarkdownRenderer()
-    generator = DescriptionGenerator(renderer=renderer, ai_model="test")
+    generator = SummaryGenerator(renderer=renderer, ai_model="test")
+    cv_text = renderer.render_to_string(sample_minimal_cv)
+    core_competences = "\n".join(
+        f"- {comp.text}" for comp in sample_minimal_cv.core_competences.items
+    )
 
     with generator.agent.override(model=test_model):
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(minimal_cv=sample_minimal_cv, job_description="")
+        with pytest.raises(ValueError, match="String should have at least 1 character"):
+            generator.generate(
+                SummaryGeneratorInput(
+                    cv_text=cv_text,
+                    job_description="",  # Empty job description should fail
+                    core_competences=core_competences,
+                )
+            )

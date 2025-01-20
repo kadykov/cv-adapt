@@ -46,3 +46,7 @@ class EducationGeneratorInput(GeneratorInputBase):
 
 class SkillsGeneratorInput(GeneratorInputBase):
     """Input model for skills generation containing all required data."""
+
+
+class SummaryGeneratorInput(GeneratorInputBase):
+    """Input model for CV summary generation containing all required data."""

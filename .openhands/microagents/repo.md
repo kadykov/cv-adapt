@@ -14,14 +14,14 @@ Project Structure:
        * `CVAdapterApplication`: Orchestrates CV generation workflow
        * Workflow steps:
          1. Generate components (core competences, experiences, education, skills)
-         2. Create minimal CV for description generation
-         3. Generate description using LLM
+         2. Create minimal CV for summary generation
+         3. Generate professional summary using LLM
          4. Generate professional title using LLM
          5. Create final CV with all components
    - `models/`: Data models and schemas
      - `cv.py`: CV-related data structures:
        * `CV`: Complete CV model with all fields
-       * `MinimalCV`: Minimal CV model for description generation
+       * `MinimalCV`: Minimal CV model for summary generation
        * `CoreCompetence`: Single core competence with validation
        * `CoreCompetences`: Collection of core competences
        * `Skill`: Single skill with validation
@@ -32,13 +32,14 @@ Project Structure:
        * `TitleGeneratorInput`: Input validation for title generation
        * `EducationGeneratorInput`: Input validation for education generation
        * `SkillsGeneratorInput`: Input validation for skills generation
+       * `SummaryGeneratorInput`: Input validation for summary generation
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
      - `competence_analyzer.py`: Analyzes competencies in CVs
      - `cv_adapter.py`: CV adaptation service
      - `cv_storage.py`: CV storage management
-     - `description_generator.py`: Generates descriptions
+     - `summary_generator.py`: Generates professional CV summaries using validated input
      - `education_generator.py`: Generates education sections using validated input
      - `experience_generator.py`: Generates experience sections using validated input
      - `skills_generator.py`: Generates and organizes skills using validated input
@@ -151,7 +152,7 @@ Development Guidelines:
      * BaseRenderer[CVType]: Generic base class for all renderers
      * BaseMarkdownRenderer[CVType]: Base class for Markdown renderers with common logic
      * MarkdownRenderer: Renders complete CV to Markdown
-     * MinimalMarkdownRenderer: Renders minimal CV for description generation
+     * MinimalMarkdownRenderer: Renders minimal CV for summary generation
      * YAMLRenderer: For data storage and interchange
    - When adding new renderers:
      * Create a new file in `renderers/` directory

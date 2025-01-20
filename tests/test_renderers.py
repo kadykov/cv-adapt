@@ -9,7 +9,7 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-    CVDescription,
+
     Education,
     Experience,
     Skill,
@@ -19,6 +19,7 @@ from cv_adapter.models.cv import (
     University,
 )
 from cv_adapter.models.personal_info import PersonalInfo
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
 
 
@@ -33,7 +34,7 @@ def sample_cv() -> CV:
             },
         ),
         title=Title(text="Senior Software Engineer"),
-        description=CVDescription(
+        summary=CVSummary(
             text="Experienced software engineer with a focus on Python development"
         ),
         core_competences=CoreCompetences(

@@ -10,7 +10,7 @@ from cv_adapter.models.cv import (
     Company,
     CoreCompetence,
     CoreCompetences,
-    CVDescription,
+
     Education,
     Experience,
     Skill,
@@ -27,7 +27,8 @@ from cv_adapter.models.generators import (
 )
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.services.competence_analyzer import CompetenceAnalyzer
-from cv_adapter.services.description_generator import DescriptionGenerator
+from cv_adapter.services.summary_generator import SummaryGenerator
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.services.education_generator import EducationGenerator
 from cv_adapter.services.experience_generator import ExperienceGenerator
 from cv_adapter.services.skills_generator import SkillsGenerator
@@ -41,7 +42,7 @@ def mock_services() -> Dict[str, Mock]:
         "experience_generator": Mock(),
         "education_generator": Mock(),
         "skills_generator": Mock(),
-        "description_generator": Mock(),
+        "summary_generator": Mock(),
         "title_generator": Mock(),
     }
 
@@ -54,7 +55,7 @@ def app(mock_services: Dict[str, Mock]) -> CVAdapterApplication:
         app.experience_generator = mock_services["experience_generator"]
         app.education_generator = mock_services["education_generator"]
         app.skills_generator = mock_services["skills_generator"]
-        app.description_generator = mock_services["description_generator"]
+        app.summary_generator = mock_services["summary_generator"]
         app.title_generator = mock_services["title_generator"]
         return app
 
@@ -67,7 +68,7 @@ def test_init_with_custom_ai_model() -> None:
         assert isinstance(app.experience_generator, ExperienceGenerator)
         assert isinstance(app.education_generator, EducationGenerator)
         assert isinstance(app.skills_generator, SkillsGenerator)
-        assert isinstance(app.description_generator, DescriptionGenerator)
+        assert isinstance(app.summary_generator, SummaryGenerator)
         assert isinstance(app.title_generator, TitleGenerator)
 
 
@@ -79,7 +80,7 @@ def detailed_cv() -> CV:
             contacts={"email": "john@example.com", "phone": "+1234567890"},
         ),
         title=Title(text="Senior Developer"),
-        description=CVDescription(text="Original description"),
+        summary=CVSummary(text="Original summary"),
         core_competences=CoreCompetences(
             items=[
                 CoreCompetence(text="Python"),
@@ -175,7 +176,7 @@ def test_generate_cv(
             )
         ]
     )
-    description = "Generated description"
+    summary = "Generated summary"
 
     mock_services["competence_analyzer"].analyze.return_value = CoreCompetences(
         items=core_competences
@@ -183,8 +184,8 @@ def test_generate_cv(
     mock_services["experience_generator"].generate.return_value = experiences
     mock_services["education_generator"].generate.return_value = education
     mock_services["skills_generator"].generate.return_value = skills
-    mock_services["description_generator"].generate.return_value = CVDescription(
-        text=description
+    mock_services["summary_generator"].generate.return_value = CVSummary(
+        text=summary
     )
     mock_services["title_generator"].generate.return_value = Title(
         text="Senior Python Developer"
@@ -199,8 +200,8 @@ def test_generate_cv(
     )
 
     # Verify
-    assert isinstance(result.description, CVDescription)
-    assert result.description.text == description
+    assert isinstance(result.summary, CVSummary)
+    assert result.summary.text == summary
     assert isinstance(result.core_competences, CoreCompetences)
     assert result.core_competences.items == core_competences
     assert result.experiences == experiences
