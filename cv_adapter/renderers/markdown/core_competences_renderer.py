@@ -1,7 +1,7 @@
 from typing import List
 
 from cv_adapter.models.cv import CoreCompetences
-from cv_adapter.renderers.markdown_list_renderer import MarkdownListRenderer
+from cv_adapter.renderers.markdown.markdown_list_renderer import MarkdownListRenderer
 
 
 class CoreCompetencesRenderer:

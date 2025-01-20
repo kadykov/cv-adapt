@@ -3,7 +3,7 @@ from typing import Union
 
 from cv_adapter.models.cv import MinimalCV
 from cv_adapter.renderers.base import RendererError
-from cv_adapter.renderers.base_markdown_renderer import BaseMarkdownRenderer
+from cv_adapter.renderers.markdown.base_markdown_renderer import BaseMarkdownRenderer
 
 
 class MinimalMarkdownRenderer(BaseMarkdownRenderer[MinimalCV]):

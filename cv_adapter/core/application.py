@@ -10,8 +10,12 @@ from cv_adapter.models.generators import (
     TitleGeneratorInput,
 )
 from cv_adapter.models.personal_info import PersonalInfo
-from cv_adapter.renderers.core_competences_renderer import CoreCompetencesRenderer
-from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
+from cv_adapter.renderers.markdown.core_competences_renderer import (
+    CoreCompetencesRenderer,
+)
+from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
+    MinimalMarkdownRenderer,
+)
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
 from cv_adapter.services.generators.education_generator import EducationGenerator
 from cv_adapter.services.generators.experience_generator import ExperienceGenerator

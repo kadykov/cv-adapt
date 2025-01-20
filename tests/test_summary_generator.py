@@ -18,7 +18,9 @@ from cv_adapter.models.cv import (
 )
 from cv_adapter.models.generators import SummaryGeneratorInput
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
+from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
+    MinimalMarkdownRenderer,
+)
 from cv_adapter.services.generators.summary_generator import SummaryGenerator
 
 

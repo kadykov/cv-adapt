@@ -10,7 +10,7 @@ from cv_adapter.models.cv import (
     Skills,
 )
 from cv_adapter.renderers.base import BaseRenderer, RendererError
-from cv_adapter.renderers.markdown_list_renderer import MarkdownListRenderer
+from cv_adapter.renderers.markdown.markdown_list_renderer import MarkdownListRenderer
 
 CVType = TypeVar("CVType", CV, MinimalCV)
 

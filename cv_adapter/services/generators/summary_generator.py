@@ -5,7 +5,9 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.generators import SummaryGeneratorInput
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.renderers.minimal_markdown_renderer import MinimalMarkdownRenderer
+from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
+    MinimalMarkdownRenderer,
+)
 
 
 class SummaryGenerator:

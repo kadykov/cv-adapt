@@ -48,12 +48,13 @@ Project Structure:
        * `title_generator.py`: Generates professional titles using validated input
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
-     - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
-     - `markdown_list_renderer.py`: Generic renderer for Markdown bullet point lists
-     - `core_competences_renderer.py`: Specialized renderer for core competences
-     - `markdown_renderer.py`: Renders CV to Markdown format
-     - `minimal_markdown_renderer.py`: Renders MinimalCV to Markdown format
      - `yaml_renderer.py`: Renders CV to YAML format
+     - `markdown/`: Markdown-specific renderers
+       * `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
+       * `markdown_list_renderer.py`: Generic renderer for Markdown bullet point lists
+       * `core_competences_renderer.py`: Specialized renderer for core competences
+       * `markdown_renderer.py`: Renders CV to Markdown format
+       * `minimal_markdown_renderer.py`: Renders MinimalCV to Markdown format
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
@@ -159,7 +160,8 @@ Development Guidelines:
      * MinimalMarkdownRenderer: Renders minimal CV for summary generation
      * YAMLRenderer: For data storage and interchange
    - When adding new renderers:
-     * Create a new file in `renderers/` directory
+     * Create a new file in `renderers/` or `renderers/markdown/` directory
+     * For Markdown-specific renderers, use the `renderers/markdown/` directory
      * Implement appropriate base class
      * Add comprehensive tests
      * Update documentation
