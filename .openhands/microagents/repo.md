@@ -22,6 +22,10 @@ Project Structure:
      - `cv.py`: CV-related data structures:
        * `CV`: Complete CV model with all fields
        * `MinimalCV`: Minimal CV model for description generation
+       * `CoreCompetence`: Single core competence with validation
+       * `CoreCompetences`: Collection of core competences
+       * `Skill`: Single skill with validation
+       * `Skills`: Collection of skill groups
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
    - `services/`: Business logic services
@@ -36,6 +40,8 @@ Project Structure:
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
+     - `markdown_list_renderer.py`: Generic renderer for Markdown bullet point lists
+     - `core_competences_renderer.py`: Specialized renderer for core competences
      - `markdown_renderer.py`: Renders CV to Markdown format
      - `minimal_markdown_renderer.py`: Renders MinimalCV to Markdown format
      - `yaml_renderer.py`: Renders CV to YAML format
@@ -111,7 +117,21 @@ Development Guidelines:
    - Use mypy for static type checking
    - Project has strict type checking enabled
 
-6. Working with Renderers:
+6. Working with Models:
+   - Models are responsible for data validation and structure
+   - Keep models focused on data representation, not presentation
+   - Use protocols for type-safe interfaces between models and renderers
+   - Models can implement string representation for debugging
+   - Example model hierarchy:
+     * Base models: CoreCompetence, Skill
+     * Collection models: CoreCompetences, Skills
+     * Complex models: CV, MinimalCV
+   - Validation rules:
+     * Use Pydantic field validators for complex validation
+     * Keep validation close to the data structure
+     * Validate both individual items and collections
+
+7. Working with Renderers:
    - Use the rendering system in `cv_adapter/renderers/` for CV output
    - All renderers must implement the BaseRenderer interface
    - Renderer hierarchy:
@@ -129,8 +149,9 @@ Development Guidelines:
      * Use generic types to ensure type safety
      * BaseRenderer and BaseMarkdownRenderer are generic over CV type
      * Concrete renderers specify their CV type (CV or MinimalCV)
+     * Use protocols (like MarkdownListItem) for type-safe interfaces
 
-7. Documentation Maintenance:
+8. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
    - When creating new files, modifying project structure, or adding features:
      * Update the Project Structure section accordingly
