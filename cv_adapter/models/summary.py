@@ -2,8 +2,8 @@
 
 from pydantic import Field, model_validator
 
-from .language import LanguageValidationMixin
 from .constants import MAX_CV_SUMMARY_LENGTH, MAX_CV_SUMMARY_WORDS
+from .language import LanguageValidationMixin
 
 
 class CVSummary(LanguageValidationMixin):

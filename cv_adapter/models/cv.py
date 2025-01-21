@@ -3,7 +3,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .language import Language, LanguageValidationMixin
 from .constants import (
     BODY_LINE_LENGTH,
     HALF_LINE_LENGTH,
@@ -16,6 +15,7 @@ from .constants import (
     SUBTITLE_LINE_LENGTH,
     TITLE_LINE_LENGTH,
 )
+from .language import Language, LanguageValidationMixin
 from .personal_info import PersonalInfo
 from .summary import CVSummary
 

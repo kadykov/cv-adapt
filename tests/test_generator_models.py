@@ -10,6 +10,7 @@ from cv_adapter.models.generators import (
     SkillsGeneratorInput,
     TitleGeneratorInput,
 )
+from cv_adapter.models.language import Language
 
 
 def test_generator_input_base_validation() -> None:
@@ -19,10 +20,12 @@ def test_generator_input_base_validation() -> None:
         cv_text="CV text",
         job_description="Job description",
         core_competences="Core competences",
+        language=Language.ENGLISH,
     )
     assert input_data.cv_text == "CV text"
     assert input_data.job_description == "Job description"
     assert input_data.core_competences == "Core competences"
+    assert input_data.language == Language.ENGLISH
     assert input_data.notes is None
 
     # Test with notes
@@ -31,6 +34,7 @@ def test_generator_input_base_validation() -> None:
         job_description="Job description",
         core_competences="Core competences",
         notes="Some notes",
+        language=Language.ENGLISH,
     )
     assert input_data.notes == "Some notes"
 
@@ -40,6 +44,7 @@ def test_generator_input_base_validation() -> None:
             cv_text="",
             job_description="Job description",
             core_competences="Core competences",
+            language=Language.ENGLISH,
         )
 
     with pytest.raises(ValidationError):
@@ -47,6 +52,7 @@ def test_generator_input_base_validation() -> None:
             cv_text="CV text",
             job_description="",
             core_competences="Core competences",
+            language=Language.ENGLISH,
         )
 
     with pytest.raises(ValidationError):
@@ -54,6 +60,7 @@ def test_generator_input_base_validation() -> None:
             cv_text="CV text",
             job_description="Job description",
             core_competences="",
+            language=Language.ENGLISH,
         )
 
     # Test whitespace-only strings
@@ -62,6 +69,7 @@ def test_generator_input_base_validation() -> None:
             cv_text="   \n  ",
             job_description="Job description",
             core_competences="Core competences",
+            language=Language.ENGLISH,
         )
 
     # Test empty notes are converted to None
@@ -70,6 +78,7 @@ def test_generator_input_base_validation() -> None:
         job_description="Job description",
         core_competences="Core competences",
         notes="   ",
+        language=Language.ENGLISH,
     )
     assert input_data.notes is None
 
@@ -81,11 +90,13 @@ def test_experience_generator_input_validation() -> None:
         cv_text="CV text",
         job_description="Job description",
         core_competences="Core competences",
+        language=Language.ENGLISH,
     )
     assert isinstance(input_data, GeneratorInputBase)
     assert input_data.cv_text == "CV text"
     assert input_data.job_description == "Job description"
     assert input_data.core_competences == "Core competences"
+    assert input_data.language == Language.ENGLISH
     assert input_data.notes is None
 
 
@@ -96,11 +107,13 @@ def test_title_generator_input_validation() -> None:
         cv_text="CV text",
         job_description="Job description",
         core_competences="Core competences",
+        language=Language.ENGLISH,
     )
     assert isinstance(input_data, GeneratorInputBase)
     assert input_data.cv_text == "CV text"
     assert input_data.job_description == "Job description"
     assert input_data.core_competences == "Core competences"
+    assert input_data.language == Language.ENGLISH
     assert input_data.notes is None
 
 
@@ -111,11 +124,13 @@ def test_education_generator_input_validation() -> None:
         cv_text="CV text",
         job_description="Job description",
         core_competences="Core competences",
+        language=Language.ENGLISH,
     )
     assert isinstance(input_data, GeneratorInputBase)
     assert input_data.cv_text == "CV text"
     assert input_data.job_description == "Job description"
     assert input_data.core_competences == "Core competences"
+    assert input_data.language == Language.ENGLISH
     assert input_data.notes is None
 
 
@@ -126,9 +141,11 @@ def test_skills_generator_input_validation() -> None:
         cv_text="CV text",
         job_description="Job description",
         core_competences="Core competences",
+        language=Language.ENGLISH,
     )
     assert isinstance(input_data, GeneratorInputBase)
     assert input_data.cv_text == "CV text"
     assert input_data.job_description == "Job description"
     assert input_data.core_competences == "Core competences"
+    assert input_data.language == Language.ENGLISH
     assert input_data.notes is None

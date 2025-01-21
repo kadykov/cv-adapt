@@ -20,6 +20,7 @@ from cv_adapter.models.cv import (
 )
 
 # Removed unused imports
+from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
@@ -74,15 +75,16 @@ def detailed_cv() -> CV:
             full_name="John Doe",
             contacts={"email": "john@example.com", "phone": "+1234567890"},
         ),
-        title=Title(text="Senior Developer"),
-        summary=CVSummary(text="Original summary"),
+        title=Title(text="Senior Developer", language=Language.ENGLISH),
+        summary=CVSummary(text="Original summary", language=Language.ENGLISH),
         core_competences=CoreCompetences(
             items=[
-                CoreCompetence(text="Python"),
-                CoreCompetence(text="JavaScript"),
-                CoreCompetence(text="TypeScript"),
-                CoreCompetence(text="React"),
-            ]
+                CoreCompetence(text="Python", language=Language.ENGLISH),
+                CoreCompetence(text="JavaScript", language=Language.ENGLISH),
+                CoreCompetence(text="TypeScript", language=Language.ENGLISH),
+                CoreCompetence(text="React", language=Language.ENGLISH),
+            ],
+            language=Language.ENGLISH,
         ),
         experiences=[
             Experience(
@@ -90,12 +92,14 @@ def detailed_cv() -> CV:
                     name="Tech Corp",
                     description="Tech company",
                     location="San Francisco",
+                    language=Language.ENGLISH,
                 ),
                 position="Developer",
                 start_date=date(2020, 1, 1),
                 end_date=date(2023, 1, 1),
                 description="Coding",
                 technologies=["Python", "Git"],
+                language=Language.ENGLISH,
             )
         ],
         education=[
@@ -104,21 +108,26 @@ def detailed_cv() -> CV:
                     name="University",
                     description="Top university",
                     location="New York",
+                    language=Language.ENGLISH,
                 ),
                 degree="BSc Computer Science",
                 start_date=date(2016, 9, 1),
                 end_date=date(2020, 6, 1),
                 description="Computer Science studies",
+                language=Language.ENGLISH,
             )
         ],
         skills=Skills(
             groups=[
                 SkillGroup(
                     name="Programming",
-                    skills=[Skill(text="Python")],
+                    skills=[Skill(text="Python", language=Language.ENGLISH)],
+                    language=Language.ENGLISH,
                 )
-            ]
+            ],
+            language=Language.ENGLISH,
         ),
+        language=Language.ENGLISH,
     )
 
 
@@ -131,10 +140,10 @@ def test_generate_cv(
     cv_text = detailed_cv.model_dump_json()
 
     core_competences = [
-        CoreCompetence(text="Python"),
-        CoreCompetence(text="JavaScript"),
-        CoreCompetence(text="TypeScript"),
-        CoreCompetence(text="React"),
+        CoreCompetence(text="Python", language=Language.ENGLISH),
+        CoreCompetence(text="JavaScript", language=Language.ENGLISH),
+        CoreCompetence(text="TypeScript", language=Language.ENGLISH),
+        CoreCompetence(text="React", language=Language.ENGLISH),
     ]
     experiences = [
         Experience(
@@ -142,12 +151,14 @@ def test_generate_cv(
                 name="Tech Corp",
                 description="Tech company",
                 location="San Francisco",
+                language=Language.ENGLISH,
             ),
             position="Senior Dev",
             start_date=date(2020, 1, 1),
             end_date=date(2023, 1, 1),
             description="Python development",
             technologies=["Python", "Git"],
+            language=Language.ENGLISH,
         )
     ]
     education = [
@@ -156,32 +167,79 @@ def test_generate_cv(
                 name="University",
                 description="Top university",
                 location="New York",
+                language=Language.ENGLISH,
             ),
             degree="MSc Computer Science",
             start_date=date(2016, 9, 1),
             end_date=date(2020, 6, 1),
             description="Advanced CS studies",
+            language=Language.ENGLISH,
         )
     ]
     skills = Skills(
         groups=[
             SkillGroup(
                 name="Programming",
-                skills=[Skill(text="Python")],
+                skills=[Skill(text="Python", language=Language.ENGLISH)],
+                language=Language.ENGLISH,
             )
-        ]
+        ],
+        language=Language.ENGLISH,
     )
     summary = "Generated summary"
 
     mock_services["competence_generator"].generate.return_value = CoreCompetences(
-        items=core_competences
+        items=core_competences,
+        language=Language.ENGLISH,
     )
-    mock_services["experience_generator"].generate.return_value = experiences
-    mock_services["education_generator"].generate.return_value = education
-    mock_services["skills_generator"].generate.return_value = skills
-    mock_services["summary_generator"].generate.return_value = CVSummary(text=summary)
+    mock_services["experience_generator"].generate.return_value = [
+        Experience(
+            company=Company(
+                name="Tech Corp",
+                description="Tech company",
+                location="San Francisco",
+                language=Language.ENGLISH,
+            ),
+            position="Senior Dev",
+            start_date=date(2020, 1, 1),
+            end_date=date(2023, 1, 1),
+            description="Python development",
+            technologies=["Python", "Git"],
+            language=Language.ENGLISH,
+        )
+    ]
+    mock_services["education_generator"].generate.return_value = [
+        Education(
+            university=University(
+                name="University",
+                description="Top university",
+                location="New York",
+                language=Language.ENGLISH,
+            ),
+            degree="MSc Computer Science",
+            start_date=date(2016, 9, 1),
+            end_date=date(2020, 6, 1),
+            description="Advanced CS studies",
+            language=Language.ENGLISH,
+        )
+    ]
+    mock_services["skills_generator"].generate.return_value = Skills(
+        groups=[
+            SkillGroup(
+                name="Programming",
+                skills=[Skill(text="Python", language=Language.ENGLISH)],
+                language=Language.ENGLISH,
+            )
+        ],
+        language=Language.ENGLISH,
+    )
+    mock_services["summary_generator"].generate.return_value = CVSummary(
+        text=summary,
+        language=Language.ENGLISH,
+    )
     mock_services["title_generator"].generate.return_value = Title(
-        text="Senior Python Developer"
+        text="Senior Python Developer",
+        language=Language.ENGLISH,
     )
 
     # Execute
@@ -190,6 +248,7 @@ def test_generate_cv(
         job_description,
         personal_info=detailed_cv.personal_info,
         notes=notes,
+        language=Language.ENGLISH,
     )
 
     # Verify
@@ -203,6 +262,7 @@ def test_generate_cv(
     assert result.personal_info.contacts == detailed_cv.personal_info.contacts
     assert result.personal_info.full_name == detailed_cv.personal_info.full_name
     assert result.title.text == "Senior Python Developer"
+    assert result.language == Language.ENGLISH
 
     # Verify service calls
     core_competences_md = "* Python\n* JavaScript\n* TypeScript\n* React"
@@ -210,28 +270,33 @@ def test_generate_cv(
         cv=cv_text,
         job_description=job_description,
         notes=notes,
+        language=Language.ENGLISH,
     )
     mock_services["experience_generator"].generate.assert_called_once_with(
         cv=cv_text,
         job_description=job_description,
         core_competences=core_competences_md,
         notes=notes,
+        language=Language.ENGLISH,
     )
     mock_services["education_generator"].generate.assert_called_once_with(
         cv=cv_text,
         job_description=job_description,
         core_competences=core_competences_md,
         notes=notes,
+        language=Language.ENGLISH,
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
         cv=cv_text,
         job_description=job_description,
         core_competences=core_competences_md,
         notes=notes,
+        language=Language.ENGLISH,
     )
     mock_services["title_generator"].generate.assert_called_once_with(
         cv=cv_text,
         job_description=job_description,
         core_competences=core_competences_md,
         notes=notes,
+        language=Language.ENGLISH,
     )
