@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from .language import Language, LanguageValidationMixin
 from .constants import (
     BODY_LINE_LENGTH,
     HALF_LINE_LENGTH,
@@ -19,7 +20,7 @@ from .personal_info import PersonalInfo
 from .summary import CVSummary
 
 
-class CoreCompetence(BaseModel):
+class CoreCompetence(LanguageValidationMixin):
     text: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)
 
     @field_validator("text")
@@ -42,6 +43,7 @@ class CoreCompetences(BaseModel):
     items: List[CoreCompetence] = Field(
         ..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES
     )
+    language: Language
 
     @field_validator("items")
     @classmethod
@@ -61,6 +63,7 @@ class Institution(BaseModel):
     )  # H2 - Company/University name
     description: Optional[str] = Field(None, max_length=BODY_LINE_LENGTH)
     location: Optional[str] = Field(None, max_length=HALF_LINE_LENGTH)
+    language: Language
 
     @field_validator("name", "description", "location")
     @classmethod
@@ -90,6 +93,7 @@ class Experience(BaseModel):
     end_date: Optional[date]
     description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
     technologies: List[str]
+    language: Language
 
 
 class Education(BaseModel):
@@ -98,6 +102,7 @@ class Education(BaseModel):
     start_date: date
     end_date: Optional[date]
     description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
+    language: Language
 
     @field_validator("degree")
     @classmethod
@@ -108,7 +113,7 @@ class Education(BaseModel):
         return v
 
 
-class Title(BaseModel):
+class Title(LanguageValidationMixin):
     text: str = Field(..., max_length=TITLE_LINE_LENGTH * 2)  # Allow up to 2 lines
 
     @model_validator(mode="after")
@@ -125,7 +130,7 @@ class Title(BaseModel):
         return self
 
 
-class Skill(BaseModel):
+class Skill(LanguageValidationMixin):
     text: str = Field(..., max_length=HALF_LINE_LENGTH)
 
     @field_validator("text")
@@ -143,6 +148,7 @@ class Skill(BaseModel):
 class SkillGroup(BaseModel):
     name: str = Field(..., max_length=HALF_LINE_LENGTH)
     skills: List[Skill] = Field(..., min_length=MIN_SKILLS_IN_GROUP)
+    language: Language
 
     @field_validator("name")
     @classmethod
@@ -162,6 +168,7 @@ class SkillGroup(BaseModel):
 
 class Skills(BaseModel):
     groups: List[SkillGroup] = Field(..., min_length=1)
+    language: Language
 
     @model_validator(mode="after")
     def validate_unique_skills_across_groups(self) -> "Skills":
@@ -184,6 +191,21 @@ class MinimalCV(BaseModel):
     experiences: List[Experience]
     education: List[Education]
     skills: Skills
+    language: Language
+
+    @model_validator(mode="after")
+    def validate_language_consistency(self) -> "MinimalCV":
+        """Ensure all components use the same language."""
+        lang = self.language
+        if (
+            self.title.language != lang
+            or self.core_competences.language != lang
+            or any(exp.language != lang for exp in self.experiences)
+            or any(edu.language != lang for edu in self.education)
+            or self.skills.language != lang
+        ):
+            raise ValueError("All CV components must use the same language")
+        return self
 
 
 class CV(BaseModel):
@@ -201,3 +223,19 @@ class CV(BaseModel):
     experiences: List[Experience]
     education: List[Education]
     skills: Skills
+    language: Language
+
+    @model_validator(mode="after")
+    def validate_language_consistency(self) -> "CV":
+        """Ensure all components use the same language."""
+        lang = self.language
+        if (
+            self.title.language != lang
+            or self.summary.language != lang
+            or self.core_competences.language != lang
+            or any(exp.language != lang for exp in self.experiences)
+            or any(edu.language != lang for edu in self.education)
+            or self.skills.language != lang
+        ):
+            raise ValueError("All CV components must use the same language")
+        return self

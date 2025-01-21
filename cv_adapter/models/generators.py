@@ -4,6 +4,8 @@ from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from .language import Language
+
 
 class CompetenceGeneratorInput(BaseModel):
     """Input model for competence generation, which is the first step in CV generation.
@@ -15,6 +17,7 @@ class CompetenceGeneratorInput(BaseModel):
     cv_text: Annotated[str, Field(min_length=1)]
     job_description: Annotated[str, Field(min_length=1)]
     notes: Optional[str] = None
+    language: Language
 
     @field_validator("cv_text", "job_description", "notes")
     @classmethod
@@ -42,6 +45,7 @@ class GeneratorInputBase(BaseModel):
     job_description: Annotated[str, Field(min_length=1)]
     core_competences: Annotated[str, Field(min_length=1)]
     notes: Optional[str] = None
+    language: Language
 
     @field_validator("cv_text", "job_description", "core_competences", "notes")
     @classmethod
