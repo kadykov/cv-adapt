@@ -56,8 +56,11 @@ def detect_language(text: str) -> Optional[Language]:
     if not text or not text.strip():
         return None
 
+    # Replace newlines with spaces to handle multi-line text
+    text_single_line = text.replace("\n", " ").strip()
+
     try:
-        result = _detect(text)
+        result = _detect(text_single_line)
         lang_code = result.get("lang")
         score = result.get("score", 0)
 

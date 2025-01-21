@@ -16,6 +16,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.language import Language
 from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
     MinimalMarkdownRenderer,
 )
@@ -24,14 +25,15 @@ from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
 @pytest.fixture
 def minimal_cv() -> MinimalCV:
     return MinimalCV(
-        title=Title(text="Senior Software Engineer"),
+        title=Title(text="Senior Software Engineer", language=Language.ENGLISH),
         core_competences=CoreCompetences(
             items=[
-                CoreCompetence(text="Python Development"),
-                CoreCompetence(text="System Design"),
-                CoreCompetence(text="Team Leadership"),
-                CoreCompetence(text="Agile Methods"),
-            ]
+                CoreCompetence(text="Python Development", language=Language.ENGLISH),
+                CoreCompetence(text="System Design", language=Language.ENGLISH),
+                CoreCompetence(text="Team Leadership", language=Language.ENGLISH),
+                CoreCompetence(text="Agile Methods", language=Language.ENGLISH),
+            ],
+            language=Language.ENGLISH,
         ),
         experiences=[
             Experience(
@@ -39,12 +41,14 @@ def minimal_cv() -> MinimalCV:
                     name="Tech Corp",
                     location="San Francisco, CA",
                     description=None,
+                    language=Language.ENGLISH,
                 ),
                 position="Senior Software Engineer",
                 start_date=date(2020, 1, 1),
                 end_date=None,
                 description="Led development of microservices architecture",
                 technologies=["Python", "Docker", "Kubernetes"],
+                language=Language.ENGLISH,
             )
         ],
         education=[
@@ -53,11 +57,13 @@ def minimal_cv() -> MinimalCV:
                     name="University of Technology",
                     location="Boston, MA",
                     description=None,
+                    language=Language.ENGLISH,
                 ),
                 degree="Master of Computer Science",
                 start_date=date(2018, 9, 1),
                 end_date=date(2020, 6, 1),
                 description="Focus on distributed systems and AI",
+                language=Language.ENGLISH,
             )
         ],
         skills=Skills(
@@ -65,21 +71,25 @@ def minimal_cv() -> MinimalCV:
                 SkillGroup(
                     name="Programming",
                     skills=[
-                        Skill(text="Python"),
-                        Skill(text="Java"),
-                        Skill(text="Go"),
+                        Skill(text="Python", language=Language.ENGLISH),
+                        Skill(text="Java", language=Language.ENGLISH),
+                        Skill(text="Go", language=Language.ENGLISH),
                     ],
+                    language=Language.ENGLISH,
                 ),
                 SkillGroup(
                     name="Tools",
                     skills=[
-                        Skill(text="Docker"),
-                        Skill(text="Kubernetes"),
-                        Skill(text="Git"),
+                        Skill(text="Docker", language=Language.ENGLISH),
+                        Skill(text="Kubernetes", language=Language.ENGLISH),
+                        Skill(text="Git", language=Language.ENGLISH),
                     ],
+                    language=Language.ENGLISH,
                 ),
-            ]
+            ],
+            language=Language.ENGLISH,
         ),
+        language=Language.ENGLISH,
     )
 
 

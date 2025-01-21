@@ -16,6 +16,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.services.generators.cv_storage import CVStorage, CVStorageError
@@ -29,21 +30,29 @@ personal_info:
     linkedin: "linkedin.com/in/johndoe"
 title:
   text: Senior Software Engineer
+  language: en
 summary:
   text: >-
     Senior Software Engineer with 5+ years of experience in Python and cloud
     technologies, specializing in cloud-native applications and CI/CD.
+  language: en
 core_competences:
   items:
     - text: Python Development
+      language: en
     - text: Cloud Architecture
+      language: en
     - text: System Design
+      language: en
     - text: Team Leadership
+      language: en
+  language: en
 experiences:
   - company:
       name: Tech Corp
       description: Leading cloud technology company
       location: San Francisco, CA
+      language: en
     position: Senior Software Engineer
     start_date: 2020-01-01
     end_date: 2023-12-31
@@ -55,10 +64,12 @@ experiences:
       - Python
       - Docker
       - AWS
+    language: en
   - company:
       name: StartUp Inc
       description: Innovative web development startup
       location: New York, NY
+      language: en
     position: Software Developer
     start_date: 2018-01-01
     end_date: 2019-12-31
@@ -70,11 +81,13 @@ experiences:
       - Python
       - React
       - PostgreSQL
+    language: en
 education:
   - university:
       name: University of Technology
       description: Leading technical university
       location: San Francisco, CA
+      language: en
     degree: MSc in Computer Science
     start_date: 2016-09-01
     end_date: 2018-06-30
@@ -82,29 +95,42 @@ education:
       Specialized in distributed systems and cloud computing. Developed scalable
       data processing systems as part of thesis. Collaborated on research projects
       with industry partners.
+    language: en
   - university:
       name: Tech University
       description: Top engineering school
       location: Boston, MA
+      language: en
     degree: BSc in Software Engineering
     start_date: 2012-09-01
     end_date: 2016-06-30
     description: >-
       Focus on software engineering principles and practices. Led team projects in
       agile development. Completed internship at major tech company.
+    language: en
 
 skills:
   groups:
     - name: Programming
       skills:
         - text: Python
+          language: en
         - text: Docker
+          language: en
         - text: AWS
+          language: en
+      language: en
     - name: Leadership
       skills:
         - text: Team Management
+          language: en
         - text: Mentoring
+          language: en
         - text: Agile
+          language: en
+      language: en
+  language: en
+language: en
 """
 
 
@@ -154,20 +180,22 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
             full_name="Jane Smith",
             contacts={"email": "jane@example.com"},
         ),
-        title=Title(text="Data Scientist"),
+        title=Title(text="Data Scientist", language=Language.ENGLISH),
         summary=CVSummary(
             text=(
                 "Data Scientist with PhD and industry experience in machine learning, "
                 "specializing in model development and optimization."
             ),
+            language=Language.ENGLISH,
         ),
         core_competences=CoreCompetences(
             items=[
-                CoreCompetence(text="Machine Learning"),
-                CoreCompetence(text="Data Analysis"),
-                CoreCompetence(text="Python Development"),
-                CoreCompetence(text="Team Leadership"),
-            ]
+                CoreCompetence(text="Machine Learning", language=Language.ENGLISH),
+                CoreCompetence(text="Data Analysis", language=Language.ENGLISH),
+                CoreCompetence(text="Python Development", language=Language.ENGLISH),
+                CoreCompetence(text="Team Leadership", language=Language.ENGLISH),
+            ],
+            language=Language.ENGLISH,
         ),
         experiences=[
             Experience(
@@ -175,6 +203,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                     name="AI Corp",
                     description="Leading AI research company",
                     location="Boston, MA",
+                    language=Language.ENGLISH,
                 ),
                 position="Data Scientist",
                 start_date=date(2020, 1, 1),
@@ -185,6 +214,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                     "Implemented automated model deployment pipeline."
                 ),
                 technologies=["Python", "TensorFlow", "PyTorch"],
+                language=Language.ENGLISH,
             )
         ],
         education=[
@@ -193,6 +223,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                     name="Tech University",
                     description="Leading research university",
                     location="Boston, MA",
+                    language=Language.ENGLISH,
                 ),
                 degree="PhD in Data Science",
                 start_date=date(2017, 9, 1),
@@ -202,6 +233,7 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                     "Published papers in top conferences. Developed novel algorithms "
                     "for large-scale data processing and analysis."
                 ),
+                language=Language.ENGLISH,
             )
         ],
         skills=Skills(
@@ -209,20 +241,24 @@ def test_save_cv_to_yaml(cv_storage: CVStorage, tmp_path: Path) -> None:
                 SkillGroup(
                     name="Machine Learning",
                     skills=[
-                        Skill(text="TensorFlow"),
-                        Skill(text="PyTorch"),
-                        Skill(text="Deep Learning"),
+                        Skill(text="TensorFlow", language=Language.ENGLISH),
+                        Skill(text="PyTorch", language=Language.ENGLISH),
+                        Skill(text="Deep Learning", language=Language.ENGLISH),
                     ],
+                    language=Language.ENGLISH,
                 ),
                 SkillGroup(
                     name="Programming",
                     skills=[
-                        Skill(text="Python"),
-                        Skill(text="SQL"),
+                        Skill(text="Python", language=Language.ENGLISH),
+                        Skill(text="SQL", language=Language.ENGLISH),
                     ],
+                    language=Language.ENGLISH,
                 ),
             ],
+            language=Language.ENGLISH,
         ),
+        language=Language.ENGLISH,
     )
 
     output_file = tmp_path / "jane_smith.yaml"
