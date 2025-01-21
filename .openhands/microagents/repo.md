@@ -36,6 +36,9 @@ Project Structure:
        * `SummaryGeneratorInput`: Input validation for summary generation
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
+     - `language.py`: Language support models:
+       * `Language`: Enum for supported languages (EN, FR, DE, ES, IT)
+       * `LanguageValidationMixin`: Mixin for language validation in models
    - `services/`: Business logic services
      - `cv_adapter.py`: CV adaptation service
      - `cv_storage.py`: CV storage management
@@ -178,7 +181,24 @@ Development Guidelines:
      * Concrete renderers specify their CV type (CV or MinimalCV)
      * Use protocols (like MarkdownListItem) for type-safe interfaces
 
-8. Documentation Maintenance:
+8. Multilingual Support:
+   - Language support is implemented through the `Language` enum and `LanguageValidationMixin`
+   - Supported languages: English, French, German, Spanish, Italian
+   - Key design principles:
+     * Language is a required parameter for all generator methods
+     * Generators adapt content to language-specific conventions
+     * Maintain consistent validation and generation logic across languages
+     * Use language-specific instructions in LLM context
+   - Language validation:
+     * `LanguageValidationMixin` provides optional text language validation
+     * Generators can detect and validate language consistency
+     * Fallback to generation without strict language validation
+   - Extending language support:
+     * Add new languages to the `Language` enum
+     * Update language-specific instructions in generator context methods
+     * Ensure comprehensive test coverage for new languages
+
+9. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
    - When creating new files, modifying project structure, or adding features:
      * Update the Project Structure section accordingly
