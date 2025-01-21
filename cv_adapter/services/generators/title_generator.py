@@ -3,6 +3,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import Title
 from cv_adapter.models.generators import TitleGeneratorInput
+from cv_adapter.models.language import Language
 
 
 class TitleGenerator:
@@ -18,7 +19,9 @@ class TitleGenerator:
             ai_model,
             system_prompt=(
                 "A professional CV writer that helps create impactful professional "
-                "titles that match job requirements and highlight core competences."
+                "titles that match job requirements and highlight core competences. "
+                "Capable of generating titles in multiple languages while maintaining "
+                "professional terminology and local CV writing conventions."
             ),
         )
 
@@ -27,6 +30,7 @@ class TitleGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
+        language: Language,
         notes: str | None = None,
     ) -> Title:
         """Generate a professional title tailored to a job description.
@@ -35,6 +39,7 @@ class TitleGenerator:
             cv: Text of the CV
             job_description: Job description text
             core_competences: Core competences to highlight
+            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
@@ -45,11 +50,13 @@ class TitleGenerator:
             job_description=job_description,
             core_competences=core_competences,
             notes=notes,
+            language=language,
         )
         context = self._prepare_context(
             cv=input_data.cv_text,
             job_description=input_data.job_description,
             core_competences=input_data.core_competences,
+            language=input_data.language,
             notes=input_data.notes,
         )
 
@@ -65,6 +72,7 @@ class TitleGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
+        language: Language,
         notes: str | None = None,
     ) -> str:
         """Prepare context for title generation.
@@ -73,17 +81,12 @@ class TitleGenerator:
             cv: Text of the CV
             job_description: Job description text
             core_competences: Core competences to highlight
+            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
             Prepared context string for the AI
         """
-        input_data = TitleGeneratorInput(
-            cv_text=cv,
-            job_description=job_description,
-            core_competences=core_competences,
-            notes=notes,
-        )
         context = (
             "Generate a professional title that effectively represents the candidate "
             "for the target job position. The title should be concise, impactful, "
@@ -94,11 +97,23 @@ class TitleGenerator:
             "3. Incorporate key expertise areas that match job requirements\n"
             "4. Ensure it reflects the seniority level appropriately\n"
             "5. Make it memorable but professional\n\n"
-            f"CV:\n{input_data.cv_text}\n\n"
-            f"Job Description:\n{input_data.job_description}\n\n"
-            f"Core Competences to Highlight:\n{input_data.core_competences}\n"
         )
-        if input_data.notes:
-            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
+
+        # Add language-specific instructions if not English
+        if language != Language.ENGLISH:
+            context += (
+                "\nLanguage Requirements:\n"
+                f"Generate the title in {language.name.title()}, following standard "
+                f"CV conventions for that language.\n"
+            )
+
+        context += (
+            f"CV:\n{cv}\n\n"
+            f"Job Description:\n{job_description}\n\n"
+            f"Core Competences to Highlight:\n{core_competences}\n"
+        )
+
+        if notes:
+            context += f"\nUser Notes for Consideration:\n{notes}"
 
         return context

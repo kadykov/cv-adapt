@@ -5,6 +5,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CoreCompetences
 from cv_adapter.models.generators import CompetenceGeneratorInput
+from cv_adapter.models.language import Language
 
 
 class CompetenceGenerator:
@@ -19,9 +20,10 @@ class CompetenceGenerator:
         self.agent = Agent(
             ai_model,
             system_prompt=(
-                "An expert CV analyst that helps identify and describe core"
-                " competences. Each competence should be a concise phrase (1-5 words)"
-                " that represents a key skill or area of expertise."
+                "An expert CV analyst that helps identify and describe core "
+                "competences. Each competence is a concise phrase (1-5 words) "
+                "representing a key skill. Capable of generating competences "
+                "in multiple languages with professional standards."
             ),
         )
 
@@ -29,6 +31,7 @@ class CompetenceGenerator:
         self,
         cv: str,
         job_description: str,
+        language: Language,
         notes: str | None = None,
     ) -> CoreCompetences:
         """Generate core competences based on CV and job description.
@@ -36,6 +39,7 @@ class CompetenceGenerator:
         Args:
             cv: Text of the CV
             job_description: Job description text
+            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
@@ -45,10 +49,12 @@ class CompetenceGenerator:
             cv_text=cv,
             job_description=job_description,
             notes=notes,
+            language=language,
         )
         context = self._prepare_context(
             cv=input_data.cv_text,
             job_description=input_data.job_description,
+            language=input_data.language,
             notes=input_data.notes,
         )
 
@@ -63,6 +69,7 @@ class CompetenceGenerator:
         self,
         cv: str,
         job_description: str,
+        language: Language,
         notes: str | None = None,
     ) -> str:
         """Prepare context for core competences generation.
@@ -70,24 +77,29 @@ class CompetenceGenerator:
         Args:
             cv: Text of the CV
             job_description: Job description text
+            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
             Prepared context string for the AI
         """
-        input_data = CompetenceGeneratorInput(
-            cv_text=cv,
-            job_description=job_description,
-            notes=notes,
-        )
         context = (
-            f"Based on the CV and job description below, identify 4-6 core competences "
-            f"that best match the requirements. Each competence should be a concise "
-            f"phrase (1-5 words) that represents a key skill or area of expertise.\n\n"
-            f"CV:\n{input_data.cv_text}\n\n"
-            f"Job Description:\n{input_data.job_description}\n"
+            "Based on the CV and job description below, identify 4-6 core competences "
+            "that best match the requirements. Each competence should be a concise "
+            "phrase (1-5 words) that represents a key skill or area of expertise.\n\n"
         )
-        if input_data.notes:
-            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
+
+        # Add language-specific instructions if not English
+        if language != Language.ENGLISH:
+            context += (
+                "\nLanguage Requirements:\n"
+                f"Generate all competences in {language.name.title()}, "
+                f"following professional terminology conventions.\n"
+            )
+
+        context += f"CV:\n{cv}\n\nJob Description:\n{job_description}\n"
+
+        if notes:
+            context += f"\nUser Notes for Consideration:\n{notes}"
 
         return context
