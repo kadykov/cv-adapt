@@ -17,6 +17,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
@@ -32,17 +33,19 @@ def sample_cv() -> CV:
                 "phone": "+1234567890",
             },
         ),
-        title=Title(text="Senior Software Engineer"),
+        title=Title(text="Senior Software Engineer", language=Language.ENGLISH),
         summary=CVSummary(
-            text="Experienced software engineer with a focus on Python development"
+            text="Experienced software engineer with a focus on Python development",
+            language=Language.ENGLISH,
         ),
         core_competences=CoreCompetences(
             items=[
-                CoreCompetence(text="Python"),
-                CoreCompetence(text="Software Architecture"),
-                CoreCompetence(text="Team Leadership"),
-                CoreCompetence(text="Agile Development"),
-            ]
+                CoreCompetence(text="Python", language=Language.ENGLISH),
+                CoreCompetence(text="Software Architecture", language=Language.ENGLISH),
+                CoreCompetence(text="Team Leadership", language=Language.ENGLISH),
+                CoreCompetence(text="Agile Development", language=Language.ENGLISH),
+            ],
+            language=Language.ENGLISH,
         ),
         experiences=[
             Experience(
@@ -50,12 +53,14 @@ def sample_cv() -> CV:
                     name="Tech Corp",
                     location="New York",
                     description=None,
+                    language=Language.ENGLISH,
                 ),
                 position="Senior Software Engineer",
                 start_date=date(2020, 1, 1),
                 end_date=None,
                 description="Leading backend development team",
                 technologies=["Python", "FastAPI", "PostgreSQL"],
+                language=Language.ENGLISH,
             )
         ],
         education=[
@@ -64,11 +69,13 @@ def sample_cv() -> CV:
                     name="State University",
                     location="Boston",
                     description=None,
+                    language=Language.ENGLISH,
                 ),
                 degree="Master of Computer Science",
                 start_date=date(2018, 9, 1),
                 end_date=date(2020, 6, 1),
                 description="Focus on distributed systems",
+                language=Language.ENGLISH,
             )
         ],
         skills=Skills(
@@ -76,12 +83,15 @@ def sample_cv() -> CV:
                 SkillGroup(
                     name="Programming Languages",
                     skills=[
-                        Skill(text="Python"),
-                        Skill(text="JavaScript"),
+                        Skill(text="Python", language=Language.ENGLISH),
+                        Skill(text="JavaScript", language=Language.ENGLISH),
                     ],
+                    language=Language.ENGLISH,
                 )
-            ]
+            ],
+            language=Language.ENGLISH,
         ),
+        language=Language.ENGLISH,
     )
 
 

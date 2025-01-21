@@ -1,11 +1,12 @@
 """Models for CV summary generation and validation."""
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
 
 from .constants import MAX_CV_SUMMARY_LENGTH, MAX_CV_SUMMARY_WORDS
+from .language import LanguageValidationMixin
 
 
-class CVSummary(BaseModel):
+class CVSummary(LanguageValidationMixin):
     """A concise summary of the CV that appears at the beginning."""
 
     text: str = Field(..., max_length=MAX_CV_SUMMARY_LENGTH)

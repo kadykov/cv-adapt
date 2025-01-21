@@ -5,6 +5,7 @@ description = "Application for adapting CV and generating cover letters based on
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fast-langdetect>=0.2.4",
     "pydantic>=2.5.2",
     "pydantic-ai>=0.0.18",
     "rich>=13.7.0",

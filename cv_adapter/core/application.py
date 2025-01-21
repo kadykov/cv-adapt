@@ -1,6 +1,7 @@
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
+from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.markdown.core_competences_renderer import (
     CoreCompetencesRenderer,
@@ -19,11 +20,16 @@ from cv_adapter.services.generators.title_generator import TitleGenerator
 class CVAdapterApplication:
     """Main application class that orchestrates the CV adaptation workflow."""
 
-    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
-        """Initialize the application with an AI model.
+    def __init__(
+        self,
+        ai_model: KnownModelName = "openai:gpt-4o",
+        language: Language = Language.ENGLISH,
+    ) -> None:
+        """Initialize the application with an AI model and language.
 
         Args:
             ai_model: AI model to use for all generators. Defaults to OpenAI GPT-4o.
+            language: Language for CV generation. Defaults to English.
         """
         self.competence_generator = CompetenceGenerator(ai_model=ai_model)
         self.experience_generator = ExperienceGenerator(ai_model=ai_model)
@@ -33,6 +39,7 @@ class CVAdapterApplication:
             MinimalMarkdownRenderer(), ai_model=ai_model
         )
         self.title_generator = TitleGenerator(ai_model=ai_model)
+        self.language = language
 
     def generate_cv(
         self,
@@ -40,6 +47,7 @@ class CVAdapterApplication:
         job_description: str,
         personal_info: PersonalInfo,
         notes: str | None = None,
+        language: Language | None = None,
     ) -> CV:
         """
         Generate a new CV adapted to the job description.
@@ -49,15 +57,20 @@ class CVAdapterApplication:
             job_description: The job description to adapt the CV for
             personal_info: Personal information to include in the CV
             notes: Optional user notes to guide the generation process
+            language: Optional language override for this specific CV generation
 
         Returns:
             A new CV instance adapted to the job description
         """
+        # Use method-level language if provided, otherwise use class-level language
+        current_language = language or self.language
+
         # 1. Generate components
         core_competences = self.competence_generator.generate(
             cv=cv_text,
             job_description=job_description,
             notes=notes,
+            language=current_language,
         )
         core_competences_md = CoreCompetencesRenderer.render_to_markdown(
             core_competences
@@ -69,24 +82,28 @@ class CVAdapterApplication:
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
+            language=current_language,
         )
         education = self.education_generator.generate(
             cv=cv_text,
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
+            language=current_language,
         )
         skills = self.skills_generator.generate(
             cv=cv_text,
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
+            language=current_language,
         )
         title = self.title_generator.generate(
             cv=cv_text,
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
+            language=current_language,
         )
 
         # 2. Create minimal CV for description generation
@@ -96,6 +113,7 @@ class CVAdapterApplication:
             experiences=experiences,
             education=education,
             skills=skills,
+            language=current_language,
         )
 
         # 3. Generate summary and create final CV
@@ -105,6 +123,7 @@ class CVAdapterApplication:
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
+            language=current_language,
         )
 
         return CV(
@@ -115,4 +134,5 @@ class CVAdapterApplication:
             experiences=experiences,
             education=education,
             skills=skills,
+            language=current_language,
         )
