@@ -24,20 +24,18 @@ class ExperienceGenerator:
             ),
         )
 
-    def generate(self, input_data: ExperienceGeneratorInput) -> List[Experience]:
-        """Generate a list of professional experiences tailored to a job description.
+    def _prepare_context(self, cv: str, job_description: str, core_competences: str, notes: str | None) -> str:
+        """Prepare context for the LLM to generate experiences.
 
         Args:
-            input_data: Validated input data containing CV text, job description,
-                       core competences and optional notes
+            cv: CV text to extract experiences from
+            job_description: Job description to adapt experiences for
+            core_competences: Core competences to demonstrate in experiences
+            notes: Optional notes for generation guidance
 
         Returns:
-            List of experiences tailored to the job description
-
-        Raises:
-            ValueError: If LLM generates empty list of experiences
+            Context string for LLM
         """
-        # Prepare context for the AI
         context = (
             "Generate a list of professional experiences tailored to the job. "
             "The experiences should be selected from the CV and adapted to match "
@@ -52,19 +50,50 @@ class ExperienceGenerator:
             "3. Keep descriptions focused and relevant, avoiding unnecessary details\n"
             "4. Ensure all dates, company names and positions match the original CV\n"
             "5. Include only technologies actually used and relevant to the job\n\n"
-            f"CV:\n{input_data.cv_text}\n\n"
-            f"Job Description:\n{input_data.job_description}\n\n"
-            f"Core Competences to Prove:\n{input_data.core_competences}\n"
+            f"CV:\n{cv}\n\n"
+            f"Job Description:\n{job_description}\n\n"
+            f"Core Competences to Prove:\n{core_competences}\n"
         )
-        if input_data.notes:
-            context += f"\nUser Notes for Consideration:\n{input_data.notes}"
+        if notes:
+            context += f"\nUser Notes for Consideration:\n{notes}"
+        return context
 
-        # Use the agent to generate experiences
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> List[Experience]:
+        """Generate a list of professional experiences tailored to a job description.
+
+        Args:
+            cv: CV text to extract experiences from
+            job_description: Job description to adapt experiences for
+            core_competences: Core competences to demonstrate in experiences
+            notes: Optional notes for generation guidance
+
+        Returns:
+            List of experiences tailored to the job description
+
+        Raises:
+            ValueError: If any of the required inputs are empty or contain only whitespace
+        """
+        input_data = ExperienceGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
+
+        context = self._prepare_context(
+            cv=input_data.cv_text,
+            job_description=input_data.job_description,
+            core_competences=input_data.core_competences,
+            notes=input_data.notes,
+        )
         result = self.agent.run_sync(
             context,
             result_type=List[Experience],
         )
-        experiences = result.data
-        if not experiences:
-            raise ValueError("At least one experience must be generated")
-        return experiences
+        return result.data
