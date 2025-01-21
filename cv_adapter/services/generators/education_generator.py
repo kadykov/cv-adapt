@@ -24,12 +24,20 @@ class EducationGenerator:
             ),
         )
 
-    def generate(self, input_data: EducationGeneratorInput) -> List[Education]:
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> List[Education]:
         """Generate a list of educational experiences tailored to a job description.
 
         Args:
-            input_data: Input data containing CV text, job description, core competences
-                and optional notes.
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to prove
+            notes: Optional additional notes for context
 
         Returns:
             List of educational experiences tailored to the job description
@@ -37,7 +45,45 @@ class EducationGenerator:
         Raises:
             ValueError: If no education entries are generated
         """
-        # Prepare context for the AI
+        input_data = EducationGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
+        context = self._prepare_context(input_data)
+
+        # Use the agent to generate education entries
+        result = self.agent.run_sync(
+            context,
+            result_type=List[Education],
+        )
+        return result.data
+
+    def _prepare_context(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> str:
+        """Prepare context for education generation.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to prove
+            notes: Optional additional notes for context
+
+        Returns:
+            Prepared context string for the AI
+        """
+        input_data = EducationGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
         context = (
             "Generate a list of educational experiences tailored to the job. "
             "The experiences should be selected from the CV and adapted to match "
@@ -59,12 +105,4 @@ class EducationGenerator:
         if input_data.notes:
             context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate education entries
-        result = self.agent.run_sync(
-            context,
-            result_type=List[Education],
-        )
-        education = result.data
-        if not education:
-            raise ValueError("At least one education entry must be generated")
-        return education
+        return context

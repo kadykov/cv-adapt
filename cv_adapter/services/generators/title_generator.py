@@ -22,17 +22,63 @@ class TitleGenerator:
             ),
         )
 
-    def generate(self, input_data: TitleGeneratorInput) -> Title:
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> Title:
         """Generate a professional title tailored to a job description.
 
         Args:
-            input_data: Input data containing CV text, job description, core competences
-                and optional notes.
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to highlight
+            notes: Optional additional notes for context
 
         Returns:
             A Title model instance containing the generated title
         """
-        # Prepare context for the AI
+        input_data = TitleGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
+        context = self._prepare_context(input_data)
+
+        # Use the agent to generate title
+        result = self.agent.run_sync(
+            context,
+            result_type=Title,
+        )
+        return result.data
+
+    def _prepare_context(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> str:
+        """Prepare context for title generation.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to highlight
+            notes: Optional additional notes for context
+
+        Returns:
+            Prepared context string for the AI
+        """
+        input_data = TitleGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
         context = (
             "Generate a professional title that effectively represents the candidate "
             "for the target job position. The title should be concise, impactful, "
@@ -50,9 +96,4 @@ class TitleGenerator:
         if input_data.notes:
             context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate title
-        result = self.agent.run_sync(
-            context,
-            result_type=Title,
-        )
-        return result.data
+        return context

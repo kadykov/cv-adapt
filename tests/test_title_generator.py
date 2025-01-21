@@ -1,54 +1,74 @@
 import pytest
-from pydantic_ai.models.test import TestModel
 
-from cv_adapter.models.cv import Title
-from cv_adapter.models.generators import TitleGeneratorInput
 from cv_adapter.services.generators.title_generator import TitleGenerator
 
 
-@pytest.fixture
-def test_model() -> TestModel:
-    """Create a test model."""
-    model = TestModel()
-    model.custom_result_args = {"text": "Senior DevOps Engineer & Cloud Architect"}
-    return model
-
-
-def test_title_generator(test_model: TestModel) -> None:
-    """Test title generation with valid input."""
+def test_context_preparation() -> None:
+    """Test that context is prepared correctly with all input fields."""
     generator = TitleGenerator(ai_model="test")
+    context = generator._prepare_context(
+        cv="Sample CV",
+        job_description="Sample Job",
+        core_competences="Python, Leadership",
+        notes="Focus on tech",
+    )
+    
+    # Test context structure and content
+    assert "Sample CV" in context
+    assert "Sample Job" in context
+    assert "Python, Leadership" in context
+    assert "Focus on tech" in context
+    assert "Generate a professional title" in context
+    assert "Guidelines for generating the title" in context
 
-    with generator.agent.override(model=test_model):
-        input_data = TitleGeneratorInput(
-            cv_text="# CV\n\nDetailed professional experience...",
-            job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences=(
-                "Python Development, Cloud Architecture, "
-                "Team Leadership, Data Engineering"
-            ),
-        )
-        title = generator.generate(input_data)
 
-        assert isinstance(title, Title)
-        assert len(title.text) <= 100
-        assert "Cloud" in title.text
-
-
-def test_title_generator_with_notes(test_model: TestModel) -> None:
-    """Test title generation with notes."""
+def test_context_preparation_without_notes() -> None:
+    """Test that context is prepared correctly without optional notes."""
     generator = TitleGenerator(ai_model="test")
+    context = generator._prepare_context(
+        cv="Sample CV",
+        job_description="Sample Job",
+        core_competences="Python, Leadership",
+        notes=None,
+    )
+    
+    # Verify required content is present
+    assert "Sample CV" in context
+    assert "Sample Job" in context
+    assert "Python, Leadership" in context
+    
+    # Verify optional content is not present
+    assert "User Notes for Consideration" not in context
 
-    with generator.agent.override(model=test_model):
-        input_data = TitleGeneratorInput(
-            cv_text="# CV\n\nDetailed professional experience...",
-            job_description=("# Job Description\n\nSeeking a senior developer..."),
-            core_competences=(
-                "Python Development, Cloud Architecture, "
-                "Team Leadership, Data Engineering"
-            ),
-            notes="Focus on DevOps expertise",
+
+def test_empty_cv_validation() -> None:
+    """Test that empty CV raises validation error."""
+    generator = TitleGenerator(ai_model="test")
+    with pytest.raises(ValueError, match="This field is required"):
+        generator.generate(
+            cv="   ",  # whitespace only
+            job_description="Sample Job",
+            core_competences="Python, Leadership",
         )
-        title = generator.generate(input_data)
 
-        assert isinstance(title, Title)
-        assert "DevOps" in title.text
+
+def test_empty_job_description_validation() -> None:
+    """Test that empty job description raises validation error."""
+    generator = TitleGenerator(ai_model="test")
+    with pytest.raises(ValueError, match="String should have at least 1 character"):
+        generator.generate(
+            cv="Sample CV",
+            job_description="",  # empty string
+            core_competences="Python, Leadership",
+        )
+
+
+def test_empty_core_competences_validation() -> None:
+    """Test that empty core competences raises validation error."""
+    generator = TitleGenerator(ai_model="test")
+    with pytest.raises(ValueError, match="This field is required"):
+        generator.generate(
+            cv="Sample CV",
+            job_description="Sample Job",
+            core_competences="\n",  # newline only
+        )

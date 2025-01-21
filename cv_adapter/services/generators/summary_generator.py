@@ -35,11 +35,20 @@ class SummaryGenerator:
             ),
         )
 
-    def generate(self, input_data: SummaryGeneratorInput) -> CVSummary:
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> CVSummary:
         """Generate a CV summary based on CV content and job requirements.
 
         Args:
-            input_data: SummaryGeneratorInput containing all required data
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to highlight
+            notes: Optional additional notes for context
 
         Returns:
             A concise CV summary
@@ -48,7 +57,45 @@ class SummaryGenerator:
             ValueError: If required inputs are missing or invalid
             RendererError: If CV rendering fails
         """
-        # Prepare context for the AI
+        input_data = SummaryGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
+        context = self._prepare_context(input_data)
+
+        # Use the agent to generate summary
+        result = self.agent.run_sync(
+            context,
+            result_type=CVSummary,
+        )
+        return result.data
+
+    def _prepare_context(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> str:
+        """Prepare context for summary generation.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to highlight
+            notes: Optional additional notes for context
+
+        Returns:
+            Prepared context string for the AI
+        """
+        input_data = SummaryGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
         context = (
             f"Based on the CV and job description below, create a concise and "
             f"impactful CV summary. The summary should be a single paragraph "
@@ -61,9 +108,4 @@ class SummaryGenerator:
         if input_data.notes:
             context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate summary
-        result = self.agent.run_sync(
-            context,
-            result_type=CVSummary,
-        )
-        return result.data
+        return context

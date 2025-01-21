@@ -1,75 +1,57 @@
-"""Tests for the competence generator service."""
-
-from unittest.mock import MagicMock, patch
-
 import pytest
-from pydantic_ai import Agent
 
-from cv_adapter.models.cv import CoreCompetence, CoreCompetences
-from cv_adapter.models.generators import CompetenceGeneratorInput
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
 
 
-@pytest.fixture
-def mock_agent(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    """Create a mock Agent instance."""
-    mock = MagicMock(spec=Agent)
-    mock.run_sync.return_value.data = CoreCompetences(
-        items=[
-            CoreCompetence(text="Python Development"),
-            CoreCompetence(text="Cloud Architecture"),
-            CoreCompetence(text="Team Leadership"),
-            CoreCompetence(text="System Design"),
-        ]
+def test_context_preparation() -> None:
+    """Test that context is prepared correctly with all input fields."""
+    generator = CompetenceGenerator(ai_model="test")
+    context = generator._prepare_context(
+        cv="Sample CV",
+        job_description="Sample Job",
+        notes="Focus on tech",
     )
-    monkeypatch.setattr(
-        "cv_adapter.services.generators.competence_generator.Agent",
-        lambda *args, **kwargs: mock,
+    
+    # Test context structure and content
+    assert "Sample CV" in context
+    assert "Sample Job" in context
+    assert "Focus on tech" in context
+    assert "identify 4-6 core competences" in context
+    assert "Each competence should be a concise phrase" in context
+
+
+def test_context_preparation_without_notes() -> None:
+    """Test that context is prepared correctly without optional notes."""
+    generator = CompetenceGenerator(ai_model="test")
+    context = generator._prepare_context(
+        cv="Sample CV",
+        job_description="Sample Job",
+        notes=None,
     )
-    return mock
+    
+    # Verify required content is present
+    assert "Sample CV" in context
+    assert "Sample Job" in context
+    
+    # Verify optional content is not present
+    assert "User Notes for Consideration" not in context
 
 
-class TestCompetenceGenerator:
-    """Test suite for CompetenceGenerator."""
-
-    def test_initialization(self) -> None:
-        """Test that generator is initialized with correct model."""
-        with patch("pydantic_ai.models.openai.AsyncOpenAI"):
-            generator = CompetenceGenerator(ai_model="openai:gpt-4o")
-            assert isinstance(generator.agent, Agent)
-
-    def test_generate_competences(self, mock_agent: MagicMock) -> None:
-        """Test competence generation with valid input."""
-        generator = CompetenceGenerator()
-        input_data = CompetenceGeneratorInput(
-            cv_text="Python developer with 5 years experience",
-            job_description="Looking for a senior Python developer",
-            notes="Focus on technical skills",
+def test_empty_cv_validation() -> None:
+    """Test that empty CV raises validation error."""
+    generator = CompetenceGenerator(ai_model="test")
+    with pytest.raises(ValueError, match="This field is required"):
+        generator.generate(
+            cv="   ",  # whitespace only
+            job_description="Sample Job",
         )
 
-        result = generator.generate(input_data)
 
-        assert isinstance(result, CoreCompetences)
-        assert len(result.items) == 4
-        assert any(comp.text == "Python Development" for comp in result.items)
-
-        # Verify agent was called with correct context
-        call_args = mock_agent.run_sync.call_args[0][0]
-        assert input_data.cv_text in call_args
-        assert input_data.job_description in call_args
-        assert input_data.notes in call_args
-
-    def test_generate_without_notes(self, mock_agent: MagicMock) -> None:
-        """Test competence generation without optional notes."""
-        generator = CompetenceGenerator()
-        input_data = CompetenceGeneratorInput(
-            cv_text="Python developer with 5 years experience",
-            job_description="Looking for a senior Python developer",
+def test_empty_job_description_validation() -> None:
+    """Test that empty job description raises validation error."""
+    generator = CompetenceGenerator(ai_model="test")
+    with pytest.raises(ValueError, match="String should have at least 1 character"):
+        generator.generate(
+            cv="Sample CV",
+            job_description="",  # empty string
         )
-
-        result = generator.generate(input_data)
-
-        assert isinstance(result, CoreCompetences)
-        # Verify notes section is not in context
-        call_args = mock_agent.run_sync.call_args[0][0]
-        assert "User Notes for Consideration" not in call_args

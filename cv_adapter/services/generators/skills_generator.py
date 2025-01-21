@@ -24,12 +24,20 @@ class SkillsGenerator:
             ),
         )
 
-    def generate(self, input_data: SkillsGeneratorInput) -> Skills:
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> Skills:
         """Generate a list of skills organized in groups and tailored to a job.
 
         Args:
-            input_data: Input data containing CV text, job description, core competences
-                and optional notes.
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to prove
+            notes: Optional additional notes for context
 
         Returns:
             Skills object containing groups of skills tailored to the job description
@@ -37,7 +45,45 @@ class SkillsGenerator:
         Raises:
             ValueError: If no skill groups are generated
         """
-        # Prepare context for the AI
+        input_data = SkillsGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
+        context = self._prepare_context(input_data)
+
+        # Use the agent to generate skills
+        result = self.agent.run_sync(
+            context,
+            result_type=Skills,
+        )
+        return result.data
+
+    def _prepare_context(
+        self,
+        cv: str,
+        job_description: str,
+        core_competences: str,
+        notes: str | None = None,
+    ) -> str:
+        """Prepare context for skills generation.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            core_competences: Core competences to prove
+            notes: Optional additional notes for context
+
+        Returns:
+            Prepared context string for the AI
+        """
+        input_data = SkillsGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            core_competences=core_competences,
+            notes=notes,
+        )
         context = (
             "Generate a list of skills organized in logical groups based on the CV "
             "and tailored to the job requirements. The skills should demonstrate "
@@ -59,12 +105,4 @@ class SkillsGenerator:
         if input_data.notes:
             context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate skills
-        result = self.agent.run_sync(
-            context,
-            result_type=Skills,
-        )
-        skills = result.data
-        if not skills.groups:
-            raise ValueError("At least one skill group must be generated")
-        return skills
+        return context

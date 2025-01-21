@@ -25,16 +25,57 @@ class CompetenceGenerator:
             ),
         )
 
-    def generate(self, input_data: CompetenceGeneratorInput) -> CoreCompetences:
+    def generate(
+        self,
+        cv: str,
+        job_description: str,
+        notes: str | None = None,
+    ) -> CoreCompetences:
         """Generate core competences based on CV and job description.
 
         Args:
-            input_data: Input data with CV text, job description, and optional notes
+            cv: Text of the CV
+            job_description: Job description text
+            notes: Optional additional notes for context
 
         Returns:
             List of core competences relevant for the job
         """
-        # Prepare context for the AI
+        input_data = CompetenceGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            notes=notes,
+        )
+        context = self._prepare_context(input_data)
+
+        # Use the agent to generate competences
+        result = self.agent.run_sync(
+            context,
+            result_type=CoreCompetences,
+        )
+        return result.data
+
+    def _prepare_context(
+        self,
+        cv: str,
+        job_description: str,
+        notes: str | None = None,
+    ) -> str:
+        """Prepare context for core competences generation.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            notes: Optional additional notes for context
+
+        Returns:
+            Prepared context string for the AI
+        """
+        input_data = CompetenceGeneratorInput(
+            cv_text=cv,
+            job_description=job_description,
+            notes=notes,
+        )
         context = (
             f"Based on the CV and job description below, identify 4-6 core competences "
             f"that best match the requirements. Each competence should be a concise "
@@ -45,9 +86,4 @@ class CompetenceGenerator:
         if input_data.notes:
             context += f"\nUser Notes for Consideration:\n{input_data.notes}"
 
-        # Use the agent to generate competences
-        result = self.agent.run_sync(
-            context,
-            result_type=CoreCompetences,
-        )
-        return result.data
+        return context
