@@ -149,6 +149,9 @@ Development Guidelines:
      * All other generators require core_competences from the first step
      * Input validation is handled by models, not services
      * Services focus on business logic, not validation
+     * Generators now use individual arguments instead of input objects
+     * Each generator has a `_prepare_context` method for context generation
+     * Simplified method signatures improve readability and type safety
 
 7. Working with Renderers:
    - Use the rendering system in `cv_adapter/renderers/` for CV output

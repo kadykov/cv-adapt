@@ -46,7 +46,11 @@ class CompetenceGenerator:
             job_description=job_description,
             notes=notes,
         )
-        context = self._prepare_context(input_data)
+        context = self._prepare_context(
+            cv=input_data.cv_text,
+            job_description=input_data.job_description,
+            notes=input_data.notes,
+        )
 
         # Use the agent to generate competences
         result = self.agent.run_sync(

@@ -51,7 +51,12 @@ class EducationGenerator:
             core_competences=core_competences,
             notes=notes,
         )
-        context = self._prepare_context(input_data)
+        context = self._prepare_context(
+            cv=input_data.cv_text,
+            job_description=input_data.job_description,
+            core_competences=input_data.core_competences,
+            notes=input_data.notes,
+        )
 
         # Use the agent to generate education entries
         result = self.agent.run_sync(
