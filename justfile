@@ -13,7 +13,7 @@ test:
 
 # Run tests with coverage
 test-cov:
-    uv run pytest --cov=cv_adapter
+    uv run pytest --cov-report term-missing --cov=cv_adapter ./tests
 
 # Run linting checks
 lint:
