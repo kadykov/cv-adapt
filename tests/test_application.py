@@ -18,13 +18,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
-from cv_adapter.models.generators import (
-    CompetenceGeneratorInput,
-    EducationGeneratorInput,
-    ExperienceGeneratorInput,
-    SkillsGeneratorInput,
-    TitleGeneratorInput,
-)
+# Removed unused imports
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
@@ -210,44 +204,33 @@ def test_generate_cv(
     assert result.title.text == "Senior Python Developer"
 
     # Verify service calls
-    mock_services["competence_generator"].generate.assert_called_once_with(
-        CompetenceGeneratorInput(
-            cv_text=cv_text,
-            job_description=job_description,
-            notes=notes,
-        )
-    )
-
     core_competences_md = "* Python\n* JavaScript\n* TypeScript\n* React"
+    mock_services["competence_generator"].generate.assert_called_once_with(
+        cv=cv_text,
+        job_description=job_description,
+        notes=notes,
+    )
     mock_services["experience_generator"].generate.assert_called_once_with(
-        ExperienceGeneratorInput(
-            cv_text=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-        )
+        cv=cv_text,
+        job_description=job_description,
+        core_competences=core_competences_md,
+        notes=notes,
     )
     mock_services["education_generator"].generate.assert_called_once_with(
-        EducationGeneratorInput(
-            cv_text=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-        )
+        cv=cv_text,
+        job_description=job_description,
+        core_competences=core_competences_md,
+        notes=notes,
     )
     mock_services["skills_generator"].generate.assert_called_once_with(
-        SkillsGeneratorInput(
-            cv_text=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-        )
+        cv=cv_text,
+        job_description=job_description,
+        core_competences=core_competences_md,
+        notes=notes,
     )
     mock_services["title_generator"].generate.assert_called_once_with(
-        TitleGeneratorInput(
-            cv_text=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-        )
+        cv=cv_text,
+        job_description=job_description,
+        core_competences=core_competences_md,
+        notes=notes,
     )
