@@ -4,7 +4,7 @@ name: CI pipeline
 on:
   pull_request:
   push:
-    branches: ['**']
+    branches: ['main']
     tags: ['v*.*.*']
   workflow_dispatch:
 
