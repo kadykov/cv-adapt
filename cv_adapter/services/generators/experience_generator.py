@@ -24,7 +24,9 @@ class ExperienceGenerator:
             ),
         )
 
-    def _prepare_context(self, cv: str, job_description: str, core_competences: str, notes: str | None) -> str:
+    def _prepare_context(
+        self, cv: str, job_description: str, core_competences: str, notes: str | None
+    ) -> str:
         """Prepare context for the LLM to generate experiences.
 
         Args:
@@ -77,7 +79,8 @@ class ExperienceGenerator:
             List of experiences tailored to the job description
 
         Raises:
-            ValueError: If any of the required inputs are empty or contain only whitespace
+            ValueError: If any of the required inputs are empty or
+            contain only whitespace
         """
         input_data = ExperienceGeneratorInput(
             cv_text=cv,

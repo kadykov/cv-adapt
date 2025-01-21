@@ -18,6 +18,7 @@ from cv_adapter.models.cv import (
     Title,
     University,
 )
+
 # Removed unused imports
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary

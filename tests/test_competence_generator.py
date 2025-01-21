@@ -11,7 +11,7 @@ def test_context_preparation() -> None:
         job_description="Sample Job",
         notes="Focus on tech",
     )
-    
+
     # Test context structure and content
     assert "Sample CV" in context
     assert "Sample Job" in context
@@ -28,11 +28,11 @@ def test_context_preparation_without_notes() -> None:
         job_description="Sample Job",
         notes=None,
     )
-    
+
     # Verify required content is present
     assert "Sample CV" in context
     assert "Sample Job" in context
-    
+
     # Verify optional content is not present
     assert "User Notes for Consideration" not in context
 
