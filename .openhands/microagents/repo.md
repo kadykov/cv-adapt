@@ -98,11 +98,15 @@ Development Guidelines:
      * Performs static type checking with mypy
      * Runs pre-commit hooks for various checks
      * Executes all tests with pytest
-   - Individual commands are available but should not replace the full check:
-     * `just lint`: Code style and type checks
-     * `just format`: Code formatting only
-     * `just test`: Run tests only
-     * `just pre-commit`: Run pre-commit hooks only
+   - Individual commands are flexible and support targeted operations:
+     * `just lint`: Code style and type checks (runs formatting first)
+       - Can be used with optional path argument, e.g., `just lint` or `just lint cv_adapter`
+     * `just format`: Code formatting
+       - Can be used with optional path argument, e.g., `just format` or `just format cv_adapter`
+     * `just test`: Run tests
+       - Can be used with optional path argument, e.g., `just test` or `just test tests/test_cv_models.py`
+     * `just test-cov`: Run tests with coverage report
+     * `just pre-commit`: Run pre-commit hooks
    - Follow type hints and enable strict type checking
    - All functions (including tests) must have type annotations
 

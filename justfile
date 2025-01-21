@@ -8,23 +8,23 @@ install:
     uv run pre-commit install
 
 # Run tests
-test:
-    uv run pytest ./tests
+test *ARGS='./tests':
+    uv run pytest {{ARGS}}
 
 # Run tests with coverage
 test-cov:
     uv run pytest --cov-report term-missing --cov=cv_adapter ./tests
 
 # Run linting checks
-lint:
-    just format
-    uv run ruff check --fix .
-    uv run mypy .
+lint *ARGS='.':
+    just format {{ARGS}}
+    uv run ruff check --fix {{ARGS}}
+    uv run mypy {{ARGS}}
 
 # Format code
-format:
-    uv run ruff check --select I --fix . --silent
-    uv run ruff format . --silent
+format *ARGS='.':
+    uv run ruff check --select I --fix {{ARGS}} --silent
+    uv run ruff format {{ARGS}} --silent
 
 # Run pre-commit checks
 pre-commit:
