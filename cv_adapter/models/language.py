@@ -32,8 +32,11 @@ class LanguageValidationMixin(BaseModel):
         if not language:
             return v
 
+        # Replace newlines with spaces to handle multi-line text
+        text_single_line = v.replace("\n", " ").strip()
+
         # Detect language with fast-langdetect
-        result = detect(v)
+        result = detect(text_single_line)
 
         # Extract detected language
         detected_lang = result["lang"]
