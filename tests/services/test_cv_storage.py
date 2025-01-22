@@ -19,7 +19,7 @@ from cv_adapter.models.cv import (
 from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.services.generators.cv_storage import CVStorage, CVStorageError
+from cv_adapter.services.cv_storage import CVStorage, CVStorageError
 
 SAMPLE_CV_YAML = """
 personal_info:
