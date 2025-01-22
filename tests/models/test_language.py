@@ -56,12 +56,6 @@ def test_detect_language_low_confidence() -> None:
     assert detect_language(text, min_confidence=0.9) is None
 
 
-def test_detect_language_empty() -> None:
-    """Test that empty text returns None."""
-    assert detect_language("") is None
-    assert detect_language("   ") is None
-
-
 def test_detect_language_unsupported() -> None:
     """Test that unsupported language returns None."""
     # Russian text
@@ -92,9 +86,6 @@ class SampleModel(LanguageValidationMixin):
         # Short texts
         (Language.ENGLISH, "Hello world", True),
         (Language.FRENCH, "Bonjour", True),
-        # Empty text should pass (validation is only for non-empty text)
-        (Language.ENGLISH, "", True),
-        (Language.FRENCH, "   ", True),
         # Multi-line texts
         (
             Language.ENGLISH,

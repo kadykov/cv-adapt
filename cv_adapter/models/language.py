@@ -24,10 +24,6 @@ class LanguageValidationMixin(BaseModel):
     @field_validator("text")
     def validate_text_language(cls, v: str, info: ValidationInfo) -> str:
         """Validate that the text is in the specified language."""
-        v = v.strip()
-        if not v:
-            return v
-
         language = info.data.get("language")
         if not language:
             return v
@@ -54,8 +50,6 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
     """Detect language of the given text and return corresponding Language enum value.
 
     Returns None if:
-    - Text is empty or whitespace
-    - Text is too short (less than 5 characters)
     - Language detection confidence is below the specified threshold
     - Detected language is not supported
     - Detection fails
@@ -64,13 +58,6 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
         text: Text to detect language for
         min_confidence: Confidence threshold for language detection (default 0.5)
     """
-    if not text or not text.strip():
-        return None
-
-    # Skip language detection for very short texts
-    if len(text.strip()) < 5:
-        return None
-
     # Replace newlines with spaces to handle multi-line text
     text_single_line = text.replace("\n", " ").strip()
 
