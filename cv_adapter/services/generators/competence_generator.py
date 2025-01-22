@@ -3,9 +3,9 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CoreCompetences
-from cv_adapter.models.generators import CompetenceGeneratorInput
+from cv_adapter.models.core_competence import CoreCompetences
 from cv_adapter.models.language import Language
+from cv_adapter.models.language_context import language_context
 
 
 class CompetenceGenerator:
@@ -45,25 +45,20 @@ class CompetenceGenerator:
         Returns:
             List of core competences relevant for the job
         """
-        input_data = CompetenceGeneratorInput(
-            cv_text=cv,
-            job_description=job_description,
-            notes=notes,
-            language=language,
-        )
-        context = self._prepare_context(
-            cv=input_data.cv_text,
-            job_description=input_data.job_description,
-            language=input_data.language,
-            notes=input_data.notes,
-        )
+        with language_context(language):
+            context = self._prepare_context(
+                cv=cv,
+                job_description=job_description,
+                language=language,
+                notes=notes,
+            )
 
-        # Use the agent to generate competences
-        result = self.agent.run_sync(
-            context,
-            result_type=CoreCompetences,
-        )
-        return result.data
+            # Use the agent to generate competences
+            result = self.agent.run_sync(
+                context,
+                result_type=CoreCompetences,
+            )
+            return result.data
 
     def _prepare_context(
         self,
