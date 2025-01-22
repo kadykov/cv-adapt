@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from langdetect import detect as _detect
+from langdetect import detect, detect_langs
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 
@@ -32,11 +32,18 @@ class LanguageValidationMixin(BaseModel):
         if not language:
             return v
 
-        detected = detect_language(v)
-        if detected is None:
-            # If we can't detect the language confidently, let it pass
+        # Skip validation for very short texts
+        if len(v) < 10:
             return v
 
+        # Detect language with a lower confidence threshold
+        detected = detect_language(v, min_confidence=0.5)
+
+        # If detection fails or is ambiguous, let it pass
+        if detected is None:
+            return v
+
+        # If detected language doesn't match
         if detected != language:
             raise ValueError(
                 f"Text language mismatch. Expected {language}, detected {detected}"
@@ -44,52 +51,55 @@ class LanguageValidationMixin(BaseModel):
         return v
 
 
-def detect_language(text: str) -> Optional[Language]:
+def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language]:
     """Detect language of the given text and return corresponding Language enum value.
 
     Returns None if:
     - Text is empty or whitespace
-    - Text is too short (less than 10 characters)
-    - Text is a technical term (e.g., programming languages, tools)
-    - Language detection confidence is below 0.9
+    - Text is too short (less than 5 characters)
+    - Language detection confidence is below the specified threshold
     - Detected language is not supported
     - Detection fails
+
+    Args:
+        text: Text to detect language for
+        min_confidence: Minimum confidence threshold for language detection (default 0.5)
     """
     if not text or not text.strip():
         return None
 
     # Skip language detection for very short texts
-    if len(text.strip()) < 10:
-        return None
-
-    # Skip language detection for technical terms
-    technical_terms = {
-        # Programming languages
-        "Python", "Java", "JavaScript", "TypeScript", "Go", "Ruby", "PHP", "C++", "C#",
-        "Swift", "Kotlin", "Rust", "Scala", "Haskell", "Perl", "R",
-        # Tools and frameworks
-        "Docker", "Kubernetes", "Git", "Jenkins", "Ansible", "Terraform", "AWS", "Azure",
-        "GCP", "TensorFlow", "PyTorch", "Pandas", "NumPy", "SciPy", "Matplotlib",
-        "Jupyter", "VSCode", "IntelliJ", "Eclipse", "Xcode",
-        # Job titles
-        "Data Scientist", "Software Engineer", "DevOps Engineer", "SRE", "CTO", "CEO",
-        "CIO", "CFO", "COO", "VP", "Director", "Manager", "Lead", "Senior", "Junior",
-        "Full Stack", "Backend", "Frontend", "Mobile", "Cloud", "AI", "ML", "QA",
-        # Common abbreviations
-        "AI", "ML", "DL", "NLP", "CV", "CI", "CD", "API", "REST", "GraphQL", "SQL",
-        "NoSQL", "UI", "UX", "DevOps", "SRE", "SLA", "KPI", "ROI", "P&L",
-    }
-    if text.strip() in technical_terms:
+    if len(text.strip()) < 5:
         return None
 
     # Replace newlines with spaces to handle multi-line text
     text_single_line = text.replace("\n", " ").strip()
 
     try:
-        lang_code = _detect(text_single_line)
+        # First, try to detect the language directly
         try:
+            lang_code = detect(text_single_line)
             return Language(lang_code)
-        except ValueError:
-            return None
+        except (ValueError, Exception):
+            pass
+
+        # If direct detection fails, try probabilistic detection
+        lang_results = detect_langs(text_single_line)
+
+        # Find the first language that meets the confidence threshold and is supported
+        for result in lang_results:
+            # langdetect returns results in format "lang:probability"
+            lang_code, confidence = result.split(':')
+
+            # Check if confidence meets the threshold
+            if float(confidence) >= min_confidence:
+                try:
+                    return Language(lang_code)
+                except ValueError:
+                    # If the language is not supported, continue to next result
+                    continue
+
+        # If no language meets the confidence threshold
+        return None
     except Exception:
         return None
