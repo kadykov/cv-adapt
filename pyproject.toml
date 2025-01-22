@@ -41,3 +41,7 @@ dev = [
     "ruff>=0.9.1",
     "ipykernel>=6.29.5",
 ]
+logfire = [
+    "logfire>=3.2.0",
+    "pydantic-ai[logfire]>=0.0.19",
+]
