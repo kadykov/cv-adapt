@@ -61,8 +61,47 @@ Project Structure:
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
-   - Contains test files matching pattern `test_*.py`
-   - Uses pytest framework with coverage reporting
+   - Comprehensive test suite using pytest framework with coverage reporting
+   - Test Structure Mirrors Source Code Structure:
+     * Tests are organized to match the `cv_adapter/` directory structure
+     * Each module or package in `cv_adapter/` has a corresponding test module or package in `tests/`
+     * Test files follow the naming convention: `test_<module_name>.py`
+
+   Test Directory Guidelines:
+   1. Naming Conventions:
+      * Test files must start with `test_`
+      * Test functions must start with `test_`
+      * Use descriptive names that explain the test's purpose
+      * Example: `test_core_competence_validation()` in `tests/models/test_cv.py`
+
+   2. Test File Creation Guidelines:
+      * Create test files in the same relative path as the source module
+      * Determine test file location by mirroring the source module's path
+      * Mapping Examples:
+        - `cv_adapter/models/cv.py` → `tests/models/test_cv.py`
+        - `cv_adapter/services/cv_storage.py` → `tests/services/test_cv_storage.py`
+        - `cv_adapter/services/generators/competence_generator.py` → `tests/services/generators/test_competence_generator.py`
+        - `cv_adapter/renderers/markdown/markdown_renderer.py` → `tests/renderers/markdown/test_markdown_renderer.py`
+      * Use `__init__.py` files to ensure proper import and package structure
+
+   3. Test Content Best Practices:
+      * Cover different scenarios: valid inputs, edge cases, error conditions
+      * Use pytest fixtures for common test data and setup
+      * Validate model validation, method behaviors, and error handling
+      * Ensure type safety and comprehensive coverage
+      * Use meaningful assertions that clearly describe expected behavior
+
+   5. Specialized Test Types:
+      * Model Validation Tests: Verify model constraints and validation rules
+      * Renderer Tests: Check output formats and rendering logic
+      * Service Tests: Validate business logic and generator behaviors
+      * Language Consistency Tests: Ensure multilingual support works correctly
+
+   6. Running Tests:
+      * Use `just test` to run all tests
+      * Use `just test <path>` to run tests for a specific module
+      * Use `just test-cov` for coverage report
+      * Aim for high test coverage across all modules
 
 3. Configuration Files:
    - `pyproject.toml`: Project metadata and dependencies

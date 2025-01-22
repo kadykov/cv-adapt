@@ -20,7 +20,7 @@ from cv_adapter.models.cv import (
 from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.renderers import MarkdownRenderer, RendererError, YAMLRenderer
+from cv_adapter.renderers import RendererError, YAMLRenderer
 
 
 @pytest.fixture
@@ -116,49 +116,9 @@ def test_yaml_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:
     assert data["personal_info"]["full_name"] == "John Doe"
 
 
-def test_markdown_renderer_to_string(sample_cv: CV) -> None:
-    renderer = MarkdownRenderer()
-    md_str = renderer.render_to_string(sample_cv)
-
-    # Verify key sections are present
-    assert "---" in md_str
-    assert "full_name: John Doe" in md_str
-    assert "contacts:" in md_str
-    assert "  email: john@example.com" in md_str
-    assert "  phone: '+1234567890'" in md_str
-    assert "---" in md_str
-    assert "## Senior Software Engineer" in md_str
-    assert "## Core Competences" in md_str
-    assert "* Python" in md_str
-    assert "## Experience" in md_str
-    assert "### Senior Software Engineer at Tech Corp" in md_str
-    assert "## Education" in md_str
-    assert "### Master of Computer Science" in md_str
-    assert "## Skills" in md_str
-    assert "### Programming Languages" in md_str
-
-
-def test_markdown_renderer_to_file(sample_cv: CV, tmp_path: Path) -> None:
-    renderer = MarkdownRenderer()
-    file_path = tmp_path / "cv.md"
-    renderer.render_to_file(sample_cv, file_path)
-
-    assert file_path.exists()
-    content = file_path.read_text()
-    assert "full_name: John Doe" in content
-
-
 def test_yaml_renderer_error_handling(sample_cv: CV, tmp_path: Path) -> None:
     renderer = YAMLRenderer()
     non_writable_path = tmp_path / "nonexistent" / "cv.yaml"
-
-    with pytest.raises(RendererError):
-        renderer.render_to_file(sample_cv, non_writable_path)
-
-
-def test_markdown_renderer_error_handling(sample_cv: CV, tmp_path: Path) -> None:
-    renderer = MarkdownRenderer()
-    non_writable_path = tmp_path / "nonexistent" / "cv.md"
 
     with pytest.raises(RendererError):
         renderer.render_to_file(sample_cv, non_writable_path)
