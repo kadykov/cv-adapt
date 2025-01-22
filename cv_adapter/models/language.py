@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from langdetect import detect, detect_langs
+from fast_langdetect import detect
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 
@@ -32,22 +32,19 @@ class LanguageValidationMixin(BaseModel):
         if not language:
             return v
 
-        # Skip validation for very short texts
-        if len(v) < 10:
-            return v
+        # Detect language with fast-langdetect
+        result = detect(v)
 
-        # Detect language with a lower confidence threshold
-        detected = detect_language(v, min_confidence=0.5)
-
-        # If detection fails or is ambiguous, let it pass
-        if detected is None:
-            return v
+        # Extract language and confidence
+        detected_lang = result["lang"]
+        confidence = result["score"]
 
         # If detected language doesn't match
-        if detected != language:
+        if detected_lang != language:
             raise ValueError(
-                f"Text language mismatch. Expected {language}, detected {detected}"
+                f"Text language mismatch. Expected {language}, detected {detected_lang}"
             )
+
         return v
 
 
@@ -76,28 +73,25 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
     text_single_line = text.replace("\n", " ").strip()
 
     try:
-        # First, try to detect the language directly
-        try:
-            lang_code = detect(text_single_line)
-            return Language(lang_code)
-        except (ValueError, Exception):
-            pass
+        # Use fast_langdetect to detect language
+        result = detect(text_single_line)
 
-        # If direct detection fails, try probabilistic detection
-        lang_results = detect_langs(text_single_line)
+        # If the result is a dictionary with 'lang' and 'score' keys
+        if isinstance(result, dict):
+            lang_code = result["lang"]
+            confidence = result["score"]
+        else:
+            # If it's a simple string, assume full confidence
+            lang_code = result
+            confidence = 1.0
 
-        # Find the first language that meets the confidence threshold and is supported
-        for result in lang_results:
-            # langdetect returns results in format "lang:probability"
-            lang_code, confidence = result.split(':')
-
-            # Check if confidence meets the threshold
-            if float(confidence) >= min_confidence:
-                try:
-                    return Language(lang_code)
-                except ValueError:
-                    # If the language is not supported, continue to next result
-                    continue
+        # Check confidence threshold
+        if confidence >= min_confidence:
+            try:
+                return Language(lang_code)
+            except ValueError:
+                # If the language is not supported
+                return None
 
         # If no language meets the confidence threshold
         return None

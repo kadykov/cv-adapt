@@ -85,9 +85,9 @@ class SampleModel(LanguageValidationMixin):
         # Mismatched languages (high confidence)
         (Language.ENGLISH, "C'est un texte en français.", False),
         (Language.FRENCH, "This is a clear English text.", False),
-        # Ambiguous or short texts
-        (Language.ENGLISH, "Hello world", True),  # Passes due to lenient validation
-        (Language.FRENCH, "Hi there", True),      # Passes due to lenient validation
+        # Short texts
+        (Language.ENGLISH, "Hello world", True),
+        (Language.FRENCH, "Bonjour", True),
         # Empty text should pass (validation is only for non-empty text)
         (Language.ENGLISH, "", True),
         (Language.FRENCH, "   ", True),
