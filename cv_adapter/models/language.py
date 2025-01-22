@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from fast_langdetect import detect
+from fast_langdetect import detect  # type: ignore[import-untyped]
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 
@@ -35,9 +35,8 @@ class LanguageValidationMixin(BaseModel):
         # Detect language with fast-langdetect
         result = detect(v)
 
-        # Extract language and confidence
+        # Extract detected language
         detected_lang = result["lang"]
-        confidence = result["score"]
 
         # If detected language doesn't match
         if detected_lang != language:
@@ -60,7 +59,7 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
 
     Args:
         text: Text to detect language for
-        min_confidence: Minimum confidence threshold for language detection (default 0.5)
+        min_confidence: Confidence threshold for language detection (default 0.5)
     """
     if not text or not text.strip():
         return None

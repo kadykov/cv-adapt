@@ -77,7 +77,11 @@ class SampleModel(LanguageValidationMixin):
     "language,text,should_pass",
     [
         # Texts with high confidence in the specified language
-        (Language.ENGLISH, "This is a clear English text with multiple sentences.", True),
+        (
+            Language.ENGLISH,
+            "This is a clear English text with multiple sentences.",
+            True,
+        ),
         (Language.FRENCH, "C'est un texte en français avec plusieurs phrases.", True),
         (Language.GERMAN, "Dies ist ein deutscher Text mit mehreren Sätzen.", True),
         (Language.SPANISH, "Este es un texto en español con varias oraciones.", True),
@@ -98,7 +102,7 @@ def test_language_validation_mixin(
 ) -> None:
     """Test LanguageValidationMixin with various language combinations."""
     if should_pass:
-        model = SampleModel(language=language, text=text)
+        model: SampleModel = SampleModel(language=language, text=text)
         assert model.language == language
         assert model.text == text.strip()
     else:
