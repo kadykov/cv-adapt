@@ -54,7 +54,9 @@ class CoreCompetences(BaseModel):
 
     @field_validator("items", mode="before")
     @classmethod
-    def validate_unique_items(cls, v: List[dict | CoreCompetence]) -> List[CoreCompetence]:
+    def validate_unique_items(
+        cls, v: List[dict | CoreCompetence]
+    ) -> List[CoreCompetence]:
         """Validate that all competences are unique.
 
         Args:
