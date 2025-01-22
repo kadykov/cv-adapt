@@ -52,9 +52,9 @@ class CoreCompetences(BaseModel):
         ..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES
     )
 
-    @field_validator("items")
+    @field_validator("items", mode="before")
     @classmethod
-    def validate_unique_items(cls, v: List[CoreCompetence]) -> List[CoreCompetence]:
+    def validate_unique_items(cls, v: List[dict | CoreCompetence]) -> List[CoreCompetence]:
         """Validate that all competences are unique.
 
         Args:
@@ -66,10 +66,17 @@ class CoreCompetences(BaseModel):
         Raises:
             ValueError: If there are duplicate competences
         """
-        texts = [item.text for item in v]
+        # Convert dictionaries to CoreCompetence objects
+        competences = [
+            item if isinstance(item, CoreCompetence) else CoreCompetence(**item)
+            for item in v
+        ]
+
+        # Check for duplicates
+        texts = [item.text for item in competences]
         if len(set(texts)) != len(texts):
             raise ValueError("core competences must be unique")
-        return v
+        return competences
 
     def __len__(self) -> int:
         return len(self.items)

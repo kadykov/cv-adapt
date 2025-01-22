@@ -44,7 +44,16 @@ class CompetenceGenerator:
 
         Returns:
             List of core competences relevant for the job
+
+        Raises:
+            ValueError: If input parameters are invalid
         """
+        # Validate input parameters
+        if not cv or not cv.strip():
+            raise ValueError("This field is required")
+        if not job_description:
+            raise ValueError("String should have at least 1 character")
+
         with language_context(language):
             context = self._prepare_context(
                 cv=cv,

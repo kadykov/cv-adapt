@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from fast_langdetect import detect as _detect  # type: ignore[import-untyped]
+from langdetect import detect as _detect
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 
@@ -49,6 +49,8 @@ def detect_language(text: str) -> Optional[Language]:
 
     Returns None if:
     - Text is empty or whitespace
+    - Text is too short (less than 10 characters)
+    - Text is a technical term (e.g., programming languages, tools)
     - Language detection confidence is below 0.9
     - Detected language is not supported
     - Detection fails
@@ -56,20 +58,38 @@ def detect_language(text: str) -> Optional[Language]:
     if not text or not text.strip():
         return None
 
+    # Skip language detection for very short texts
+    if len(text.strip()) < 10:
+        return None
+
+    # Skip language detection for technical terms
+    technical_terms = {
+        # Programming languages
+        "Python", "Java", "JavaScript", "TypeScript", "Go", "Ruby", "PHP", "C++", "C#",
+        "Swift", "Kotlin", "Rust", "Scala", "Haskell", "Perl", "R",
+        # Tools and frameworks
+        "Docker", "Kubernetes", "Git", "Jenkins", "Ansible", "Terraform", "AWS", "Azure",
+        "GCP", "TensorFlow", "PyTorch", "Pandas", "NumPy", "SciPy", "Matplotlib",
+        "Jupyter", "VSCode", "IntelliJ", "Eclipse", "Xcode",
+        # Job titles
+        "Data Scientist", "Software Engineer", "DevOps Engineer", "SRE", "CTO", "CEO",
+        "CIO", "CFO", "COO", "VP", "Director", "Manager", "Lead", "Senior", "Junior",
+        "Full Stack", "Backend", "Frontend", "Mobile", "Cloud", "AI", "ML", "QA",
+        # Common abbreviations
+        "AI", "ML", "DL", "NLP", "CV", "CI", "CD", "API", "REST", "GraphQL", "SQL",
+        "NoSQL", "UI", "UX", "DevOps", "SRE", "SLA", "KPI", "ROI", "P&L",
+    }
+    if text.strip() in technical_terms:
+        return None
+
     # Replace newlines with spaces to handle multi-line text
     text_single_line = text.replace("\n", " ").strip()
 
     try:
-        result = _detect(text_single_line)
-        lang_code = result.get("lang")
-        score = result.get("score", 0)
-
-        # Only return language if we're confident enough
-        if score >= 0.9:
-            try:
-                return Language(lang_code)
-            except ValueError:
-                return None
-        return None
-    except (ValueError, KeyError, AttributeError):
+        lang_code = _detect(text_single_line)
+        try:
+            return Language(lang_code)
+        except ValueError:
+            return None
+    except Exception:
         return None

@@ -20,7 +20,7 @@ def test_validate_language_with_mismatched_language() -> None:
     with language_context(Language.FRENCH):
         # English text should fail validation
         with pytest.raises(ValueError) as exc_info:
-            validate_language("Hello world")
+            validate_language("This is a longer English text that should be detected")
         assert "language mismatch" in str(exc_info.value)
 
 
