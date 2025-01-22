@@ -95,6 +95,17 @@ class SampleModel(LanguageValidationMixin):
         # Empty text should pass (validation is only for non-empty text)
         (Language.ENGLISH, "", True),
         (Language.FRENCH, "   ", True),
+        # Multi-line texts
+        (
+            Language.ENGLISH,
+            "This is a multi-line\nEnglish text with\nmultiple sentences.",
+            True,
+        ),
+        (
+            Language.FRENCH,
+            "C'est un texte\nen français avec\nplusieurs phrases.",
+            True,
+        ),
     ],
 )
 def test_language_validation_mixin(
@@ -116,3 +127,13 @@ def test_language_validation_mixin_invalid_language() -> None:
     with pytest.raises(ValidationError) as exc_info:
         SampleModel(language="invalid", text="Some text")  # type: ignore[arg-type]
     assert "Input should be 'en', 'fr', 'de', 'es' or 'it'" in str(exc_info.value)
+
+
+def test_language_validation_mixin_multi_line_language_mismatch() -> None:
+    """Test language validation with multi-line text and language mismatch."""
+    with pytest.raises(ValidationError) as exc_info:
+        SampleModel(
+            language=Language.ENGLISH,
+            text="C'est un texte\nen français avec\nplusieurs phrases.",
+        )
+    assert "Text language mismatch" in str(exc_info.value)
