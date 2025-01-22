@@ -65,14 +65,9 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
         # Use fast_langdetect to detect language
         result = detect(text_single_line)
 
-        # If the result is a dictionary with 'lang' and 'score' keys
-        if isinstance(result, dict):
-            lang_code = result["lang"]
-            confidence = result["score"]
-        else:
-            # If it's a simple string, assume full confidence
-            lang_code = result
-            confidence = 1.0
+        # Extract language code and confidence
+        lang_code = result["lang"]
+        confidence = result["score"]
 
         # Check confidence threshold
         if confidence >= min_confidence:
