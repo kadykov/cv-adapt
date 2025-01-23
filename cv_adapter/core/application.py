@@ -1,6 +1,8 @@
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.models.cv import CV, MinimalCV
+from cv_adapter.models.cv import CoreCompetence as CVCoreCompetence
+from cv_adapter.models.cv import CoreCompetences as CVCoreCompetences
 from cv_adapter.models.language import Language
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.markdown.core_competences_renderer import (
@@ -73,7 +75,13 @@ class CVAdapterApplication:
             language=current_language,
         )
         core_competences_md = CoreCompetencesRenderer.render_to_markdown(
-            core_competences
+            CVCoreCompetences(
+                items=[
+                    CVCoreCompetence(text=comp.text, language=current_language)
+                    for comp in core_competences.items
+                ],
+                language=current_language,
+            )
         )
 
         # Generate components
@@ -109,7 +117,13 @@ class CVAdapterApplication:
         # 2. Create minimal CV for description generation
         minimal_cv = MinimalCV(
             title=title,
-            core_competences=core_competences,
+            core_competences=CVCoreCompetences(
+                items=[
+                    CVCoreCompetence(text=comp.text, language=current_language)
+                    for comp in core_competences.items
+                ],
+                language=current_language,
+            ),
             experiences=experiences,
             education=education,
             skills=skills,
@@ -130,7 +144,13 @@ class CVAdapterApplication:
             personal_info=personal_info,
             title=title,
             summary=summary,
-            core_competences=core_competences,
+            core_competences=CVCoreCompetences(
+                items=[
+                    CVCoreCompetence(text=comp.text, language=current_language)
+                    for comp in core_competences.items
+                ],
+                language=current_language,
+            ),
             experiences=experiences,
             education=education,
             skills=skills,

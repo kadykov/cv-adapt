@@ -18,7 +18,10 @@ def test_core_competence_validation() -> None:
         # Too many words
         with pytest.raises(ValidationError) as exc_info:
             CoreCompetence(
-                text="Un deux trois quatre cinq six sept huit neuf dix onze douze treize quatorze"
+                text=(
+                    "Un deux trois quatre cinq six sept huit "
+                    "neuf dix onze douze treize quatorze"
+                )
             )
         assert "core competence must not exceed" in str(exc_info.value)
 
