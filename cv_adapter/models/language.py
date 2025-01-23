@@ -23,24 +23,30 @@ class LanguageValidationMixin(BaseModel):
 
     @field_validator("text")
     def validate_text_language(cls, v: str, info: ValidationInfo) -> str:
-        """Validate that the text is in the specified language."""
+        """
+        Validate that the text is in the specified language.
+
+        Args:
+            v (str): Text to validate
+            info (ValidationInfo): Validation context
+
+        Returns:
+            str: Validated text
+
+        Raises:
+            ValueError: If detected language does not match expected language
+        """
         language = info.data.get("language")
         if not language:
             return v
 
-        # Replace newlines with spaces to handle multi-line text
-        text_single_line = v.replace("\n", " ").strip()
+        detected_language = detect_language(v, min_confidence=0.6)
 
-        # Detect language with fast-langdetect
-        result = detect(text_single_line)
-
-        # Extract detected language
-        detected_lang = result["lang"]
-
-        # If detected language doesn't match
-        if detected_lang != language:
+        if detected_language is not None and detected_language != language:
             raise ValueError(
-                f"Text language mismatch. Expected {language}, detected {detected_lang}"
+                f"Text language mismatch. "
+                f"Expected {language}, but detected {detected_language}. "
+                "Please ensure the text is in the correct language."
             )
 
         return v
