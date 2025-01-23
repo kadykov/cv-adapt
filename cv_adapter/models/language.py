@@ -40,19 +40,46 @@ class LanguageValidationMixin(BaseModel):
         if not language:
             return v
 
-        detected_language = detect_language(v, min_confidence=0.6)
+        # Replace newlines with spaces to handle multi-line text
+        text_single_line = v.replace("\n", " ").strip()
 
-        if detected_language is not None and detected_language != language:
+        try:
+            # Detect language for the entire text
+            detected_text_language = detect_language(text_single_line, min_confidence=0.7)
+
+            # If detected language is different, raise error
+            if detected_text_language is not None and detected_text_language != language:
+                raise ValueError(
+                    f"Text language mismatch. "
+                    f"Expected {language}, but detected {detected_text_language}. "
+                    "Please ensure the text is in the correct language."
+                )
+
+            # Always check each line for language
+            lines = v.split("\n")
+            line_languages = [detect_language(line.strip(), min_confidence=0.7) for line in lines]
+            
+            # If any line has a different language, raise an error
+            detected_languages = set(lang for lang in line_languages if lang is not None)
+            if len(detected_languages) > 1 or (detected_languages and list(detected_languages)[0] != language):
+                raise ValueError(
+                    f"Text language mismatch. "
+                    f"Expected {language}, but detected mixed or different languages. "
+                    "Please ensure the text is in the correct language."
+                )
+
+        except Exception as e:
+            # If detection fails or language mismatch is detected, raise an error
             raise ValueError(
                 f"Text language mismatch. "
-                f"Expected {language}, but detected {detected_language}. "
+                f"Expected {language}. "
                 "Please ensure the text is in the correct language."
-            )
+            ) from e
 
         return v
 
 
-def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language]:
+def detect_language(text: str, min_confidence: float = 0.7) -> Optional[Language]:
     """Detect language of the given text and return corresponding Language enum value.
 
     Returns None if:
@@ -62,7 +89,7 @@ def detect_language(text: str, min_confidence: float = 0.5) -> Optional[Language
 
     Args:
         text: Text to detect language for
-        min_confidence: Confidence threshold for language detection (default 0.5)
+        min_confidence: Confidence threshold for language detection (default 0.7)
     """
     # Replace newlines with spaces to handle multi-line text
     text_single_line = text.replace("\n", " ").strip()

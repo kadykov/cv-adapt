@@ -83,18 +83,57 @@ class SampleModel(LanguageValidationMixin):
         # Mismatched languages (high confidence)
         (Language.ENGLISH, "C'est un texte en français.", False),
         (Language.FRENCH, "This is a clear English text.", False),
-        # Short texts
-        (Language.ENGLISH, "Hello world", True),
-        (Language.FRENCH, "Bonjour", True),
-        # Multi-line texts
+        # Short texts with potential ambiguity
+        (Language.ENGLISH, "Communication", True),
+        (Language.FRENCH, "Communication", True),
+        (Language.ENGLISH, "Python", True),
+        (Language.FRENCH, "Python", True),
+        (Language.ENGLISH, "SQL", True),
+        (Language.FRENCH, "SQL", True),
+        # Proper nouns and technical terms
+        (Language.ENGLISH, "Paris, France", True),
+        (Language.FRENCH, "Paris, France", True),
+        # Slightly longer ambiguous texts
+        (Language.ENGLISH, "Excellent Communication Skills", True),
+        (Language.FRENCH, "Compétences en Communication Excellentes", True),
+        (Language.ENGLISH, "Strong Collaboration Experience", True),
+        (Language.FRENCH, "Expérience de Collaboration Solide", True),
+        # Technical skill descriptions
+        (Language.ENGLISH, "Python Programming", True),
+        (Language.FRENCH, "Programmation Python", True),
+        (Language.ENGLISH, "SQL Database Management", True),
+        (Language.FRENCH, "Gestion de Base de Données SQL", True),
+        # Multiline text with single language
         (
             Language.ENGLISH,
-            "This is a multi-line\nEnglish text with\nmultiple sentences.",
+            "This is a multi-line text.\nWith multiple sentences.\nTesting language detection.",
             True,
         ),
         (
             Language.FRENCH,
-            "C'est un texte\nen français avec\nplusieurs phrases.",
+            "C'est un texte multi-ligne.\nAvec plusieurs phrases.\nTest de détection de langue.",
+            True,
+        ),
+        # Mixed language multiline text (should fail)
+        (
+            Language.ENGLISH,
+            "This is an English sentence.\nC'est une phrase en français.",
+            False,
+        ),
+        (
+            Language.FRENCH,
+            "C'est une phrase en français.\nThis is an English sentence.",
+            False,
+        ),
+        # Multiline text with different languages in each line
+        (
+            Language.ENGLISH,
+            "Excellent Communication Skills\nPython Programming\nDatabase Management",
+            True,
+        ),
+        (
+            Language.FRENCH,
+            "Compétences en Communication Excellentes\nProgrammation Python\nGestion de Base de Données",
             True,
         ),
     ],
