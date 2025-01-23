@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar, Union
 
-from cv_adapter.models.cv import CV
+from cv_adapter.dto.cv import CVDTO, MinimalCVDTO
 
 
 class RendererError(Exception):
@@ -11,18 +11,18 @@ class RendererError(Exception):
     pass
 
 
-CVType = TypeVar("CVType", bound=CV)
+CVDTOType = TypeVar("CVDTOType", CVDTO, MinimalCVDTO)
 
 
-class BaseRenderer(ABC, Generic[CVType]):
+class BaseRenderer(ABC, Generic[CVDTOType]):
     """Base class for CV renderers."""
 
     @abstractmethod
-    def render_to_string(self, cv: CVType) -> str:
+    def render_to_string(self, cv_dto: CVDTOType) -> str:
         """Render CV to string representation.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
 
         Returns:
             String representation of the CV in the target format
@@ -33,11 +33,11 @@ class BaseRenderer(ABC, Generic[CVType]):
         pass
 
     @abstractmethod
-    def render_to_file(self, cv: CVType, file_path: Union[str, Path]) -> None:
+    def render_to_file(self, cv_dto: CVDTOType, file_path: Union[str, Path]) -> None:
         """Render CV to file.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
             file_path: Path where to save the rendered CV
 
         Raises:
