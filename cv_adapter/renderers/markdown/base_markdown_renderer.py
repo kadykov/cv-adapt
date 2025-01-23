@@ -7,7 +7,7 @@ from cv_adapter.dto.cv import (
     MinimalCVDTO,
     SkillsDTO,
 )
-from cv_adapter.dto.language import Language, ENGLISH, FRENCH
+from cv_adapter.dto.language import ENGLISH, FRENCH, Language
 from cv_adapter.renderers.base import BaseRenderer, RendererError
 from cv_adapter.renderers.markdown.markdown_list_renderer import MarkdownListRenderer
 
@@ -88,9 +88,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             sections.append("")
         return sections
 
-    def _render_education(
-        self, education: List[Any], language: Language
-    ) -> List[str]:
+    def _render_education(self, education: List[Any], language: Language) -> List[str]:
         """Render education section.
 
         Args:

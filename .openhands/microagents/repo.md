@@ -252,13 +252,13 @@ Development Guidelines:
      * Maintain consistent validation and generation logic across languages
      * Use language-specific instructions in LLM context
    - Language Design:
-     * `Language` is a dataclass with rich metadata and advanced registry capabilities
+     * `Language` is a Pydantic model with rich metadata and advanced registry capabilities
      * Supports language code, name, native name
      * Provides language-specific formatting details:
        - Date format
        - Decimal separator
        - Thousands separator
-     * Immutable and type-safe representation
+     * Immutable and type-safe representation using Pydantic's `ConfigDict(frozen=True)`
      * Supports string conversion and class-level language registry
      * Predefined language instances (ENGLISH, FRENCH, etc.) for easy access
    - Language Handling:
@@ -267,22 +267,25 @@ Development Guidelines:
      * Supports easy extension and customization
      * Provides class methods for language retrieval and registration
    - Language Registry Features:
-     * Automatic registration of language instances
+     * Automatic registration of language instances using a class method
      * Ability to retrieve languages by their code
      * Supports runtime language instance management
      * Provides detailed string and repr representations
+     * Uses `ClassVar` for type-safe class-level registry
    - Extending language support:
      * Add new languages to the `LanguageCode` enum
      * Create new `Language` instances with specific metadata
-     * Automatically register new languages in the class registry
+     * Automatically register new languages using the `register` class method
      * Update language-specific instructions in generator context methods
      * Ensure comprehensive test coverage for new languages
-   - Advantages of the New Language Implementation:
-     * Type-safe language representation
+   - Advantages of the Pydantic Language Implementation:
+     * Enhanced type safety with Pydantic validation
      * Rich metadata support
      * Easy language retrieval and management
      * Flexible and extensible design
      * Supports internationalization requirements
+     * Immutable model configuration
+     * Improved type checking and runtime validation
 
 9. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date

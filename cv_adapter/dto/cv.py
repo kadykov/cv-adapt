@@ -1,21 +1,20 @@
-from dataclasses import dataclass, field
 from datetime import date
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 from cv_adapter.dto.language import Language
 
 
-@dataclass
-class ContactDTO:
+class ContactDTO(BaseModel):
     """Represents a single contact method with optional metadata."""
     value: str
-    type: Optional[str] = None  # e.g., "personal", "work"
-    icon: Optional[str] = None  # e.g., "email", "phone", "linkedin"
-    url: Optional[str] = None  # Optional URL for the contact (e.g., mailto:, tel:, https://)
+    type: Optional[str] = Field(None, description="e.g., 'personal', 'work'")
+    icon: Optional[str] = Field(None, description="e.g., 'email', 'phone', 'linkedin'")
+    url: Optional[str] = Field(None, description="Optional URL for the contact (e.g., mailto:, tel:, https://)")
 
 
-@dataclass
-class PersonalInfoDTO:
+class PersonalInfoDTO(BaseModel):
     """Personal information with flexible contact handling."""
     full_name: str
     email: Optional[ContactDTO] = None
@@ -25,35 +24,30 @@ class PersonalInfoDTO:
     github: Optional[ContactDTO] = None
 
 
-@dataclass
-class CoreCompetenceDTO:
+class CoreCompetenceDTO(BaseModel):
     text: str
 
 
-@dataclass
-class CoreCompetencesDTO:
+class CoreCompetencesDTO(BaseModel):
     items: List[CoreCompetenceDTO]
 
 
-@dataclass
-class InstitutionDTO:
+class InstitutionDTO(BaseModel):
     name: str
     description: Optional[str] = None
     location: Optional[str] = None
 
 
-@dataclass
-class ExperienceDTO:
+class ExperienceDTO(BaseModel):
     company: InstitutionDTO
     position: str
     start_date: date
     end_date: Optional[date] = None
     description: str = ""
-    technologies: List[str] = field(default_factory=list)
+    technologies: List[str] = Field(default_factory=list)
 
 
-@dataclass
-class EducationDTO:
+class EducationDTO(BaseModel):
     university: InstitutionDTO
     degree: str
     start_date: date
@@ -61,34 +55,28 @@ class EducationDTO:
     description: str = ""
 
 
-@dataclass
-class SkillDTO:
+class SkillDTO(BaseModel):
     text: str
 
 
-@dataclass
-class SkillGroupDTO:
+class SkillGroupDTO(BaseModel):
     name: str
     skills: List[SkillDTO]
 
 
-@dataclass
-class SkillsDTO:
+class SkillsDTO(BaseModel):
     groups: List[SkillGroupDTO]
 
 
-@dataclass
-class TitleDTO:
+class TitleDTO(BaseModel):
     text: str
 
 
-@dataclass
-class SummaryDTO:
+class SummaryDTO(BaseModel):
     text: str
 
 
-@dataclass
-class MinimalCVDTO:
+class MinimalCVDTO(BaseModel):
     title: TitleDTO
     core_competences: CoreCompetencesDTO
     experiences: List[ExperienceDTO]
@@ -97,8 +85,7 @@ class MinimalCVDTO:
     language: Language
 
 
-@dataclass
-class CVDTO:
+class CVDTO(BaseModel):
     personal_info: PersonalInfoDTO
     title: TitleDTO
     summary: SummaryDTO

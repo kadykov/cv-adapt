@@ -1,6 +1,7 @@
-from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar, Dict, Optional
+from typing import Dict, Optional, ClassVar
+
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LanguageCode(str, Enum):
@@ -12,9 +13,10 @@ class LanguageCode(str, Enum):
     ITALIAN = "it"
 
 
-@dataclass(frozen=True)
-class Language:
+class Language(BaseModel):
     """Representation of a language with detection and metadata capabilities."""
+
+    model_config = ConfigDict(frozen=True)
 
     code: LanguageCode
     name: str
@@ -28,9 +30,16 @@ class Language:
     # Class-level language registry
     _registry: ClassVar[Dict[LanguageCode, 'Language']] = {}
 
-    def __post_init__(self) -> None:
+    def __init__(self, **data):
         """Register the language in the class registry."""
-        type(self)._registry[self.code] = self
+        super().__init__(**data)
+        # Use the class method to register the language
+        self.__class__.register(self)
+
+    @classmethod
+    def register(cls, language: 'Language') -> None:
+        """Register a language in the class registry."""
+        cls._registry[language.code] = language
 
     @classmethod
     def get(cls, code: LanguageCode) -> 'Language':

@@ -4,7 +4,7 @@ from typing import List
 import yaml
 
 from cv_adapter.dto.cv import CVDTO
-from cv_adapter.dto.language import Language, ENGLISH, FRENCH
+from cv_adapter.dto.language import ENGLISH, FRENCH, Language
 from cv_adapter.renderers.base import RendererError
 from cv_adapter.renderers.markdown.base_markdown_renderer import BaseMarkdownRenderer
 

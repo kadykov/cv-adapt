@@ -27,21 +27,21 @@ class YAMLRenderer(BaseRenderer[CVDTO]):
             return {k: self._convert_to_dict(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [self._convert_to_dict(item) for item in obj]
-        elif hasattr(obj, '__dict__'):
+        elif hasattr(obj, "__dict__"):
             # Convert dataclass or object to dictionary and recursively convert
             try:
                 # First try dataclass conversion
                 return {
                     k: self._convert_to_dict(v)
                     for k, v in asdict(obj).items()
-                    if not k.startswith('_') and v is not None
+                    if not k.startswith("_") and v is not None
                 }
             except TypeError:
                 # Fallback to __dict__ conversion
                 return {
                     k: self._convert_to_dict(v)
                     for k, v in obj.__dict__.items()
-                    if not k.startswith('_') and v is not None
+                    if not k.startswith("_") and v is not None
                 }
         return obj
 
@@ -58,7 +58,7 @@ class YAMLRenderer(BaseRenderer[CVDTO]):
             RendererError: If rendering fails
         """
         try:
-            # Convert DTO to a dictionary 
+            # Convert DTO to a dictionary
             cv_dict = self._convert_to_dict(cv_dto)
             return yaml.safe_dump(
                 cv_dict,
