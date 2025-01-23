@@ -49,7 +49,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             List of lines in Markdown format
         """
-        sections = [f"## {self._get_section_label('core_competences', language)}\n"]
+        sections = [f"## {self._get_section_label('core_competences', language)}"]
         sections.extend(MarkdownListRenderer.render_bullet_list(core_competences.items))
         sections.append("")
         return sections

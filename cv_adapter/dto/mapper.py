@@ -1,16 +1,66 @@
+from typing import Union
+
 from cv_adapter.models import cv as cv_models
 from cv_adapter.models import personal_info as personal_info_models
 from cv_adapter.dto import cv as cv_dto
 
 
-def map_personal_info(personal_info: personal_info_models.PersonalInfo) -> cv_dto.PersonalInfoDTO:
+def map_personal_info(personal_info: Union[personal_info_models.PersonalInfo, cv_dto.PersonalInfoDTO]) -> cv_dto.PersonalInfoDTO:
+    # If already a DTO, return as-is
+    if isinstance(personal_info, cv_dto.PersonalInfoDTO):
+        return personal_info
+    
+    # Extract contacts from the contacts dictionary
+    contacts = personal_info.contacts or {}
+    
+    # Helper function to create ContactDTO with smart defaults
+    def create_contact_dto(value: Optional[str], contact_type: str) -> Optional[cv_dto.ContactDTO]:
+        if not value:
+            return None
+        
+        # Define contact-specific metadata
+        contact_metadata = {
+            'email': {
+                'icon': 'email',
+                'url': f'mailto:{value}',
+                'type': 'primary'
+            },
+            'phone': {
+                'icon': 'phone',
+                'url': f'tel:{value}',
+                'type': 'primary'
+            },
+            'linkedin': {
+                'icon': 'linkedin',
+                'url': f'https://linkedin.com/in/{value}',
+                'type': 'social'
+            },
+            'github': {
+                'icon': 'github',
+                'url': f'https://github.com/{value}',
+                'type': 'social'
+            },
+            'location': {
+                'icon': 'location',
+                'type': 'location'
+            }
+        }
+        
+        metadata = contact_metadata.get(contact_type, {})
+        return cv_dto.ContactDTO(
+            value=value,
+            type=metadata.get('type'),
+            icon=metadata.get('icon'),
+            url=metadata.get('url')
+        )
+    
     return cv_dto.PersonalInfoDTO(
         full_name=personal_info.full_name,
-        email=personal_info.email,
-        phone=personal_info.phone,
-        location=personal_info.location,
-        linkedin=personal_info.linkedin,
-        github=personal_info.github
+        email=create_contact_dto(contacts.get('email'), 'email'),
+        phone=create_contact_dto(contacts.get('phone'), 'phone'),
+        location=create_contact_dto(contacts.get('location'), 'location'),
+        linkedin=create_contact_dto(contacts.get('linkedin'), 'linkedin'),
+        github=create_contact_dto(contacts.get('github'), 'github')
     )
 
 

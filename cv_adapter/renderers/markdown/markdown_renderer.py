@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List
 
 import yaml
 
@@ -23,13 +23,13 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             Localized section label
         """
         labels = {
-            Language.EN: {
+            Language.ENGLISH: {
                 'experience': 'Professional Experience',
                 'education': 'Education',
                 'skills': 'Skills',
                 'core_competences': 'Core Competences'
             },
-            Language.FR: {
+            Language.FRENCH: {
                 'experience': 'Expérience Professionnelle',
                 'education': 'Formation',
                 'skills': 'Compétences',
@@ -37,7 +37,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             },
             # Add more languages as needed
         }
-        return labels.get(language, labels[Language.EN])[section]
+        return labels.get(language, labels[Language.ENGLISH])[section]
 
     def _render_yaml_header(self, cv_dto: CVDTO) -> List[str]:
         """Render YAML header with personal information.
@@ -51,7 +51,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
         personal_info = {
             "full_name": cv_dto.personal_info.full_name,
             "contacts": {
-                k: v for k, v in {
+                k: v.value for k, v in {
                     "email": cv_dto.personal_info.email,
                     "phone": cv_dto.personal_info.phone,
                     "location": cv_dto.personal_info.location,
@@ -138,7 +138,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
         except Exception as e:
             raise RendererError(f"Error rendering CV to Markdown: {e}")
 
-    def render_to_file(self, cv_dto: CVDTO, file_path: Union[str, Path]) -> None:
+    def render_to_file(self, cv_dto: CVDTO, file_path: Path) -> None:
         """Render CV to Markdown file.
 
         Args:

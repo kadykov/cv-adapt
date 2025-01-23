@@ -6,13 +6,23 @@ from cv_adapter.models.language import Language
 
 
 @dataclass
+class ContactDTO:
+    """Represents a single contact method with optional metadata."""
+    value: str
+    type: Optional[str] = None  # e.g., "personal", "work"
+    icon: Optional[str] = None  # e.g., "email", "phone", "linkedin"
+    url: Optional[str] = None  # Optional URL for the contact (e.g., mailto:, tel:, https://)
+
+
+@dataclass
 class PersonalInfoDTO:
+    """Personal information with flexible contact handling."""
     full_name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    location: Optional[str] = None
-    linkedin: Optional[str] = None
-    github: Optional[str] = None
+    email: Optional[ContactDTO] = None
+    phone: Optional[ContactDTO] = None
+    location: Optional[ContactDTO] = None
+    linkedin: Optional[ContactDTO] = None
+    github: Optional[ContactDTO] = None
 
 
 @dataclass

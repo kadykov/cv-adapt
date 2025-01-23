@@ -49,6 +49,16 @@ Project Structure:
        * `experience_generator.py`: Generates experience sections using validated input
        * `skills_generator.py`: Generates and organizes skills using validated input
        * `title_generator.py`: Generates professional titles using validated input
+   - `dto/`: Data Transfer Objects (DTOs)
+     - `cv.py`: DTO classes for decoupling data representation from rendering
+       * `ContactDTO`: Represents contact information with metadata
+       * `PersonalInfoDTO`: Personal information with flexible contact handling
+       * `CoreCompetenceDTO`, `CoreCompetencesDTO`: Core competence representations
+       * `ExperienceDTO`, `EducationDTO`: Experience and education representations
+       * `SkillDTO`, `SkillGroupDTO`, `SkillsDTO`: Skill-related DTOs
+       * `TitleDTO`, `SummaryDTO`: Title and summary representations
+       * `CVDTO`, `MinimalCVDTO`: Top-level CV data transfer objects
+     - `mapper.py`: Conversion utilities between Pydantic models and DTOs
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `yaml_renderer.py`: Renders CV to YAML format
@@ -199,26 +209,39 @@ Development Guidelines:
      * Each generator has a `_prepare_context` method for context generation
      * Simplified method signatures improve readability and type safety
 
-7. Working with Renderers:
+7. Working with Renderers and DTOs:
    - Use the rendering system in `cv_adapter/renderers/` for CV output
-   - All renderers must implement the BaseRenderer interface
+   - Utilize Data Transfer Objects (DTOs) in `cv_adapter/dto/` for decoupled rendering
+   - Renderer and DTO Design Principles:
+     * DTOs provide a clean, language-agnostic data representation
+     * Renderers work with DTOs, not directly with Pydantic models
+     * Mapper utility converts between Pydantic models and DTOs
    - Renderer hierarchy:
-     * BaseRenderer[CVType]: Generic base class for all renderers
-     * BaseMarkdownRenderer[CVType]: Base class for Markdown renderers with common logic
+     * BaseRenderer[DTOType]: Generic base class for all renderers
+     * BaseMarkdownRenderer[DTOType]: Base class for Markdown renderers with common logic
      * MarkdownRenderer: Renders complete CV to Markdown
      * MinimalMarkdownRenderer: Renders minimal CV for summary generation
      * YAMLRenderer: For data storage and interchange
+   - DTO Design:
+     * Separate DTOs for different CV components (PersonalInfo, Experience, etc.)
+     * Top-level DTOs (CVDTO, MinimalCVDTO) contain language context
+     * ContactDTO provides flexible contact information handling
    - When adding new renderers:
      * Create a new file in `renderers/` or `renderers/markdown/` directory
      * For Markdown-specific renderers, use the `renderers/markdown/` directory
      * Implement appropriate base class
+     * Work with DTO classes
      * Add comprehensive tests
      * Update documentation
    - Type safety:
      * Use generic types to ensure type safety
-     * BaseRenderer and BaseMarkdownRenderer are generic over CV type
-     * Concrete renderers specify their CV type (CV or MinimalCV)
-     * Use protocols (like MarkdownListItem) for type-safe interfaces
+     * BaseRenderer and BaseMarkdownRenderer are generic over DTO type
+     * Concrete renderers specify their DTO type
+     * Use protocols for type-safe interfaces
+   - Conversion between Models and DTOs:
+     * Use `mapper.py` for converting Pydantic models to DTOs
+     * Mapper handles type conversion and provides flexibility
+     * Allows for future changes in model structure without affecting renderers
 
 8. Multilingual Support:
    - Language support is implemented through the `Language` enum and `LanguageValidationMixin`
