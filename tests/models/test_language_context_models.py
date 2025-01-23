@@ -43,7 +43,7 @@ def test_institution_validation() -> None:
         assert "field must be a single line" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Institution(
                 name="Large Technology Corporation",
                 description="Cutting-edge software development company",
@@ -72,7 +72,7 @@ def test_experience_validation() -> None:
         assert experience.position == "Développeur Senior"
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Experience(
                 company=Company(
                     name="Global Tech Solutions",
@@ -112,12 +112,13 @@ def test_education_validation() -> None:
                 university=university,
                 degree="Master\nen Informatique",
                 start_date=date(2018, 9, 1),
+                end_date=date(2020, 6, 30),
                 description="Spécialisation en développement logiciel",
             )
         assert "degree must be a single line" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Education(
                 university=University(
                     name="Stanford University",
@@ -145,7 +146,7 @@ def test_title_validation() -> None:
         assert "title must not exceed 2 lines" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Title(text="Senior Software Engineer with Global Experience")
         assert "language mismatch" in str(exc_info.value).lower()
 
@@ -163,7 +164,7 @@ def test_skill_validation() -> None:
         assert "skill must be a single line" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Skill(
                 text=(
                     "Implementing advanced cloud infrastructure requires deep "
@@ -212,7 +213,7 @@ def test_skill_group_validation() -> None:
         assert "group name must be a single line" in str(exc_info.value)
 
         # Obvious language mismatch in group name
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             SkillGroup(
                 name=(
                     "Advanced Technical Competencies with "
@@ -271,7 +272,7 @@ def test_skills_validation() -> None:
         assert "skills must be unique across all groups" in str(exc_info.value)
 
         # Obvious language mismatch in skills
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             Skills(
                 groups=[
                     SkillGroup(
@@ -321,7 +322,7 @@ def test_core_competence_validation() -> None:
         assert "core competence must be a single line" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             CoreCompetence(text="Advanced Software Architecture and Design")
         assert "language mismatch" in str(exc_info.value).lower()
 
@@ -365,7 +366,7 @@ def test_core_competences_validation() -> None:
         assert "too_long" in str(exc_info.value)
 
         # Obvious language mismatch
-        with pytest.raises((ValueError, ValidationError)) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             CoreCompetences(
                 items=[
                     CoreCompetence(text="Advanced Cloud Infrastructure"),
