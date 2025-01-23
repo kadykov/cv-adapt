@@ -1,8 +1,13 @@
 from pathlib import Path
-from typing import Generic, List, TypeVar, Union
+from typing import Any, Generic, List, TypeVar
 
-from cv_adapter.dto.cv import CVDTO, MinimalCVDTO
-from cv_adapter.models.language import Language
+from cv_adapter.dto.cv import (
+    CVDTO,
+    CoreCompetencesDTO,
+    LanguageDTO,
+    MinimalCVDTO,
+    SkillsDTO,
+)
 from cv_adapter.renderers.base import BaseRenderer, RendererError
 from cv_adapter.renderers.markdown.markdown_list_renderer import MarkdownListRenderer
 
@@ -12,7 +17,7 @@ CVDTOType = TypeVar("CVDTOType", CVDTO, MinimalCVDTO)
 class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
     """Base class for Markdown renderers with common rendering logic."""
 
-    def _get_section_label(self, section: str, language: Language) -> str:
+    def _get_section_label(self, section: str, language: LanguageDTO) -> str:
         """Get language-specific section labels.
 
         Args:
@@ -23,23 +28,25 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             Localized section label
         """
         labels = {
-            Language.EN: {
-                'experience': 'Experience',
-                'education': 'Education',
-                'skills': 'Skills',
-                'core_competences': 'Core Competences'
+            LanguageDTO.ENGLISH: {
+                "experience": "Experience",
+                "education": "Education",
+                "skills": "Skills",
+                "core_competences": "Core Competences",
             },
-            Language.FR: {
-                'experience': 'Expérience',
-                'education': 'Formation',
-                'skills': 'Compétences',
-                'core_competences': 'Compétences Clés'
+            LanguageDTO.FRENCH: {
+                "experience": "Expérience",
+                "education": "Formation",
+                "skills": "Compétences",
+                "core_competences": "Compétences Clés",
             },
             # Add more languages as needed
         }
-        return labels.get(language, labels[Language.EN])[section]
+        return labels.get(language, labels[LanguageDTO.ENGLISH])[section]
 
-    def _render_core_competences(self, core_competences, language: Language) -> List[str]:
+    def _render_core_competences(
+        self, core_competences: CoreCompetencesDTO, language: LanguageDTO
+    ) -> List[str]:
         """Render core competences section.
 
         Args:
@@ -54,7 +61,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         sections.append("")
         return sections
 
-    def _render_experiences(self, experiences, language: Language) -> List[str]:
+    def _render_experiences(
+        self, experiences: List[Any], language: LanguageDTO
+    ) -> List[str]:
         """Render experiences section.
 
         Args:
@@ -79,7 +88,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             sections.append("")
         return sections
 
-    def _render_education(self, education, language: Language) -> List[str]:
+    def _render_education(
+        self, education: List[Any], language: LanguageDTO
+    ) -> List[str]:
         """Render education section.
 
         Args:
@@ -103,7 +114,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             sections.append("")
         return sections
 
-    def _render_skills(self, skills, language: Language) -> List[str]:
+    def _render_skills(self, skills: SkillsDTO, language: LanguageDTO) -> List[str]:
         """Render skills section.
 
         Args:
@@ -134,7 +145,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         """
         raise NotImplementedError("Subclasses must implement render_to_string")
 
-    def render_to_file(self, cv_dto: CVDTOType, file_path: Union[str, Path]) -> None:
+    def render_to_file(self, cv_dto: CVDTOType, file_path: Path) -> None:
         """Render CV to Markdown file.
 
         Args:
@@ -146,7 +157,6 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         """
         try:
             markdown = self.render_to_string(cv_dto)
-            path = Path(file_path)
-            path.write_text(markdown, encoding="utf-8")
+            file_path.write_text(markdown, encoding="utf-8")
         except Exception as e:
             raise RendererError(f"Error saving CV to Markdown file: {e}")

@@ -244,19 +244,29 @@ Development Guidelines:
      * Allows for future changes in model structure without affecting renderers
 
 8. Multilingual Support:
-   - Language support is implemented through the `Language` enum and `LanguageValidationMixin`
+   - Language support is implemented through the `Language` class in DTOs
    - Supported languages: English, French, German, Spanish, Italian
    - Key design principles:
      * Language is a required parameter for all generator methods
      * Generators adapt content to language-specific conventions
      * Maintain consistent validation and generation logic across languages
      * Use language-specific instructions in LLM context
-   - Language validation:
-     * `LanguageValidationMixin` provides optional text language validation
-     * Generators can detect and validate language consistency
-     * Fallback to generation without strict language validation
+   - Language Design:
+     * `Language` is a dataclass with rich metadata
+     * Supports language code, name, native name
+     * Provides language-specific formatting details:
+       - Date format
+       - Decimal separator
+       - Thousands separator
+     * Immutable and type-safe representation
+     * Supports string conversion and registry of language instances
+   - Language Handling:
+     * Language is part of DTO classes (CVDTO, MinimalCVDTO)
+     * Renderers can convert language to string representation
+     * Supports easy extension and customization
    - Extending language support:
-     * Add new languages to the `Language` enum
+     * Add new languages to the `LanguageCode` enum
+     * Create new `Language` instances with specific metadata
      * Update language-specific instructions in generator context methods
      * Ensure comprehensive test coverage for new languages
 

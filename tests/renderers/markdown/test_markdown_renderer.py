@@ -5,18 +5,18 @@ import pytest
 
 from cv_adapter.dto.cv import (
     CVDTO,
-    PersonalInfoDTO,
     ContactDTO,
-    TitleDTO,
-    SummaryDTO,
-    CoreCompetencesDTO,
     CoreCompetenceDTO,
+    CoreCompetencesDTO,
+    EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
-    EducationDTO,
-    SkillsDTO,
-    SkillGroupDTO,
+    PersonalInfoDTO,
     SkillDTO,
+    SkillGroupDTO,
+    SkillsDTO,
+    SummaryDTO,
+    TitleDTO,
 )
 from cv_adapter.models.language import Language
 from cv_adapter.renderers import MarkdownRenderer, RendererError
@@ -31,17 +31,16 @@ def sample_cv_dto() -> CVDTO:
                 value="john@example.com",
                 type="primary",
                 icon="email",
-                url="mailto:john@example.com"
+                url="mailto:john@example.com",
             ),
             phone=ContactDTO(
-                value="+1234567890",
-                type="primary",
-                icon="phone",
-                url="tel:+1234567890"
-            )
+                value="+1234567890", type="primary", icon="phone", url="tel:+1234567890"
+            ),
         ),
         title=TitleDTO(text="Senior Software Engineer"),
-        summary=SummaryDTO(text="Experienced software engineer with a focus on Python development"),
+        summary=SummaryDTO(
+            text="Experienced software engineer with a focus on Python development"
+        ),
         core_competences=CoreCompetencesDTO(
             items=[
                 CoreCompetenceDTO(text="Python"),
@@ -52,41 +51,32 @@ def sample_cv_dto() -> CVDTO:
         ),
         experiences=[
             ExperienceDTO(
-                company=InstitutionDTO(
-                    name="Tech Corp",
-                    location="New York"
-                ),
+                company=InstitutionDTO(name="Tech Corp", location="New York"),
                 position="Senior Software Engineer",
                 start_date=date(2020, 1, 1),
                 end_date=None,
                 description="Leading backend development team",
-                technologies=["Python", "FastAPI", "PostgreSQL"]
+                technologies=["Python", "FastAPI", "PostgreSQL"],
             )
         ],
         education=[
             EducationDTO(
-                university=InstitutionDTO(
-                    name="State University",
-                    location="Boston"
-                ),
+                university=InstitutionDTO(name="State University", location="Boston"),
                 degree="Master of Computer Science",
                 start_date=date(2018, 9, 1),
                 end_date=date(2020, 6, 1),
-                description="Focus on distributed systems"
+                description="Focus on distributed systems",
             )
         ],
         skills=SkillsDTO(
             groups=[
                 SkillGroupDTO(
                     name="Programming Languages",
-                    skills=[
-                        SkillDTO(text="Python"),
-                        SkillDTO(text="JavaScript")
-                    ]
+                    skills=[SkillDTO(text="Python"), SkillDTO(text="JavaScript")],
                 )
             ]
         ),
-        language=Language.ENGLISH
+        language=Language.ENGLISH,
     )
 
 

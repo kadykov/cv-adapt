@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from cv_adapter.dto.cv import CVDTO, MinimalCVDTO
 
@@ -33,7 +33,7 @@ class BaseRenderer(ABC, Generic[CVDTOType]):
         pass
 
     @abstractmethod
-    def render_to_file(self, cv_dto: CVDTOType, file_path: Union[str, Path]) -> None:
+    def render_to_file(self, cv_dto: CVDTOType, file_path: Path) -> None:
         """Render CV to file.
 
         Args:
