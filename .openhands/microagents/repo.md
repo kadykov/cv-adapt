@@ -226,6 +226,12 @@ Development Guidelines:
      * Separate DTOs for different CV components (PersonalInfo, Experience, etc.)
      * Top-level DTOs (CVDTO, MinimalCVDTO) contain language context
      * ContactDTO provides flexible contact information handling
+   - Renderer Conversion Strategies:
+     * Recursive conversion of complex objects
+     * Special handling for Language and Enum types
+     * Converts objects to their string or primitive representations
+     * Supports nested dictionaries and lists
+     * Ensures type-safe and consistent rendering
    - When adding new renderers:
      * Create a new file in `renderers/` or `renderers/markdown/` directory
      * For Markdown-specific renderers, use the `renderers/markdown/` directory
@@ -242,6 +248,12 @@ Development Guidelines:
      * Use `mapper.py` for converting Pydantic models to DTOs
      * Mapper handles type conversion and provides flexibility
      * Allows for future changes in model structure without affecting renderers
+   - Renderer Conversion Best Practices:
+     * Implement recursive conversion functions
+     * Handle special types like Language and Enum
+     * Ensure consistent string representation
+     * Maintain type information during conversion
+     * Provide clear error handling and logging
 
 8. Multilingual Support:
    - Language support is implemented through the `Language` class in `cv_adapter/dto/language.py`

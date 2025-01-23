@@ -30,8 +30,12 @@ class Language(BaseModel):
     # Class-level language registry
     _registry: ClassVar[Dict[LanguageCode, 'Language']] = {}
 
-    def __init__(self, **data):
-        """Register the language in the class registry."""
+    def __init__(self, **data: object) -> None:
+        """Register the language in the class registry.
+
+        Args:
+            **data: Keyword arguments for language initialization
+        """
         super().__init__(**data)
         # Use the class method to register the language
         self.__class__.register(self)

@@ -1,49 +1,15 @@
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 from cv_adapter.dto.cv import CVDTO
-from cv_adapter.dto.language import Language
+from cv_adapter.dto.language import Language, LanguageCode
 from cv_adapter.renderers.base import BaseRenderer, RendererError
 
 
 class YAMLRenderer(BaseRenderer[CVDTO]):
     """Renderer for CV in YAML format."""
-
-    def _convert_to_dict(self, obj: Any) -> Any:
-        """Recursively convert objects to dictionaries.
-
-        Args:
-            obj: Object to convert
-
-        Returns:
-            Converted dictionary representation
-        """
-        if isinstance(obj, Language):
-            return str(obj)
-        elif isinstance(obj, dict):
-            return {k: self._convert_to_dict(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [self._convert_to_dict(item) for item in obj]
-        elif hasattr(obj, "__dict__"):
-            # Convert dataclass or object to dictionary and recursively convert
-            try:
-                # First try dataclass conversion
-                return {
-                    k: self._convert_to_dict(v)
-                    for k, v in asdict(obj).items()
-                    if not k.startswith("_") and v is not None
-                }
-            except TypeError:
-                # Fallback to __dict__ conversion
-                return {
-                    k: self._convert_to_dict(v)
-                    for k, v in obj.__dict__.items()
-                    if not k.startswith("_") and v is not None
-                }
-        return obj
 
     def render_to_string(self, cv_dto: CVDTO) -> str:
         """Render CV to YAML string.
@@ -58,8 +24,27 @@ class YAMLRenderer(BaseRenderer[CVDTO]):
             RendererError: If rendering fails
         """
         try:
-            # Convert DTO to a dictionary
-            cv_dict = self._convert_to_dict(cv_dto)
+            # Convert DTO to a dictionary using Pydantic's model_dump
+            cv_dict = cv_dto.model_dump(
+                exclude_unset=True,  # Exclude fields not explicitly set
+                exclude_none=True,  # Exclude None values
+                by_alias=False,  # Use original field names
+            )
+
+            # Recursively convert Language objects and Enum to strings
+            def convert_language(obj: Any) -> Any:
+                if isinstance(obj, Language):
+                    return str(obj)
+                elif isinstance(obj, LanguageCode):
+                    return obj.value
+                elif isinstance(obj, dict):
+                    return {k: convert_language(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [convert_language(item) for item in obj]
+                return obj
+
+            cv_dict = convert_language(cv_dict)
+
             return yaml.safe_dump(
                 cv_dict,
                 default_flow_style=False,
