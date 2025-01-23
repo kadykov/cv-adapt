@@ -3,7 +3,8 @@ from typing import List
 
 import yaml
 
-from cv_adapter.dto.cv import CVDTO, LanguageDTO
+from cv_adapter.dto.cv import CVDTO
+from cv_adapter.dto.language import Language, ENGLISH, FRENCH
 from cv_adapter.renderers.base import RendererError
 from cv_adapter.renderers.markdown.base_markdown_renderer import BaseMarkdownRenderer
 
@@ -11,7 +12,7 @@ from cv_adapter.renderers.markdown.base_markdown_renderer import BaseMarkdownRen
 class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
     """Renderer for CV in Markdown format."""
 
-    def _get_section_label(self, section: str, language: LanguageDTO) -> str:
+    def _get_section_label(self, section: str, language: Language) -> str:
         """Get language-specific section labels.
 
         Args:
@@ -22,13 +23,13 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             Localized section label
         """
         labels = {
-            LanguageDTO.ENGLISH: {
+            ENGLISH: {
                 "experience": "Professional Experience",
                 "education": "Education",
                 "skills": "Skills",
                 "core_competences": "Core Competences",
             },
-            LanguageDTO.FRENCH: {
+            FRENCH: {
                 "experience": "Expérience Professionnelle",
                 "education": "Formation",
                 "skills": "Compétences",
@@ -36,7 +37,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             },
             # Add more languages as needed
         }
-        return labels.get(language, labels[LanguageDTO.ENGLISH])[section]
+        return labels.get(language, labels[ENGLISH])[section]
 
     def _render_yaml_header(self, cv_dto: CVDTO) -> List[str]:
         """Render YAML header with personal information.

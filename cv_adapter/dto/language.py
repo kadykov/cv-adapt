@@ -28,14 +28,17 @@ class Language:
     # Class-level language registry
     _registry: ClassVar[Dict[LanguageCode, 'Language']] = {}
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Register the language in the class registry."""
         type(self)._registry[self.code] = self
 
     @classmethod
     def get(cls, code: LanguageCode) -> 'Language':
         """Retrieve a language by its code."""
-        return cls._registry.get(code)
+        language = cls._registry.get(code)
+        if language is None:
+            raise KeyError(f"Language with code {code} not found")
+        return language
 
     def __str__(self) -> str:
         """Return the language code."""

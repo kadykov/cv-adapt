@@ -2,17 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import List, Optional
 
-from enum import Enum
-
-
-class LanguageDTO(str, Enum):
-    """Supported languages for CV generation."""
-
-    ENGLISH = "en"
-    FRENCH = "fr"
-    GERMAN = "de"
-    SPANISH = "es"
-    ITALIAN = "it"
+from cv_adapter.dto.language import Language
 
 
 @dataclass
@@ -104,7 +94,7 @@ class MinimalCVDTO:
     experiences: List[ExperienceDTO]
     education: List[EducationDTO]
     skills: SkillsDTO
-    language: LanguageDTO
+    language: Language
 
 
 @dataclass
@@ -116,4 +106,4 @@ class CVDTO:
     experiences: List[ExperienceDTO]
     education: List[EducationDTO]
     skills: SkillsDTO
-    language: LanguageDTO
+    language: Language

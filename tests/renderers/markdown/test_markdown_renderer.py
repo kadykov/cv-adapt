@@ -18,7 +18,7 @@ from cv_adapter.dto.cv import (
     SummaryDTO,
     TitleDTO,
 )
-from cv_adapter.models.language import Language
+from cv_adapter.dto.language import ENGLISH
 from cv_adapter.renderers import MarkdownRenderer, RendererError
 
 
@@ -76,7 +76,7 @@ def sample_cv_dto() -> CVDTO:
                 )
             ]
         ),
-        language=Language.ENGLISH,
+        language=ENGLISH,
     )
 
 

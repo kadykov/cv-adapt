@@ -4,10 +4,10 @@ from typing import Any, Generic, List, TypeVar
 from cv_adapter.dto.cv import (
     CVDTO,
     CoreCompetencesDTO,
-    LanguageDTO,
     MinimalCVDTO,
     SkillsDTO,
 )
+from cv_adapter.dto.language import Language, ENGLISH, FRENCH
 from cv_adapter.renderers.base import BaseRenderer, RendererError
 from cv_adapter.renderers.markdown.markdown_list_renderer import MarkdownListRenderer
 
@@ -17,7 +17,7 @@ CVDTOType = TypeVar("CVDTOType", CVDTO, MinimalCVDTO)
 class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
     """Base class for Markdown renderers with common rendering logic."""
 
-    def _get_section_label(self, section: str, language: LanguageDTO) -> str:
+    def _get_section_label(self, section: str, language: Language) -> str:
         """Get language-specific section labels.
 
         Args:
@@ -28,13 +28,13 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             Localized section label
         """
         labels = {
-            LanguageDTO.ENGLISH: {
+            ENGLISH: {
                 "experience": "Experience",
                 "education": "Education",
                 "skills": "Skills",
                 "core_competences": "Core Competences",
             },
-            LanguageDTO.FRENCH: {
+            FRENCH: {
                 "experience": "Expérience",
                 "education": "Formation",
                 "skills": "Compétences",
@@ -42,10 +42,10 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             },
             # Add more languages as needed
         }
-        return labels.get(language, labels[LanguageDTO.ENGLISH])[section]
+        return labels.get(language, labels[ENGLISH])[section]
 
     def _render_core_competences(
-        self, core_competences: CoreCompetencesDTO, language: LanguageDTO
+        self, core_competences: CoreCompetencesDTO, language: Language
     ) -> List[str]:
         """Render core competences section.
 
@@ -62,7 +62,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         return sections
 
     def _render_experiences(
-        self, experiences: List[Any], language: LanguageDTO
+        self, experiences: List[Any], language: Language
     ) -> List[str]:
         """Render experiences section.
 
@@ -89,7 +89,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         return sections
 
     def _render_education(
-        self, education: List[Any], language: LanguageDTO
+        self, education: List[Any], language: Language
     ) -> List[str]:
         """Render education section.
 
@@ -114,7 +114,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             sections.append("")
         return sections
 
-    def _render_skills(self, skills: SkillsDTO, language: LanguageDTO) -> List[str]:
+    def _render_skills(self, skills: SkillsDTO, language: Language) -> List[str]:
         """Render skills section.
 
         Args:

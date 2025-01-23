@@ -244,7 +244,7 @@ Development Guidelines:
      * Allows for future changes in model structure without affecting renderers
 
 8. Multilingual Support:
-   - Language support is implemented through the `Language` class in DTOs
+   - Language support is implemented through the `Language` class in `cv_adapter/dto/language.py`
    - Supported languages: English, French, German, Spanish, Italian
    - Key design principles:
      * Language is a required parameter for all generator methods
@@ -252,23 +252,37 @@ Development Guidelines:
      * Maintain consistent validation and generation logic across languages
      * Use language-specific instructions in LLM context
    - Language Design:
-     * `Language` is a dataclass with rich metadata
+     * `Language` is a dataclass with rich metadata and advanced registry capabilities
      * Supports language code, name, native name
      * Provides language-specific formatting details:
        - Date format
        - Decimal separator
        - Thousands separator
      * Immutable and type-safe representation
-     * Supports string conversion and registry of language instances
+     * Supports string conversion and class-level language registry
+     * Predefined language instances (ENGLISH, FRENCH, etc.) for easy access
    - Language Handling:
      * Language is part of DTO classes (CVDTO, MinimalCVDTO)
      * Renderers can convert language to string representation
      * Supports easy extension and customization
+     * Provides class methods for language retrieval and registration
+   - Language Registry Features:
+     * Automatic registration of language instances
+     * Ability to retrieve languages by their code
+     * Supports runtime language instance management
+     * Provides detailed string and repr representations
    - Extending language support:
      * Add new languages to the `LanguageCode` enum
      * Create new `Language` instances with specific metadata
+     * Automatically register new languages in the class registry
      * Update language-specific instructions in generator context methods
      * Ensure comprehensive test coverage for new languages
+   - Advantages of the New Language Implementation:
+     * Type-safe language representation
+     * Rich metadata support
+     * Easy language retrieval and management
+     * Flexible and extensible design
+     * Supports internationalization requirements
 
 9. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
