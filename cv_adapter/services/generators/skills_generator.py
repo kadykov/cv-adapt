@@ -1,9 +1,10 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import Skills
 from cv_adapter.models.generators import SkillsGeneratorInput
 from cv_adapter.models.language import Language
+from cv_adapter.models.language_context import language_context
+from cv_adapter.models.language_context_models import Skills
 
 
 class SkillsGenerator:
@@ -57,20 +58,22 @@ class SkillsGenerator:
             notes=notes,
             language=language,
         )
-        context = self._prepare_context(
-            cv=input_data.cv_text,
-            job_description=input_data.job_description,
-            core_competences=input_data.core_competences,
-            language=input_data.language,
-            notes=input_data.notes,
-        )
 
-        # Use the agent to generate skills
-        result = self.agent.run_sync(
-            context,
-            result_type=Skills,
-        )
-        return result.data
+        with language_context(language):
+            context = self._prepare_context(
+                cv=input_data.cv_text,
+                job_description=input_data.job_description,
+                core_competences=input_data.core_competences,
+                language=input_data.language,
+                notes=input_data.notes,
+            )
+
+            # Use the agent to generate skills
+            result = self.agent.run_sync(
+                context,
+                result_type=Skills,
+            )
+            return result.data
 
     def _prepare_context(
         self,
