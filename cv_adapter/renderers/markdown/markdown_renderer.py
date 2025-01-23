@@ -3,50 +3,86 @@ from typing import List, Union
 
 import yaml
 
-from cv_adapter.models.cv import CV
+from cv_adapter.dto.cv import CVDTO
+from cv_adapter.models.language import Language
 from cv_adapter.renderers.base import RendererError
 from cv_adapter.renderers.markdown.base_markdown_renderer import BaseMarkdownRenderer
 
 
-class MarkdownRenderer(BaseMarkdownRenderer[CV]):
+class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
     """Renderer for CV in Markdown format."""
 
-    def _render_yaml_header(self, cv: CV) -> List[str]:
+    def _get_section_label(self, section: str, language: Language) -> str:
+        """Get language-specific section labels.
+
+        Args:
+            section: Section name
+            language: Language for the label
+
+        Returns:
+            Localized section label
+        """
+        labels = {
+            Language.EN: {
+                'experience': 'Professional Experience',
+                'education': 'Education',
+                'skills': 'Skills',
+                'core_competences': 'Core Competences'
+            },
+            Language.FR: {
+                'experience': 'Expérience Professionnelle',
+                'education': 'Formation',
+                'skills': 'Compétences',
+                'core_competences': 'Compétences Clés'
+            },
+            # Add more languages as needed
+        }
+        return labels.get(language, labels[Language.EN])[section]
+
+    def _render_yaml_header(self, cv_dto: CVDTO) -> List[str]:
         """Render YAML header with personal information.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
 
         Returns:
             List of lines in YAML format
         """
         personal_info = {
-            "full_name": cv.personal_info.full_name,
-            "contacts": cv.personal_info.contacts,
+            "full_name": cv_dto.personal_info.full_name,
+            "contacts": {
+                k: v for k, v in {
+                    "email": cv_dto.personal_info.email,
+                    "phone": cv_dto.personal_info.phone,
+                    "location": cv_dto.personal_info.location,
+                    "linkedin": cv_dto.personal_info.linkedin,
+                    "github": cv_dto.personal_info.github
+                }.items() if v is not None
+            }
         }
         yaml_str = yaml.safe_dump(personal_info, default_flow_style=False)
         return ["---", yaml_str.rstrip(), "---", ""]
 
-    def _render_header(self, cv: CV) -> List[str]:
+    def _render_header(self, cv_dto: CVDTO) -> List[str]:
         """Render header section with title and professional summary.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
 
         Returns:
             List of lines in Markdown format
         """
         return [
-            f"## {cv.title.text}",
-            cv.summary.text,
+            f"## {cv_dto.title.text}",
+            cv_dto.summary.text,
             "",
         ]
 
-    def render_to_string(self, cv: CV) -> str:
+    def render_to_string(self, cv_dto: CVDTO) -> str:
         """Render CV to Markdown string.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
 
         Returns:
             Markdown string representation of the CV
@@ -58,40 +94,62 @@ class MarkdownRenderer(BaseMarkdownRenderer[CV]):
             sections = []
 
             # YAML Header with Personal Info
-            sections.extend(self._render_yaml_header(cv))
+            sections.extend(self._render_yaml_header(cv_dto))
 
             # Header
-            sections.extend(self._render_header(cv))
+            sections.extend(self._render_header(cv_dto))
 
             # Core Competences
-            sections.extend(self._render_core_competences(cv.core_competences))
+            sections.append(f"## {self._get_section_label('core_competences', cv_dto.language)}")
+            sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences.items])
+            sections.append("")
 
             # Experience
-            sections.extend(self._render_experiences(cv.experiences))
+            sections.append(f"## {self._get_section_label('experience', cv_dto.language)}")
+            for exp in cv_dto.experiences:
+                # Render experience details
+                date_str = f"{exp.start_date.year} - {exp.end_date.year if exp.end_date else 'Present'}"
+                sections.append(f"### {exp.position} | {exp.company.name}")
+                sections.append(f"*{date_str}*")
+                sections.append(exp.description)
+                if exp.technologies:
+                    sections.append("**Technologies:** " + ", ".join(exp.technologies))
+                sections.append("")
 
             # Education
-            sections.extend(self._render_education(cv.education))
+            sections.append(f"## {self._get_section_label('education', cv_dto.language)}")
+            for edu in cv_dto.education:
+                # Render education details
+                date_str = f"{edu.start_date.year} - {edu.end_date.year if edu.end_date else 'Present'}"
+                sections.append(f"### {edu.degree} | {edu.university.name}")
+                sections.append(f"*{date_str}*")
+                sections.append(edu.description)
+                sections.append("")
 
             # Skills
-            sections.extend(self._render_skills(cv.skills))
+            sections.append(f"## {self._get_section_label('skills', cv_dto.language)}")
+            for group in cv_dto.skills.groups:
+                sections.append(f"### {group.name}")
+                sections.append(", ".join(skill.text for skill in group.skills))
+                sections.append("")
 
             return "\n".join(sections)
 
         except Exception as e:
             raise RendererError(f"Error rendering CV to Markdown: {e}")
 
-    def render_to_file(self, cv: CV, file_path: Union[str, Path]) -> None:
+    def render_to_file(self, cv_dto: CVDTO, file_path: Union[str, Path]) -> None:
         """Render CV to Markdown file.
 
         Args:
-            cv: CV object to render
+            cv_dto: CV DTO object to render
             file_path: Path where to save the Markdown file
 
         Raises:
             RendererError: If rendering or saving fails
         """
         try:
-            markdown = self.render_to_string(cv)
+            markdown = self.render_to_string(cv_dto)
             path = Path(file_path)
             path.write_text(markdown, encoding="utf-8")
         except Exception as e:
