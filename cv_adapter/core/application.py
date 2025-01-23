@@ -1,9 +1,34 @@
+from typing import Optional
+
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CV, MinimalCV
+from cv_adapter.models.cv import (
+    CV,
+    Company,
+    Education,
+    Experience,
+    MinimalCV,
+    Skill,
+    SkillGroup,
+    Skills,
+    Title,
+    University,
+)
 from cv_adapter.models.cv import CoreCompetence as CVCoreCompetence
 from cv_adapter.models.cv import CoreCompetences as CVCoreCompetences
 from cv_adapter.models.language import Language
+from cv_adapter.models.language_context_models import (
+    Education as LanguageContextEducation,
+)
+from cv_adapter.models.language_context_models import (
+    Experience as LanguageContextExperience,
+)
+from cv_adapter.models.language_context_models import (
+    Skills as LanguageContextSkills,
+)
+from cv_adapter.models.language_context_models import (
+    Title as LanguageContextTitle,
+)
 from cv_adapter.models.personal_info import PersonalInfo
 from cv_adapter.renderers.markdown.core_competences_renderer import (
     CoreCompetencesRenderer,
@@ -48,8 +73,8 @@ class CVAdapterApplication:
         cv_text: str,
         job_description: str,
         personal_info: PersonalInfo,
-        notes: str | None = None,
-        language: Language | None = None,
+        notes: Optional[str] = None,
+        language: Optional[Language] = None,
     ) -> CV:
         """
         Generate a new CV adapted to the job description.
@@ -67,7 +92,7 @@ class CVAdapterApplication:
         # Use method-level language if provided, otherwise use class-level language
         current_language = language or self.language
 
-        # 1. Generate components
+        # 1. Generate core competences
         core_competences = self.competence_generator.generate(
             cv=cv_text,
             job_description=job_description,
@@ -84,37 +109,99 @@ class CVAdapterApplication:
             )
         )
 
-        # Generate components
-        experiences = self.experience_generator.generate(
+        # 2. Generate other components
+        experiences_lc: list[LanguageContextExperience] = (
+            self.experience_generator.generate(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+                language=current_language,
+            )
+        )
+        experiences: list[Experience] = [
+            Experience(
+                position=exp.position,
+                company=Company(
+                    name=exp.company.name,
+                    description=None,
+                    location=None,
+                    language=current_language,
+                ),
+                start_date=exp.start_date,
+                end_date=exp.end_date,
+                description=exp.description,
+                technologies=[],  # Add empty list as technologies is required
+                language=current_language,
+            )
+            for exp in experiences_lc
+        ]
+
+        education_lc: list[LanguageContextEducation] = (
+            self.education_generator.generate(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
+                language=current_language,
+            )
+        )
+        education: list[Education] = [
+            Education(
+                degree=edu.degree,
+                university=University(
+                    name=edu.university.name,
+                    description=None,
+                    location=None,
+                    language=current_language,
+                ),
+                start_date=edu.start_date,
+                end_date=edu.end_date,
+                description=edu.description,
+                language=current_language,
+            )
+            for edu in education_lc
+        ]
+
+        skills_lc: LanguageContextSkills = self.skills_generator.generate(
             cv=cv_text,
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
             language=current_language,
         )
-        education = self.education_generator.generate(
-            cv=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-            language=current_language,
-        )
-        skills = self.skills_generator.generate(
-            cv=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
-            language=current_language,
-        )
-        title = self.title_generator.generate(
-            cv=cv_text,
-            job_description=job_description,
-            core_competences=core_competences_md,
-            notes=notes,
+        skills: Skills = Skills(
+            groups=[
+                SkillGroup(
+                    name="Technical Skills",
+                    skills=[
+                        Skill(text=skill.text, language=current_language)
+                        for skill in skills_lc.groups[0].skills
+                    ],
+                    language=current_language,
+                ),
+                SkillGroup(
+                    name="Soft Skills",
+                    skills=[
+                        Skill(text=skill.text, language=current_language)
+                        for skill in skills_lc.groups[1].skills
+                    ],
+                    language=current_language,
+                ),
+            ],
             language=current_language,
         )
 
-        # 2. Create minimal CV for description generation
+        title_lc: LanguageContextTitle = self.title_generator.generate(
+            cv=cv_text,
+            job_description=job_description,
+            core_competences=core_competences_md,
+            notes=notes,
+            language=current_language,
+        )
+        title: Title = Title(text=title_lc.text, language=current_language)
+
+        # 3. Create minimal CV for summary generation
         minimal_cv = MinimalCV(
             title=title,
             core_competences=CVCoreCompetences(
@@ -130,16 +217,17 @@ class CVAdapterApplication:
             language=current_language,
         )
 
-        # 3. Generate summary and create final CV
-        cv_text = MinimalMarkdownRenderer().render_to_string(minimal_cv)
+        # 4. Generate summary
+        cv_text_for_summary = MinimalMarkdownRenderer().render_to_string(minimal_cv)
         summary = self.summary_generator.generate(
-            cv=cv_text,
+            cv=cv_text_for_summary,
             job_description=job_description,
             core_competences=core_competences_md,
             notes=notes,
             language=current_language,
         )
 
+        # 5. Create final CV
         return CV(
             personal_info=personal_info,
             title=title,
