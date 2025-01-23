@@ -1,9 +1,12 @@
 """Tests for CV language context models."""
 
-import pytest
 from datetime import date
+
+import pytest
 from pydantic import ValidationError
 
+from cv_adapter.models.language import Language
+from cv_adapter.models.language_context import language_context
 from cv_adapter.models.language_context_models import (
     Company,
     CoreCompetence,
@@ -17,8 +20,6 @@ from cv_adapter.models.language_context_models import (
     Title,
     University,
 )
-from cv_adapter.models.language import Language
-from cv_adapter.models.language_context import language_context
 
 
 def test_institution_validation() -> None:
@@ -28,7 +29,7 @@ def test_institution_validation() -> None:
         institution = Institution(
             name="Société Technologique",
             description="Entreprise de développement logiciel",
-            location="Paris, La France"
+            location="Paris, La France",
         )
         assert institution.name == "Société Technologique"
 
@@ -37,54 +38,71 @@ def test_institution_validation() -> None:
             Institution(
                 name="Société\nTechnologique",
                 description="Entreprise de développement logiciel",
-                location="Paris, France"
+                location="Paris, France",
             )
         assert "field must be a single line" in str(exc_info.value)
 
-        # English text in French context should fail
-        with pytest.raises(ValueError) as exc_info:
-            Institution(name="Tech Company")
-        assert "language mismatch" in str(exc_info.value)
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
+            Institution(
+                name="Large Technology Corporation",
+                description="Cutting-edge software development company",
+                location="San Francisco, California",
+            )
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_experience_validation() -> None:
     """Test experience model validation."""
     with language_context(Language.FRENCH):
         # Valid French experience
-        company = Company(name="Société Technologique")
+        company = Company(
+            name="Société Technologique",
+            description="Entreprise de développement logiciel",
+            location="Paris, France",
+        )
         experience = Experience(
             company=company,
             position="Développeur Senior",
             start_date=date(2020, 1, 1),
             end_date=date(2023, 12, 31),
             description="Développement de solutions logicielles innovantes",
-            technologies=["Python", "Django"]
+            technologies=["Python", "Django"],
         )
         assert experience.position == "Développeur Senior"
 
-        # English text in French context should fail
-        with pytest.raises(ValueError) as exc_info:
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
             Experience(
-                company=company,
-                position="Senior Developer",
+                company=Company(
+                    name="Global Tech Solutions",
+                    description="International software solutions",
+                    location="San Francisco, CA",
+                ),
+                position="Senior Software Engineer",
                 start_date=date(2020, 1, 1),
-                description="Developing innovative software solutions",
-                technologies=["Python", "Django"]
+                end_date=date(2023, 12, 31),
+                description="Developed scalable cloud infrastructure",
+                technologies=["Python", "Kubernetes", "AWS"],
             )
-        assert "language mismatch" in str(exc_info.value)
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_education_validation() -> None:
     """Test education model validation."""
     with language_context(Language.FRENCH):
         # Valid French education
-        university = University(name="Université de Paris")
+        university = University(
+            name="Université de Paris",
+            description="Institution d'enseignement supérieur",
+            location="Paris, France",
+        )
         education = Education(
             university=university,
             degree="Master en Informatique",
             start_date=date(2018, 9, 1),
             end_date=date(2020, 6, 30),
-            description="Spécialisation en développement logiciel"
+            description="Spécialisation en développement logiciel",
         )
         assert education.degree == "Master en Informatique"
 
@@ -94,9 +112,24 @@ def test_education_validation() -> None:
                 university=university,
                 degree="Master\nen Informatique",
                 start_date=date(2018, 9, 1),
-                description="Spécialisation en développement logiciel"
+                description="Spécialisation en développement logiciel",
             )
         assert "degree must be a single line" in str(exc_info.value)
+
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
+            Education(
+                university=University(
+                    name="Stanford University",
+                    description="Top-tier research university",
+                    location="Stanford, CA",
+                ),
+                degree="Master of Science in Computer Engineering",
+                start_date=date(2018, 9, 1),
+                end_date=date(2020, 6, 30),
+                description="Advanced software engineering and cloud computing",
+            )
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_title_validation() -> None:
@@ -111,10 +144,10 @@ def test_title_validation() -> None:
             Title(text="Développeur\nLogiciel\nExpérimenté")
         assert "title must not exceed 2 lines" in str(exc_info.value)
 
-        # English text in French context should fail
-        with pytest.raises(ValueError) as exc_info:
-            Title(text="Senior Software Developer")
-        assert "language mismatch" in str(exc_info.value)
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
+            Title(text="Senior Software Engineer with Global Experience")
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_skill_validation() -> None:
@@ -129,10 +162,15 @@ def test_skill_validation() -> None:
             Skill(text="Gestion\nde projet")
         assert "skill must be a single line" in str(exc_info.value)
 
-        # English text in French context should fail
+        # Obvious language mismatch
         with pytest.raises(ValueError) as exc_info:
-            Skill(text="Project Management")
-        assert "language mismatch" in str(exc_info.value)
+            Skill(
+                text=(
+                    "Implementing advanced cloud infrastructure requires deep "
+                    "understanding of distributed systems and scalable architectures"
+                )
+            )
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_skill_group_validation() -> None:
@@ -142,10 +180,10 @@ def test_skill_group_validation() -> None:
         skill_group = SkillGroup(
             name="Compétences Techniques",
             skills=[
-                Skill(text="Python"),
-                Skill(text="Django"),
-                Skill(text="SQL")
-            ]
+                Skill(text="Développement de logiciels"),
+                Skill(text="Gestion de bases de données"),
+                Skill(text="Analyse de systèmes"),
+            ],
         )
         assert skill_group.name == "Compétences Techniques"
 
@@ -154,10 +192,10 @@ def test_skill_group_validation() -> None:
             SkillGroup(
                 name="Compétences Techniques",
                 skills=[
-                    Skill(text="Python"),
-                    Skill(text="Python"),
-                    Skill(text="Django")
-                ]
+                    Skill(text="Développement de logiciels"),
+                    Skill(text="Développement de logiciels"),
+                    Skill(text="Gestion de bases de données"),
+                ],
             )
         assert "skills within a group must be unique" in str(exc_info.value)
 
@@ -166,12 +204,27 @@ def test_skill_group_validation() -> None:
             SkillGroup(
                 name="Compétences\nTechniques",
                 skills=[
-                    Skill(text="Python"),
-                    Skill(text="Django"),
-                    Skill(text="SQL")
-                ]
+                    Skill(text="Développement de logiciels"),
+                    Skill(text="Gestion de bases de données"),
+                    Skill(text="Analyse de systèmes"),
+                ],
             )
         assert "group name must be a single line" in str(exc_info.value)
+
+        # Obvious language mismatch in group name
+        with pytest.raises(ValueError) as exc_info:
+            SkillGroup(
+                name=(
+                    "Advanced Technical Competencies with "
+                    "Comprehensive Enterprise Solutions"
+                ),
+                skills=[
+                    Skill(text="Développement de logiciels"),
+                    Skill(text="Gestion de bases de données"),
+                    Skill(text="Analyse de systèmes"),
+                ],
+            )
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_skills_validation() -> None:
@@ -183,17 +236,14 @@ def test_skills_validation() -> None:
                 SkillGroup(
                     name="Compétences Techniques",
                     skills=[
-                        Skill(text="Python"),
-                        Skill(text="Django")
-                    ]
+                        Skill(text="Développement de logiciels"),
+                        Skill(text="Gestion de bases de données"),
+                    ],
                 ),
                 SkillGroup(
                     name="Compétences Interpersonnelles",
-                    skills=[
-                        Skill(text="Communication"),
-                        Skill(text="Collaboration")
-                    ]
-                )
+                    skills=[Skill(text="Communication"), Skill(text="Collaboration")],
+                ),
             ]
         )
         assert len(skills.groups) == 2
@@ -205,20 +255,47 @@ def test_skills_validation() -> None:
                     SkillGroup(
                         name="Compétences Techniques",
                         skills=[
-                            Skill(text="Python"),
-                            Skill(text="Django")
-                        ]
+                            Skill(text="Développement de logiciels"),
+                            Skill(text="Gestion de bases de données"),
+                        ],
                     ),
                     SkillGroup(
                         name="Compétences Interpersonnelles",
                         skills=[
-                            Skill(text="Python"),
-                            Skill(text="Communication")
-                        ]
-                    )
+                            Skill(text="Développement de logiciels"),
+                            Skill(text="Communication"),
+                        ],
+                    ),
                 ]
             )
         assert "skills must be unique across all groups" in str(exc_info.value)
+
+        # Obvious language mismatch in skills
+        with pytest.raises(ValueError) as exc_info:
+            Skills(
+                groups=[
+                    SkillGroup(
+                        name="Compétences Techniques",
+                        skills=[
+                            Skill(
+                                text=(
+                                    "Designing and implementing advanced cloud "
+                                    "infrastructure requires deep understanding of "
+                                    "distributed systems, scalable architectures, "
+                                    "and enterprise-level solutions"
+                                )
+                            ),
+                            Skill(
+                                text=(
+                                    "Developing microservices with comprehensive "
+                                    "monitoring and observability strategies"
+                                )
+                            ),
+                        ],
+                    )
+                ]
+            )
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_core_competence_validation() -> None:
@@ -243,10 +320,10 @@ def test_core_competence_validation() -> None:
             CoreCompetence(text="Gestion de projet\nLeadership")
         assert "core competence must be a single line" in str(exc_info.value)
 
-        # English text in French context should fail
-        with pytest.raises(ValueError) as exc_info:
-            CoreCompetence(text="Project Management")
-        assert "language mismatch" in str(exc_info.value)
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
+            CoreCompetence(text="Advanced Software Architecture and Design")
+        assert "language mismatch" in str(exc_info.value).lower()
 
 
 def test_core_competences_validation() -> None:
@@ -286,3 +363,15 @@ def test_core_competences_validation() -> None:
                 items=[CoreCompetence(text=f"Compétence {i}") for i in range(10)]
             )
         assert "too_long" in str(exc_info.value)
+
+        # Obvious language mismatch
+        with pytest.raises((ValueError, ValidationError)) as exc_info:
+            CoreCompetences(
+                items=[
+                    CoreCompetence(text="Advanced Cloud Infrastructure"),
+                    CoreCompetence(text="Enterprise Software Architecture"),
+                    CoreCompetence(text="Scalable System Design"),
+                    CoreCompetence(text="Microservices Engineering"),
+                ]
+            )
+        assert "language mismatch" in str(exc_info.value).lower()

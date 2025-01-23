@@ -106,12 +106,20 @@ class SampleModel(LanguageValidationMixin):
         # Multiline text with single language
         (
             Language.ENGLISH,
-            "This is a multi-line text.\nWith multiple sentences.\nTesting language detection.",
+            (
+                "This is a multi-line text.\n"
+                "With multiple sentences.\n"
+                "Testing language detection."
+            ),
             True,
         ),
         (
             Language.FRENCH,
-            "C'est un texte multi-ligne.\nAvec plusieurs phrases.\nTest de détection de langue.",
+            (
+                "C'est un texte multi-ligne.\n"
+                "Avec plusieurs phrases.\n"
+                "Test de détection de langue."
+            ),
             True,
         ),
         # Mixed language multiline text (should fail)
@@ -133,7 +141,11 @@ class SampleModel(LanguageValidationMixin):
         ),
         (
             Language.FRENCH,
-            "Compétences en Communication Excellentes\nProgrammation Python\nGestion de Base de Données",
+            (
+                "Compétences en Communication Excellentes\n"
+                "Programmation Python\n"
+                "Gestion de Base de Données"
+            ),
             True,
         ),
     ],

@@ -3,9 +3,9 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import language_context
+from cv_adapter.models.language_context_models import CoreCompetences
 
 
 class CompetenceGenerator:

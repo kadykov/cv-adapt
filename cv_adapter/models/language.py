@@ -45,10 +45,15 @@ class LanguageValidationMixin(BaseModel):
 
         try:
             # Detect language for the entire text
-            detected_text_language = detect_language(text_single_line, min_confidence=0.7)
+            detected_text_language = detect_language(
+                text_single_line, min_confidence=0.7
+            )
 
             # If detected language is different, raise error
-            if detected_text_language is not None and detected_text_language != language:
+            if (
+                detected_text_language is not None
+                and detected_text_language != language
+            ):
                 raise ValueError(
                     f"Text language mismatch. "
                     f"Expected {language}, but detected {detected_text_language}. "
@@ -57,11 +62,17 @@ class LanguageValidationMixin(BaseModel):
 
             # Always check each line for language
             lines = v.split("\n")
-            line_languages = [detect_language(line.strip(), min_confidence=0.7) for line in lines]
-            
+            line_languages = [
+                detect_language(line.strip(), min_confidence=0.7) for line in lines
+            ]
+
             # If any line has a different language, raise an error
-            detected_languages = set(lang for lang in line_languages if lang is not None)
-            if len(detected_languages) > 1 or (detected_languages and list(detected_languages)[0] != language):
+            detected_languages = set(
+                lang for lang in line_languages if lang is not None
+            )
+            if len(detected_languages) > 1 or (
+                detected_languages and list(detected_languages)[0] != language
+            ):
                 raise ValueError(
                     f"Text language mismatch. "
                     f"Expected {language}, but detected mixed or different languages. "

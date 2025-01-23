@@ -17,10 +17,7 @@ from .constants import (
     SUBTITLE_LINE_LENGTH,
     TITLE_LINE_LENGTH,
 )
-from .language import Language
 from .validators import LanguageValidatedStr
-from .personal_info import PersonalInfo
-from .summary import CVSummary
 
 
 class CoreCompetence(BaseModel):
@@ -100,7 +97,9 @@ class Institution(BaseModel):
     name: LanguageValidatedStr = Field(
         ..., max_length=SUBTITLE_LINE_LENGTH
     )  # H2 - Company/University name
-    description: Optional[LanguageValidatedStr] = Field(None, max_length=BODY_LINE_LENGTH)
+    description: Optional[LanguageValidatedStr] = Field(
+        None, max_length=BODY_LINE_LENGTH
+    )
     location: Optional[LanguageValidatedStr] = Field(None, max_length=HALF_LINE_LENGTH)
 
     @field_validator("name", "description", "location")
@@ -117,11 +116,13 @@ class Institution(BaseModel):
 
 class Company(Institution):
     """Represents a company in the CV."""
+
     pass
 
 
 class University(Institution):
     """Represents a university in the CV."""
+
     pass
 
 
@@ -134,7 +135,9 @@ class Experience(BaseModel):
     )  # H3 - Position title
     start_date: date
     end_date: Optional[date]
-    description: LanguageValidatedStr = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
+    description: LanguageValidatedStr = Field(
+        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
+    )
     technologies: List[str]
 
 
@@ -142,10 +145,14 @@ class Education(BaseModel):
     """Represents an educational experience entry."""
 
     university: University
-    degree: LanguageValidatedStr = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Degree title
+    degree: LanguageValidatedStr = Field(
+        ..., max_length=SUBSUBTITLE_LINE_LENGTH
+    )  # H3 - Degree title
     start_date: date
     end_date: Optional[date]
-    description: LanguageValidatedStr = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
+    description: LanguageValidatedStr = Field(
+        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
+    )
 
     @field_validator("degree")
     @classmethod
@@ -160,7 +167,9 @@ class Education(BaseModel):
 class Title(BaseModel):
     """Represents a professional title."""
 
-    text: LanguageValidatedStr = Field(..., max_length=TITLE_LINE_LENGTH * 2)  # Allow up to 2 lines
+    text: LanguageValidatedStr = Field(
+        ..., max_length=TITLE_LINE_LENGTH * 2
+    )  # Allow up to 2 lines
 
     @model_validator(mode="after")
     def validate_text(self) -> "Title":
