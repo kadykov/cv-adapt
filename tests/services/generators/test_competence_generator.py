@@ -1,7 +1,12 @@
 import pytest
+from pydantic_ai.models.function import FunctionModel
+from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.language import Language
+from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, SPANISH, ITALIAN, Language
+from cv_adapter.models.language_context_models import CoreCompetence, CoreCompetences
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
+from cv_adapter.dto.cv import CoreCompetencesDTO, CoreCompetenceDTO
+# Removed language context import
 
 
 def test_context_preparation() -> None:
@@ -10,7 +15,7 @@ def test_context_preparation() -> None:
     context = generator._prepare_context(
         cv="Sample CV",
         job_description="Sample Job",
-        language=Language.ENGLISH,
+        language=ENGLISH,
         notes="Focus on tech",
     )
 
@@ -29,7 +34,7 @@ def test_context_preparation_french() -> None:
     context = generator._prepare_context(
         cv="Sample CV",
         job_description="Sample Job",
-        language=Language.FRENCH,
+        language=FRENCH,
         notes=None,
     )
 
@@ -45,7 +50,7 @@ def test_context_preparation_without_notes() -> None:
     context = generator._prepare_context(
         cv="Sample CV",
         job_description="Sample Job",
-        language=Language.ENGLISH,
+        language=ENGLISH,
         notes=None,
     )
 
@@ -60,11 +65,11 @@ def test_context_preparation_without_notes() -> None:
 @pytest.mark.parametrize(
     "language",
     [
-        Language.ENGLISH,
-        Language.FRENCH,
-        Language.GERMAN,
-        Language.SPANISH,
-        Language.ITALIAN,
+        ENGLISH,
+        FRENCH,
+        GERMAN,
+        SPANISH,
+        ITALIAN,
     ],
 )
 def test_context_preparation_all_languages(language: Language) -> None:
@@ -77,7 +82,7 @@ def test_context_preparation_all_languages(language: Language) -> None:
         notes=None,
     )
 
-    if language == Language.ENGLISH:
+    if language == ENGLISH:
         assert "Language Requirements" not in context
     else:
         assert "Language Requirements" in context
@@ -92,7 +97,7 @@ def test_empty_cv_validation() -> None:
         generator.generate(
             cv="   ",  # whitespace only
             job_description="Sample Job",
-            language=Language.ENGLISH,
+            language=ENGLISH,
         )
 
 
@@ -103,7 +108,7 @@ def test_empty_job_description_validation() -> None:
         generator.generate(
             cv="Sample CV",
             job_description="",  # empty string
-            language=Language.ENGLISH,
+            language=ENGLISH,
         )
 
 
@@ -117,3 +122,68 @@ def test_missing_language_validation() -> None:
             cv="Sample CV",
             job_description="Sample Job",
         )
+
+
+def test_competence_generator_dto_output() -> None:
+    """Test that the competence generator returns a valid CoreCompetencesDTO."""
+    # Temporarily disable language validation
+    from cv_adapter.models import validators
+    from cv_adapter.models.language_context import current_language
+
+    # Backup original validators
+    original_validate_language = validators.validate_language
+
+    # Replace validators
+    validators.validate_language = lambda x: None
+
+    try:
+        # Create a mock AI model using FunctionModel
+        mock_core_competences = CoreCompetences(
+            items=[
+                CoreCompetence(text="Strategic Problem Solving"),
+                CoreCompetence(text="Technical Leadership"),
+                CoreCompetence(text="Agile Methodology"),
+            ]
+        )
+
+        # Create a mock function that returns the predefined core competences
+        def mock_generate_competences(*args, **kwargs) -> CoreCompetences:
+            return mock_core_competences
+
+        mock_ai_model = FunctionModel(
+            name="mock_competence_generator",
+            function=mock_generate_competences,
+            result_type=CoreCompetences,
+        )
+
+        # Initialize generator with the mock AI model
+        generator = CompetenceGenerator(ai_model=mock_ai_model)
+
+        # Generate core competences
+        result = generator.generate(
+            cv="Experienced software engineer with 10 years of expertise",
+            job_description="Seeking a senior software engineer with leadership skills",
+            language=ENGLISH,
+        )
+
+        # Verify the result is a CoreCompetencesDTO
+        assert isinstance(result, CoreCompetencesDTO)
+
+        # Verify the number of competences
+        assert len(result.items) == 3
+
+        # Verify each competence is a CoreCompetenceDTO
+        for competence in result.items:
+            assert isinstance(competence, CoreCompetenceDTO)
+            assert isinstance(competence.text, str)
+            assert len(competence.text) > 0
+
+        # Verify specific competence texts
+        competence_texts = [comp.text for comp in result.items]
+        assert "Strategic Problem Solving" in competence_texts
+        assert "Technical Leadership" in competence_texts
+        assert "Agile Methodology" in competence_texts
+
+    finally:
+        # Restore original validators
+        validators.validate_language = original_validate_language
