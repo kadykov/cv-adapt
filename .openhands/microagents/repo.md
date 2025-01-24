@@ -64,14 +64,22 @@ Project Structure:
        * Enables easy conversion between language context models and DTOs
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
+       * `ListItem`: Generic protocol for items that can be rendered as list items
+       * `RenderingConfig`: Flexible configuration for rendering with customizable options
+       * `BaseRenderer`: Generic base class for all renderers with configuration support
      - `yaml_renderer.py`: Renders CV to YAML format
      - `markdown.py`: Consolidated Markdown rendering module
        * `MarkdownListRenderer`: Generic renderer for Markdown bullet point lists
        * `CoreCompetencesRenderer`: Specialized renderer for core competences
        * `BaseMarkdownRenderer`: Base class for Markdown renderers with common rendering logic
-       * `MarkdownRenderer`: Renders complete CV to Markdown format
+       * `MarkdownRenderer`: Renders complete CV to Markdown format with configurable sections
        * `MinimalMarkdownRenderer`: Renders minimal CV for summary generation
-       * `MarkdownListItem`: Protocol for items that can be rendered as Markdown list items
+       
+     Rendering Features:
+       * Flexible section rendering with optional configuration
+       * Customizable section labels for multilingual support
+       * Ability to include/exclude specific sections
+       * Support for custom rendering strategies per section
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
