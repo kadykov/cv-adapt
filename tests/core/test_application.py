@@ -171,9 +171,37 @@ def test_generate_cv(
     assert [cc.model_dump() for cc in result.core_competences] == [
         cc.model_dump() for cc in core_competences_dto
     ]
-    assert [exp.model_dump() for exp in result.experiences] == experiences_dto
-    assert [edu.model_dump() for edu in result.education] == education_dto
-    assert [group.model_dump() for group in result.skills] == skills_dto
+    # Compare experiences by converting to dictionaries and comparing key fields
+    assert len(result.experiences) == len(experiences_dto)
+    for result_exp, expected_exp in zip(result.experiences, experiences_dto):
+        assert result_exp.company.name == expected_exp.company.name
+        assert result_exp.company.description == expected_exp.company.description
+        assert result_exp.company.location == expected_exp.company.location
+        assert result_exp.position == expected_exp.position
+        assert result_exp.start_date == expected_exp.start_date
+        assert result_exp.end_date == expected_exp.end_date
+        assert result_exp.description == expected_exp.description
+        assert result_exp.technologies == expected_exp.technologies
+    # Compare education by converting to dictionaries and comparing key fields
+    assert len(result.education) == len(education_dto)
+    for result_edu, expected_edu in zip(result.education, education_dto):
+        assert result_edu.university.name == expected_edu.university.name
+        assert result_edu.university.description == expected_edu.university.description
+        assert result_edu.university.location == expected_edu.university.location
+        assert result_edu.degree == expected_edu.degree
+        assert result_edu.start_date == expected_edu.start_date
+        assert result_edu.end_date == expected_edu.end_date
+        assert result_edu.description == expected_edu.description
+
+    # Compare skills by converting to dictionaries and comparing key fields
+    assert len(result.skills) == len(skills_dto)
+    for result_group, expected_group in zip(result.skills, skills_dto):
+        assert result_group.name == expected_group.name
+        assert len(result_group.skills) == len(expected_group.skills)
+        for result_skill, expected_skill in zip(
+            result_group.skills, expected_group.skills
+        ):
+            assert result_skill.text == expected_skill.text
     assert result.personal_info.model_dump() == personal_info_dto.model_dump()
     assert result.title.model_dump() == title_dto.model_dump()
     assert result.language == ENGLISH

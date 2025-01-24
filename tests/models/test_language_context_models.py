@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cv_adapter.models.language import Language
+from cv_adapter.dto.language import FRENCH
 from cv_adapter.models.language_context import language_context
 from cv_adapter.models.language_context_models import (
     Company,
@@ -24,7 +24,7 @@ from cv_adapter.models.language_context_models import (
 
 def test_institution_validation() -> None:
     """Test institution model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French institution
         institution = Institution(
             name="Société Technologique",
@@ -54,7 +54,7 @@ def test_institution_validation() -> None:
 
 def test_experience_validation() -> None:
     """Test experience model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French experience
         company = Company(
             name="Société Technologique",
@@ -90,7 +90,7 @@ def test_experience_validation() -> None:
 
 def test_education_validation() -> None:
     """Test education model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French education
         university = University(
             name="Université de Paris",
@@ -135,7 +135,7 @@ def test_education_validation() -> None:
 
 def test_title_validation() -> None:
     """Test title model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French title
         title = Title(text="Développeur Logiciel\nExpérimenté")
         assert title.text == "Développeur Logiciel\nExpérimenté"
@@ -153,7 +153,7 @@ def test_title_validation() -> None:
 
 def test_skill_validation() -> None:
     """Test skill model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French skill
         skill = Skill(text="Gestion de projet")
         assert skill.text == "Gestion de projet"
@@ -176,7 +176,7 @@ def test_skill_validation() -> None:
 
 def test_skill_group_validation() -> None:
     """Test skill group model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French skill group
         skill_group = SkillGroup(
             name="Compétences Techniques",
@@ -230,7 +230,7 @@ def test_skill_group_validation() -> None:
 
 def test_skills_validation() -> None:
     """Test skills model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid skills
         skills = Skills(
             groups=[
@@ -301,7 +301,7 @@ def test_skills_validation() -> None:
 
 def test_core_competence_validation() -> None:
     """Test core competence model validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid French core competence
         competence = CoreCompetence(text="Gestion de projet")
         assert competence.text == "Gestion de projet"
@@ -329,7 +329,7 @@ def test_core_competence_validation() -> None:
 
 def test_core_competences_validation() -> None:
     """Test core competences collection validation."""
-    with language_context(Language.FRENCH):
+    with language_context(FRENCH):
         # Valid competences
         competences = CoreCompetences(
             items=[

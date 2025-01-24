@@ -19,29 +19,20 @@ Project Structure:
          4. Generate professional title using LLM
          5. Create final CV with all components
    - `models/`: Data models and schemas
-     - `cv.py`: CV-related data structures:
-       * `CV`: Complete CV model with all fields
-       * `MinimalCV`: Minimal CV model for summary generation
-       * `CoreCompetence`: Single core competence with validation
-       * `CoreCompetences`: Collection of core competences
-       * `Skill`: Single skill with validation
-       * `Skills`: Collection of skill groups
-     - `generators.py`: Input models for generator services:
-       * `CompetenceGeneratorInput`: Input validation for competence generation (first step)
-       * `GeneratorInputBase`: Base model for all subsequent generator inputs with common fields
-       * `ExperienceGeneratorInput`: Input validation for experience generation
-       * `TitleGeneratorInput`: Input validation for title generation
-       * `EducationGeneratorInput`: Input validation for education generation
-       * `SkillsGeneratorInput`: Input validation for skills generation
-       * `SummaryGeneratorInput`: Input validation for summary generation
      - `personal_info.py`: Personal information models:
        * `PersonalInfo`: Model for handling personal information (full name, contacts)
-     - `language.py`: Language support models:
-       * `Language`: Enum for supported languages (EN, FR, DE, ES, IT)
+     - `language.py`: Language context and validation models:
        * `LanguageValidationMixin`: Mixin for language validation in models
+     - `language_context.py`: Language context management
+       * `current_language`: Thread-safe context variable for language
+       * `language_context()`: Context manager for setting current language
+       * `get_current_language()`: Retrieve current language context
+     - `language_context_models.py`: Language-aware data models
+       * Language-validated models for CV components
+       * Supports multilingual validation and generation
+     - `validators.py`: Language validation utilities
    - `services/`: Business logic services
      - `cv_adapter.py`: CV adaptation service
-     - `cv_storage.py`: CV storage management
      - `generators/`: Specialized generator services
        * `competence_generator.py`: Generates core competences using validated input
        * `summary_generator.py`: Generates professional CV summaries using validated input
@@ -75,7 +66,7 @@ Project Structure:
        * `BaseMarkdownRenderer`: Base class for Markdown renderers with common rendering logic
        * `MarkdownRenderer`: Renders complete CV to Markdown format with configurable sections
        * `MinimalMarkdownRenderer`: Renders minimal CV for summary generation
-       
+
      Rendering Features:
        * Flexible section rendering with optional configuration
        * Customizable section labels for multilingual support
@@ -202,25 +193,30 @@ Development Guidelines:
    - Use protocols for type-safe interfaces between models and renderers
    - Models can implement string representation for debugging
    - Example model hierarchy:
-     * Base models: CoreCompetence, Skill, GeneratorInputBase
-     * Collection models: CoreCompetences, Skills
-     * Complex models: CV, MinimalCV
-     * Input models: ExperienceGeneratorInput, TitleGeneratorInput, etc.
+     * Base models: Language, LanguageValidationMixin
+     * Language-aware models: Language-validated CV components
+     * DTOs: Decoupled data representation
    - Validation rules:
      * Use Pydantic field validators for complex validation
      * Keep validation close to the data structure
      * Validate both individual items and collections
-     * Use base models for common validation logic
-   - Generator Input Models:
-     * All generator inputs inherit from GeneratorInputBase
-     * Common fields: cv_text, job_description, core_competences, notes
-     * CompetenceGeneratorInput has a different structure as it's the first step
-     * All other generators require core_competences from the first step
-     * Input validation is handled by models, not services
-     * Services focus on business logic, not validation
-     * Generators now use individual arguments instead of input objects
-     * Each generator has a `_prepare_context` method for context generation
-     * Simplified method signatures improve readability and type safety
+     * Implement language-specific validation
+   - Language Context Design:
+     * Thread-safe language context management
+     * Context manager for setting and resetting language
+     * Supports multilingual validation and generation
+     * Provides language-specific metadata (date formats, separators)
+   - Generator Design:
+     * Generators use language context for content generation
+     * Each generator adapts content to language-specific conventions
+     * Simplified method signatures with direct language parameter
+     * Generators focus on business logic and language adaptation
+     * Context preparation method for LLM interactions
+   - Key Principles:
+     * Language is a first-class concept in the application
+     * Validation is language-aware and context-sensitive
+     * Decoupled data representation with DTOs
+     * Flexible and extensible language support
 
 7. Working with Renderers and DTOs:
    - Use the rendering system in `cv_adapter/renderers/` for CV output
