@@ -1,5 +1,6 @@
 from datetime import date
 from pathlib import Path
+from typing import List
 
 import pytest
 
@@ -19,7 +20,52 @@ from cv_adapter.dto.cv import (
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.renderers import MarkdownRenderer, RendererError
+from cv_adapter.renderers.markdown import (
+    CoreCompetencesRenderer,
+    MarkdownListRenderer,
+    MarkdownRenderer,
+    RendererError,
+)
+
+
+def test_core_competences_renderer_to_list() -> None:
+    """Test rendering core competences to a list of strings."""
+    core_competences = CoreCompetencesDTO(
+        items=[
+            CoreCompetenceDTO(text="Leadership"),
+            CoreCompetenceDTO(text="Problem Solving"),
+        ]
+    )
+
+    result = CoreCompetencesRenderer.render_to_list(core_competences)
+
+    assert result == ["Leadership", "Problem Solving"]
+
+
+def test_core_competences_renderer_to_markdown() -> None:
+    """Test rendering core competences to Markdown format."""
+    core_competences = CoreCompetencesDTO(
+        items=[
+            CoreCompetenceDTO(text="Leadership"),
+            CoreCompetenceDTO(text="Problem Solving"),
+        ]
+    )
+
+    result = CoreCompetencesRenderer.render_to_markdown(core_competences)
+
+    assert result == "* Leadership\n* Problem Solving"
+
+
+def test_markdown_list_renderer_bullet_list() -> None:
+    """Test rendering a list of items as Markdown bullet points."""
+    items: List[CoreCompetenceDTO] = [
+        CoreCompetenceDTO(text="Leadership"),
+        CoreCompetenceDTO(text="Problem Solving"),
+    ]
+
+    result = MarkdownListRenderer.render_bullet_list(items)
+
+    assert result == ["* Leadership", "* Problem Solving"]
 
 
 @pytest.fixture
@@ -81,6 +127,7 @@ def sample_cv_dto() -> CVDTO:
 
 
 def test_markdown_renderer_to_string(sample_cv_dto: CVDTO) -> None:
+    """Test rendering CV to Markdown string."""
     renderer = MarkdownRenderer()
     md_str = renderer.render_to_string(sample_cv_dto)
 
@@ -103,6 +150,7 @@ def test_markdown_renderer_to_string(sample_cv_dto: CVDTO) -> None:
 
 
 def test_markdown_renderer_to_file(sample_cv_dto: CVDTO, tmp_path: Path) -> None:
+    """Test rendering CV to Markdown file."""
     renderer = MarkdownRenderer()
     file_path = tmp_path / "cv.md"
     renderer.render_to_file(sample_cv_dto, file_path)
@@ -113,6 +161,7 @@ def test_markdown_renderer_to_file(sample_cv_dto: CVDTO, tmp_path: Path) -> None
 
 
 def test_markdown_renderer_error_handling(sample_cv_dto: CVDTO, tmp_path: Path) -> None:
+    """Test error handling when rendering to an invalid file path."""
     renderer = MarkdownRenderer()
     non_writable_path = tmp_path / "nonexistent" / "cv.md"
 

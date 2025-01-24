@@ -20,7 +20,8 @@ from cv_adapter.dto.cv import (
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.renderers import RendererError, YAMLRenderer
+from cv_adapter.renderers.base import RendererError
+from cv_adapter.renderers.yaml_renderer import YAMLRenderer
 
 
 @pytest.fixture

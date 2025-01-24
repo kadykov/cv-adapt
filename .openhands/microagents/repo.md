@@ -65,12 +65,13 @@ Project Structure:
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `yaml_renderer.py`: Renders CV to YAML format
-     - `markdown/`: Markdown-specific renderers
-       * `base_markdown_renderer.py`: Base class for Markdown renderers with common rendering logic
-       * `markdown_list_renderer.py`: Generic renderer for Markdown bullet point lists
-       * `core_competences_renderer.py`: Specialized renderer for core competences
-       * `markdown_renderer.py`: Renders CV to Markdown format
-       * `minimal_markdown_renderer.py`: Renders MinimalCV to Markdown format
+     - `markdown.py`: Consolidated Markdown rendering module
+       * `MarkdownListRenderer`: Generic renderer for Markdown bullet point lists
+       * `CoreCompetencesRenderer`: Specialized renderer for core competences
+       * `BaseMarkdownRenderer`: Base class for Markdown renderers with common rendering logic
+       * `MarkdownRenderer`: Renders complete CV to Markdown format
+       * `MinimalMarkdownRenderer`: Renders minimal CV for summary generation
+       * `MarkdownListItem`: Protocol for items that can be rendered as Markdown list items
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
@@ -94,7 +95,7 @@ Project Structure:
         - `cv_adapter/models/cv.py` → `tests/models/test_cv.py`
         - `cv_adapter/services/cv_storage.py` → `tests/services/test_cv_storage.py`
         - `cv_adapter/services/generators/competence_generator.py` → `tests/services/generators/test_competence_generator.py`
-        - `cv_adapter/renderers/markdown/markdown_renderer.py` → `tests/renderers/markdown/test_markdown_renderer.py`
+        - `cv_adapter/renderers/markdown.py` → `tests/renderers/test_markdown.py`
       * Use `__init__.py` files to ensure proper import and package structure
 
    3. Test Content Best Practices:
