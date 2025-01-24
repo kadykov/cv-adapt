@@ -3,9 +3,11 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import CoreCompetences
-from cv_adapter.models.generators import CompetenceGeneratorInput
-from cv_adapter.models.language import Language
+from cv_adapter.dto.cv import CoreCompetenceDTO
+from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.mapper import map_core_competences
+from cv_adapter.models.language_context import get_current_language
+from cv_adapter.models.language_context_models import CoreCompetences
 
 
 class CompetenceGenerator:
@@ -31,31 +33,36 @@ class CompetenceGenerator:
         self,
         cv: str,
         job_description: str,
-        language: Language,
         notes: str | None = None,
-    ) -> CoreCompetences:
+    ) -> list[CoreCompetenceDTO]:
         """Generate core competences based on CV and job description.
 
         Args:
             cv: Text of the CV
             job_description: Job description text
-            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
-            List of core competences relevant for the job
+            DTO containing core competences relevant for the job
+
+        Raises:
+            ValueError: If input parameters are invalid
+            RuntimeError: If language context is not set
         """
-        input_data = CompetenceGeneratorInput(
-            cv_text=cv,
-            job_description=job_description,
-            notes=notes,
-            language=language,
-        )
+        # Validate input parameters
+        if not cv or not cv.strip():
+            raise ValueError("CV text is required")
+        if not job_description:
+            raise ValueError("Job description is required")
+
+        # Get the current language from context
+        language = get_current_language()
+
         context = self._prepare_context(
-            cv=input_data.cv_text,
-            job_description=input_data.job_description,
-            language=input_data.language,
-            notes=input_data.notes,
+            cv=cv,
+            job_description=job_description,
+            language=language,
+            notes=notes,
         )
 
         # Use the agent to generate competences
@@ -63,7 +70,9 @@ class CompetenceGenerator:
             context,
             result_type=CoreCompetences,
         )
-        return result.data
+
+        # Convert to DTO using mapper
+        return map_core_competences(result.data)
 
     def _prepare_context(
         self,
@@ -90,7 +99,7 @@ class CompetenceGenerator:
         )
 
         # Add language-specific instructions if not English
-        if language != Language.ENGLISH:
+        if language != ENGLISH:
             context += (
                 "\nLanguage Requirements:\n"
                 f"Generate all competences in {language.name.title()}, "

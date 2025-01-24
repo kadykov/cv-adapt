@@ -1,3 +1,5 @@
+"""Language context models for CV components."""
+
 from datetime import date
 from typing import List, Optional
 
@@ -15,17 +17,28 @@ from .constants import (
     SUBTITLE_LINE_LENGTH,
     TITLE_LINE_LENGTH,
 )
-from .language import Language, LanguageValidationMixin
-from .personal_info import PersonalInfo
-from .summary import CVSummary
+from .validators import LanguageValidatedStr
 
 
-class CoreCompetence(LanguageValidationMixin):
-    text: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)
+class CoreCompetence(BaseModel):
+    """A single core competence with validation."""
+
+    text: LanguageValidatedStr = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)
 
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str) -> str:
+        """Validate text format and length.
+
+        Args:
+            v: The text to validate
+
+        Returns:
+            The validated text
+
+        Raises:
+            ValueError: If text format is invalid
+        """
         v = v.strip()
         if len(v.split()) > MAX_WORDS_PER_SUBSUBTITLE:
             raise ValueError(
@@ -40,34 +53,59 @@ class CoreCompetence(LanguageValidationMixin):
 
 
 class CoreCompetences(BaseModel):
+    """A collection of core competences with validation."""
+
     items: List[CoreCompetence] = Field(
         ..., min_length=MIN_CORE_COMPETENCES, max_length=MAX_CORE_COMPETENCES
     )
-    language: Language
 
-    @field_validator("items")
+    @field_validator("items", mode="before")
     @classmethod
-    def validate_unique_items(cls, v: List[CoreCompetence]) -> List[CoreCompetence]:
-        texts = [item.text for item in v]
+    def validate_unique_items(
+        cls, v: List[dict | CoreCompetence]
+    ) -> List[CoreCompetence]:
+        """Validate that all competences are unique.
+
+        Args:
+            v: List of competences to validate
+
+        Returns:
+            The validated list of competences
+
+        Raises:
+            ValueError: If there are duplicate competences
+        """
+        # Convert dictionaries to CoreCompetence objects
+        competences = [
+            item if isinstance(item, CoreCompetence) else CoreCompetence(**item)
+            for item in v
+        ]
+
+        # Check for duplicates
+        texts = [item.text for item in competences]
         if len(set(texts)) != len(texts):
             raise ValueError("core competences must be unique")
-        return v
+        return competences
 
     def __len__(self) -> int:
         return len(self.items)
 
 
 class Institution(BaseModel):
-    name: str = Field(
+    """Base model for institutions with language validation."""
+
+    name: LanguageValidatedStr = Field(
         ..., max_length=SUBTITLE_LINE_LENGTH
     )  # H2 - Company/University name
-    description: Optional[str] = Field(None, max_length=BODY_LINE_LENGTH)
-    location: Optional[str] = Field(None, max_length=HALF_LINE_LENGTH)
-    language: Language
+    description: Optional[LanguageValidatedStr] = Field(
+        None, max_length=BODY_LINE_LENGTH
+    )
+    location: Optional[LanguageValidatedStr] = Field(None, max_length=HALF_LINE_LENGTH)
 
     @field_validator("name", "description", "location")
     @classmethod
     def validate_single_line(cls, v: Optional[str]) -> Optional[str]:
+        """Validate that the field is a single line."""
         if v is None:
             return v
         v = v.strip()
@@ -77,47 +115,65 @@ class Institution(BaseModel):
 
 
 class Company(Institution):
+    """Represents a company in the CV."""
+
     pass
 
 
 class University(Institution):
+    """Represents a university in the CV."""
+
     pass
 
 
 class Experience(BaseModel):
+    """Represents a professional experience entry."""
+
     company: Company
-    position: str = Field(
+    position: LanguageValidatedStr = Field(
         ..., max_length=SUBSUBTITLE_LINE_LENGTH
     )  # H3 - Position title
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
+    description: LanguageValidatedStr = Field(
+        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
+    )
     technologies: List[str]
-    language: Language
 
 
 class Education(BaseModel):
+    """Represents an educational experience entry."""
+
     university: University
-    degree: str = Field(..., max_length=SUBSUBTITLE_LINE_LENGTH)  # H3 - Degree title
+    degree: LanguageValidatedStr = Field(
+        ..., max_length=SUBSUBTITLE_LINE_LENGTH
+    )  # H3 - Degree title
     start_date: date
     end_date: Optional[date]
-    description: str = Field(..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH)
-    language: Language
+    description: LanguageValidatedStr = Field(
+        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
+    )
 
     @field_validator("degree")
     @classmethod
     def validate_degree(cls, v: str) -> str:
+        """Validate that the degree is a single line."""
         v = v.strip()
         if "\n" in v:
             raise ValueError("degree must be a single line")
         return v
 
 
-class Title(LanguageValidationMixin):
-    text: str = Field(..., max_length=TITLE_LINE_LENGTH * 2)  # Allow up to 2 lines
+class Title(BaseModel):
+    """Represents a professional title."""
+
+    text: LanguageValidatedStr = Field(
+        ..., max_length=TITLE_LINE_LENGTH * 2
+    )  # Allow up to 2 lines
 
     @model_validator(mode="after")
     def validate_text(self) -> "Title":
+        """Validate title text length and line count."""
         text = self.text.strip()
         if len(text.split("\n")) > 2:
             raise ValueError("title must not exceed 2 lines")
@@ -130,12 +186,15 @@ class Title(LanguageValidationMixin):
         return self
 
 
-class Skill(LanguageValidationMixin):
-    text: str = Field(..., max_length=HALF_LINE_LENGTH)
+class Skill(BaseModel):
+    """Represents a single skill."""
+
+    text: LanguageValidatedStr = Field(..., max_length=HALF_LINE_LENGTH)
 
     @field_validator("text")
     @classmethod
     def validate_text(cls, v: str) -> str:
+        """Validate that the skill is a single line."""
         v = v.strip()
         if "\n" in v:
             raise ValueError("skill must be a single line")
@@ -146,13 +205,15 @@ class Skill(LanguageValidationMixin):
 
 
 class SkillGroup(BaseModel):
-    name: str = Field(..., max_length=HALF_LINE_LENGTH)
+    """Represents a group of related skills."""
+
+    name: LanguageValidatedStr = Field(..., max_length=HALF_LINE_LENGTH)
     skills: List[Skill] = Field(..., min_length=MIN_SKILLS_IN_GROUP)
-    language: Language
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """Validate that the group name is a single line."""
         v = v.strip()
         if "\n" in v:
             raise ValueError("group name must be a single line")
@@ -160,6 +221,7 @@ class SkillGroup(BaseModel):
 
     @model_validator(mode="after")
     def validate_unique_skills(self) -> "SkillGroup":
+        """Validate that skills within the group are unique."""
         texts = [skill.text for skill in self.skills]
         if len(set(texts)) != len(texts):
             raise ValueError("skills within a group must be unique")
@@ -167,75 +229,14 @@ class SkillGroup(BaseModel):
 
 
 class Skills(BaseModel):
+    """Represents a collection of skill groups."""
+
     groups: List[SkillGroup] = Field(..., min_length=1)
-    language: Language
 
     @model_validator(mode="after")
     def validate_unique_skills_across_groups(self) -> "Skills":
+        """Validate that skills are unique across all groups."""
         all_skills = [skill.text for group in self.groups for skill in group.skills]
         if len(set(all_skills)) != len(all_skills):
             raise ValueError("skills must be unique across all groups")
-        return self
-
-
-class MinimalCV(BaseModel):
-    """A minimal CV model containing only the essential parts for summary generation.
-
-    Used by SummaryGenerator to create a focused input for LLM. Contains only the
-    key components needed to generate an impactful CV summary, excluding personal
-    information and other non-essential details.
-    """
-
-    title: Title
-    core_competences: CoreCompetences
-    experiences: List[Experience]
-    education: List[Education]
-    skills: Skills
-    language: Language
-
-    @model_validator(mode="after")
-    def validate_language_consistency(self) -> "MinimalCV":
-        """Ensure all components use the same language."""
-        lang = self.language
-        if (
-            self.title.language != lang
-            or self.core_competences.language != lang
-            or any(exp.language != lang for exp in self.experiences)
-            or any(edu.language != lang for edu in self.education)
-            or self.skills.language != lang
-        ):
-            raise ValueError("All CV components must use the same language")
-        return self
-
-
-class CV(BaseModel):
-    """Complete CV model containing all components of a professional CV.
-
-    This model represents a fully-formed CV with all necessary sections, including
-    personal information, professional summary, and detailed experience sections.
-    The components are organized in the order they should appear in the final CV.
-    """
-
-    personal_info: PersonalInfo
-    title: Title
-    summary: CVSummary
-    core_competences: CoreCompetences
-    experiences: List[Experience]
-    education: List[Education]
-    skills: Skills
-    language: Language
-
-    @model_validator(mode="after")
-    def validate_language_consistency(self) -> "CV":
-        """Ensure all components use the same language."""
-        lang = self.language
-        if (
-            self.title.language != lang
-            or self.summary.language != lang
-            or self.core_competences.language != lang
-            or any(exp.language != lang for exp in self.experiences)
-            or any(edu.language != lang for edu in self.education)
-            or self.skills.language != lang
-        ):
-            raise ValueError("All CV components must use the same language")
         return self

@@ -1,9 +1,12 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import Title
-from cv_adapter.models.generators import TitleGeneratorInput
+from cv_adapter.dto import cv as cv_dto
+from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.mapper import map_title
 from cv_adapter.models.language import Language
+from cv_adapter.models.language_context import get_current_language
+from cv_adapter.models.language_context_models import Title
 
 
 class TitleGenerator:
@@ -30,34 +33,36 @@ class TitleGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        language: Language,
         notes: str | None = None,
-    ) -> Title:
+    ) -> cv_dto.TitleDTO:
         """Generate a professional title tailored to a job description.
 
         Args:
             cv: Text of the CV
             job_description: Job description text
             core_competences: Core competences to highlight
-            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
-            A Title model instance containing the generated title
+            A TitleDTO containing the generated title
         """
-        input_data = TitleGeneratorInput(
-            cv_text=cv,
+        # Input validation
+        if not cv or not cv.strip():
+            raise ValueError("CV text is required")
+        if not job_description:
+            raise ValueError("Job description is required")
+        if not core_competences or not core_competences.strip():
+            raise ValueError("Core competences are required")
+
+        # Get language from context
+        language = get_current_language()
+
+        context = self._prepare_context(
+            cv=cv,
             job_description=job_description,
             core_competences=core_competences,
-            notes=notes,
             language=language,
-        )
-        context = self._prepare_context(
-            cv=input_data.cv_text,
-            job_description=input_data.job_description,
-            core_competences=input_data.core_competences,
-            language=input_data.language,
-            notes=input_data.notes,
+            notes=notes,
         )
 
         # Use the agent to generate title
@@ -65,7 +70,9 @@ class TitleGenerator:
             context,
             result_type=Title,
         )
-        return result.data
+
+        # Convert to DTO
+        return map_title(result.data)
 
     def _prepare_context(
         self,
@@ -99,8 +106,8 @@ class TitleGenerator:
             "5. Make it memorable but professional\n\n"
         )
 
-        # Add language-specific instructions if not English
-        if language != Language.ENGLISH:
+        # Replace Language.ENGLISH with ENGLISH
+        if language != ENGLISH:
             context += (
                 "\nLanguage Requirements:\n"
                 f"Generate the title in {language.name.title()}, following standard "

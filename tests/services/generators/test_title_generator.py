@@ -1,19 +1,22 @@
 import pytest
 
+from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH
 from cv_adapter.models.language import Language
+from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.title_generator import TitleGenerator
 
 
 def test_context_preparation() -> None:
     """Test that context is prepared correctly with all input fields."""
     generator = TitleGenerator(ai_model="test")
-    context = generator._prepare_context(
-        cv="Sample CV",
-        job_description="Sample Job",
-        core_competences="Python, Leadership",
-        language=Language.ENGLISH,
-        notes="Focus on tech",
-    )
+    with language_context(ENGLISH):
+        context = generator._prepare_context(
+            cv="Sample CV",
+            job_description="Sample Job",
+            core_competences="Python, Leadership",
+            language=ENGLISH,
+            notes="Focus on tech",
+        )
 
     # Test context structure and content
     assert "Sample CV" in context
@@ -28,13 +31,14 @@ def test_context_preparation() -> None:
 def test_context_preparation_french() -> None:
     """Test that context is prepared correctly with French language."""
     generator = TitleGenerator(ai_model="test")
-    context = generator._prepare_context(
-        cv="Sample CV",
-        job_description="Sample Job",
-        core_competences="Python, Leadership",
-        language=Language.FRENCH,
-        notes=None,
-    )
+    with language_context(FRENCH):
+        context = generator._prepare_context(
+            cv="Sample CV",
+            job_description="Sample Job",
+            core_competences="Python, Leadership",
+            language=FRENCH,
+            notes=None,
+        )
 
     # Verify language-specific instructions
     assert "Language Requirements" in context
@@ -45,13 +49,14 @@ def test_context_preparation_french() -> None:
 def test_context_preparation_without_notes() -> None:
     """Test that context is prepared correctly without optional notes."""
     generator = TitleGenerator(ai_model="test")
-    context = generator._prepare_context(
-        cv="Sample CV",
-        job_description="Sample Job",
-        core_competences="Python, Leadership",
-        language=Language.ENGLISH,
-        notes=None,
-    )
+    with language_context(ENGLISH):
+        context = generator._prepare_context(
+            cv="Sample CV",
+            job_description="Sample Job",
+            core_competences="Python, Leadership",
+            language=ENGLISH,
+            notes=None,
+        )
 
     # Verify required content is present
     assert "Sample CV" in context
@@ -65,25 +70,26 @@ def test_context_preparation_without_notes() -> None:
 @pytest.mark.parametrize(
     "language",
     [
-        Language.ENGLISH,
-        Language.FRENCH,
-        Language.GERMAN,
-        Language.SPANISH,
-        Language.ITALIAN,
+        ENGLISH,
+        FRENCH,
+        GERMAN,
+        SPANISH,
+        ITALIAN,
     ],
 )
 def test_context_preparation_all_languages(language: Language) -> None:
     """Test context preparation for all supported languages."""
     generator = TitleGenerator(ai_model="test")
-    context = generator._prepare_context(
-        cv="Sample CV",
-        job_description="Sample Job",
-        core_competences="Python, Leadership",
-        language=language,
-        notes=None,
-    )
+    with language_context(language):
+        context = generator._prepare_context(
+            cv="Sample CV",
+            job_description="Sample Job",
+            core_competences="Python, Leadership",
+            language=language,
+            notes=None,
+        )
 
-    if language == Language.ENGLISH:
+    if language == ENGLISH:
         assert "Language Requirements" not in context
     else:
         assert "Language Requirements" in context
@@ -94,47 +100,50 @@ def test_context_preparation_all_languages(language: Language) -> None:
 def test_empty_cv_validation() -> None:
     """Test that empty CV raises validation error."""
     generator = TitleGenerator(ai_model="test")
-    with pytest.raises(ValueError, match="This field is required"):
-        generator.generate(
-            cv="   ",  # whitespace only
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-            language=Language.ENGLISH,
-        )
+    with language_context(ENGLISH):
+        with pytest.raises(ValueError, match="CV text is required"):
+            generator.generate(
+                cv="   ",  # whitespace only
+                job_description="Sample Job",
+                core_competences="Python, Leadership",
+            )
 
 
 def test_empty_job_description_validation() -> None:
     """Test that empty job description raises validation error."""
     generator = TitleGenerator(ai_model="test")
-    with pytest.raises(ValueError, match="String should have at least 1 character"):
-        generator.generate(
-            cv="Sample CV",
-            job_description="",  # empty string
-            core_competences="Python, Leadership",
-            language=Language.ENGLISH,
-        )
+    with language_context(ENGLISH):
+        with pytest.raises(ValueError, match="Job description is required"):
+            generator.generate(
+                cv="Sample CV",
+                job_description="",  # empty string
+                core_competences="Python, Leadership",
+            )
 
 
 def test_empty_core_competences_validation() -> None:
     """Test that empty core competences raises validation error."""
     generator = TitleGenerator(ai_model="test")
-    with pytest.raises(ValueError, match="This field is required"):
-        generator.generate(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="\n",  # newline only
-            language=Language.ENGLISH,
-        )
+    with language_context(ENGLISH):
+        with pytest.raises(ValueError, match="Core competences are required"):
+            generator.generate(
+                cv="Sample CV",
+                job_description="Sample Job",
+                core_competences="\n",  # newline only
+            )
 
 
-def test_missing_language_validation() -> None:
-    """Test that missing language raises TypeError."""
+def test_generate_title_dto() -> None:
+    """Test that generate method returns a TitleDTO."""
     generator = TitleGenerator(ai_model="test")
-    with pytest.raises(
-        TypeError, match="missing 1 required positional argument: 'language'"
-    ):
-        generator.generate(  # type: ignore[call-arg]
+    with language_context(ENGLISH):
+        result = generator.generate(
             cv="Sample CV",
             job_description="Sample Job",
             core_competences="Python, Leadership",
         )
+
+    # Verify DTO structure
+    assert hasattr(result, "text")
+    assert isinstance(result.text, str)
+    assert len(result.text) > 0

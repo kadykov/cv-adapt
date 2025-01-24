@@ -1,9 +1,11 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.cv import Skills
-from cv_adapter.models.generators import SkillsGeneratorInput
-from cv_adapter.models.language import Language
+from cv_adapter.dto.cv import SkillGroupDTO
+from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.mapper import map_skills
+from cv_adapter.models.language_context import get_current_language
+from cv_adapter.models.language_context_models import Skills
 
 
 class SkillsGenerator:
@@ -32,37 +34,39 @@ class SkillsGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        language: Language,
         notes: str | None = None,
-    ) -> Skills:
+    ) -> list[SkillGroupDTO]:
         """Generate a list of skills organized in groups and tailored to a job.
 
         Args:
             cv: Text of the CV
             job_description: Job description text
             core_competences: Core competences to prove
-            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
-            Skills object containing groups of skills tailored to the job description
+            DTO containing groups of skills tailored to the job description
 
         Raises:
-            ValueError: If no skill groups are generated
+            ValueError: If any of the required inputs are empty or
+            contain only whitespace
+            RuntimeError: If language context is not set
         """
-        input_data = SkillsGeneratorInput(
-            cv_text=cv,
+        # Validate input parameters
+        if not cv or not cv.strip():
+            raise ValueError("CV text is required")
+        if not job_description:
+            raise ValueError("Job description is required")
+
+        # Get the current language from context
+        language = get_current_language()
+
+        context = self._prepare_context(
+            cv=cv,
             job_description=job_description,
             core_competences=core_competences,
-            notes=notes,
             language=language,
-        )
-        context = self._prepare_context(
-            cv=input_data.cv_text,
-            job_description=input_data.job_description,
-            core_competences=input_data.core_competences,
-            language=input_data.language,
-            notes=input_data.notes,
+            notes=notes,
         )
 
         # Use the agent to generate skills
@@ -70,7 +74,9 @@ class SkillsGenerator:
             context,
             result_type=Skills,
         )
-        return result.data
+
+        # Convert to DTO
+        return map_skills(result.data)
 
     def _prepare_context(
         self,
@@ -109,7 +115,7 @@ class SkillsGenerator:
         )
 
         # Add language-specific instructions if not English
-        if language != Language.ENGLISH:
+        if language != ENGLISH:
             context += (
                 "\nLanguage Requirements:\n"
                 f"Generate skills in {language.name.title()}, following "
