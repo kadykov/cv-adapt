@@ -3,11 +3,11 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
+from cv_adapter.dto.cv import CoreCompetencesDTO
+from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import CoreCompetences
-from cv_adapter.dto.cv import CoreCompetencesDTO
-from cv_adapter.dto.language import Language, ENGLISH
-from cv_adapter.dto.mapper import map_core_competences
 
 
 class CompetenceGenerator:
@@ -70,7 +70,7 @@ class CompetenceGenerator:
             context,
             result_type=CoreCompetences,
         )
-        
+
         # Convert to DTO using mapper
         return map_core_competences(result.data)
 

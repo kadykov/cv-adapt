@@ -1,12 +1,10 @@
 import pytest
-from pydantic_ai.models.function import FunctionModel
-from pydantic_ai.models import KnownModelName
+from pydantic_ai.models.test import TestModel
 
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, SPANISH, ITALIAN, Language
-from cv_adapter.models.language_context_models import CoreCompetence, CoreCompetences
+from cv_adapter.dto.cv import CoreCompetenceDTO, CoreCompetencesDTO
+from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
+from cv_adapter.models.language_context import get_current_language, language_context
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
-from cv_adapter.dto.cv import CoreCompetencesDTO, CoreCompetenceDTO
-from cv_adapter.models.language_context import language_context, get_current_language
 
 
 def test_context_preparation() -> None:
@@ -128,10 +126,6 @@ def test_missing_language_validation() -> None:
         )
 
 
-import pytest
-from pydantic_ai.models.test import TestModel
-
-
 @pytest.fixture
 def test_model() -> TestModel:
     """Create a test model for competence generation."""
@@ -141,7 +135,7 @@ def test_model() -> TestModel:
             {"text": "Strategic Problem Solving"},
             {"text": "Technical Leadership"},
             {"text": "Agile Methodology"},
-            {"text": "Cross-Functional Collaboration"}
+            {"text": "Cross-Functional Collaboration"},
         ]
     }
     return model
@@ -159,7 +153,9 @@ def test_competence_generator_dto_output(test_model: TestModel) -> None:
             # Generate core competences
             result = generator.generate(
                 cv="Experienced software engineer with 10 years of expertise",
-                job_description="Seeking a senior software engineer with leadership skills",
+                job_description=(
+                    "Seeking a senior software engineer with leadership skills"
+                ),
             )
 
             # Verify the result is a CoreCompetencesDTO
