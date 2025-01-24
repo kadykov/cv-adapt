@@ -120,7 +120,7 @@ def test_missing_language_validation() -> None:
     """Test that missing language context raises RuntimeError."""
     generator = CompetenceGenerator(ai_model="test")
     with pytest.raises(
-        RuntimeError, match="Language context not set. Use language_context\(\) first."
+        RuntimeError, match=r"Language context not set. Use language_context\(\) first."
     ):
         generator.generate(
             cv="Sample CV",
@@ -128,41 +128,34 @@ def test_missing_language_validation() -> None:
         )
 
 
-def test_competence_generator_dto_output() -> None:
+import pytest
+from pydantic_ai.models.test import TestModel
+
+
+@pytest.fixture
+def test_model() -> TestModel:
+    """Create a test model for competence generation."""
+    model = TestModel()
+    model.custom_result_args = {
+        "items": [
+            {"text": "Strategic Problem Solving"},
+            {"text": "Technical Leadership"},
+            {"text": "Agile Methodology"},
+            {"text": "Cross-Functional Collaboration"}
+        ]
+    }
+    return model
+
+
+def test_competence_generator_dto_output(test_model: TestModel) -> None:
     """Test that the competence generator returns a valid CoreCompetencesDTO."""
-    # Temporarily disable language validation
-    from cv_adapter.models import validators
-    from unittest.mock import Mock
-
-    # Backup original validators
-    original_validate_language = validators.validate_language
-
-    # Replace validators
-    validators.validate_language = lambda x: None
-
     # Set language context before the test
     with language_context(ENGLISH):
-        try:
-            # Create a mock AI model
-            mock_core_competences = CoreCompetences(
-                items=[
-                    CoreCompetence(text="Strategic Problem Solving"),
-                    CoreCompetence(text="Technical Leadership"),
-                    CoreCompetence(text="Agile Methodology"),
-                    CoreCompetence(text="Cross-Functional Collaboration"),
-                ]
-            )
+        # Initialize generator
+        generator = CompetenceGenerator(ai_model="test")
 
-            # Create a mock agent with a run_sync method
-            mock_agent = Mock()
-            mock_result = Mock()
-            mock_result.data = mock_core_competences
-            mock_agent.run_sync.return_value = mock_result
-
-            # Initialize generator with the mock agent
-            generator = CompetenceGenerator(ai_model="test")
-            generator.agent = mock_agent
-
+        # Use agent override to set the test model
+        with generator.agent.override(model=test_model):
             # Generate core competences
             result = generator.generate(
                 cv="Experienced software engineer with 10 years of expertise",
@@ -187,7 +180,3 @@ def test_competence_generator_dto_output() -> None:
             assert "Technical Leadership" in competence_texts
             assert "Agile Methodology" in competence_texts
             assert "Cross-Functional Collaboration" in competence_texts
-
-        finally:
-            # Restore original validators
-            validators.validate_language = original_validate_language
