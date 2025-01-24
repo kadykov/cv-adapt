@@ -3,7 +3,7 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.language_context import language_context
+from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.dto.cv import CoreCompetencesDTO
 from cv_adapter.dto.language import Language, ENGLISH
@@ -33,7 +33,6 @@ class CompetenceGenerator:
         self,
         cv: str,
         job_description: str,
-        language: Language,
         notes: str | None = None,
     ) -> CoreCompetencesDTO:
         """Generate core competences based on CV and job description.
@@ -41,7 +40,6 @@ class CompetenceGenerator:
         Args:
             cv: Text of the CV
             job_description: Job description text
-            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
@@ -49,29 +47,32 @@ class CompetenceGenerator:
 
         Raises:
             ValueError: If input parameters are invalid
+            RuntimeError: If language context is not set
         """
         # Validate input parameters
         if not cv or not cv.strip():
-            raise ValueError("This field is required")
+            raise ValueError("CV text is required")
         if not job_description:
-            raise ValueError("String should have at least 1 character")
+            raise ValueError("Job description is required")
 
-        with language_context(language):
-            context = self._prepare_context(
-                cv=cv,
-                job_description=job_description,
-                language=language,
-                notes=notes,
-            )
+        # Get the current language from context
+        language = get_current_language()
 
-            # Use the agent to generate competences
-            result = self.agent.run_sync(
-                context,
-                result_type=CoreCompetences,
-            )
-            
-            # Convert to DTO using mapper
-            return map_core_competences(result.data)
+        context = self._prepare_context(
+            cv=cv,
+            job_description=job_description,
+            language=language,
+            notes=notes,
+        )
+
+        # Use the agent to generate competences
+        result = self.agent.run_sync(
+            context,
+            result_type=CoreCompetences,
+        )
+        
+        # Convert to DTO using mapper
+        return map_core_competences(result.data)
 
     def _prepare_context(
         self,
