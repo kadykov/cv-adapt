@@ -21,7 +21,7 @@ class Language(BaseModel):
     code: LanguageCode
     name: str
     native_name: str
-    
+
     # Optional metadata for language-specific rendering
     date_format: Optional[str] = None
     decimal_separator: Optional[str] = None

@@ -30,8 +30,8 @@ def validate_language(text: str) -> str:
     if detected is not None and detected != current_lang:
         raise ValueError(
             f"Text language mismatch. "
-            f"Expected {current_lang.value}, "
-            f"detected {detected.value}"
+            f"Expected {current_lang.name}, "
+            f"detected {detected.name}"
         )
     return text.strip()
 
