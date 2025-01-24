@@ -18,65 +18,42 @@ Project Structure:
          3. Generate professional summary using LLM
          4. Generate professional title using LLM
          5. Create final CV with all components
-   - `models/`: Data models and schemas
-     - `personal_info.py`: Personal information models:
-       * `PersonalInfo`: Model for handling personal information (full name, contacts)
-     - `language.py`: Language context and validation models:
-       * `LanguageValidationMixin`: Mixin for language validation in models
+   - `models/`: Core data models and schemas
+     - `personal_info.py`: Personal information models
+       * `PersonalInfo`: Model for handling personal information
+     - `language.py`: Language support and validation
+       * Defines language-related constants and validation
      - `language_context.py`: Language context management
-       * `current_language`: Thread-safe context variable for language
-       * `language_context()`: Context manager for setting current language
-       * `get_current_language()`: Retrieve current language context
+       * Provides thread-safe language context handling
      - `language_context_models.py`: Language-aware data models
-       * Language-validated models for CV components
        * Supports multilingual validation and generation
-     - `validators.py`: Language validation utilities
+     - `validators.py`: Custom validation utilities
+     - `summary.py`: Summary-related models
+     - `constants.py`: Project-wide constants
    - `services/`: Business logic services
-     - `cv_adapter.py`: CV adaptation service
      - `generators/`: Specialized generator services
-       * `competence_generator.py`: Generates core competences using validated input
-       * `summary_generator.py`: Generates professional CV summaries using validated input
-       * `education_generator.py`: Generates education sections using validated input
-       * `experience_generator.py`: Generates experience sections using validated input
-       * `skills_generator.py`: Generates and organizes skills using validated input
-       * `title_generator.py`: Generates professional titles using validated input
+       * `competence_generator.py`: Generates core competences
+       * `summary_generator.py`: Generates professional CV summaries
+       * `education_generator.py`: Generates education sections
+       * `experience_generator.py`: Generates experience sections
+       * `skills_generator.py`: Generates and organizes skills
+       * `title_generator.py`: Generates professional titles
    - `dto/`: Data Transfer Objects (DTOs)
-     - `cv.py`: DTO classes for decoupling data representation from rendering
-       * `ContactDTO`: Represents contact information with metadata
-       * `PersonalInfoDTO`: Personal information with flexible contact handling
-       * `CoreCompetenceDTO`: Core competence representation
-       * `ExperienceDTO`, `EducationDTO`: Experience and education representations
-       * `SkillDTO`, `SkillGroupDTO`: Skill-related DTOs
-       * `TitleDTO`, `SummaryDTO`: Title and summary representations
-       * `CVDTO`, `MinimalCVDTO`: Top-level CV data transfer objects
-     - `mapper.py`: Conversion utilities between Pydantic models and DTOs
-       * Supports flexible mapping from dictionaries to DTOs
+     - `cv.py`: DTO classes for decoupled data representation
+       * Provides data transfer objects for CV components
+     - `language.py`: Language-related DTOs and utilities
+     - `mapper.py`: Conversion utilities between models and DTOs
+       * Supports flexible mapping and conversion
        * Decoupled from specific model implementations
-       * Enables easy conversion between language context models and DTOs
-       * Simplified list handling by removing wrapper classes
-       * Enhanced contact metadata handling with type-safe design
-       * Centralized contact type management
-       * Improved type hints and validation
-       * Supports dynamic URL generation for contact information
-       * Flexible and extensible contact metadata configuration
    - `renderers/`: CV rendering implementations
-     - `base.py`: Abstract base class for renderers
-       * `ListItem`: Generic protocol for items that can be rendered as list items
-       * `RenderingConfig`: Flexible configuration for rendering with customizable options
-       * `BaseRenderer`: Generic base class for all renderers with configuration support
-     - `yaml_renderer.py`: Renders CV to YAML format
+     - `base.py`: Base rendering interfaces and protocols
      - `markdown.py`: Consolidated Markdown rendering module
-       * `MarkdownListRenderer`: Generic renderer for Markdown bullet point lists
-       * `CoreCompetencesRenderer`: Specialized renderer for core competences
-       * `BaseMarkdownRenderer`: Base class for Markdown renderers with common rendering logic
-       * `MarkdownRenderer`: Renders complete CV to Markdown format with configurable sections
-       * `MinimalMarkdownRenderer`: Renders minimal CV for summary generation
-
+       * Provides rendering logic for Markdown formats
+     - `yaml_renderer.py`: Renders CV to YAML format
      Rendering Features:
-       * Flexible section rendering with optional configuration
-       * Customizable section labels for multilingual support
-       * Ability to include/exclude specific sections
-       * Support for custom rendering strategies per section
+       * Flexible section rendering
+       * Multilingual support
+       * Configurable output formats
    - `py.typed`: Marker file for type checking
 
 2. Tests (`tests/`):
@@ -194,133 +171,112 @@ Development Guidelines:
 
 6. Working with Models:
    - Models are responsible for data validation and structure
-   - Keep models focused on data representation, not presentation
-   - Use protocols for type-safe interfaces between models and renderers
-   - Models can implement string representation for debugging
-   - Example model hierarchy:
-     * Base models: Language, LanguageValidationMixin
-     * Language-aware models: Language-validated CV components
-     * DTOs: Decoupled data representation
-   - Validation rules:
+   - Focus on data representation with minimal presentation logic
+   - Use type hints and Pydantic for robust validation
+   - Key Model Design Principles:
+     * Separate concerns between data models and DTOs
+     * Leverage Pydantic for type validation and serialization
+     * Support multilingual context
+     * Minimize complex logic in models
+   - Model Validation Strategies:
      * Use Pydantic field validators for complex validation
      * Keep validation close to the data structure
      * Validate both individual items and collections
-     * Implement language-specific validation
-   - Language Context Design:
-     * Thread-safe language context management
-     * Context manager for setting and resetting language
+     * Support language-specific validation
+   - Language Context:
+     * Provides thread-safe language management
      * Supports multilingual validation and generation
-     * Provides language-specific metadata (date formats, separators)
+     * Allows language-specific metadata configuration
    - Generator Design:
-     * Generators use language context for content generation
-     * Each generator adapts content to language-specific conventions
-     * Simplified method signatures with direct language parameter
-     * Generators focus on business logic and language adaptation
-     * Context preparation method for LLM interactions
+     * Generators focus on business logic
+     * Adapt content to language-specific conventions
+     * Use direct language parameter in method signatures
+     * Prepare context for LLM interactions
    - Key Principles:
-     * Language is a first-class concept in the application
-     * Validation is language-aware and context-sensitive
-     * Decoupled data representation with DTOs
-     * Flexible and extensible language support
+     * Language is a first-class concept
+     * Validation is context-aware
+     * Decoupled data representation
+     * Flexible and extensible design
 
 7. Working with Renderers and DTOs:
-   - Use the rendering system in `cv_adapter/renderers/` for CV output
-   - Utilize Data Transfer Objects (DTOs) in `cv_adapter/dto/` for decoupled rendering
+   - Rendering System Overview:
+     * Use `cv_adapter/renderers/` for CV output
+     * Utilize DTOs for decoupled rendering
    - Renderer and DTO Design Principles:
-     * DTOs provide a clean, language-agnostic data representation
+     * DTOs provide clean, language-agnostic data representation
      * Renderers work with DTOs, not directly with Pydantic models
-     * Mapper utility converts between Pydantic models and DTOs
-     * Simplified list handling with direct list usage instead of wrapper classes
-   - Renderer hierarchy:
-     * BaseRenderer[DTOType]: Generic base class for all renderers
-     * BaseMarkdownRenderer[DTOType]: Base class for Markdown renderers with common logic
-     * MarkdownRenderer: Renders complete CV to Markdown
-     * MinimalMarkdownRenderer: Renders minimal CV for summary generation
-     * YAMLRenderer: For data storage and interchange
+     * Mapper utility converts between models and DTOs
+     * Simplified list handling
+   - Renderer Hierarchy:
+     * `base.py`: Defines base rendering interfaces
+     * `markdown.py`: Consolidated Markdown rendering
+     * `yaml_renderer.py`: YAML output rendering
    - DTO Design:
-     * Separate DTOs for different CV components (PersonalInfo, Experience, etc.)
-     * Top-level DTOs (CVDTO, MinimalCVDTO) contain language context
-     * ContactDTO provides flexible contact information handling
-     * Direct list handling for collections (core competences, skills, etc.)
+     * Separate DTOs for different CV components
+     * Provide flexible data representation
+     * Support language context
+     * Direct list handling for collections
    - Renderer Conversion Strategies:
      * Recursive conversion of complex objects
-     * Special handling for Language and Enum types
-     * Converts objects to their string or primitive representations
-     * Supports nested dictionaries and lists
-     * Ensures type-safe and consistent rendering
-     * Simplified list handling with direct list iteration
-   - When adding new renderers:
-     * Create a new file in `renderers/` or `renderers/markdown/` directory
-     * For Markdown-specific renderers, use the `renderers/markdown/` directory
-     * Implement appropriate base class
+     * Handle special types (Language, Enum)
+     * Convert objects to primitive representations
+     * Ensure type-safe and consistent rendering
+   - Adding New Renderers:
+     * Create file in `renderers/` directory
+     * Implement base rendering interfaces
      * Work with DTO classes
      * Add comprehensive tests
      * Update documentation
-   - Type safety:
-     * Use generic types to ensure type safety
-     * BaseRenderer and BaseMarkdownRenderer are generic over DTO type
-     * Concrete renderers specify their DTO type
-     * Use protocols for type-safe interfaces
-     * Simplified type handling with direct list usage
-   - Conversion between Models and DTOs:
-     * Use `mapper.py` for converting Pydantic models to DTOs
-     * Mapper handles type conversion and provides flexibility
-     * Allows for future changes in model structure without affecting renderers
-     * Simplified conversion with direct list mapping
-   - Renderer Conversion Best Practices:
+   - Type Safety and Conversion:
+     * Use type hints and protocols
+     * Mapper handles type conversion
+     * Allows future model structure changes
+     * Simplified conversion with direct mapping
+   - Conversion Best Practices:
      * Implement recursive conversion functions
-     * Handle special types like Language and Enum
+     * Handle special type conversions
      * Ensure consistent string representation
-     * Maintain type information during conversion
-     * Provide clear error handling and logging
-     * Prefer direct list handling over wrapper classes
+     * Provide clear error handling
+     * Prefer direct list handling
 
 8. Multilingual Support:
-   - Language support is implemented through the `Language` class in `cv_adapter/dto/language.py`
-   - Supported languages: English, French, German, Spanish, Italian
-   - Key design principles:
-     * Language is a required parameter for all generator methods
-     * Generators adapt content to language-specific conventions
-     * Maintain consistent validation and generation logic across languages
+   - Language Support Overview:
+     * Implemented in `cv_adapter/models/language.py` and `cv_adapter/dto/language.py`
+     * Supports multiple languages with context-aware generation
+   - Supported Languages:
+     * English
+     * French
+     * German
+     * Spanish
+     * Italian
+   - Key Design Principles:
+     * Language is a required parameter for generators
+     * Adapt content to language-specific conventions
+     * Maintain consistent validation across languages
      * Use language-specific instructions in LLM context
-   - Language Design:
-     * Unified language implementation across DTO and models
-     * `Language` is a Pydantic model with rich metadata and advanced registry capabilities
-     * Supports language code, name, native name
-     * Provides language-specific formatting details:
-       - Date format
-       - Decimal separator
-       - Thousands separator
-     * Immutable and type-safe representation using Pydantic's `ConfigDict(frozen=True)`
-     * Supports string conversion and class-level language registry
-     * Predefined language instances (ENGLISH, FRENCH, etc.) for easy access
-   - Language Handling:
-     * Consistent language representation across DTOs and models
-     * Language is part of DTO classes (CVDTO, MinimalCVDTO)
-     * Renderers can convert language to string representation
-     * Supports easy extension and customization
-     * Provides class methods for language retrieval and registration
-   - Language Registry Features:
-     * Automatic registration of language instances using a class method
-     * Ability to retrieve languages by their code
-     * Supports runtime language instance management
-     * Provides detailed string and repr representations
-     * Uses `ClassVar` for type-safe class-level registry
-   - Extending language support:
-     * Add new languages to the `LanguageCode` enum
-     * Create new `Language` instances with specific metadata
-     * Automatically register new languages using the `register` class method
-     * Update language-specific instructions in generator context methods
-     * Ensure comprehensive test coverage for new languages
-   - Advantages of the Pydantic Language Implementation:
-     * Enhanced type safety with Pydantic validation
-     * Rich metadata support
+   - Language Implementation:
+     * Unified approach across models and DTOs
+     * Provides language code, name, and metadata
+     * Supports language-specific formatting:
+       - Date formats
+       - Decimal and thousands separators
+     * Immutable and type-safe representation
+   - Language Handling Features:
+     * Consistent representation in DTOs and models
+     * Easy extension and customization
+     * Context-aware language management
+   - Extending Language Support:
+     * Add new languages to language-related enums
+     * Create language-specific metadata
+     * Update generator context methods
+     * Ensure comprehensive test coverage
+   - Advantages:
+     * Enhanced type safety
+     * Flexible language context management
+     * Supports multilingual content generation
      * Easy language retrieval and management
      * Flexible and extensible design
      * Supports internationalization requirements
-     * Immutable model configuration
-     * Improved type checking and runtime validation
-     * Unified language representation across the entire application
 
 9. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
