@@ -3,9 +3,10 @@ from typing import List
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.models.generators import EducationGeneratorInput
-from cv_adapter.models.language import Language
-from cv_adapter.models.language_context import language_context
+from cv_adapter.dto.cv import EducationDTO
+from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.mapper import map_education
+from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import Education
 
 
@@ -33,47 +34,49 @@ class EducationGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        language: Language,
         notes: str | None = None,
-    ) -> List[Education]:
+    ) -> List[EducationDTO]:
         """Generate a list of educational experiences tailored to a job description.
 
         Args:
             cv: Text of the CV
             job_description: Job description text
             core_competences: Core competences to prove
-            language: Target language for generation
             notes: Optional additional notes for context
 
         Returns:
             List of educational experiences tailored to the job description
 
         Raises:
-            ValueError: If no education entries are generated
+            ValueError: If any of the required inputs are empty or
+            contain only whitespace
+            RuntimeError: If language context is not set
         """
-        input_data = EducationGeneratorInput(
-            cv_text=cv,
+        # Validate input parameters
+        if not cv or not cv.strip():
+            raise ValueError("CV text is required")
+        if not job_description:
+            raise ValueError("Job description is required")
+
+        # Get the current language from context
+        language = get_current_language()
+
+        context = self._prepare_context(
+            cv=cv,
             job_description=job_description,
             core_competences=core_competences,
-            notes=notes,
             language=language,
+            notes=notes,
         )
 
-        with language_context(language):
-            context = self._prepare_context(
-                cv=input_data.cv_text,
-                job_description=input_data.job_description,
-                core_competences=input_data.core_competences,
-                language=input_data.language,
-                notes=input_data.notes,
-            )
+        # Use the agent to generate education entries
+        result = self.agent.run_sync(
+            context,
+            result_type=list[Education],
+        )
 
-            # Use the agent to generate education entries
-            result = self.agent.run_sync(
-                context,
-                result_type=List[Education],
-            )
-            return result.data
+        # Convert to DTO
+        return [map_education(edu) for edu in result.data]
 
     def _prepare_context(
         self,
@@ -112,7 +115,7 @@ class EducationGenerator:
         )
 
         # Add language-specific instructions if not English
-        if language != Language.ENGLISH:
+        if language != ENGLISH:
             context += (
                 "\nLanguage Requirements:\n"
                 f"Generate the education section in {language.name.title()}, "
