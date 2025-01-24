@@ -3,9 +3,7 @@ import pytest
 from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH
 from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import language_context
-from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
-    MinimalMarkdownRenderer,
-)
+from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.summary_generator import SummaryGenerator
 
 
@@ -29,6 +27,7 @@ def test_context_preparation() -> None:
     assert "Based on the CV and job description" in context
     assert "create a concise and impactful CV summary" in context
     assert "Language Requirements" not in context
+    assert "User Notes for Consideration" in context
 
 
 def test_context_preparation_french() -> None:
@@ -68,6 +67,7 @@ def test_context_preparation_without_notes() -> None:
 
     # Verify optional content is not present
     assert "User Notes for Consideration" not in context
+    assert "notes" not in context.lower()
 
 
 @pytest.mark.parametrize(
