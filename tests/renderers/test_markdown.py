@@ -9,7 +9,6 @@ from cv_adapter.dto.cv import (
     CVDTO,
     ContactDTO,
     CoreCompetenceDTO,
-    CoreCompetencesDTO,
     EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
@@ -17,7 +16,6 @@ from cv_adapter.dto.cv import (
     PersonalInfoDTO,
     SkillDTO,
     SkillGroupDTO,
-    SkillsDTO,
     SummaryDTO,
     TitleDTO,
 )
@@ -35,7 +33,7 @@ from cv_adapter.renderers.markdown import (
 
 def test_markdown_list_renderer_bullet_list() -> None:
     """Test rendering a list of items as Markdown bullet points."""
-    items: List[CoreCompetenceDTO] = [
+    items: list = [
         CoreCompetenceDTO(text="Leadership"),
         CoreCompetenceDTO(text="Problem Solving"),
     ]
@@ -53,12 +51,10 @@ def test_markdown_list_renderer_empty_list() -> None:
 
 def test_core_competences_renderer_to_list() -> None:
     """Test rendering core competences to a list of strings."""
-    core_competences = CoreCompetencesDTO(
-        items=[
-            CoreCompetenceDTO(text="Leadership"),
-            CoreCompetenceDTO(text="Problem Solving"),
-        ]
-    )
+    core_competences = [
+        CoreCompetenceDTO(text="Leadership"),
+        CoreCompetenceDTO(text="Problem Solving"),
+    ]
 
     result = CoreCompetencesRenderer.render_to_list(core_competences)
 
@@ -67,12 +63,10 @@ def test_core_competences_renderer_to_list() -> None:
 
 def test_core_competences_renderer_to_markdown() -> None:
     """Test rendering core competences to Markdown format."""
-    core_competences = CoreCompetencesDTO(
-        items=[
-            CoreCompetenceDTO(text="Leadership"),
-            CoreCompetenceDTO(text="Problem Solving"),
-        ]
-    )
+    core_competences = [
+        CoreCompetenceDTO(text="Leadership"),
+        CoreCompetenceDTO(text="Problem Solving"),
+    ]
 
     result = CoreCompetencesRenderer.render_to_markdown(core_competences)
 
@@ -117,21 +111,19 @@ def test_base_markdown_renderer_custom_renderers() -> None:
     """Test custom renderers in BaseMarkdownRenderer."""
 
     def custom_core_competences_renderer(
-        core_competences: CoreCompetencesDTO, language: Language
+        core_competences: list, language: Language
     ) -> List[str]:
         return [f"Custom Core Competences ({language.code.value})"] + [
-            f"- {cc.text}" for cc in core_competences.items
+            f"- {cc.text}" for cc in core_competences
         ]
 
     config = RenderingConfig(core_competences_renderer=custom_core_competences_renderer)
     renderer = BaseMarkdownRenderer(config)
 
-    core_competences = CoreCompetencesDTO(
-        items=[
-            CoreCompetenceDTO(text="Leadership"),
-            CoreCompetenceDTO(text="Problem Solving"),
-        ]
-    )
+    core_competences = [
+        CoreCompetenceDTO(text="Leadership"),
+        CoreCompetenceDTO(text="Problem Solving"),
+    ]
 
     result = renderer._render_core_competences(core_competences, ENGLISH)
     assert result == [
@@ -163,14 +155,12 @@ def sample_cv_dto() -> CVDTO:
         summary=SummaryDTO(
             text="Experienced software engineer with a focus on Python development"
         ),
-        core_competences=CoreCompetencesDTO(
-            items=[
-                CoreCompetenceDTO(text="Python"),
-                CoreCompetenceDTO(text="Software Architecture"),
-                CoreCompetenceDTO(text="Team Leadership"),
-                CoreCompetenceDTO(text="Agile Development"),
-            ]
-        ),
+        core_competences=[
+            CoreCompetenceDTO(text="Python"),
+            CoreCompetenceDTO(text="Software Architecture"),
+            CoreCompetenceDTO(text="Team Leadership"),
+            CoreCompetenceDTO(text="Agile Development"),
+        ],
         experiences=[
             ExperienceDTO(
                 company=InstitutionDTO(name="Tech Corp", location="New York"),
@@ -190,14 +180,12 @@ def sample_cv_dto() -> CVDTO:
                 description="Focus on distributed systems",
             )
         ],
-        skills=SkillsDTO(
-            groups=[
-                SkillGroupDTO(
-                    name="Programming Languages",
-                    skills=[SkillDTO(text="Python"), SkillDTO(text="JavaScript")],
-                )
-            ]
-        ),
+        skills=[
+            SkillGroupDTO(
+                name="Programming Languages",
+                skills=[SkillDTO(text="Python"), SkillDTO(text="JavaScript")],
+            )
+        ],
         language=ENGLISH,
     )
 
@@ -270,10 +258,10 @@ def test_markdown_renderer_header_section_disabled() -> None:
         personal_info=PersonalInfoDTO(full_name="John Doe"),
         title=TitleDTO(text="Software Engineer"),
         summary=SummaryDTO(text="Sample summary"),
-        core_competences=CoreCompetencesDTO(items=[]),
+        core_competences=[],
         experiences=[],
         education=[],
-        skills=SkillsDTO(groups=[]),
+        skills=[],
         language=ENGLISH,
     )
 
@@ -329,15 +317,11 @@ def test_markdown_renderer_to_file_error_handling(
 def test_minimal_markdown_renderer_to_string() -> None:
     """Test rendering MinimalCVDTO to Markdown string."""
     minimal_cv_dto = MinimalCVDTO(
-        personal_info=PersonalInfoDTO(full_name="Jane Doe"),
         title=TitleDTO(text="Software Engineer"),
-        summary=SummaryDTO(text="Experienced software engineer"),
-        core_competences=CoreCompetencesDTO(
-            items=[
-                CoreCompetenceDTO(text="Leadership"),
-                CoreCompetenceDTO(text="Problem Solving"),
-            ]
-        ),
+        core_competences=[
+            CoreCompetenceDTO(text="Leadership"),
+            CoreCompetenceDTO(text="Problem Solving"),
+        ],
         experiences=[
             ExperienceDTO(
                 company=InstitutionDTO(name="Tech Corp"),
@@ -356,14 +340,12 @@ def test_minimal_markdown_renderer_to_string() -> None:
                 description="Bachelor's degree",
             )
         ],
-        skills=SkillsDTO(
-            groups=[
-                SkillGroupDTO(
-                    name="Programming",
-                    skills=[SkillDTO(text="Python"), SkillDTO(text="JavaScript")],
-                )
-            ]
-        ),
+        skills=[
+            SkillGroupDTO(
+                name="Programming",
+                skills=[SkillDTO(text="Python"), SkillDTO(text="JavaScript")],
+            )
+        ],
         language=ENGLISH,
     )
 

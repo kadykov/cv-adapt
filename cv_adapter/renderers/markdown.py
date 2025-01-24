@@ -3,7 +3,7 @@ from typing import Any, Generic, List, Optional, Sequence
 
 import yaml
 
-from cv_adapter.dto.cv import CVDTO, CoreCompetencesDTO, MinimalCVDTO, SkillsDTO
+from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, MinimalCVDTO, SkillGroupDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, Language
 from cv_adapter.renderers.base import (
     BaseRenderer,
@@ -34,7 +34,7 @@ class CoreCompetencesRenderer:
     """Renderer for core competences."""
 
     @staticmethod
-    def render_to_list(core_competences: CoreCompetencesDTO) -> List[str]:
+    def render_to_list(core_competences: List[CoreCompetenceDTO]) -> List[str]:
         """Render core competences to a list of strings.
 
         Args:
@@ -43,10 +43,10 @@ class CoreCompetencesRenderer:
         Returns:
             List of strings representing core competences
         """
-        return [item.text for item in core_competences.items]
+        return [item.text for item in core_competences]
 
     @staticmethod
-    def render_to_markdown(core_competences: CoreCompetencesDTO) -> str:
+    def render_to_markdown(core_competences: List[CoreCompetenceDTO]) -> str:
         """Render core competences to Markdown format.
 
         Args:
@@ -55,7 +55,7 @@ class CoreCompetencesRenderer:
         Returns:
             Core competences in Markdown format
         """
-        lines = MarkdownListRenderer.render_bullet_list(core_competences.items)
+        lines = MarkdownListRenderer.render_bullet_list(core_competences)
         return "\n".join(lines)
 
 
@@ -85,7 +85,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         )[section]
 
     def _render_core_competences(
-        self, core_competences: CoreCompetencesDTO, language: Language
+        self, core_competences: List[CoreCompetenceDTO], language: Language
     ) -> List[str]:
         """Render core competences section.
 
@@ -100,7 +100,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             return self.config.core_competences_renderer(core_competences, language)
 
         sections = [f"## {self._get_section_label('core_competences', language)}"]
-        sections.extend(MarkdownListRenderer.render_bullet_list(core_competences.items))
+        sections.extend(MarkdownListRenderer.render_bullet_list(core_competences))
         sections.append("")
         return sections
 
@@ -161,7 +161,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             sections.append("")
         return sections
 
-    def _render_skills(self, skills: SkillsDTO, language: Language) -> List[str]:
+    def _render_skills(
+        self, skills: List[SkillGroupDTO], language: Language
+    ) -> List[str]:
         """Render skills section.
 
         Args:
@@ -175,7 +177,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
             return self.config.skills_renderer(skills, language)
 
         sections = [f"## {self._get_section_label('skills', language)}\n"]
-        for group in skills.groups:
+        for group in skills:
             sections.append(f"### {group.name}")
             sections.extend(MarkdownListRenderer.render_bullet_list(group.skills))
             sections.append("")
@@ -314,9 +316,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                     sections.append(
                         f"## {self._get_section_label('core_competences', cv_dto.language)}"
                     )
-                    sections.extend(
-                        [f"- {cc.text}" for cc in cv_dto.core_competences.items]
-                    )
+                    sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences])
                     sections.append("")
                 elif section == "experience":
                     sections.append(
@@ -348,7 +348,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                     sections.append(
                         f"## {self._get_section_label('skills', cv_dto.language)}"
                     )
-                    for group in cv_dto.skills.groups:
+                    for group in cv_dto.skills:
                         sections.append(f"### {group.name}")
                         sections.append(", ".join(skill.text for skill in group.skills))
                         sections.append("")

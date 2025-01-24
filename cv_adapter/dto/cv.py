@@ -32,10 +32,6 @@ class CoreCompetenceDTO(BaseModel):
     text: str
 
 
-class CoreCompetencesDTO(BaseModel):
-    items: List[CoreCompetenceDTO]
-
-
 class InstitutionDTO(BaseModel):
     name: str
     description: Optional[str] = None
@@ -68,8 +64,7 @@ class SkillGroupDTO(BaseModel):
     skills: List[SkillDTO]
 
 
-class SkillsDTO(BaseModel):
-    groups: List[SkillGroupDTO]
+# List[SkillGroupDTO] removed, use List[SkillGroupDTO] directly
 
 
 class TitleDTO(BaseModel):
@@ -82,10 +77,10 @@ class SummaryDTO(BaseModel):
 
 class MinimalCVDTO(BaseModel):
     title: TitleDTO
-    core_competences: CoreCompetencesDTO
+    core_competences: List[CoreCompetenceDTO]
     experiences: List[ExperienceDTO]
     education: List[EducationDTO]
-    skills: SkillsDTO
+    skills: List[SkillGroupDTO]
     language: Language
 
 
@@ -93,8 +88,8 @@ class CVDTO(BaseModel):
     personal_info: PersonalInfoDTO
     title: TitleDTO
     summary: SummaryDTO
-    core_competences: CoreCompetencesDTO
+    core_competences: List[CoreCompetenceDTO]
     experiences: List[ExperienceDTO]
     education: List[EducationDTO]
-    skills: SkillsDTO
+    skills: List[SkillGroupDTO]
     language: Language

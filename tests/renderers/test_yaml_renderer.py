@@ -8,14 +8,12 @@ from cv_adapter.dto.cv import (
     CVDTO,
     ContactDTO,
     CoreCompetenceDTO,
-    CoreCompetencesDTO,
     EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
     PersonalInfoDTO,
     SkillDTO,
     SkillGroupDTO,
-    SkillsDTO,
     SummaryDTO,
     TitleDTO,
 )
@@ -36,14 +34,12 @@ def sample_cv() -> CVDTO:
         summary=SummaryDTO(
             text="Experienced software engineer with a focus on Python development"
         ),
-        core_competences=CoreCompetencesDTO(
-            items=[
-                CoreCompetenceDTO(text="Python"),
-                CoreCompetenceDTO(text="Software Architecture"),
-                CoreCompetenceDTO(text="Team Leadership"),
-                CoreCompetenceDTO(text="Agile Development"),
-            ]
-        ),
+        core_competences=[
+            CoreCompetenceDTO(text="Python"),
+            CoreCompetenceDTO(text="Software Architecture"),
+            CoreCompetenceDTO(text="Team Leadership"),
+            CoreCompetenceDTO(text="Agile Development"),
+        ],
         experiences=[
             ExperienceDTO(
                 company=InstitutionDTO(
@@ -69,17 +65,15 @@ def sample_cv() -> CVDTO:
                 description="Focus on distributed systems",
             )
         ],
-        skills=SkillsDTO(
-            groups=[
-                SkillGroupDTO(
-                    name="Programming Languages",
-                    skills=[
-                        SkillDTO(text="Python"),
-                        SkillDTO(text="JavaScript"),
-                    ],
-                )
-            ]
-        ),
+        skills=[
+            SkillGroupDTO(
+                name="Programming Languages",
+                skills=[
+                    SkillDTO(text="Python"),
+                    SkillDTO(text="JavaScript"),
+                ],
+            )
+        ],
         language=ENGLISH,
     )
 

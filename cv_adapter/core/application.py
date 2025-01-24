@@ -4,12 +4,12 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import (
     CVDTO,
-    CoreCompetencesDTO,
+    List[CoreCompetenceDTO],
     EducationDTO,
     ExperienceDTO,
     MinimalCVDTO,
     PersonalInfoDTO,
-    SkillsDTO,
+    List[SkillGroupDTO],
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH, Language
@@ -71,7 +71,7 @@ class CVAdapterApplication:
         # Use language context to ensure generators are called in the right context
         with language_context(language):
             # 1. Generate core competences
-            core_competences_dto: CoreCompetencesDTO = (
+            core_competences_dto: List[CoreCompetenceDTO] = (
                 self.competence_generator.generate(
                     cv=cv_text,
                     job_description=job_description,
@@ -97,7 +97,7 @@ class CVAdapterApplication:
                 notes=notes,
             )
 
-            skills_dto: SkillsDTO = self.skills_generator.generate(
+            skills_dto: List[SkillGroupDTO] = self.skills_generator.generate(
                 cv=cv_text,
                 job_description=job_description,
                 core_competences=core_competences_md,

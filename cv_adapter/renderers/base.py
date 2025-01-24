@@ -12,7 +12,7 @@ from typing import (
     TypeVar,
 )
 
-from cv_adapter.dto.cv import CVDTO, CoreCompetencesDTO, MinimalCVDTO, SkillsDTO
+from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, MinimalCVDTO, SkillGroupDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, Language
 
 
@@ -48,11 +48,13 @@ class RenderingConfig:
 
     # Customizable section rendering strategies
     core_competences_renderer: Optional[
-        Callable[[CoreCompetencesDTO, Language], List[str]]
+        Callable[[List[CoreCompetenceDTO], Language], List[str]]
     ] = None
     experiences_renderer: Optional[Callable[[List[Any], Language], List[str]]] = None
     education_renderer: Optional[Callable[[List[Any], Language], List[str]]] = None
-    skills_renderer: Optional[Callable[[SkillsDTO, Language], List[str]]] = None
+    skills_renderer: Optional[Callable[[List[SkillGroupDTO], Language], List[str]]] = (
+        None
+    )
 
     # Customizable section labels
     section_labels: Dict[Language, Dict[str, str]] = field(
