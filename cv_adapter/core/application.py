@@ -12,11 +12,10 @@ from cv_adapter.dto.cv import (
     SkillsDTO,
     TitleDTO,
 )
-from cv_adapter.models.language import Language
-from cv_adapter.renderers.markdown.core_competences_renderer import (
+from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.models.language_context import language_context
+from cv_adapter.renderers.markdown import (
     CoreCompetencesRenderer,
-)
-from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
     MinimalMarkdownRenderer,
 )
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
@@ -25,9 +24,6 @@ from cv_adapter.services.generators.experience_generator import ExperienceGenera
 from cv_adapter.services.generators.skills_generator import SkillsGenerator
 from cv_adapter.services.generators.summary_generator import SummaryGenerator
 from cv_adapter.services.generators.title_generator import TitleGenerator
-from cv_adapter.services.language_context import (
-    language_context_manager as language_context,
-)
 
 
 class CVAdapterApplication:
@@ -57,7 +53,7 @@ class CVAdapterApplication:
         job_description: str,
         personal_info: PersonalInfoDTO,
         notes: Optional[str] = None,
-        language: Language = Language.ENGLISH,
+        language: Language = ENGLISH,
     ) -> CVDTO:
         """
         Generate a new CV adapted to the job description.

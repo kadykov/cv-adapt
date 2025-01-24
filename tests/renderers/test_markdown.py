@@ -1,6 +1,6 @@
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import pytest
 import yaml
@@ -92,30 +92,38 @@ def test_base_markdown_renderer_section_labels() -> None:
                 "experience": "Expérience Professionnelle",
                 "education": "Formation",
                 "skills": "Compétences",
-            }
+            },
         }
     )
     renderer = BaseMarkdownRenderer(config)
 
     # Test English labels
-    assert renderer._get_section_label("experience", ENGLISH) == "Professional Experience"
+    assert (
+        renderer._get_section_label("experience", ENGLISH) == "Professional Experience"
+    )
     assert renderer._get_section_label("education", ENGLISH) == "Education"
     assert renderer._get_section_label("skills", ENGLISH) == "Skills"
 
     # Test French labels
-    assert renderer._get_section_label("experience", FRENCH) == "Expérience Professionnelle"
+    assert (
+        renderer._get_section_label("experience", FRENCH)
+        == "Expérience Professionnelle"
+    )
     assert renderer._get_section_label("education", FRENCH) == "Formation"
     assert renderer._get_section_label("skills", FRENCH) == "Compétences"
 
 
 def test_base_markdown_renderer_custom_renderers() -> None:
     """Test custom renderers in BaseMarkdownRenderer."""
-    def custom_core_competences_renderer(core_competences: CoreCompetencesDTO, language: Language) -> List[str]:
-        return [f"Custom Core Competences ({language.code.value})"] + [f"- {cc.text}" for cc in core_competences.items]
 
-    config = RenderingConfig(
-        core_competences_renderer=custom_core_competences_renderer
-    )
+    def custom_core_competences_renderer(
+        core_competences: CoreCompetencesDTO, language: Language
+    ) -> List[str]:
+        return [f"Custom Core Competences ({language.code.value})"] + [
+            f"- {cc.text}" for cc in core_competences.items
+        ]
+
+    config = RenderingConfig(core_competences_renderer=custom_core_competences_renderer)
     renderer = BaseMarkdownRenderer(config)
 
     core_competences = CoreCompetencesDTO(
@@ -129,7 +137,7 @@ def test_base_markdown_renderer_custom_renderers() -> None:
     assert result == [
         "Custom Core Competences (en)",
         "- Leadership",
-        "- Problem Solving"
+        "- Problem Solving",
     ]
 
 
@@ -209,7 +217,9 @@ def test_markdown_renderer_yaml_header(sample_cv_dto: CVDTO) -> None:
     assert yaml_header[3] == ""
 
 
-def test_markdown_renderer_yaml_header_no_optional_contacts(sample_cv_dto: CVDTO) -> None:
+def test_markdown_renderer_yaml_header_no_optional_contacts(
+    sample_cv_dto: CVDTO,
+) -> None:
     """Test YAML header generation when optional contacts are missing."""
     cv_dto = sample_cv_dto.model_copy(
         update={
@@ -246,7 +256,9 @@ def test_markdown_renderer_header_section(sample_cv_dto: CVDTO) -> None:
     header = renderer._render_header(sample_cv_dto)
 
     assert header[0] == "## Senior Software Engineer"
-    assert header[1] == "Experienced software engineer with a focus on Python development"
+    assert (
+        header[1] == "Experienced software engineer with a focus on Python development"
+    )
     assert header[2] == ""
 
 
@@ -303,7 +315,9 @@ def test_markdown_renderer_to_file(sample_cv_dto: CVDTO, tmp_path: Path) -> None
     assert "full_name: John Doe" in content
 
 
-def test_markdown_renderer_to_file_error_handling(sample_cv_dto: CVDTO, tmp_path: Path) -> None:
+def test_markdown_renderer_to_file_error_handling(
+    sample_cv_dto: CVDTO, tmp_path: Path
+) -> None:
     """Test error handling when rendering to an invalid file path."""
     renderer = MarkdownRenderer()
     non_writable_path = tmp_path / "nonexistent" / "cv.md"

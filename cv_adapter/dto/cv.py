@@ -8,14 +8,18 @@ from cv_adapter.dto.language import Language
 
 class ContactDTO(BaseModel):
     """Represents a single contact method with optional metadata."""
+
     value: str
     type: Optional[str] = Field(None, description="e.g., 'personal', 'work'")
     icon: Optional[str] = Field(None, description="e.g., 'email', 'phone', 'linkedin'")
-    url: Optional[str] = Field(None, description="Optional URL for the contact (e.g., mailto:, tel:, https://)")
+    url: Optional[str] = Field(
+        None, description="Optional URL for the contact (e.g., mailto:, tel:, https://)"
+    )
 
 
 class PersonalInfoDTO(BaseModel):
     """Personal information with flexible contact handling."""
+
     full_name: str
     email: Optional[ContactDTO] = None
     phone: Optional[ContactDTO] = None

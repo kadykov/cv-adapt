@@ -3,7 +3,7 @@ from typing import Optional
 from fast_langdetect import detect  # type: ignore[import-untyped]
 from pydantic import BaseModel, ValidationInfo, field_validator
 
-from cv_adapter.dto.language import LanguageCode, Language
+from cv_adapter.dto.language import Language, LanguageCode
 
 
 class LanguageValidationMixin(BaseModel):

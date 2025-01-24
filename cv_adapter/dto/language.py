@@ -1,11 +1,12 @@
 from enum import Enum
-from typing import Dict, Optional, ClassVar
+from typing import ClassVar, Dict, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class LanguageCode(str, Enum):
     """Standardized language codes."""
+
     ENGLISH = "en"
     FRENCH = "fr"
     GERMAN = "de"
@@ -28,7 +29,7 @@ class Language(BaseModel):
     thousands_separator: Optional[str] = None
 
     # Class-level language registry
-    _registry: ClassVar[Dict[LanguageCode, 'Language']] = {}
+    _registry: ClassVar[Dict[LanguageCode, "Language"]] = {}
 
     def __init__(self, **data: object) -> None:
         """Register the language in the class registry.
@@ -41,12 +42,12 @@ class Language(BaseModel):
         self.__class__.register(self)
 
     @classmethod
-    def register(cls, language: 'Language') -> None:
+    def register(cls, language: "Language") -> None:
         """Register a language in the class registry."""
         cls._registry[language.code] = language
 
     @classmethod
-    def get(cls, code: LanguageCode) -> 'Language':
+    def get(cls, code: LanguageCode) -> "Language":
         """Retrieve a language by its code."""
         language = cls._registry.get(code)
         if language is None:
@@ -69,7 +70,7 @@ ENGLISH = Language(
     native_name="English",
     date_format="%m/%d/%Y",
     decimal_separator=".",
-    thousands_separator=","
+    thousands_separator=",",
 )
 
 FRENCH = Language(
@@ -78,7 +79,7 @@ FRENCH = Language(
     native_name="Français",
     date_format="%d/%m/%Y",
     decimal_separator=",",
-    thousands_separator=" "
+    thousands_separator=" ",
 )
 
 GERMAN = Language(
@@ -87,7 +88,7 @@ GERMAN = Language(
     native_name="Deutsch",
     date_format="%d.%m.%Y",
     decimal_separator=",",
-    thousands_separator="."
+    thousands_separator=".",
 )
 
 SPANISH = Language(
@@ -96,7 +97,7 @@ SPANISH = Language(
     native_name="Español",
     date_format="%d/%m/%Y",
     decimal_separator=",",
-    thousands_separator="."
+    thousands_separator=".",
 )
 
 ITALIAN = Language(
@@ -105,5 +106,5 @@ ITALIAN = Language(
     native_name="Italiano",
     date_format="%d/%m/%Y",
     decimal_separator=",",
-    thousands_separator="."
+    thousands_separator=".",
 )

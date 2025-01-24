@@ -9,7 +9,7 @@ from cv_adapter.dto.mapper import map_summary
 from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
+from cv_adapter.renderers.markdown import (
     MinimalMarkdownRenderer,
 )
 

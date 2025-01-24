@@ -47,33 +47,42 @@ class RenderingConfig:
     """Configuration for rendering."""
 
     # Customizable section rendering strategies
-    core_competences_renderer: Optional[Callable[[CoreCompetencesDTO, Language], List[str]]] = None
+    core_competences_renderer: Optional[
+        Callable[[CoreCompetencesDTO, Language], List[str]]
+    ] = None
     experiences_renderer: Optional[Callable[[List[Any], Language], List[str]]] = None
     education_renderer: Optional[Callable[[List[Any], Language], List[str]]] = None
     skills_renderer: Optional[Callable[[SkillsDTO, Language], List[str]]] = None
 
     # Customizable section labels
-    section_labels: Dict[Language, Dict[str, str]] = field(default_factory=lambda: {
-        ENGLISH: {
-            "experience": "Professional Experience",
-            "education": "Education",
-            "skills": "Skills",
-            "core_competences": "Core Competences",
-        },
-        FRENCH: {
-            "experience": "Expérience Professionnelle",
-            "education": "Formation",
-            "skills": "Compétences",
-            "core_competences": "Compétences Clés",
+    section_labels: Dict[Language, Dict[str, str]] = field(
+        default_factory=lambda: {
+            ENGLISH: {
+                "experience": "Professional Experience",
+                "education": "Education",
+                "skills": "Skills",
+                "core_competences": "Core Competences",
+            },
+            FRENCH: {
+                "experience": "Expérience Professionnelle",
+                "education": "Formation",
+                "skills": "Compétences",
+                "core_competences": "Compétences Clés",
+            },
         }
-    })
+    )
 
     # Rendering options
     include_yaml_header: bool = True
     include_header: bool = True
-    include_sections: List[str] = field(default_factory=lambda: [
-        "core_competences", "experience", "education", "skills"
-    ])
+    include_sections: List[str] = field(
+        default_factory=lambda: [
+            "core_competences",
+            "experience",
+            "education",
+            "skills",
+        ]
+    )
 
 
 class BaseRenderer(ABC, Generic[CVDTOType]):

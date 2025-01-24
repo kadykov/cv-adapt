@@ -1,15 +1,16 @@
 from pathlib import Path
 from typing import Any, Generic, List, Optional, Sequence
+
 import yaml
 
 from cv_adapter.dto.cv import CVDTO, CoreCompetencesDTO, MinimalCVDTO, SkillsDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, Language
 from cv_adapter.renderers.base import (
-    BaseRenderer, 
-    RendererError, 
-    RenderingConfig, 
+    BaseRenderer,
+    CVDTOType,
     ListItem,
-    CVDTOType
+    RendererError,
+    RenderingConfig,
 )
 
 
@@ -79,7 +80,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             Localized section label
         """
-        return self.config.section_labels.get(language, self.config.section_labels[ENGLISH])[section]
+        return self.config.section_labels.get(
+            language, self.config.section_labels[ENGLISH]
+        )[section]
 
     def _render_core_competences(
         self, core_competences: CoreCompetencesDTO, language: Language
@@ -232,7 +235,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                         "education": "Formation",
                         "skills": "Compétences",
                         "core_competences": "Compétences Clés",
-                    }
+                    },
                 }
             )
         super().__init__(config)
@@ -311,7 +314,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                     sections.append(
                         f"## {self._get_section_label('core_competences', cv_dto.language)}"
                     )
-                    sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences.items])
+                    sections.extend(
+                        [f"- {cc.text}" for cc in cv_dto.core_competences.items]
+                    )
                     sections.append("")
                 elif section == "experience":
                     sections.append(
@@ -324,7 +329,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                         sections.append(f"*{date_str}*")
                         sections.append(exp.description)
                         if exp.technologies:
-                            sections.append("**Technologies:** " + ", ".join(exp.technologies))
+                            sections.append(
+                                "**Technologies:** " + ", ".join(exp.technologies)
+                            )
                         sections.append("")
                 elif section == "education":
                     sections.append(
@@ -338,7 +345,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
                         sections.append(edu.description)
                         sections.append("")
                 elif section == "skills":
-                    sections.append(f"## {self._get_section_label('skills', cv_dto.language)}")
+                    sections.append(
+                        f"## {self._get_section_label('skills', cv_dto.language)}"
+                    )
                     for group in cv_dto.skills.groups:
                         sections.append(f"### {group.name}")
                         sections.append(", ".join(skill.text for skill in group.skills))
@@ -375,7 +384,9 @@ class MinimalMarkdownRenderer(BaseMarkdownRenderer[MinimalCVDTO]):
                         self._render_core_competences(cv.core_competences, cv.language)
                     )
                 elif section == "experience":
-                    sections.extend(self._render_experiences(cv.experiences, cv.language))
+                    sections.extend(
+                        self._render_experiences(cv.experiences, cv.language)
+                    )
                 elif section == "education":
                     sections.extend(self._render_education(cv.education, cv.language))
                 elif section == "skills":
