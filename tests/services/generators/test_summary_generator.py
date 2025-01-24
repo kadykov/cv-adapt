@@ -1,6 +1,6 @@
 import pytest
 
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, SPANISH, ITALIAN
+from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH
 from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import language_context
 from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
@@ -80,7 +80,7 @@ def test_context_preparation_without_notes() -> None:
         ITALIAN,
     ],
 )
-def test_context_preparation_all_languages(language) -> None:
+def test_context_preparation_all_languages(language: Language) -> None:
     """Test context preparation for all supported languages."""
     generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
     with language_context(language):
@@ -111,7 +111,7 @@ def test_generate_summary_dto() -> None:
         )
 
     # Verify DTO structure
-    assert hasattr(result, 'text')
+    assert hasattr(result, "text")
     assert isinstance(result.text, str)
     assert len(result.text) > 0
 

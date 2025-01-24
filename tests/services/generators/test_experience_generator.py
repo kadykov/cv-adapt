@@ -1,5 +1,6 @@
-import pytest
 from datetime import date
+
+import pytest
 from pydantic_ai.models.test import TestModel
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO

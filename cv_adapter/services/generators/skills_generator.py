@@ -1,9 +1,7 @@
-from typing import List
-
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.dto.cv import SkillGroupDTO, SkillsDTO
+from cv_adapter.dto.cv import SkillsDTO
 from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.dto.mapper import map_skills
 from cv_adapter.models.language_context import get_current_language

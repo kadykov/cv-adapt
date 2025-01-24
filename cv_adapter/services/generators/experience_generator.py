@@ -1,9 +1,9 @@
 """Service for generating professional experiences based on CV and job description."""
 
+from typing import List
+
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
-
-from typing import List
 
 from cv_adapter.dto.cv import ExperienceDTO
 from cv_adapter.dto.language import ENGLISH, Language

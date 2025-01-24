@@ -6,7 +6,7 @@ from pydantic_ai.models import KnownModelName
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.dto.mapper import map_summary
-from cv_adapter.models.generators import SummaryGeneratorInput
+from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.markdown.minimal_markdown_renderer import (
@@ -87,7 +87,7 @@ class SummaryGenerator:
             context,
             result_type=CVSummary,
         )
-        
+
         # Convert to DTO
         return map_summary(result.data.text)
 
@@ -96,7 +96,7 @@ class SummaryGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        language,
+        language: Language,
         notes: str | None = None,
     ) -> str:
         """Prepare context for summary generation.

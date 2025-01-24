@@ -4,7 +4,6 @@ from pydantic_ai.models import KnownModelName
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.dto.mapper import map_title
-from cv_adapter.models.generators import TitleGeneratorInput
 from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import Title
@@ -71,7 +70,7 @@ class TitleGenerator:
             context,
             result_type=Title,
         )
-        
+
         # Convert to DTO
         return map_title(result.data)
 

@@ -1,7 +1,7 @@
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.dto.cv import SkillGroupDTO, SkillsDTO, SkillDTO
+from cv_adapter.dto.cv import SkillDTO, SkillGroupDTO, SkillsDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
 from cv_adapter.models.language_context import get_current_language, language_context
 from cv_adapter.services.generators.skills_generator import SkillsGenerator
@@ -147,17 +147,17 @@ def test_model() -> TestModel:
                     "skills": [
                         {"text": "Python"},
                         {"text": "JavaScript"},
-                        {"text": "TypeScript"}
-                    ]
+                        {"text": "TypeScript"},
+                    ],
                 },
                 {
                     "name": "Frameworks",
                     "skills": [
                         {"text": "React"},
                         {"text": "Django"},
-                        {"text": "FastAPI"}
-                    ]
-                }
+                        {"text": "FastAPI"},
+                    ],
+                },
             ]
         }
     }
@@ -177,7 +177,8 @@ def test_skills_generator_dto_output(test_model: TestModel) -> None:
             result = generator.generate(
                 cv="Experienced software engineer with diverse technical skills",
                 job_description=(
-                    "Seeking a senior software engineer with full-stack development skills"
+                    "Seeking a senior software engineer "
+                    "with full-stack development skills"
                 ),
                 core_competences="Technical Leadership, Advanced Learning",
             )
