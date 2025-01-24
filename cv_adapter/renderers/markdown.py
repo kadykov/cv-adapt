@@ -1,32 +1,23 @@
 from pathlib import Path
-from typing import Any, Generic, List, Protocol, Sequence, TypeVar
-
+from typing import Any, Generic, List, Optional, Sequence
 import yaml
 
 from cv_adapter.dto.cv import CVDTO, CoreCompetencesDTO, MinimalCVDTO, SkillsDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, Language
-from cv_adapter.renderers.base import BaseRenderer, RendererError
-
-CVDTOType = TypeVar("CVDTOType", CVDTO, MinimalCVDTO)
-
-
-class MarkdownListItem(Protocol):
-    """Protocol for items that can be rendered as Markdown list items."""
-
-    def __str__(self) -> str:
-        """Convert item to string representation.
-
-        Returns:
-            String representation of the item
-        """
-        ...
+from cv_adapter.renderers.base import (
+    BaseRenderer, 
+    RendererError, 
+    RenderingConfig, 
+    ListItem,
+    CVDTOType
+)
 
 
 class MarkdownListRenderer:
     """Renderer for Markdown lists."""
 
     @staticmethod
-    def render_bullet_list(items: Sequence[MarkdownListItem]) -> List[str]:
+    def render_bullet_list(items: Sequence[ListItem]) -> List[str]:
         """Render items as a bullet point list.
 
         Args:
@@ -70,6 +61,14 @@ class CoreCompetencesRenderer:
 class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
     """Base class for Markdown renderers with common rendering logic."""
 
+    def __init__(self, config: Optional[RenderingConfig] = None):
+        """Initialize the renderer with optional configuration.
+
+        Args:
+            config: Optional rendering configuration
+        """
+        self.config = config or RenderingConfig()
+
     def _get_section_label(self, section: str, language: Language) -> str:
         """Get language-specific section labels.
 
@@ -80,22 +79,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             Localized section label
         """
-        labels = {
-            ENGLISH: {
-                "experience": "Experience",
-                "education": "Education",
-                "skills": "Skills",
-                "core_competences": "Core Competences",
-            },
-            FRENCH: {
-                "experience": "Expérience",
-                "education": "Formation",
-                "skills": "Compétences",
-                "core_competences": "Compétences Clés",
-            },
-            # Add more languages as needed
-        }
-        return labels.get(language, labels[ENGLISH])[section]
+        return self.config.section_labels.get(language, self.config.section_labels[ENGLISH])[section]
 
     def _render_core_competences(
         self, core_competences: CoreCompetencesDTO, language: Language
@@ -109,6 +93,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             List of lines in Markdown format
         """
+        if self.config.core_competences_renderer:
+            return self.config.core_competences_renderer(core_competences, language)
+
         sections = [f"## {self._get_section_label('core_competences', language)}"]
         sections.extend(MarkdownListRenderer.render_bullet_list(core_competences.items))
         sections.append("")
@@ -126,6 +113,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             List of lines in Markdown format
         """
+        if self.config.experiences_renderer:
+            return self.config.experiences_renderer(experiences, language)
+
         sections = [f"## {self._get_section_label('experience', language)}\n"]
         for exp in experiences:
             sections.append(f"### {exp.position} at {exp.company.name}")
@@ -151,6 +141,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             List of lines in Markdown format
         """
+        if self.config.education_renderer:
+            return self.config.education_renderer(education, language)
+
         sections = [f"## {self._get_section_label('education', language)}\n"]
         for edu in education:
             sections.append(f"### {edu.degree}")
@@ -175,6 +168,9 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             List of lines in Markdown format
         """
+        if self.config.skills_renderer:
+            return self.config.skills_renderer(skills, language)
+
         sections = [f"## {self._get_section_label('skills', language)}\n"]
         for group in skills.groups:
             sections.append(f"### {group.name}")
@@ -216,32 +212,30 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
 class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
     """Renderer for CV in Markdown format."""
 
-    def _get_section_label(self, section: str, language: Language) -> str:
-        """Get language-specific section labels.
+    def __init__(self, config: Optional[RenderingConfig] = None):
+        """Initialize the renderer with optional configuration.
 
         Args:
-            section: Section name
-            language: Language for the label
-
-        Returns:
-            Localized section label
+            config: Optional rendering configuration
         """
-        labels = {
-            ENGLISH: {
-                "experience": "Professional Experience",
-                "education": "Education",
-                "skills": "Skills",
-                "core_competences": "Core Competences",
-            },
-            FRENCH: {
-                "experience": "Expérience Professionnelle",
-                "education": "Formation",
-                "skills": "Compétences",
-                "core_competences": "Compétences Clés",
-            },
-            # Add more languages as needed
-        }
-        return labels.get(language, labels[ENGLISH])[section]
+        if config is None:
+            config = RenderingConfig(
+                section_labels={
+                    ENGLISH: {
+                        "experience": "Professional Experience",
+                        "education": "Education",
+                        "skills": "Skills",
+                        "core_competences": "Core Competences",
+                    },
+                    FRENCH: {
+                        "experience": "Expérience Professionnelle",
+                        "education": "Formation",
+                        "skills": "Compétences",
+                        "core_competences": "Compétences Clés",
+                    }
+                }
+            )
+        super().__init__(config)
 
     def _render_yaml_header(self, cv_dto: CVDTO) -> List[str]:
         """Render YAML header with personal information.
@@ -252,6 +246,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
         Returns:
             List of lines in YAML format
         """
+        if not self.config.include_yaml_header:
+            return []
+
         personal_info = {
             "full_name": cv_dto.personal_info.full_name,
             "contacts": {
@@ -278,6 +275,9 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
         Returns:
             List of lines in Markdown format
         """
+        if not self.config.include_header:
+            return []
+
         return [
             f"## {cv_dto.title.text}",
             cv_dto.summary.text,
@@ -305,68 +305,49 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             # Header
             sections.extend(self._render_header(cv_dto))
 
-            # Core Competences
-            sections.append(
-                f"## {self._get_section_label('core_competences', cv_dto.language)}"
-            )
-            sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences.items])
-            sections.append("")
-
-            # Experience
-            sections.append(
-                f"## {self._get_section_label('experience', cv_dto.language)}"
-            )
-            for exp in cv_dto.experiences:
-                # Render experience details
-                end_year = exp.end_date.year if exp.end_date else "Present"
-                date_str = f"{exp.start_date.year} - {end_year}"
-                sections.append(f"### {exp.position} | {exp.company.name}")
-                sections.append(f"*{date_str}*")
-                sections.append(exp.description)
-                if exp.technologies:
-                    sections.append("**Technologies:** " + ", ".join(exp.technologies))
-                sections.append("")
-
-            # Education
-            sections.append(
-                f"## {self._get_section_label('education', cv_dto.language)}"
-            )
-            for edu in cv_dto.education:
-                # Render education details
-                end_year = edu.end_date.year if edu.end_date else "Present"
-                date_str = f"{edu.start_date.year} - {end_year}"
-                sections.append(f"### {edu.degree} | {edu.university.name}")
-                sections.append(f"*{date_str}*")
-                sections.append(edu.description)
-                sections.append("")
-
-            # Skills
-            sections.append(f"## {self._get_section_label('skills', cv_dto.language)}")
-            for group in cv_dto.skills.groups:
-                sections.append(f"### {group.name}")
-                sections.append(", ".join(skill.text for skill in group.skills))
-                sections.append("")
+            # Render sections based on configuration
+            for section in self.config.include_sections:
+                if section == "core_competences":
+                    sections.append(
+                        f"## {self._get_section_label('core_competences', cv_dto.language)}"
+                    )
+                    sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences.items])
+                    sections.append("")
+                elif section == "experience":
+                    sections.append(
+                        f"## {self._get_section_label('experience', cv_dto.language)}"
+                    )
+                    for exp in cv_dto.experiences:
+                        end_year = exp.end_date.year if exp.end_date else "Present"
+                        date_str = f"{exp.start_date.year} - {end_year}"
+                        sections.append(f"### {exp.position} | {exp.company.name}")
+                        sections.append(f"*{date_str}*")
+                        sections.append(exp.description)
+                        if exp.technologies:
+                            sections.append("**Technologies:** " + ", ".join(exp.technologies))
+                        sections.append("")
+                elif section == "education":
+                    sections.append(
+                        f"## {self._get_section_label('education', cv_dto.language)}"
+                    )
+                    for edu in cv_dto.education:
+                        end_year = edu.end_date.year if edu.end_date else "Present"
+                        date_str = f"{edu.start_date.year} - {end_year}"
+                        sections.append(f"### {edu.degree} | {edu.university.name}")
+                        sections.append(f"*{date_str}*")
+                        sections.append(edu.description)
+                        sections.append("")
+                elif section == "skills":
+                    sections.append(f"## {self._get_section_label('skills', cv_dto.language)}")
+                    for group in cv_dto.skills.groups:
+                        sections.append(f"### {group.name}")
+                        sections.append(", ".join(skill.text for skill in group.skills))
+                        sections.append("")
 
             return "\n".join(sections)
 
         except Exception as e:
             raise RendererError(f"Error rendering CV to Markdown: {e}")
-
-    def render_to_file(self, cv_dto: CVDTO, file_path: Path) -> None:
-        """Render CV to Markdown file.
-
-        Args:
-            cv_dto: CV DTO object to render
-            file_path: Path where to save the Markdown file
-
-        Raises:
-            RendererError: If rendering or saving fails
-        """
-        try:
-            markdown = self.render_to_string(cv_dto)
-            file_path.write_text(markdown, encoding="utf-8")
-        except Exception as e:
-            raise RendererError(f"Error saving CV to Markdown file: {e}")
 
 
 class MinimalMarkdownRenderer(BaseMarkdownRenderer[MinimalCVDTO]):
@@ -387,19 +368,18 @@ class MinimalMarkdownRenderer(BaseMarkdownRenderer[MinimalCVDTO]):
         try:
             sections = []
 
-            # Core Competences
-            sections.extend(
-                self._render_core_competences(cv.core_competences, cv.language)
-            )
-
-            # Experience
-            sections.extend(self._render_experiences(cv.experiences, cv.language))
-
-            # Education
-            sections.extend(self._render_education(cv.education, cv.language))
-
-            # Skills
-            sections.extend(self._render_skills(cv.skills, cv.language))
+            # Render sections based on configuration
+            for section in self.config.include_sections:
+                if section == "core_competences":
+                    sections.extend(
+                        self._render_core_competences(cv.core_competences, cv.language)
+                    )
+                elif section == "experience":
+                    sections.extend(self._render_experiences(cv.experiences, cv.language))
+                elif section == "education":
+                    sections.extend(self._render_education(cv.education, cv.language))
+                elif section == "skills":
+                    sections.extend(self._render_skills(cv.skills, cv.language))
 
             return "\n".join(sections)
 
@@ -407,23 +387,3 @@ class MinimalMarkdownRenderer(BaseMarkdownRenderer[MinimalCVDTO]):
             raise RendererError(
                 f"Failed to render MinimalCVDTO to Markdown: {e}"
             ) from e
-
-    def render_to_file(
-        self,
-        cv: MinimalCVDTO,
-        file_path: Path,  # type: ignore[override]
-    ) -> None:
-        """Render MinimalCVDTO to Markdown file.
-
-        Args:
-            cv: MinimalCVDTO object to render
-            file_path: Path where to save the rendered MinimalCVDTO
-
-        Raises:
-            RendererError: If rendering or saving fails
-        """
-        try:
-            markdown = self.render_to_string(cv)
-            file_path.write_text(markdown, encoding="utf-8")
-        except Exception as e:
-            raise RendererError(f"Failed to save MinimalCVDTO to file: {e}") from e
