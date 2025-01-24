@@ -1,18 +1,9 @@
-from enum import Enum
 from typing import Optional
 
 from fast_langdetect import detect  # type: ignore[import-untyped]
 from pydantic import BaseModel, ValidationInfo, field_validator
 
-
-class Language(str, Enum):
-    """Supported languages for CV generation."""
-
-    ENGLISH = "en"
-    FRENCH = "fr"
-    GERMAN = "de"
-    SPANISH = "es"
-    ITALIAN = "it"
+from cv_adapter.dto.language import LanguageCode, Language
 
 
 class LanguageValidationMixin(BaseModel):
@@ -116,8 +107,11 @@ def detect_language(text: str, min_confidence: float = 0.7) -> Optional[Language
         # Check confidence threshold
         if confidence >= min_confidence:
             try:
-                return Language(lang_code)
-            except ValueError:
+                # Convert the detected language code to LanguageCode
+                language_code = LanguageCode(lang_code)
+                # Retrieve the corresponding Language instance
+                return Language.get(language_code)
+            except (ValueError, KeyError):
                 # If the language is not supported
                 return None
 

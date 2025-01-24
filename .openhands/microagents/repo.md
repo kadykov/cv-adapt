@@ -59,6 +59,9 @@ Project Structure:
        * `TitleDTO`, `SummaryDTO`: Title and summary representations
        * `CVDTO`, `MinimalCVDTO`: Top-level CV data transfer objects
      - `mapper.py`: Conversion utilities between Pydantic models and DTOs
+       * Supports flexible mapping from dictionaries to DTOs
+       * Decoupled from specific model implementations
+       * Enables easy conversion between language context models and DTOs
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
      - `yaml_renderer.py`: Renders CV to YAML format
@@ -264,6 +267,7 @@ Development Guidelines:
      * Maintain consistent validation and generation logic across languages
      * Use language-specific instructions in LLM context
    - Language Design:
+     * Unified language implementation across DTO and models
      * `Language` is a Pydantic model with rich metadata and advanced registry capabilities
      * Supports language code, name, native name
      * Provides language-specific formatting details:
@@ -274,6 +278,7 @@ Development Guidelines:
      * Supports string conversion and class-level language registry
      * Predefined language instances (ENGLISH, FRENCH, etc.) for easy access
    - Language Handling:
+     * Consistent language representation across DTOs and models
      * Language is part of DTO classes (CVDTO, MinimalCVDTO)
      * Renderers can convert language to string representation
      * Supports easy extension and customization
@@ -298,6 +303,7 @@ Development Guidelines:
      * Supports internationalization requirements
      * Immutable model configuration
      * Improved type checking and runtime validation
+     * Unified language representation across the entire application
 
 9. Documentation Maintenance:
    - Keep `.openhands/microagents/repo.md` documentation file up to date
