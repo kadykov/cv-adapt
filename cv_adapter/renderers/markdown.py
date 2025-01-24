@@ -313,9 +313,10 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             # Render sections based on configuration
             for section in self.config.include_sections:
                 if section == "core_competences":
-                    sections.append(
-                        f"## {self._get_section_label('core_competences', cv_dto.language)}"
+                    section_label = self._get_section_label(
+                        "core_competences", cv_dto.language
                     )
+                    sections.append(f"## {section_label}")
                     sections.extend([f"- {cc.text}" for cc in cv_dto.core_competences])
                     sections.append("")
                 elif section == "experience":
