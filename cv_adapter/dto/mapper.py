@@ -1,8 +1,41 @@
-from typing import Optional, Union
+from dataclasses import dataclass
+from typing import Any, ClassVar, Dict, Mapping, Optional, Union
 
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.models import language_context_models
 from cv_adapter.models import personal_info as personal_info_models
+
+
+@dataclass(frozen=True)
+class ContactMetadata:
+    icon: str
+    url_template: Optional[str] = None
+    type: str = "primary"
+
+    def create_url(self, value: str) -> Optional[str]:
+        return self.url_template.format(value) if self.url_template else None
+
+
+class ContactTypes:
+    EMAIL: ClassVar[ContactMetadata] = ContactMetadata(
+        icon="email", url_template="mailto:{}", type="primary"
+    )
+    PHONE: ClassVar[ContactMetadata] = ContactMetadata(
+        icon="phone", url_template="tel:{}", type="primary"
+    )
+    LINKEDIN: ClassVar[ContactMetadata] = ContactMetadata(
+        icon="linkedin", url_template="https://linkedin.com/in/{}", type="social"
+    )
+    GITHUB: ClassVar[ContactMetadata] = ContactMetadata(
+        icon="github", url_template="https://github.com/{}", type="social"
+    )
+    LOCATION: ClassVar[ContactMetadata] = ContactMetadata(
+        icon="location", url_template=None, type="location"
+    )
+
+    @classmethod
+    def get_metadata(cls, contact_type: str) -> Optional[ContactMetadata]:
+        return getattr(cls, contact_type.upper(), None)
 
 
 def map_personal_info(
@@ -13,7 +46,7 @@ def map_personal_info(
         return personal_info
 
     # Extract contacts from the contacts dictionary
-    contacts = personal_info.contacts or {}
+    contacts: Mapping[str, Optional[str]] = personal_info.contacts or {}
 
     # Helper function to create ContactDTO with smart defaults
     def create_contact_dto(
@@ -22,29 +55,15 @@ def map_personal_info(
         if not value:
             return None
 
-        # Define contact-specific metadata
-        contact_metadata = {
-            "email": {"icon": "email", "url": f"mailto:{value}", "type": "primary"},
-            "phone": {"icon": "phone", "url": f"tel:{value}", "type": "primary"},
-            "linkedin": {
-                "icon": "linkedin",
-                "url": f"https://linkedin.com/in/{value}",
-                "type": "social",
-            },
-            "github": {
-                "icon": "github",
-                "url": f"https://github.com/{value}",
-                "type": "social",
-            },
-            "location": {"icon": "location", "type": "location"},
-        }
+        metadata = ContactTypes.get_metadata(contact_type)
+        if not metadata:
+            return None
 
-        metadata = contact_metadata.get(contact_type, {})
         return cv_dto.ContactDTO(
             value=value,
-            type=metadata.get("type"),
-            icon=metadata.get("icon"),
-            url=metadata.get("url"),
+            type=metadata.type,
+            icon=metadata.icon,
+            url=metadata.create_url(value),
         )
 
     return cv_dto.PersonalInfoDTO(
@@ -126,7 +145,7 @@ def map_summary(summary: str) -> cv_dto.SummaryDTO:
     return cv_dto.SummaryDTO(text=summary)
 
 
-def map_minimal_cv(minimal_cv: dict) -> cv_dto.MinimalCVDTO:
+def map_minimal_cv(minimal_cv: Dict[str, Any]) -> cv_dto.MinimalCVDTO:
     return cv_dto.MinimalCVDTO(
         title=map_title(minimal_cv["title"]),
         core_competences=map_core_competences(minimal_cv["core_competences"]),
@@ -137,7 +156,7 @@ def map_minimal_cv(minimal_cv: dict) -> cv_dto.MinimalCVDTO:
     )
 
 
-def map_cv(cv: dict) -> cv_dto.CVDTO:
+def map_cv(cv: Dict[str, Any]) -> cv_dto.CVDTO:
     return cv_dto.CVDTO(
         personal_info=map_personal_info(cv["personal_info"]),
         title=map_title(cv["title"]),

@@ -54,6 +54,11 @@ Project Structure:
        * Decoupled from specific model implementations
        * Enables easy conversion between language context models and DTOs
        * Simplified list handling by removing wrapper classes
+       * Enhanced contact metadata handling with type-safe design
+       * Centralized contact type management
+       * Improved type hints and validation
+       * Supports dynamic URL generation for contact information
+       * Flexible and extensible contact metadata configuration
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
        * `ListItem`: Generic protocol for items that can be rendered as list items
