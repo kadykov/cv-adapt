@@ -4,12 +4,12 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import (
     CVDTO,
-    List[CoreCompetenceDTO],
+    CoreCompetenceDTO,
     EducationDTO,
     ExperienceDTO,
     MinimalCVDTO,
     PersonalInfoDTO,
-    List[SkillGroupDTO],
+    SkillGroupDTO,
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH, Language
@@ -71,33 +71,31 @@ class CVAdapterApplication:
         # Use language context to ensure generators are called in the right context
         with language_context(language):
             # 1. Generate core competences
-            core_competences_dto: List[CoreCompetenceDTO] = (
-                self.competence_generator.generate(
-                    cv=cv_text,
-                    job_description=job_description,
-                    notes=notes,
-                )
+            core_competences_dto = self.competence_generator.generate(
+                cv=cv_text,
+                job_description=job_description,
+                notes=notes,
             )
             core_competences_md = CoreCompetencesRenderer.render_to_markdown(
                 core_competences_dto
             )
 
             # 2. Generate other components
-            experiences_dto: list[ExperienceDTO] = self.experience_generator.generate(
+            experiences_dto = self.experience_generator.generate(
                 cv=cv_text,
                 job_description=job_description,
                 core_competences=core_competences_md,
                 notes=notes,
             )
 
-            education_dto: list[EducationDTO] = self.education_generator.generate(
+            education_dto = self.education_generator.generate(
                 cv=cv_text,
                 job_description=job_description,
                 core_competences=core_competences_md,
                 notes=notes,
             )
 
-            skills_dto: List[SkillGroupDTO] = self.skills_generator.generate(
+            skills_dto = self.skills_generator.generate(
                 cv=cv_text,
                 job_description=job_description,
                 core_competences=core_competences_md,

@@ -10,14 +10,12 @@ from cv_adapter.dto.cv import (
     CVDTO,
     ContactDTO,
     CoreCompetenceDTO,
-    List[CoreCompetenceDTO],
     EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
     PersonalInfoDTO,
     SkillDTO,
     SkillGroupDTO,
-    List[SkillGroupDTO],
     SummaryDTO,
     TitleDTO,
 )
@@ -96,14 +94,12 @@ def test_generate_cv(
     notes: Optional[str] = "Focus on Python experience"
 
     # Prepare mock DTOs
-    core_competences_dto = List[CoreCompetenceDTO](
-        items=[
-            CoreCompetenceDTO(text="Python"),
-            CoreCompetenceDTO(text="JavaScript"),
-            CoreCompetenceDTO(text="TypeScript"),
-            CoreCompetenceDTO(text="React"),
-        ]
-    )
+    core_competences_dto = [
+        CoreCompetenceDTO(text="Python"),
+        CoreCompetenceDTO(text="JavaScript"),
+        CoreCompetenceDTO(text="TypeScript"),
+        CoreCompetenceDTO(text="React"),
+    ]
     experiences_dto: list[ExperienceDTO] = [
         ExperienceDTO(
             company=InstitutionDTO(
@@ -131,14 +127,12 @@ def test_generate_cv(
             description="Advanced CS studies",
         )
     ]
-    skills_dto = List[SkillGroupDTO](
-        groups=[
-            SkillGroupDTO(
-                name="Programming",
-                skills=[SkillDTO(text="Python")],
-            )
-        ]
-    )
+    skills_dto = [
+        SkillGroupDTO(
+            name="Programming",
+            skills=[SkillDTO(text="Python")],
+        )
+    ]
     summary_dto = SummaryDTO(text="Generated summary")
     title_dto = TitleDTO(text="Senior Python Developer")
     personal_info_dto = PersonalInfoDTO(
@@ -174,10 +168,12 @@ def test_generate_cv(
     # Verify
     assert isinstance(result, CVDTO)
     assert result.summary == summary_dto
-    assert result.core_competences.model_dump() == core_competences_dto.model_dump()
+    assert [cc.model_dump() for cc in result.core_competences] == [
+        cc.model_dump() for cc in core_competences_dto
+    ]
     assert [exp.model_dump() for exp in result.experiences] == experiences_dto
     assert [edu.model_dump() for edu in result.education] == education_dto
-    assert result.skills.model_dump() == skills_dto.model_dump()
+    assert [group.model_dump() for group in result.skills] == skills_dto
     assert result.personal_info.model_dump() == personal_info_dto.model_dump()
     assert result.title.model_dump() == title_dto.model_dump()
     assert result.language == ENGLISH
