@@ -4,12 +4,8 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import (
     CVDTO,
-    CoreCompetenceDTO,
-    EducationDTO,
-    ExperienceDTO,
     MinimalCVDTO,
     PersonalInfoDTO,
-    SkillGroupDTO,
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH, Language

@@ -53,15 +53,16 @@ Project Structure:
      - `cv.py`: DTO classes for decoupling data representation from rendering
        * `ContactDTO`: Represents contact information with metadata
        * `PersonalInfoDTO`: Personal information with flexible contact handling
-       * `CoreCompetenceDTO`, `CoreCompetencesDTO`: Core competence representations
+       * `CoreCompetenceDTO`: Core competence representation
        * `ExperienceDTO`, `EducationDTO`: Experience and education representations
-       * `SkillDTO`, `SkillGroupDTO`, `SkillsDTO`: Skill-related DTOs
+       * `SkillDTO`, `SkillGroupDTO`: Skill-related DTOs
        * `TitleDTO`, `SummaryDTO`: Title and summary representations
        * `CVDTO`, `MinimalCVDTO`: Top-level CV data transfer objects
      - `mapper.py`: Conversion utilities between Pydantic models and DTOs
        * Supports flexible mapping from dictionaries to DTOs
        * Decoupled from specific model implementations
        * Enables easy conversion between language context models and DTOs
+       * Simplified list handling by removing wrapper classes
    - `renderers/`: CV rendering implementations
      - `base.py`: Abstract base class for renderers
        * `ListItem`: Generic protocol for items that can be rendered as list items
@@ -228,6 +229,7 @@ Development Guidelines:
      * DTOs provide a clean, language-agnostic data representation
      * Renderers work with DTOs, not directly with Pydantic models
      * Mapper utility converts between Pydantic models and DTOs
+     * Simplified list handling with direct list usage instead of wrapper classes
    - Renderer hierarchy:
      * BaseRenderer[DTOType]: Generic base class for all renderers
      * BaseMarkdownRenderer[DTOType]: Base class for Markdown renderers with common logic
@@ -238,12 +240,14 @@ Development Guidelines:
      * Separate DTOs for different CV components (PersonalInfo, Experience, etc.)
      * Top-level DTOs (CVDTO, MinimalCVDTO) contain language context
      * ContactDTO provides flexible contact information handling
+     * Direct list handling for collections (core competences, skills, etc.)
    - Renderer Conversion Strategies:
      * Recursive conversion of complex objects
      * Special handling for Language and Enum types
      * Converts objects to their string or primitive representations
      * Supports nested dictionaries and lists
      * Ensures type-safe and consistent rendering
+     * Simplified list handling with direct list iteration
    - When adding new renderers:
      * Create a new file in `renderers/` or `renderers/markdown/` directory
      * For Markdown-specific renderers, use the `renderers/markdown/` directory
@@ -256,16 +260,19 @@ Development Guidelines:
      * BaseRenderer and BaseMarkdownRenderer are generic over DTO type
      * Concrete renderers specify their DTO type
      * Use protocols for type-safe interfaces
+     * Simplified type handling with direct list usage
    - Conversion between Models and DTOs:
      * Use `mapper.py` for converting Pydantic models to DTOs
      * Mapper handles type conversion and provides flexibility
      * Allows for future changes in model structure without affecting renderers
+     * Simplified conversion with direct list mapping
    - Renderer Conversion Best Practices:
      * Implement recursive conversion functions
      * Handle special types like Language and Enum
      * Ensure consistent string representation
      * Maintain type information during conversion
      * Provide clear error handling and logging
+     * Prefer direct list handling over wrapper classes
 
 8. Multilingual Support:
    - Language support is implemented through the `Language` class in `cv_adapter/dto/language.py`
