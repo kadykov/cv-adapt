@@ -57,12 +57,12 @@ def test_map_core_competences() -> None:
     )
     dto = map_core_competences(core_competences)
 
-    assert isinstance(dto, cv_dto.List[CoreCompetenceDTO])
-    assert len(dto.items) == 4
-    assert dto.items[0].text == "Innovative problem-solving"
-    assert dto.items[1].text == "Strategic planning"
-    assert dto.items[2].text == "Cross-functional collaboration"
-    assert dto.items[3].text == "Technical leadership"
+    assert isinstance(dto, list)
+    assert len(dto) == 4
+    assert dto[0].text == "Innovative problem-solving"
+    assert dto[1].text == "Strategic planning"
+    assert dto[2].text == "Cross-functional collaboration"
+    assert dto[3].text == "Technical leadership"
 
 
 @with_language_context
@@ -174,10 +174,10 @@ def test_map_skills() -> None:
     )
     dto = map_skills(skills)
 
-    assert isinstance(dto, cv_dto.List[SkillGroupDTO])
-    assert len(dto.groups) == 2
-    assert dto.groups[0].name == "Programming Languages"
-    assert dto.groups[1].name == "Frameworks"
+    assert isinstance(dto, list)
+    assert len(dto) == 2
+    assert dto[0].name == "Programming Languages"
+    assert dto[1].name == "Frameworks"
 
 
 @with_language_context
@@ -259,17 +259,17 @@ def test_map_minimal_cv() -> None:
 
     assert isinstance(dto, cv_dto.MinimalCVDTO)
     assert dto.title.text == "Innovative Software Engineer"
-    assert len(dto.core_competences.items) == 4
-    assert dto.core_competences.items[0].text == "Innovative problem-solving"
-    assert dto.core_competences.items[1].text == "Strategic planning"
-    assert dto.core_competences.items[2].text == "Cross-functional collaboration"
-    assert dto.core_competences.items[3].text == "Technical leadership"
+    assert len(dto.core_competences) == 4
+    assert dto.core_competences[0].text == "Innovative problem-solving"
+    assert dto.core_competences[1].text == "Strategic planning"
+    assert dto.core_competences[2].text == "Cross-functional collaboration"
+    assert dto.core_competences[3].text == "Technical leadership"
     assert len(dto.experiences) == 1
     assert dto.experiences[0].position == "Senior Software Engineer"
     assert len(dto.education) == 1
     assert dto.education[0].degree == "Master of Science in Computer Science"
-    assert len(dto.skills.groups) == 1
-    assert dto.skills.groups[0].name == "Programming Languages"
+    assert len(dto.skills) == 1
+    assert dto.skills[0].name == "Programming Languages"
     assert dto.language == ENGLISH
 
 
