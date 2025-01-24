@@ -10,14 +10,14 @@ from cv_adapter.dto.cv import (
     CVDTO,
     ContactDTO,
     CoreCompetenceDTO,
-    CoreCompetencesDTO,
+    List[CoreCompetenceDTO],
     EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
     PersonalInfoDTO,
     SkillDTO,
     SkillGroupDTO,
-    SkillsDTO,
+    List[SkillGroupDTO],
     SummaryDTO,
     TitleDTO,
 )
@@ -96,7 +96,7 @@ def test_generate_cv(
     notes: Optional[str] = "Focus on Python experience"
 
     # Prepare mock DTOs
-    core_competences_dto = CoreCompetencesDTO(
+    core_competences_dto = List[CoreCompetenceDTO](
         items=[
             CoreCompetenceDTO(text="Python"),
             CoreCompetenceDTO(text="JavaScript"),
@@ -131,7 +131,7 @@ def test_generate_cv(
             description="Advanced CS studies",
         )
     ]
-    skills_dto = SkillsDTO(
+    skills_dto = List[SkillGroupDTO](
         groups=[
             SkillGroupDTO(
                 name="Programming",

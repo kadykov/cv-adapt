@@ -3,7 +3,7 @@
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
-from cv_adapter.dto.cv import CoreCompetencesDTO
+from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context import get_current_language
@@ -34,7 +34,7 @@ class CompetenceGenerator:
         cv: str,
         job_description: str,
         notes: str | None = None,
-    ) -> CoreCompetencesDTO:
+    ) -> list[CoreCompetenceDTO]:
         """Generate core competences based on CV and job description.
 
         Args:

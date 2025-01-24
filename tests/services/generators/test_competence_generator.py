@@ -1,7 +1,7 @@
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.dto.cv import CoreCompetenceDTO, CoreCompetencesDTO
+from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
 from cv_adapter.models.language_context import get_current_language, language_context
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
@@ -142,7 +142,7 @@ def test_model() -> TestModel:
 
 
 def test_competence_generator_dto_output(test_model: TestModel) -> None:
-    """Test that the competence generator returns a valid CoreCompetencesDTO."""
+    """Test that the competence generator returns a valid List[CoreCompetenceDTO]."""
     # Set language context before the test
     with language_context(ENGLISH):
         # Initialize generator
@@ -158,20 +158,21 @@ def test_competence_generator_dto_output(test_model: TestModel) -> None:
                 ),
             )
 
-            # Verify the result is a CoreCompetencesDTO
-            assert isinstance(result, CoreCompetencesDTO)
+            # Verify the result is a list of CoreCompetenceDTO
+            assert isinstance(result, list)
+            assert all(isinstance(comp, CoreCompetenceDTO) for comp in result)
 
             # Verify the number of competences
-            assert len(result.items) == 4
+            assert len(result) == 4
 
             # Verify each competence is a CoreCompetenceDTO
-            for competence in result.items:
+            for competence in result:
                 assert isinstance(competence, CoreCompetenceDTO)
                 assert isinstance(competence.text, str)
                 assert len(competence.text) > 0
 
             # Verify specific competence texts
-            competence_texts = [comp.text for comp in result.items]
+            competence_texts = [comp.text for comp in result]
             assert "Strategic Problem Solving" in competence_texts
             assert "Technical Leadership" in competence_texts
             assert "Agile Methodology" in competence_texts

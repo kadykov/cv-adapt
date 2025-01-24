@@ -65,10 +65,8 @@ def map_core_competence(
 
 def map_core_competences(
     core_competences: language_context_models.CoreCompetences,
-) -> cv_dto.CoreCompetencesDTO:
-    return cv_dto.CoreCompetencesDTO(
-        items=[map_core_competence(cc) for cc in core_competences.items]
-    )
+) -> list[cv_dto.CoreCompetenceDTO]:
+    return [map_core_competence(cc) for cc in core_competences.items]
 
 
 def map_institution(
@@ -116,8 +114,8 @@ def map_skill_group(
     )
 
 
-def map_skills(skills: language_context_models.Skills) -> cv_dto.SkillsDTO:
-    return cv_dto.SkillsDTO(groups=[map_skill_group(group) for group in skills.groups])
+def map_skills(skills: language_context_models.Skills) -> list[cv_dto.SkillGroupDTO]:
+    return [map_skill_group(group) for group in skills.groups]
 
 
 def map_title(title: language_context_models.Title) -> cv_dto.TitleDTO:

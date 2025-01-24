@@ -1,7 +1,7 @@
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from cv_adapter.dto.cv import SkillDTO, SkillGroupDTO, SkillsDTO
+from cv_adapter.dto.cv import SkillDTO, SkillGroupDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
 from cv_adapter.models.language_context import get_current_language, language_context
 from cv_adapter.services.generators.skills_generator import SkillsGenerator
@@ -165,7 +165,7 @@ def test_model() -> TestModel:
 
 
 def test_skills_generator_dto_output(test_model: TestModel) -> None:
-    """Test that the skills generator returns a valid SkillsDTO."""
+    """Test that the skills generator returns a valid List[SkillGroupDTO]."""
     # Set language context before the test
     with language_context(ENGLISH):
         # Initialize generator
@@ -183,14 +183,15 @@ def test_skills_generator_dto_output(test_model: TestModel) -> None:
                 core_competences="Technical Leadership, Advanced Learning",
             )
 
-            # Verify the result is a SkillsDTO
-            assert isinstance(result, SkillsDTO)
+            # Verify the result is a list of SkillGroupDTO
+            assert isinstance(result, list)
+            assert all(isinstance(group, SkillGroupDTO) for group in result)
 
             # Verify skill groups
-            assert len(result.groups) > 0
+            assert len(result) > 0
 
             # Verify each skill group
-            for group in result.groups:
+            for group in result:
                 assert isinstance(group, SkillGroupDTO)
                 assert isinstance(group.name, str)
                 assert len(group.skills) > 0

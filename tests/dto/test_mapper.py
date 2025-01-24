@@ -57,7 +57,7 @@ def test_map_core_competences() -> None:
     )
     dto = map_core_competences(core_competences)
 
-    assert isinstance(dto, cv_dto.CoreCompetencesDTO)
+    assert isinstance(dto, cv_dto.List[CoreCompetenceDTO])
     assert len(dto.items) == 4
     assert dto.items[0].text == "Innovative problem-solving"
     assert dto.items[1].text == "Strategic planning"
@@ -174,7 +174,7 @@ def test_map_skills() -> None:
     )
     dto = map_skills(skills)
 
-    assert isinstance(dto, cv_dto.SkillsDTO)
+    assert isinstance(dto, cv_dto.List[SkillGroupDTO])
     assert len(dto.groups) == 2
     assert dto.groups[0].name == "Programming Languages"
     assert dto.groups[1].name == "Frameworks"
