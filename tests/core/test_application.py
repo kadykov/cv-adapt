@@ -8,10 +8,15 @@ from pydantic_ai.models import KnownModelName
 from cv_adapter.core.application import CVAdapterApplication
 from cv_adapter.dto.cv import (
     CVDTO,
+    ContactDTO,
+    CoreCompetenceDTO,
     CoreCompetencesDTO,
     EducationDTO,
     ExperienceDTO,
+    InstitutionDTO,
     PersonalInfoDTO,
+    SkillDTO,
+    SkillGroupDTO,
     SkillsDTO,
     SummaryDTO,
     TitleDTO,
@@ -93,19 +98,19 @@ def test_generate_cv(
     # Prepare mock DTOs
     core_competences_dto = CoreCompetencesDTO(
         items=[
-            {"text": "Python", "language": ENGLISH},
-            {"text": "JavaScript", "language": ENGLISH},
-            {"text": "TypeScript", "language": ENGLISH},
-            {"text": "React", "language": ENGLISH},
+            CoreCompetenceDTO(text="Python"),
+            CoreCompetenceDTO(text="JavaScript"),
+            CoreCompetenceDTO(text="TypeScript"),
+            CoreCompetenceDTO(text="React"),
         ]
     )
     experiences_dto: list[ExperienceDTO] = [
         ExperienceDTO(
-            company={
-                "name": "Tech Corp",
-                "description": "Tech company",
-                "location": "San Francisco",
-            },
+            company=InstitutionDTO(
+                name="Tech Corp",
+                description="Tech company",
+                location="San Francisco",
+            ),
             position="Senior Dev",
             start_date=date(2020, 1, 1),
             end_date=date(2023, 1, 1),
@@ -115,11 +120,11 @@ def test_generate_cv(
     ]
     education_dto: list[EducationDTO] = [
         EducationDTO(
-            university={
-                "name": "University",
-                "description": "Top university",
-                "location": "New York",
-            },
+            university=InstitutionDTO(
+                name="University",
+                description="Top university",
+                location="New York",
+            ),
             degree="MSc Computer Science",
             start_date=date(2016, 9, 1),
             end_date=date(2020, 6, 1),
@@ -128,20 +133,25 @@ def test_generate_cv(
     ]
     skills_dto = SkillsDTO(
         groups=[
-            {
-                "name": "Programming",
-                "skills": [{"text": "Python"}],
-            }
+            SkillGroupDTO(
+                name="Programming",
+                skills=[SkillDTO(text="Python")],
+            )
         ]
     )
     summary_dto = SummaryDTO(text="Generated summary")
     title_dto = TitleDTO(text="Senior Python Developer")
     personal_info_dto = PersonalInfoDTO(
         full_name="John Doe",
-        contacts={
-            "email": {"value": "john@example.com"},
-            "phone": {"value": "+1234567890"},
-        },
+        email=ContactDTO(
+            value="john@example.com",
+            type="email",
+            icon="email",
+            url="mailto:john@example.com",
+        ),
+        phone=ContactDTO(
+            value="+1234567890", type="phone", icon="phone", url="tel:+1234567890"
+        ),
     )
 
     # Configure mock generators
