@@ -100,7 +100,11 @@ class BaseGenerator(ABC, Generic[T]):
 
     @abstractmethod
     def generate(
-        self, cv: str, job_description: str, language: Language, **kwargs: Any
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        **kwargs: Any,
     ) -> Union[T, List[T]]:
         """
         Generate CV component based on CV and job description.
@@ -108,7 +112,7 @@ class BaseGenerator(ABC, Generic[T]):
         Args:
             cv: Text of the CV
             job_description: Job description text
-            language: Language for generation (default: English)
+            language: Optional language for generation
             **kwargs: Additional generation parameters
 
         Returns:

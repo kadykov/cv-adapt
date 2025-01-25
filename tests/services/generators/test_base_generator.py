@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Any, List
+from typing import Any, List, Optional
 
 import pytest
 from pydantic_ai.models import KnownModelName
@@ -20,7 +20,11 @@ def create_test_generator(
 
     class TestBaseGenerator(BaseGenerator):
         def generate(
-            self, cv: str, job_description: str, language: Language, **kwargs: Any
+            self,
+            cv: str,
+            job_description: str,
+            language: Optional[Language] = None,
+            **kwargs: Any,
         ) -> List[CoreCompetenceDTO]:
             """Validate inputs and return dummy data."""
             # Validate inputs as per base generator's requirements
