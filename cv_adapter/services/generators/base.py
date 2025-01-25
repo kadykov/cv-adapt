@@ -135,13 +135,24 @@ class BaseGenerator(ABC, Generic[T]):
 
         Returns:
             Prepared context string
+
+        Raises:
+            ValueError: If context template path is not set or cannot be processed
+            RuntimeError: If template rendering fails
         """
         # Use current language context if no language is provided
         if language is None:
             language = get_current_language()
 
-        # Use custom context template if provided
-        if self.context_template_path and os.path.exists(self.context_template_path):
+        # Validate context template path
+        if not self.context_template_path:
+            raise ValueError("Context template path is not set. A valid template path is required.")
+
+        if not os.path.exists(self.context_template_path):
+            raise ValueError(f"Context template file does not exist: {self.context_template_path}")
+
+        try:
+            # Create Jinja2 environment
             env = Environment(
                 loader=FileSystemLoader(os.path.dirname(self.context_template_path)),
                 undefined=StrictUndefined  # Raise errors for undefined variables
@@ -157,9 +168,12 @@ class BaseGenerator(ABC, Generic[T]):
                 **kwargs
             )
 
-            # If the template doesn't add language requirements, add them manually
+            # Validate rendered context
+            if not context or not context.strip():
+                raise RuntimeError("Rendered context template is empty")
+
+            # Add language-specific requirements if not English
             if language != ENGLISH:
-                # Ensure the language requirements are added at the end
                 context += (
                     f"\nLanguage Requirements: Generate in {language.name.title()}, "
                     f"following professional conventions."
@@ -167,18 +181,7 @@ class BaseGenerator(ABC, Generic[T]):
 
             return context
 
-        # Fallback to default context generation
-        context = f"CV:\n{cv}\n\nJob Description:\n{job_description}"
-
-        # Add optional notes
-        if kwargs.get('notes'):
-            context += f"\n\nAdditional Notes:\n{kwargs['notes']}"
-
-        # Add language-specific instructions if not English
-        if language != ENGLISH:
-            context += (
-                f"\n\nLanguage Requirements: Generate in {language.name.title()}, "
-                f"following professional conventions."
-            )
-
-        return context
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to process context template {self.context_template_path}: {str(e)}"
+            ) from e

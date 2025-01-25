@@ -197,19 +197,19 @@ Development Guidelines:
      * Allows language-specific metadata configuration
    - Generator Design:
      * Generators use template-based generation framework
-     * Supports fail-fast design principles
+     * Implements strict "fail-fast" design principles
      * Decouples generation logic from prompt templates
      * Enables dynamic context and prompt generation
      * Adapt content to language-specific conventions
      * Use direct language parameter in method signatures
-     * Prepare context for LLM interactions
+     * Prepare context for LLM interactions with immediate validation
    - Key Principles:
      * Language is a first-class concept
-     * Validation is context-aware
+     * Validation is context-aware and immediate
      * Decoupled data representation
      * Flexible and extensible design
      * Template-driven generation
-     * Explicit error handling
+     * Strict error handling with immediate failure
      * Supports language-specific template customization
    - Template Generation Features:
      * Jinja2-based template system
@@ -218,6 +218,9 @@ Development Guidelines:
      * Supports optional context parameters
      * Provides clear separation of concerns
      * Enables easy template modification without code changes
+     * Immediate validation of template paths and rendering
+     * Raises specific exceptions for configuration and rendering errors
+     * Prevents silent failures or unexpected behavior
 
 7. Working with Renderers and DTOs:
    - Rendering System Overview:
