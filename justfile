@@ -21,10 +21,19 @@ lint *ARGS='.':
     uv run ruff check --fix {{ARGS}}
     uv run mypy {{ARGS}}
 
+# Run ruff on a specific file or directory with auto-fixes
+ruff *ARGS='.':
+    just format {{ARGS}}
+    uv run ruff check --fix {{ARGS}}
+
+# Run mypy on a specific file or directory
+mypy *ARGS='.':
+    uv run mypy {{ARGS}}
+
 # Format code
 format *ARGS='.':
-    uv run ruff check --select I --fix {{ARGS}} --silent
-    uv run ruff format {{ARGS}} --silent
+    uv run ruff check --select I --fix {{ARGS}}
+    uv run ruff format {{ARGS}}
 
 # Run pre-commit checks
 pre-commit:

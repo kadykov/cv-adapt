@@ -141,9 +141,14 @@ Development Guidelines:
        - Can be used with optional path argument, e.g., `just lint` or `just lint cv_adapter`
      * `just format`: Code formatting
        - Can be used with optional path argument, e.g., `just format` or `just format cv_adapter`
+     * `just ruff`: Run Ruff linting and formatting
+       - Runs `format` first, then applies Ruff checks and fixes
+       - Can be used with optional path argument, e.g., `just ruff` or `just ruff cv_adapter`
+     * `just mypy`: Run static type checking
+       - Can be used with optional path argument, e.g., `just mypy` or `just mypy cv_adapter`
      * `just test`: Run tests
        - Can be used with optional path argument, e.g., `just test` or `just test tests/test_cv_models.py`
-     * `just test-cov`: Run tests with coverage report
+     * `just test-cov`: Run tests with coverage report for entire test suite
      * `just pre-commit`: Run pre-commit hooks
    - Follow type hints and enable strict type checking
    - All functions (including tests) must have type annotations
