@@ -1,11 +1,12 @@
 """Service for generating core competences based on CV and job description."""
 
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import CoreCompetenceDTO
+from cv_adapter.dto.language import Language
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import CoreCompetences
@@ -53,7 +54,9 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
         self,
         cv: str,
         job_description: str,
+        language: Optional["Language"] = None,
         notes: Optional[str] = None,
+        **kwargs: Any,
     ) -> List[CoreCompetenceDTO]:
         """
         Generate core competences based on CV and job description.

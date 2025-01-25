@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import pytest
 from pydantic_ai.models.test import TestModel
@@ -11,7 +12,7 @@ from cv_adapter.services.generators.competence_generator import CompetenceGenera
 
 
 @pytest.fixture
-def valid_system_prompt_template(tmp_path):
+def valid_system_prompt_template(tmp_path: Any) -> str:
     """Create a valid system prompt template."""
     template_path = tmp_path / "system_prompt.j2"
     template_path.write_text(
@@ -22,7 +23,7 @@ def valid_system_prompt_template(tmp_path):
 
 
 @pytest.fixture
-def valid_context_template(tmp_path):
+def valid_context_template(tmp_path: Any) -> str:
     """Create a valid context template."""
     template_path = tmp_path / "context.j2"
     template_path.write_text(
