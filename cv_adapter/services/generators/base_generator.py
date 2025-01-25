@@ -128,39 +128,6 @@ class BaseGenerator(ABC, Generic[T]):
         """
         raise NotImplementedError("Subclasses must implement generate method")
 
-    def _generate_with_context(
-        self,
-        cv: str,
-        job_description: str,
-        language: Optional[Language] = None,
-        notes: Optional[str] = None,
-        **kwargs: Any,
-    ) -> Union[T, List[T]]:
-        """
-        Deprecated: Use _generate_single_with_context or _generate_list_with_context instead.
-
-        Provides backward compatibility with existing code.
-        """
-        # Determine if the result should be a single item or a list
-        is_list = kwargs.get("is_list", False)
-
-        if is_list:
-            return self._generate_list_with_context(
-                cv=cv,
-                job_description=job_description,
-                language=language,
-                notes=notes,
-                **kwargs,
-            )
-        else:
-            return self._generate_single_with_context(
-                cv=cv,
-                job_description=job_description,
-                language=language,
-                notes=notes,
-                **kwargs,
-            )
-
     def _generate_context(
         self,
         cv: str,
