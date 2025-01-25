@@ -1,19 +1,17 @@
 """Base abstract generator for CV components."""
 
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Union, List, Optional
-
 import os
-from jinja2 import Environment, FileSystemLoader, Template, StrictUndefined
+from abc import ABC, abstractmethod
+from typing import Generic, List, Optional, TypeVar, Union
 
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.models.language_context import get_current_language
 
-
-T = TypeVar('T')  # Generic type for the DTO
+T = TypeVar("T")  # Generic type for the DTO
 
 
 class BaseGenerator(ABC, Generic[T]):
@@ -34,9 +32,12 @@ class BaseGenerator(ABC, Generic[T]):
         Initialize the base generator.
 
         Args:
-            ai_model: AI model to use for generation. Defaults to OpenAI GPT-4o.
-            system_prompt_template_path: Optional path to Jinja2 template for system prompt.
-            context_template_path: Optional path to Jinja2 template for context generation.
+            ai_model: AI model to use for generation.
+                Defaults to OpenAI GPT-4o.
+            system_prompt_template_path: Optional path to
+                Jinja2 template for system prompt.
+            context_template_path: Optional path to
+                Jinja2 template for context generation.
         """
         self.system_prompt_template_path = system_prompt_template_path
         self.context_template_path = context_template_path
@@ -73,7 +74,7 @@ class BaseGenerator(ABC, Generic[T]):
             # Create Jinja2 environment
             env = Environment(
                 loader=FileSystemLoader(template_dir),
-                undefined=StrictUndefined  # Raise errors for undefined variables
+                undefined=StrictUndefined,  # Raise errors for undefined variables
             )
 
             # Load and render the template
@@ -83,25 +84,23 @@ class BaseGenerator(ABC, Generic[T]):
             # Validate that the rendered prompt is not empty
             if not rendered_prompt or not rendered_prompt.strip():
                 raise RuntimeError(
-                    f"Rendered system prompt is empty: {self.system_prompt_template_path}"
+                    f"Rendered system prompt is empty: "
+                    f"{self.system_prompt_template_path}"
                 )
 
             return rendered_prompt
 
         except Exception as e:
             raise RuntimeError(
-                f"Error loading system prompt template {self.system_prompt_template_path}: {str(e)}"
+                f"Error loading system prompt template "
+                f"{self.system_prompt_template_path}: {str(e)}"
             ) from e
 
     # Removed default system prompt method to enforce explicit template provision
 
     @abstractmethod
     def generate(
-        self,
-        cv: str,
-        job_description: str,
-        language: Language,
-        **kwargs
+        self, cv: str, job_description: str, language: Language, **kwargs
     ) -> Union[T, List[T]]:
         """
         Generate CV component based on CV and job description.
@@ -118,11 +117,7 @@ class BaseGenerator(ABC, Generic[T]):
         raise NotImplementedError("Subclasses must implement generate method")
 
     def _prepare_context(
-        self,
-        cv: str,
-        job_description: str,
-        language: Language = None,
-        **kwargs
+        self, cv: str, job_description: str, language: Language = None, **kwargs
     ) -> str:
         """
         Prepare context for generation with language support.
@@ -146,26 +141,30 @@ class BaseGenerator(ABC, Generic[T]):
 
         # Validate context template path
         if not self.context_template_path:
-            raise ValueError("Context template path is not set. A valid template path is required.")
+            raise ValueError(
+                "Context template path is not set. A valid template path is required."
+            )
 
         if not os.path.exists(self.context_template_path):
-            raise ValueError(f"Context template file does not exist: {self.context_template_path}")
+            raise ValueError(
+                f"Context template file does not exist: {self.context_template_path}"
+            )
 
         try:
             # Create Jinja2 environment
             env = Environment(
                 loader=FileSystemLoader(os.path.dirname(self.context_template_path)),
-                undefined=StrictUndefined  # Raise errors for undefined variables
+                undefined=StrictUndefined,  # Raise errors for undefined variables
             )
             template = env.get_template(os.path.basename(self.context_template_path))
-            
+
             # Render the template
             context = template.render(
                 cv=cv,
                 job_description=job_description,
                 language=language,
                 ENGLISH=ENGLISH,
-                **kwargs
+                **kwargs,
             )
 
             # Validate rendered context
@@ -176,5 +175,6 @@ class BaseGenerator(ABC, Generic[T]):
 
         except Exception as e:
             raise RuntimeError(
-                f"Failed to process context template {self.context_template_path}: {str(e)}"
+                f"Failed to process context template "
+                f"{self.context_template_path}: {str(e)}"
             ) from e

@@ -1,4 +1,5 @@
 import os
+
 import pytest
 from pydantic_ai.models.test import TestModel
 
@@ -36,7 +37,7 @@ def valid_context_template(tmp_path):
 def test_model() -> TestModel:
     """
     Create a test model for competence generation.
-    
+
     Returns:
         TestModel: A mock model with predefined core competence items.
     """
@@ -57,25 +58,27 @@ def test_competence_generator_default_templates(test_model: TestModel) -> None:
     # Use default template paths
     default_system_prompt_path = os.path.join(
         os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_system_prompt.j2'
+        "templates",
+        "competence_system_prompt.j2",
     )
     default_context_path = os.path.join(
         os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_context.j2'
-    )
-    
-    # Initialize generator
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path
+        "templates",
+        "competence_context.j2",
     )
 
     # Verify default template paths exist
-    assert os.path.exists(default_system_prompt_path), "Default system prompt template not found"
+    assert os.path.exists(default_system_prompt_path), (
+        "Default system prompt template not found"
+    )
     assert os.path.exists(default_context_path), "Default context template not found"
+
+    # Create generator (kept for potential future use)
+    CompetenceGenerator(
+        ai_model="test",
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path,
+    )
 
 
 def test_competence_generator_dto_output(test_model: TestModel) -> None:
@@ -83,20 +86,20 @@ def test_competence_generator_dto_output(test_model: TestModel) -> None:
     # Use default template paths
     default_system_prompt_path = os.path.join(
         os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_system_prompt.j2'
+        "templates",
+        "competence_system_prompt.j2",
     )
     default_context_path = os.path.join(
         os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_context.j2'
+        "templates",
+        "competence_context.j2",
     )
-    
+
     # Initialize generator
     generator = CompetenceGenerator(
-        ai_model="test", 
+        ai_model="test",
         system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path
+        context_template_path=default_context_path,
     )
 
     # Use agent override to set the test model
@@ -108,7 +111,7 @@ def test_competence_generator_dto_output(test_model: TestModel) -> None:
                 cv="Experienced software engineer with 10 years of expertise",
                 job_description=(
                     "Seeking a senior software engineer with leadership skills"
-                )
+                ),
             )
 
             # Verify the result is a list of CoreCompetenceDTO
@@ -133,15 +136,15 @@ def test_competence_generator_dto_output(test_model: TestModel) -> None:
 
 
 def test_generator_with_valid_templates(
-    valid_system_prompt_template: str, 
-    valid_context_template: str, 
-    test_model: TestModel
+    valid_system_prompt_template: str,
+    valid_context_template: str,
+    test_model: TestModel,
 ) -> None:
     """Test generator with valid custom templates."""
     generator = CompetenceGenerator(
         ai_model="test",
         system_prompt_template_path=valid_system_prompt_template,
-        context_template_path=valid_context_template
+        context_template_path=valid_context_template,
     )
 
     # Use agent override to set the test model
@@ -151,7 +154,9 @@ def test_generator_with_valid_templates(
             # Generate core competences with custom templates
             result = generator.generate(
                 cv="Experienced software engineer with 10 years of expertise",
-                job_description="Seeking a senior software engineer with leadership skills"
+                job_description=(
+                    "Seeking a senior software engineer with leadership skills"
+                ),
             )
 
             # Verify the result is a list of CoreCompetenceDTO

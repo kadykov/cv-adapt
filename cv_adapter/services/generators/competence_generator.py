@@ -34,19 +34,15 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
         # Set default system prompt template if not provided
         if system_prompt_template_path is None:
             system_prompt_template_path = os.path.join(
-                os.path.dirname(__file__),
-                'templates',
-                'competence_system_prompt.j2'
+                os.path.dirname(__file__), "templates", "competence_system_prompt.j2"
             )
-        
+
         # Set default context template if not provided
         if context_template_path is None:
             context_template_path = os.path.join(
-                os.path.dirname(__file__),
-                'templates',
-                'competence_context.j2'
+                os.path.dirname(__file__), "templates", "competence_context.j2"
             )
-        
+
         super().__init__(
             ai_model,
             system_prompt_template_path,
