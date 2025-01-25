@@ -3,6 +3,7 @@ import tempfile
 from typing import List
 
 import pytest
+from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH
@@ -11,7 +12,7 @@ from cv_adapter.services.generators.base import BaseGenerator
 
 
 def create_test_generator(
-    ai_model: str,
+    ai_model: KnownModelName,
     system_prompt_template_path: str,
     context_template_path: str | None = None,
 ) -> BaseGenerator:
