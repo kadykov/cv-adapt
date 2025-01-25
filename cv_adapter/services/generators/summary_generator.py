@@ -53,7 +53,7 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
             system_prompt_template_path=system_prompt_template_path,
             context_template_path=context_template_path,
             result_type=CVSummary,
-            mapper_func=lambda data: map_summary(data.text),
+            mapper_func=map_summary,
         )
 
     def generate(
@@ -101,6 +101,6 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
             notes=notes,
             language=language,
             result_type=CVSummary,
-            mapper_func=lambda data: map_summary(data.text),
+            mapper_func=map_summary,
             **kwargs,
         )

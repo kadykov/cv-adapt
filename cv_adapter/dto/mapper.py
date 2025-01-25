@@ -4,6 +4,7 @@ from typing import Any, ClassVar, Dict, Mapping, Optional, Union
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.models import language_context_models
 from cv_adapter.models import personal_info as personal_info_models
+from cv_adapter.models.summary import CVSummary
 
 
 @dataclass(frozen=True)
@@ -141,8 +142,8 @@ def map_title(title: language_context_models.Title) -> cv_dto.TitleDTO:
     return cv_dto.TitleDTO(text=title.text)
 
 
-def map_summary(summary: str) -> cv_dto.SummaryDTO:
-    return cv_dto.SummaryDTO(text=summary)
+def map_summary(summary: CVSummary) -> cv_dto.SummaryDTO:
+    return cv_dto.SummaryDTO(text=summary.text)
 
 
 def map_minimal_cv(minimal_cv: Dict[str, Any]) -> cv_dto.MinimalCVDTO:
