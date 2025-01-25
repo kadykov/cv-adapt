@@ -20,9 +20,9 @@ from cv_adapter.dto.mapper import (
     map_title,
 )
 from cv_adapter.models import language_context_models as lcm
-from cv_adapter.models.summary import CVSummary
 from cv_adapter.models import personal_info as pi
 from cv_adapter.models.language_context import language_context
+from cv_adapter.models.summary import CVSummary
 
 
 def with_language_context(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -194,8 +194,8 @@ def test_map_title() -> None:
 def test_map_summary() -> None:
     """Test mapping a summary."""
     summary = CVSummary(
-        language=ENGLISH, 
-        text="Experienced software engineer with a passion for innovative solutions"
+        language=ENGLISH,
+        text="Experienced software engineer with a passion for innovative solutions",
     )
     dto = map_summary(summary)
 
@@ -288,7 +288,7 @@ def test_map_cv() -> None:
         ),
         "summary": CVSummary(
             language=ENGLISH,
-            text="Experienced software engineer with a passion for innovative solutions"
+            text="Experienced software engineer with a passion for innovative solutions",
         ),
     }
 

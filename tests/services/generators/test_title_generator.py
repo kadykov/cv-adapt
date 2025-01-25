@@ -11,9 +11,7 @@ def test_model() -> TestModel:
     """Create a test model for title generation."""
     model = TestModel()
     model.custom_result_args = {
-        "data": {
-            "text": "Senior Software Engineer | Full-Stack Development Expert"
-        }
+        "data": {"text": "Senior Software Engineer | Full-Stack Development Expert"}
     }
     return model
 

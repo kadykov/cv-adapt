@@ -24,7 +24,9 @@ def test_generate_summary_dto(test_model: TestModel) -> None:
     # Set language context before the test
     with language_context(ENGLISH):
         # Initialize generator
-        generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
+        generator = SummaryGenerator(
+            renderer=MinimalMarkdownRenderer(), ai_model="test"
+        )
 
         # Use agent override to set the test model
         with generator.agent.override(model=test_model):
