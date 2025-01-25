@@ -104,6 +104,7 @@ class BaseGenerator(ABC, Generic[T]):
         cv: str,
         job_description: str,
         language: Optional[Language] = None,
+        notes: Optional[str] = None,
         **kwargs: Any,
     ) -> Union[T, List[T]]:
         """
@@ -113,6 +114,7 @@ class BaseGenerator(ABC, Generic[T]):
             cv: Text of the CV
             job_description: Job description text
             language: Optional language for generation
+            notes: Optional additional notes for generation
             **kwargs: Additional generation parameters
 
         Returns:
@@ -125,6 +127,7 @@ class BaseGenerator(ABC, Generic[T]):
         cv: str,
         job_description: str,
         language: Optional[Language] = None,
+        notes: Optional[str] = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -172,6 +175,7 @@ class BaseGenerator(ABC, Generic[T]):
                 job_description=job_description,
                 language=language,
                 ENGLISH=ENGLISH,
+                notes=notes,
                 **kwargs,
             )
 

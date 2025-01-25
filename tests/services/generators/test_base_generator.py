@@ -24,6 +24,7 @@ def create_test_generator(
             cv: str,
             job_description: str,
             language: Optional[Language] = None,
+            notes: Optional[str] = None,
             **kwargs: Any,
         ) -> List[CoreCompetenceDTO]:
             """Validate inputs and return dummy data."""
@@ -99,6 +100,7 @@ def test_base_generator_empty_cv_validation() -> None:
                     cv="   ",  # whitespace only
                     job_description="Sample Job",
                     language=ENGLISH,
+                    notes=None,
                 )
     finally:
         os.unlink(system_prompt_path)
@@ -123,6 +125,7 @@ def test_base_generator_empty_job_description_validation() -> None:
                     cv="Sample CV",
                     job_description="",  # empty string
                     language=ENGLISH,
+                    notes=None,
                 )
     finally:
         os.unlink(system_prompt_path)
@@ -146,7 +149,10 @@ def test_base_generator_missing_language_context() -> None:
             match=r"Language context not set. Use language_context\(\) first.",
         ):
             generator.generate(
-                cv="Sample CV", job_description="Sample Job", language=ENGLISH
+                cv="Sample CV",
+                job_description="Sample Job",
+                language=ENGLISH,
+                notes=None,
             )
     finally:
         os.unlink(system_prompt_path)
@@ -189,7 +195,10 @@ def test_base_generator_successful_generation() -> None:
 
         with language_context(ENGLISH):
             result = generator.generate(
-                cv="Sample CV", job_description="Sample Job", language=ENGLISH
+                cv="Sample CV",
+                job_description="Sample Job",
+                language=ENGLISH,
+                notes=None,
             )
 
         assert len(result) == 2
