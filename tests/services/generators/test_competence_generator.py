@@ -313,16 +313,6 @@ def test_generator_with_valid_templates(
             assert len(result) == 4
 
 
-def test_generator_with_no_template_path() -> None:
-    """Test that generator fails when no template path is provided."""
-    with pytest.raises(ValueError, match="System prompt template path is not provided"):
-        CompetenceGenerator(
-            ai_model="test",
-            system_prompt_template_path=None,
-            context_template_path=None,
-        )
-
-
 def test_generator_with_non_existent_template() -> None:
     """Test that generator fails when template does not exist."""
     with pytest.raises(FileNotFoundError, match="System prompt template not found"):
