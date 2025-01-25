@@ -221,6 +221,11 @@ Development Guidelines:
      * Immediate validation of template paths and rendering
      * Raises specific exceptions for configuration and rendering errors
      * Prevents silent failures or unexpected behavior
+     * Conditional language-specific template rendering
+     * Supports dynamic content injection based on language context
+     * Flexible template inheritance and customization
+     * Handles language-specific requirements within templates
+     * Decouples language-specific logic from generation code
 
 7. Working with Renderers and DTOs:
    - Rendering System Overview:
