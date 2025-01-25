@@ -31,14 +31,20 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
             context_template_path: Optional path to context generation template.
                 Defaults to the package's default template.
         """
-        # Use package default templates if not provided
+        # Validate system prompt template path
         if system_prompt_template_path is None:
+            # If both paths are None, raise an error
+            if context_template_path is None:
+                raise ValueError("System prompt template path is not provided")
+            
+            # Otherwise, set default system prompt template
             system_prompt_template_path = os.path.join(
                 os.path.dirname(__file__),
                 'templates',
                 'competence_system_prompt.j2'
             )
         
+        # Set default context template if not provided
         if context_template_path is None:
             context_template_path = os.path.join(
                 os.path.dirname(__file__),

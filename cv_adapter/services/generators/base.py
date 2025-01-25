@@ -132,20 +132,26 @@ class BaseGenerator(ABC, Generic[T]):
         Returns:
             Prepared context string
         """
+        # Determine language, prioritizing passed language over context
+        language = kwargs.get('language') or get_current_language()
+
         # Use custom context template if provided
         if self.context_template_path and os.path.exists(self.context_template_path):
             env = Environment(loader=FileSystemLoader(os.path.dirname(self.context_template_path)))
             template = env.get_template(os.path.basename(self.context_template_path))
+            
+            # Remove language from kwargs to prevent duplicate argument
+            render_kwargs = {k: v for k, v in kwargs.items() if k != 'language'}
+            
             return template.render(
                 cv=cv,
                 job_description=job_description,
-                language=kwargs.get('language', get_current_language()),
+                language=language,
                 ENGLISH=ENGLISH,
-                **kwargs
+                **render_kwargs
             )
 
         # Fallback to default context generation
-        language = kwargs.get('language', get_current_language())
         context = f"CV:\n{cv}\n\nJob Description:\n{job_description}\n"
 
         # Add language-specific instructions if not English

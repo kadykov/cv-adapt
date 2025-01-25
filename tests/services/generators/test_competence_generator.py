@@ -2,6 +2,7 @@ import os
 import pytest
 from pydantic_ai.models.test import TestModel
 
+import cv_adapter.services.generators.competence_generator
 from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
 from cv_adapter.models.language_context import get_current_language, language_context
@@ -130,7 +131,23 @@ def test_context_preparation_all_languages(
 
 def test_empty_cv_validation() -> None:
     """Test that empty CV raises validation error."""
-    generator = CompetenceGenerator(ai_model="test")
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_system_prompt.j2'
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_context.j2'
+    )
+    
+    generator = CompetenceGenerator(
+        ai_model="test", 
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path
+    )
     with language_context(ENGLISH):
         with pytest.raises(ValueError, match="CV text is required"):
             generator.generate(
@@ -141,7 +158,23 @@ def test_empty_cv_validation() -> None:
 
 def test_empty_job_description_validation() -> None:
     """Test that empty job description raises validation error."""
-    generator = CompetenceGenerator(ai_model="test")
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_system_prompt.j2'
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_context.j2'
+    )
+    
+    generator = CompetenceGenerator(
+        ai_model="test", 
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path
+    )
     with language_context(ENGLISH):
         with pytest.raises(ValueError, match="Job description is required"):
             generator.generate(
@@ -152,7 +185,23 @@ def test_empty_job_description_validation() -> None:
 
 def test_missing_language_validation() -> None:
     """Test that missing language context raises RuntimeError."""
-    generator = CompetenceGenerator(ai_model="test")
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_system_prompt.j2'
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_context.j2'
+    )
+    
+    generator = CompetenceGenerator(
+        ai_model="test", 
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path
+    )
     with pytest.raises(
         RuntimeError, match=r"Language context not set. Use language_context\(\) first."
     ):
@@ -164,8 +213,13 @@ def test_missing_language_validation() -> None:
 
 @pytest.fixture
 def test_model() -> TestModel:
-    """Create a test model for competence generation."""
-    model = TestModel()
+    """
+    Create a test model for competence generation.
+    
+    Returns:
+        TestModel: A mock model with predefined core competence items.
+    """
+    model: TestModel = TestModel()
     model.custom_result_args = {
         "items": [
             {"text": "Strategic Problem Solving"},
@@ -179,19 +233,35 @@ def test_model() -> TestModel:
 
 def test_competence_generator_dto_output(test_model: TestModel) -> None:
     """Test that the competence generator returns a valid List[CoreCompetenceDTO]."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Initialize generator
-        generator = CompetenceGenerator(ai_model="test")
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_system_prompt.j2'
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_context.j2'
+    )
+    
+    # Initialize generator
+    generator = CompetenceGenerator(
+        ai_model="test", 
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path
+    )
 
-        # Use agent override to set the test model
-        with generator.agent.override(model=test_model):
+    # Use agent override to set the test model
+    with generator.agent.override(model=test_model):
+        # Set language context
+        with language_context(ENGLISH):
             # Generate core competences
             result = generator.generate(
                 cv="Experienced software engineer with 10 years of expertise",
                 job_description=(
                     "Seeking a senior software engineer with leadership skills"
-                ),
+                )
             )
 
             # Verify the result is a list of CoreCompetenceDTO
@@ -221,18 +291,20 @@ def test_generator_with_valid_templates(
     test_model: TestModel
 ) -> None:
     """Test generator with valid custom templates."""
-    with language_context(ENGLISH):
-        generator = CompetenceGenerator(
-            ai_model="test",
-            system_prompt_template_path=valid_system_prompt_template,
-            context_template_path=valid_context_template
-        )
+    generator = CompetenceGenerator(
+        ai_model="test",
+        system_prompt_template_path=valid_system_prompt_template,
+        context_template_path=valid_context_template
+    )
 
-        # Use agent override to set the test model
-        with generator.agent.override(model=test_model):
+    # Use agent override to set the test model
+    with generator.agent.override(model=test_model):
+        # Set language context
+        with language_context(ENGLISH):
+            # Generate core competences with custom templates
             result = generator.generate(
                 cv="Experienced software engineer with 10 years of expertise",
-                job_description="Seeking a senior software engineer with leadership skills",
+                job_description="Seeking a senior software engineer with leadership skills"
             )
 
             # Verify the result is a list of CoreCompetenceDTO
@@ -247,6 +319,7 @@ def test_generator_with_no_template_path() -> None:
         CompetenceGenerator(
             ai_model="test",
             system_prompt_template_path=None,
+            context_template_path=None,
         )
 
 
