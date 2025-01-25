@@ -1,12 +1,12 @@
 import os
 import tempfile
-from typing import List
+from typing import Any, List
 
 import pytest
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import CoreCompetenceDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.base import BaseGenerator
 
@@ -20,7 +20,7 @@ def create_test_generator(
 
     class TestBaseGenerator(BaseGenerator):
         def generate(
-            self, cv: str, job_description: str, notes: str | None = None
+            self, cv: str, job_description: str, language: Language, **kwargs: Any
         ) -> List[CoreCompetenceDTO]:
             """Validate inputs and return dummy data."""
             # Validate inputs as per base generator's requirements
@@ -94,6 +94,7 @@ def test_base_generator_empty_cv_validation() -> None:
                 generator.generate(
                     cv="   ",  # whitespace only
                     job_description="Sample Job",
+                    language=ENGLISH,
                 )
     finally:
         os.unlink(system_prompt_path)
@@ -117,6 +118,7 @@ def test_base_generator_empty_job_description_validation() -> None:
                 generator.generate(
                     cv="Sample CV",
                     job_description="",  # empty string
+                    language=ENGLISH,
                 )
     finally:
         os.unlink(system_prompt_path)
@@ -139,7 +141,9 @@ def test_base_generator_missing_language_context() -> None:
             RuntimeError,
             match=r"Language context not set. Use language_context\(\) first.",
         ):
-            generator.generate(cv="Sample CV", job_description="Sample Job")
+            generator.generate(
+                cv="Sample CV", job_description="Sample Job", language=ENGLISH
+            )
     finally:
         os.unlink(system_prompt_path)
         os.unlink(context_path)
@@ -180,7 +184,9 @@ def test_base_generator_successful_generation() -> None:
         )
 
         with language_context(ENGLISH):
-            result = generator.generate(cv="Sample CV", job_description="Sample Job")
+            result = generator.generate(
+                cv="Sample CV", job_description="Sample Job", language=ENGLISH
+            )
 
         assert len(result) == 2
         assert all(isinstance(item, CoreCompetenceDTO) for item in result)

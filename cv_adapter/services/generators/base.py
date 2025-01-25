@@ -2,7 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic_ai import Agent
@@ -100,7 +100,7 @@ class BaseGenerator(ABC, Generic[T]):
 
     @abstractmethod
     def generate(
-        self, cv: str, job_description: str, language: Language, **kwargs
+        self, cv: str, job_description: str, language: Language, **kwargs: Any
     ) -> Union[T, List[T]]:
         """
         Generate CV component based on CV and job description.
@@ -117,7 +117,11 @@ class BaseGenerator(ABC, Generic[T]):
         raise NotImplementedError("Subclasses must implement generate method")
 
     def _prepare_context(
-        self, cv: str, job_description: str, language: Language = None, **kwargs
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        **kwargs: Any,
     ) -> str:
         """
         Prepare context for generation with language support.
