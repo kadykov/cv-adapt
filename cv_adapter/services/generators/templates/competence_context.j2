@@ -1,0 +1,22 @@
+{% if language != ENGLISH %}
+Language Requirements:
+Generate all competences in {{ language.name.title() }}, following professional terminology conventions.
+{% endif %}
+
+Objective: Identify 4-6 core competences that best match the job requirements.
+
+Guidelines:
+1. Each competence should be a concise phrase (1-5 words)
+2. Focus on key skills and areas of expertise
+3. Align competences with job description requirements
+
+CV:
+{{ cv }}
+
+Job Description:
+{{ job_description }}
+
+{% if notes %}
+Additional Notes:
+{{ notes }}
+{% endif %}

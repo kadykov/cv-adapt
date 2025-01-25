@@ -32,12 +32,20 @@ Project Structure:
      - `constants.py`: Project-wide constants
    - `services/`: Business logic services
      - `generators/`: Specialized generator services
+       * `base.py`: Abstract base class for generators
+         - Provides template-based generation framework
+         - Supports fail-fast design principles
+         - Enables flexible context and prompt generation
        * `competence_generator.py`: Generates core competences
        * `summary_generator.py`: Generates professional CV summaries
        * `education_generator.py`: Generates education sections
        * `experience_generator.py`: Generates experience sections
        * `skills_generator.py`: Generates and organizes skills
        * `title_generator.py`: Generates professional titles
+       * `templates/`: Jinja2 templates for generators
+         - Supports dynamic prompt and context generation
+         - Enables language-specific template customization
+         - Provides clear separation between generation logic and templates
    - `dto/`: Data Transfer Objects (DTOs)
      - `cv.py`: DTO classes for decoupled data representation
        * Provides data transfer objects for CV components
@@ -188,7 +196,10 @@ Development Guidelines:
      * Supports multilingual validation and generation
      * Allows language-specific metadata configuration
    - Generator Design:
-     * Generators focus on business logic
+     * Generators use template-based generation framework
+     * Supports fail-fast design principles
+     * Decouples generation logic from prompt templates
+     * Enables dynamic context and prompt generation
      * Adapt content to language-specific conventions
      * Use direct language parameter in method signatures
      * Prepare context for LLM interactions
@@ -197,6 +208,16 @@ Development Guidelines:
      * Validation is context-aware
      * Decoupled data representation
      * Flexible and extensible design
+     * Template-driven generation
+     * Explicit error handling
+     * Supports language-specific template customization
+   - Template Generation Features:
+     * Jinja2-based template system
+     * Dynamic prompt and context generation
+     * Language-aware template rendering
+     * Supports optional context parameters
+     * Provides clear separation of concerns
+     * Enables easy template modification without code changes
 
 7. Working with Renderers and DTOs:
    - Rendering System Overview:
