@@ -2,7 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Generic, List, Optional, TypeVar, Union, cast
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic_ai import Agent
@@ -159,21 +159,22 @@ class BaseGenerator(ABC, Generic[T]):
         )
 
         # Use the agent to generate result
-        result_type = kwargs.get('result_type', self._result_type)
-        result = self.agent.run_sync(
+        result_type = kwargs.get("result_type", self._result_type)
+        result: Any = self.agent.run_sync(
             context,
             result_type=result_type,
         )
 
         # Apply mapper function if provided
-        mapper_func = kwargs.get('mapper_func', self._mapper_func)
+        mapper_func = kwargs.get("mapper_func", self._mapper_func)
         if mapper_func:
             if isinstance(result.data, list):
-                return [mapper_func(item) for item in result.data]
+                return cast(List[T], [mapper_func(item) for item in result.data])
             else:
-                return mapper_func(result.data)
+                return cast(T, mapper_func(result.data))
 
-        return result.data
+        # Explicitly type cast to Union[T, List[T]]
+        return cast(Union[T, List[T]], result.data)
 
     def _prepare_context(
         self,
