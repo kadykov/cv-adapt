@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.models.language_context import language_context
-from cv_adapter.services.generators.base import BaseGenerator
+from cv_adapter.services.generators.base_generator import BaseGenerator
 
 
 def create_test_generator(

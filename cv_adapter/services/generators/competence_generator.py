@@ -10,7 +10,7 @@ from cv_adapter.dto.language import Language
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import CoreCompetences
-from cv_adapter.services.generators.base import BaseGenerator
+from cv_adapter.services.generators.base_generator import BaseGenerator
 
 
 class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
