@@ -100,6 +100,7 @@ class BaseGenerator(ABC, Generic[T]):
         self,
         cv: str,
         job_description: str,
+        language: Language,
         **kwargs
     ) -> Union[T, List[T]]:
         """
@@ -108,6 +109,7 @@ class BaseGenerator(ABC, Generic[T]):
         Args:
             cv: Text of the CV
             job_description: Job description text
+            language: Language for generation (default: English)
             **kwargs: Additional generation parameters
 
         Returns:
@@ -119,6 +121,7 @@ class BaseGenerator(ABC, Generic[T]):
         self,
         cv: str,
         job_description: str,
+        language: Language = None,
         **kwargs
     ) -> str:
         """
@@ -127,43 +130,55 @@ class BaseGenerator(ABC, Generic[T]):
         Args:
             cv: CV text
             job_description: Job description text
+            language: Language for generation (default: current language context)
             **kwargs: Additional context parameters
 
         Returns:
             Prepared context string
         """
-        # Determine language, prioritizing passed language over context
-        language = kwargs.get('language') or get_current_language()
+        # Use current language context if no language is provided
+        if language is None:
+            language = get_current_language()
 
         # Use custom context template if provided
         if self.context_template_path and os.path.exists(self.context_template_path):
-            env = Environment(loader=FileSystemLoader(os.path.dirname(self.context_template_path)))
+            env = Environment(
+                loader=FileSystemLoader(os.path.dirname(self.context_template_path)),
+                undefined=StrictUndefined  # Raise errors for undefined variables
+            )
             template = env.get_template(os.path.basename(self.context_template_path))
             
-            # Remove language from kwargs to prevent duplicate argument
-            render_kwargs = {k: v for k, v in kwargs.items() if k != 'language'}
-            
-            return template.render(
+            # Render the template
+            context = template.render(
                 cv=cv,
                 job_description=job_description,
                 language=language,
                 ENGLISH=ENGLISH,
-                **render_kwargs
+                **kwargs
             )
 
+            # If the template doesn't add language requirements, add them manually
+            if language != ENGLISH:
+                # Ensure the language requirements are added at the end
+                context += (
+                    f"\nLanguage Requirements: Generate in {language.name.title()}, "
+                    f"following professional conventions."
+                )
+
+            return context
+
         # Fallback to default context generation
-        context = f"CV:\n{cv}\n\nJob Description:\n{job_description}\n"
+        context = f"CV:\n{cv}\n\nJob Description:\n{job_description}"
+
+        # Add optional notes
+        if kwargs.get('notes'):
+            context += f"\n\nAdditional Notes:\n{kwargs['notes']}"
 
         # Add language-specific instructions if not English
         if language != ENGLISH:
             context += (
-                f"\nLanguage Requirements:\n"
-                f"Generate content in {language.name.title()}, "
-                f"following professional conventions.\n"
+                f"\n\nLanguage Requirements: Generate in {language.name.title()}, "
+                f"following professional conventions."
             )
-
-        # Add optional notes
-        if kwargs.get('notes'):
-            context += f"\nAdditional Notes:\n{kwargs['notes']}"
 
         return context
