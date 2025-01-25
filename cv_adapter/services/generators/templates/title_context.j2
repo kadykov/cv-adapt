@@ -1,0 +1,27 @@
+Generate a professional title that effectively represents the candidate for the target job position. The title should be concise, impactful, and aligned with both the job requirements and core competences.
+
+Guidelines for generating the title:
+1. Keep it under 2 lines and within 50 characters per line
+2. Focus on the most relevant professional identity
+3. Incorporate key expertise areas that match job requirements
+4. Ensure it reflects the seniority level appropriately
+5. Make it memorable but professional
+
+{% if language != 'ENGLISH' %}
+Language Requirements:
+Generate the title in {{ language.name.title() }}, following standard CV conventions for that language.
+{% endif %}
+
+CV:
+{{ cv }}
+
+Job Description:
+{{ job_description }}
+
+Core Competences to Highlight:
+{{ core_competences }}
+
+{% if notes %}
+User Notes for Consideration:
+{{ notes }}
+{% endif %}

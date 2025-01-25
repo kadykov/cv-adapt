@@ -1,44 +1,55 @@
 """Service for generating CV summaries."""
 
-from pydantic_ai import Agent
+from typing import Optional
+
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto import cv as cv_dto
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.language import Language
 from cv_adapter.dto.mapper import map_summary
-from cv_adapter.models.language import Language
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.summary import CVSummary
-from cv_adapter.renderers.markdown import (
-    MinimalMarkdownRenderer,
-)
+from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
+from cv_adapter.services.generators.base_generator import BaseGenerator
 
 
-class SummaryGenerator:
+class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
     """Generates a concise CV summary based on CV content and job description."""
 
     def __init__(
         self,
         renderer: MinimalMarkdownRenderer,
         ai_model: KnownModelName = "openai:gpt-4o",
+        system_prompt_template_path: Optional[str] = None,
+        context_template_path: Optional[str] = None,
     ) -> None:
         """Initialize the generator with a renderer and AI model.
 
         Args:
             renderer: MinimalMarkdownRenderer instance to use for CV rendering
             ai_model: AI model to use. Defaults to OpenAI GPT-4o.
+            system_prompt_template_path: Optional path to system prompt Jinja2 template
+            context_template_path: Optional path to context Jinja2 template
         """
+        # Store renderer for potential future use
         self.renderer = renderer
-        self.agent = Agent(
-            ai_model,
-            system_prompt=(
-                "An expert CV writer that creates concise and impactful CV "
-                "summaries. Each summary should be a single paragraph of no "
-                "more than 50 words that highlights the candidate's key strengths "
-                "and experience in relation to the job requirements. Capable of "
-                "generating summaries in multiple languages while maintaining "
-                "professional tone and local communication styles."
-            ),
+
+        # Use default templates if not provided
+        default_template_dir = self._get_default_template_dir()
+        system_prompt_template_path = system_prompt_template_path or (
+            f"{default_template_dir}/summary_system_prompt.j2"
+        )
+        context_template_path = context_template_path or (
+            f"{default_template_dir}/summary_context.j2"
+        )
+
+        # Initialize base generator with templates
+        super().__init__(
+            ai_model=ai_model,
+            system_prompt_template_path=system_prompt_template_path,
+            context_template_path=context_template_path,
+            result_type=CVSummary,
+            mapper_func=lambda data: map_summary(data.text),
         )
 
     def generate(
@@ -46,7 +57,9 @@ class SummaryGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        notes: str | None = None,
+        notes: Optional[str] = None,
+        language: Optional[Language] = None,
+        **kwargs,
     ) -> cv_dto.SummaryDTO:
         """Generate a CV summary based on CV content and job requirements.
 
@@ -55,13 +68,14 @@ class SummaryGenerator:
             job_description: Job description text
             core_competences: Core competences to highlight
             notes: Optional additional notes for context
+            language: Optional language override
+            **kwargs: Additional keyword arguments
 
         Returns:
             A concise CV summary DTO
 
         Raises:
             ValueError: If required inputs are missing or invalid
-            RendererError: If CV rendering fails
         """
         # Input validation
         if not cv or not cv.strip():
@@ -71,68 +85,15 @@ class SummaryGenerator:
         if not core_competences or not core_competences.strip():
             raise ValueError("Core competences are required")
 
-        # Get language from context
-        language = get_current_language()
+        # Use provided language or get from context
+        language = language or get_current_language()
 
-        context = self._prepare_context(
+        # Prepare context and generate
+        return super().generate(
             cv=cv,
             job_description=job_description,
             core_competences=core_competences,
-            language=language,
             notes=notes,
+            language=language,
+            **kwargs,
         )
-
-        # Use the agent to generate summary
-        result = self.agent.run_sync(
-            context,
-            result_type=CVSummary,
-        )
-
-        # Convert to DTO
-        return map_summary(result.data.text)
-
-    def _prepare_context(
-        self,
-        cv: str,
-        job_description: str,
-        core_competences: str,
-        language: Language,
-        notes: str | None = None,
-    ) -> str:
-        """Prepare context for summary generation.
-
-        Args:
-            cv: Text of the CV
-            job_description: Job description text
-            core_competences: Core competences to highlight
-            language: Target language for generation
-            notes: Optional additional notes for context
-
-        Returns:
-            Prepared context string for the AI
-        """
-        context = (
-            "Based on the CV and job description below, create a concise and "
-            "impactful CV summary. The summary should be a single paragraph "
-            "of no more than 50 words that highlights the candidate's key strengths "
-            "and experience in relation to the job requirements.\n\n"
-        )
-
-        # Replace Language.ENGLISH with ENGLISH
-        if language != ENGLISH:
-            context += (
-                "\nLanguage Requirements:\n"
-                f"Generate the summary in {language.name.title()}, following "
-                f"professional communication conventions for that language.\n"
-            )
-
-        context += (
-            f"CV:\n{cv}\n\n"
-            f"Job Description:\n{job_description}\n\n"
-            f"Core Competences:\n{core_competences}\n"
-        )
-
-        if notes:
-            context += f"\nUser Notes for Consideration:\n{notes}"
-
-        return context

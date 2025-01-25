@@ -1,32 +1,49 @@
-from pydantic_ai import Agent
+from typing import List, Optional
+
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import SkillGroupDTO
-from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.language import Language
 from cv_adapter.dto.mapper import map_skills
 from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import Skills
+from cv_adapter.services.generators.base_generator import BaseGenerator
 
 
-class SkillsGenerator:
+class SkillsGenerator(BaseGenerator[List[SkillGroupDTO]]):
     """Generates a list of skills organized in groups and tailored to a job description.
 
     Organizes skills into logical groups based on CV content and job requirements."""
 
-    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
-        """Initialize the generator with an AI model.
+    def __init__(
+        self,
+        ai_model: KnownModelName = "openai:gpt-4o",
+        system_prompt_template_path: Optional[str] = None,
+        context_template_path: Optional[str] = None,
+    ) -> None:
+        """Initialize the generator with an AI model and optional template paths.
 
         Args:
             ai_model: AI model to use. Defaults to OpenAI GPT-4o.
+            system_prompt_template_path: Optional path to system prompt Jinja2 template
+            context_template_path: Optional path to context Jinja2 template
         """
-        self.agent = Agent(
-            ai_model,
-            system_prompt=(
-                "A professional CV writer that helps organize and adapt skills "
-                "to match job requirements and prove core competences. Capable of "
-                "generating skills in multiple languages while maintaining "
-                "professional terminology and local skill categorization conventions."
-            ),
+        # Use default templates if not provided
+        default_template_dir = self._get_default_template_dir()
+        system_prompt_template_path = system_prompt_template_path or (
+            f"{default_template_dir}/skills_system_prompt.j2"
+        )
+        context_template_path = context_template_path or (
+            f"{default_template_dir}/skills_context.j2"
+        )
+
+        # Initialize base generator with templates
+        super().__init__(
+            ai_model=ai_model,
+            system_prompt_template_path=system_prompt_template_path,
+            context_template_path=context_template_path,
+            result_type=Skills,
+            mapper_func=map_skills,
         )
 
     def generate(
@@ -34,8 +51,10 @@ class SkillsGenerator:
         cv: str,
         job_description: str,
         core_competences: str,
-        notes: str | None = None,
-    ) -> list[SkillGroupDTO]:
+        notes: Optional[str] = None,
+        language: Optional[Language] = None,
+        **kwargs,
+    ) -> List[SkillGroupDTO]:
         """Generate a list of skills organized in groups and tailored to a job.
 
         Args:
@@ -43,6 +62,8 @@ class SkillsGenerator:
             job_description: Job description text
             core_competences: Core competences to prove
             notes: Optional additional notes for context
+            language: Optional language override
+            **kwargs: Additional keyword arguments
 
         Returns:
             DTO containing groups of skills tailored to the job description
@@ -58,78 +79,15 @@ class SkillsGenerator:
         if not job_description:
             raise ValueError("Job description is required")
 
-        # Get the current language from context
-        language = get_current_language()
+        # Use provided language or get from context
+        language = language or get_current_language()
 
-        context = self._prepare_context(
+        # Prepare context and generate
+        return super().generate(
             cv=cv,
             job_description=job_description,
             core_competences=core_competences,
-            language=language,
             notes=notes,
+            language=language,
+            **kwargs,
         )
-
-        # Use the agent to generate skills
-        result = self.agent.run_sync(
-            context,
-            result_type=Skills,
-        )
-
-        # Convert to DTO
-        return map_skills(result.data)
-
-    def _prepare_context(
-        self,
-        cv: str,
-        job_description: str,
-        core_competences: str,
-        language: Language,
-        notes: str | None = None,
-    ) -> str:
-        """Prepare context for skills generation.
-
-        Args:
-            cv: Text of the CV
-            job_description: Job description text
-            core_competences: Core competences to prove
-            language: Target language for generation
-            notes: Optional additional notes for context
-
-        Returns:
-            Prepared context string for the AI
-        """
-        context = (
-            "Generate a list of skills organized in logical groups based on the CV "
-            "and tailored to the job requirements. The skills should demonstrate "
-            "the core competences and match the job requirements.\n\n"
-            "Guidelines for generating skills:\n"
-            "1. Extract skills from CV experiences and education\n"
-            "2. Organize skills in logical groups (e.g., 'Programming', 'Analytics')\n"
-            "3. Ensure each skill:\n"
-            "   - Is relevant to the job requirements\n"
-            "   - Helps demonstrate the core competences\n"
-            "   - Is specific and clear (e.g., 'Python' instead of 'Programming')\n"
-            "   - Is mentioned or implied in the CV\n"
-            "4. Keep skills concise (max 40 characters)\n"
-            "5. Ensure all skills are unique across all groups\n\n"
-        )
-
-        # Add language-specific instructions if not English
-        if language != ENGLISH:
-            context += (
-                "\nLanguage Requirements:\n"
-                f"Generate skills in {language.name.title()}, following "
-                f"professional skill terminology and categorization conventions "
-                f"for that language.\n"
-            )
-
-        context += (
-            f"CV:\n{cv}\n\n"
-            f"Job Description:\n{job_description}\n\n"
-            f"Core Competences to Prove:\n{core_competences}\n"
-        )
-
-        if notes:
-            context += f"\nUser Notes for Consideration:\n{notes}"
-
-        return context
