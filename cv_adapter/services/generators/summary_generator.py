@@ -93,8 +93,7 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
         language = language or get_current_language()
 
         # Prepare context and generate
-                # Prepare context and generate
-        return self._generate_with_context(
+        return self._generate_single_with_context(
             cv=cv,
             job_description=job_description,
             core_competences=core_competences,

@@ -79,8 +79,8 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
         if not job_description:
             raise ValueError("Job description is required")
 
-        # Use _generate_with_context with mapper and result type
-        return self._generate_with_context(
+        # Use _generate_list_with_context with mapper and result type
+        return self._generate_list_with_context(
             cv=cv,
             job_description=job_description,
             language=language,

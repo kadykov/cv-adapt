@@ -85,21 +85,14 @@ class ExperienceGenerator(BaseGenerator[ExperienceDTO]):
         # Get the current language from context
         language = language or get_current_language()
 
-        # Prepare context for generation
-        context = self._prepare_context(
+        # Prepare context and generate
+        return self._generate_list_with_context(
             cv=cv,
             job_description=job_description,
             language=language,
             notes=notes,
             core_competences=core_competences,
+            result_type=list[Experience],
+            mapper_func=map_experience,
             **kwargs,
         )
-
-        # Use the agent to generate experiences
-        result = self.agent.run_sync(
-            context,
-            result_type=list[Experience],
-        )
-
-        # Convert to DTO
-        return [map_experience(exp) for exp in result.data]

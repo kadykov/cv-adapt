@@ -83,7 +83,7 @@ class EducationGenerator(BaseGenerator[EducationDTO]):
         language = language or get_current_language()
 
         # Prepare context and generate
-        return self._generate_with_context(
+        return self._generate_list_with_context(
             cv=cv,
             job_description=job_description,
             core_competences=core_competences,

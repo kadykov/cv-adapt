@@ -137,7 +137,40 @@ class BaseGenerator(ABC, Generic[T]):
         **kwargs: Any,
     ) -> Union[T, List[T]]:
         """
-        Common generation method with context handling.
+        Deprecated: Use _generate_single_with_context or _generate_list_with_context instead.
+
+        Provides backward compatibility with existing code.
+        """
+        # Determine if the result should be a single item or a list
+        is_list = kwargs.get("is_list", False)
+
+        if is_list:
+            return self._generate_list_with_context(
+                cv=cv,
+                job_description=job_description,
+                language=language,
+                notes=notes,
+                **kwargs,
+            )
+        else:
+            return self._generate_single_with_context(
+                cv=cv,
+                job_description=job_description,
+                language=language,
+                notes=notes,
+                **kwargs,
+            )
+
+    def _generate_context(
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Prepare context and generate result using the AI agent.
 
         Args:
             cv: Text of the CV
@@ -147,7 +180,7 @@ class BaseGenerator(ABC, Generic[T]):
             **kwargs: Additional generation parameters
 
         Returns:
-            Generated CV component or list of components
+            Generated result from the AI agent
         """
         # Prepare context for generation
         context = self._prepare_context(
@@ -160,21 +193,86 @@ class BaseGenerator(ABC, Generic[T]):
 
         # Use the agent to generate result
         result_type = kwargs.get("result_type", self._result_type)
-        result: Any = self.agent.run_sync(
+        return self.agent.run_sync(
             context,
             result_type=result_type,
+        )
+
+    def _generate_single_with_context(
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> T:
+        """
+        Generate a single CV component with context handling.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            language: Optional language for generation
+            notes: Optional additional notes for generation
+            **kwargs: Additional generation parameters
+
+        Returns:
+            Generated single CV component
+        """
+        # Generate result using context
+        result = self._generate_context(
+            cv=cv,
+            job_description=job_description,
+            language=language,
+            notes=notes,
+            **kwargs,
         )
 
         # Apply mapper function if provided
         mapper_func = kwargs.get("mapper_func", self._mapper_func)
         if mapper_func:
-            if isinstance(result.data, list):
-                return cast(List[T], [mapper_func(item) for item in result.data])
-            else:
-                return cast(T, mapper_func(result.data))
+            return cast(T, mapper_func(result.data))
 
-        # Explicitly type cast to Union[T, List[T]]
-        return cast(Union[T, List[T]], result.data)
+        # Explicitly type cast to T
+        return cast(T, result.data)
+
+    def _generate_list_with_context(
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> List[T]:
+        """
+        Generate a list of CV components with context handling.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            language: Optional language for generation
+            notes: Optional additional notes for generation
+            **kwargs: Additional generation parameters
+
+        Returns:
+            Generated list of CV components
+        """
+        # Generate result using context
+        result = self._generate_context(
+            cv=cv,
+            job_description=job_description,
+            language=language,
+            notes=notes,
+            **kwargs,
+        )
+
+        # Apply mapper function if provided
+        mapper_func = kwargs.get("mapper_func", self._mapper_func)
+        if mapper_func:
+            return cast(List[T], [mapper_func(item) for item in result.data])
+
+        # Explicitly type cast to List[T]
+        return cast(List[T], result.data)
 
     def _prepare_context(
         self,
