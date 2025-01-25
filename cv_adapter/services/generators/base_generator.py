@@ -2,7 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Generic, List, Optional, TypeVar, Union
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic_ai import Agent
@@ -27,6 +27,8 @@ class BaseGenerator(ABC, Generic[T]):
         ai_model: KnownModelName = "openai:gpt-4o",
         system_prompt_template_path: Optional[str] = None,
         context_template_path: Optional[str] = None,
+        result_type: Optional[Any] = None,
+        mapper_func: Optional[Callable[[Any], T]] = None,
     ) -> None:
         """
         Initialize the base generator.
@@ -38,9 +40,13 @@ class BaseGenerator(ABC, Generic[T]):
                 Jinja2 template for system prompt.
             context_template_path: Optional path to
                 Jinja2 template for context generation.
+            result_type: Optional type for result conversion
+            mapper_func: Optional function to map result to DTO
         """
         self.system_prompt_template_path = system_prompt_template_path
         self.context_template_path = context_template_path
+        self._result_type = result_type
+        self._mapper_func = mapper_func
 
         self.agent = Agent(
             ai_model,
@@ -121,6 +127,53 @@ class BaseGenerator(ABC, Generic[T]):
             Generated CV component or list of components
         """
         raise NotImplementedError("Subclasses must implement generate method")
+
+    def _generate_with_context(
+        self,
+        cv: str,
+        job_description: str,
+        language: Optional[Language] = None,
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Union[T, List[T]]:
+        """
+        Common generation method with context handling.
+
+        Args:
+            cv: Text of the CV
+            job_description: Job description text
+            language: Optional language for generation
+            notes: Optional additional notes for generation
+            **kwargs: Additional generation parameters
+
+        Returns:
+            Generated CV component or list of components
+        """
+        # Prepare context for generation
+        context = self._prepare_context(
+            cv=cv,
+            job_description=job_description,
+            language=language,
+            notes=notes,
+            **kwargs,
+        )
+
+        # Use the agent to generate result
+        result_type = kwargs.get('result_type', self._result_type)
+        result = self.agent.run_sync(
+            context,
+            result_type=result_type,
+        )
+
+        # Apply mapper function if provided
+        mapper_func = kwargs.get('mapper_func', self._mapper_func)
+        if mapper_func:
+            if isinstance(result.data, list):
+                return [mapper_func(item) for item in result.data]
+            else:
+                return mapper_func(result.data)
+
+        return result.data
 
     def _prepare_context(
         self,

@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 
 from pydantic_ai.models import KnownModelName
@@ -28,14 +29,17 @@ class SkillsGenerator(BaseGenerator[List[SkillGroupDTO]]):
             system_prompt_template_path: Optional path to system prompt Jinja2 template
             context_template_path: Optional path to context Jinja2 template
         """
-        # Use default templates if not provided
-        default_template_dir = self._get_default_template_dir()
-        system_prompt_template_path = system_prompt_template_path or (
-            f"{default_template_dir}/skills_system_prompt.j2"
-        )
-        context_template_path = context_template_path or (
-            f"{default_template_dir}/skills_context.j2"
-        )
+        # Set default system prompt template if not provided
+        if system_prompt_template_path is None:
+            system_prompt_template_path = os.path.join(
+                os.path.dirname(__file__), "templates", "skills_system_prompt.j2"
+            )
+
+        # Set default context template if not provided
+        if context_template_path is None:
+            context_template_path = os.path.join(
+                os.path.dirname(__file__), "templates", "skills_context.j2"
+            )
 
         # Initialize base generator with templates
         super().__init__(
@@ -83,11 +87,14 @@ class SkillsGenerator(BaseGenerator[List[SkillGroupDTO]]):
         language = language or get_current_language()
 
         # Prepare context and generate
-        return super().generate(
+                # Prepare context and generate
+        return self._generate_with_context(
             cv=cv,
             job_description=job_description,
             core_competences=core_competences,
             notes=notes,
             language=language,
+            result_type=Skills,
+            mapper_func=map_skills,
             **kwargs,
         )
