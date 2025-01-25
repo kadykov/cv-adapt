@@ -1,7 +1,7 @@
 """Service for generating CV summaries."""
 
 import os
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic_ai.models import KnownModelName
 
@@ -60,10 +60,9 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
         self,
         cv: str,
         job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
         language: Optional[Language] = None,
-        **kwargs,
+        notes: Optional[str] = None,
+        **kwargs: Any,
     ) -> cv_dto.SummaryDTO:
         """Generate a CV summary based on CV content and job requirements.
 
@@ -86,8 +85,6 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
             raise ValueError("CV text is required")
         if not job_description:
             raise ValueError("Job description is required")
-        if not core_competences or not core_competences.strip():
-            raise ValueError("Core competences are required")
 
         # Use provided language or get from context
         language = language or get_current_language()
@@ -96,7 +93,6 @@ class SummaryGenerator(BaseGenerator[cv_dto.SummaryDTO]):
         return self._generate_single_with_context(
             cv=cv,
             job_description=job_description,
-            core_competences=core_competences,
             notes=notes,
             language=language,
             result_type=CVSummary,

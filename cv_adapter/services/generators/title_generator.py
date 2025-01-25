@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic_ai.models import KnownModelName
 
@@ -52,10 +52,9 @@ class TitleGenerator(BaseGenerator[cv_dto.TitleDTO]):
         self,
         cv: str,
         job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
         language: Optional[Language] = None,
-        **kwargs,
+        notes: Optional[str] = None,
+        **kwargs: Any,
     ) -> cv_dto.TitleDTO:
         """Generate a professional title tailored to a job description.
 
@@ -79,8 +78,6 @@ class TitleGenerator(BaseGenerator[cv_dto.TitleDTO]):
             raise ValueError("CV text is required")
         if not job_description:
             raise ValueError("Job description is required")
-        if not core_competences or not core_competences.strip():
-            raise ValueError("Core competences are required")
 
         # Use provided language or get from context
         language = language or get_current_language()

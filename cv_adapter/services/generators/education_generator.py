@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from pydantic_ai.models import KnownModelName
 
@@ -44,16 +44,17 @@ class EducationGenerator(BaseGenerator[EducationDTO]):
             ai_model=ai_model,
             system_prompt_template_path=system_prompt_template_path,
             context_template_path=context_template_path,
+            result_type=Education,
+            mapper_func=map_education,
         )
 
     def generate(
         self,
         cv: str,
         job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
         language: Optional[Language] = None,
-        **kwargs,
+        notes: Optional[str] = None,
+        **kwargs: Any,
     ) -> List[EducationDTO]:
         """Generate a list of educational experiences tailored to a job description.
 

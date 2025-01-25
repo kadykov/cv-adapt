@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Any, cast
 
 from pydantic_ai.models import KnownModelName
 
@@ -54,10 +54,9 @@ class SkillsGenerator(BaseGenerator[List[SkillGroupDTO]]):
         self,
         cv: str,
         job_description: str,
-        core_competences: str,
-        notes: Optional[str] = None,
         language: Optional[Language] = None,
-        **kwargs,
+        notes: Optional[str] = None,
+        **kwargs: Any,
     ) -> List[SkillGroupDTO]:
         """Generate a list of skills organized in groups and tailored to a job.
 
