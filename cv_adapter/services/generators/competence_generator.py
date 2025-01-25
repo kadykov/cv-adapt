@@ -64,6 +64,7 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
         Args:
             cv: Text of the CV
             job_description: Job description text
+            language: Optional language for generation
             notes: Optional additional notes for context
 
         Returns:
@@ -78,22 +79,13 @@ class CompetenceGenerator(BaseGenerator[CoreCompetenceDTO]):
         if not job_description:
             raise ValueError("Job description is required")
 
-        # Get the current language from context
-        language = get_current_language()
-
-        # Prepare context for generation
-        context = self._prepare_context(
+        # Use _generate_with_context with mapper and result type
+        return self._generate_with_context(
             cv=cv,
             job_description=job_description,
             language=language,
             notes=notes,
-        )
-
-        # Use the agent to generate competences
-        result = self.agent.run_sync(
-            context,
             result_type=CoreCompetences,
+            mapper_func=map_core_competences,
+            **kwargs
         )
-
-        # Convert to DTO using mapper
-        return map_core_competences(result.data)
