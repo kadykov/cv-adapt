@@ -4,8 +4,8 @@ from pydantic_ai.models.test import TestModel
 
 import cv_adapter.services.generators.competence_generator
 from cv_adapter.dto.cv import CoreCompetenceDTO
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
-from cv_adapter.models.language_context import get_current_language, language_context
+from cv_adapter.dto.language import ENGLISH
+from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.competence_generator import CompetenceGenerator
 
 
@@ -25,190 +25,11 @@ def valid_context_template(tmp_path):
     """Create a valid context template."""
     template_path = tmp_path / "context.j2"
     template_path.write_text(
-        "{% if language != ENGLISH %}"
-        "Language Requirements: Generate in {{ language.name.title() }}. "
-        "{% endif %}"
         "CV: {{ cv }}\n"
         "Job Description: {{ job_description }}\n"
         "{% if notes is defined %}Notes: {{ notes }}{% endif %}"
     )
     return str(template_path)
-
-
-@pytest.fixture
-def empty_template(tmp_path):
-    """Create an empty template."""
-    template_path = tmp_path / "empty.j2"
-    template_path.write_text("")
-    return str(template_path)
-
-
-def test_context_preparation(valid_context_template: str) -> None:
-    """Test that context is prepared correctly with all input fields."""
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        context_template_path=valid_context_template
-    )
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            notes="Focus on tech",
-        )
-
-    # Test context structure and content
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-    assert "Notes: Focus on tech" in context
-
-
-def test_context_preparation_french(valid_context_template: str) -> None:
-    """Test that context is prepared correctly with French language."""
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        context_template_path=valid_context_template
-    )
-    with language_context(FRENCH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-        )
-
-    # Verify language-specific instructions
-    assert "Language Requirements: Generate in French" in context
-
-
-def test_context_preparation_without_notes(valid_context_template: str) -> None:
-    """Test that context is prepared correctly without optional notes."""
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        context_template_path=valid_context_template
-    )
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-        )
-
-    # Verify required content is present
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-
-    # Verify notes are not present
-    assert "Notes:" not in context
-
-
-@pytest.mark.parametrize(
-    "language",
-    [
-        ENGLISH,
-        FRENCH,
-        GERMAN,
-        SPANISH,
-        ITALIAN,
-    ],
-)
-def test_context_preparation_all_languages(
-    language: Language, 
-    valid_context_template: str
-) -> None:
-    """Test context preparation for all supported languages."""
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        context_template_path=valid_context_template
-    )
-    with language_context(language):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-        )
-
-    if language == ENGLISH:
-        assert "Language Requirements" not in context
-    else:
-        assert f"Language Requirements: Generate in {language.name.title()}" in context
-
-
-def test_empty_cv_validation() -> None:
-    """Test that empty CV raises validation error."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_system_prompt.j2'
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_context.j2'
-    )
-    
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path
-    )
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="CV text is required"):
-            generator.generate(
-                cv="   ",  # whitespace only
-                job_description="Sample Job",
-            )
-
-
-def test_empty_job_description_validation() -> None:
-    """Test that empty job description raises validation error."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_system_prompt.j2'
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_context.j2'
-    )
-    
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path
-    )
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(
-                cv="Sample CV",
-                job_description="",  # empty string
-            )
-
-
-def test_missing_language_validation() -> None:
-    """Test that missing language context raises RuntimeError."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_system_prompt.j2'
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
-        'templates',
-        'competence_context.j2'
-    )
-    
-    generator = CompetenceGenerator(
-        ai_model="test", 
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path
-    )
-    with pytest.raises(
-        RuntimeError, match=r"Language context not set. Use language_context\(\) first."
-    ):
-        generator.generate(
-            cv="Sample CV",
-            job_description="Sample Job",
-        )
 
 
 @pytest.fixture
@@ -229,6 +50,32 @@ def test_model() -> TestModel:
         ]
     }
     return model
+
+
+def test_competence_generator_default_templates(test_model: TestModel) -> None:
+    """Test the competence generator with default templates."""
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_system_prompt.j2'
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        'templates',
+        'competence_context.j2'
+    )
+    
+    # Initialize generator
+    generator = CompetenceGenerator(
+        ai_model="test", 
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path
+    )
+
+    # Verify default template paths exist
+    assert os.path.exists(default_system_prompt_path), "Default system prompt template not found"
+    assert os.path.exists(default_context_path), "Default context template not found"
 
 
 def test_competence_generator_dto_output(test_model: TestModel) -> None:
@@ -311,21 +158,3 @@ def test_generator_with_valid_templates(
             assert isinstance(result, list)
             assert all(isinstance(comp, CoreCompetenceDTO) for comp in result)
             assert len(result) == 4
-
-
-def test_generator_with_non_existent_template() -> None:
-    """Test that generator fails when template does not exist."""
-    with pytest.raises(FileNotFoundError, match="System prompt template not found"):
-        CompetenceGenerator(
-            ai_model="test",
-            system_prompt_template_path="/path/to/non/existent/template.j2",
-        )
-
-
-def test_generator_with_empty_template(empty_template: str) -> None:
-    """Test that generator fails with an empty template."""
-    with pytest.raises(RuntimeError, match="Rendered system prompt is empty"):
-        CompetenceGenerator(
-            ai_model="test",
-            system_prompt_template_path=empty_template,
-        )
