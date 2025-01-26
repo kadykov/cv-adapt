@@ -10,12 +10,12 @@ from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.services.generators.protocols import (
-    Generator, 
-    GenerationContext, 
+    Generator,
+    GenerationContext,
     CoreCompetenceGeneratorProtocol
 )
 from cv_adapter.services.generators.utils import (
-    load_system_prompt, 
+    load_system_prompt,
     prepare_context
 )
 
@@ -83,48 +83,3 @@ def create_core_competence_generator(
         return map_core_competences(result.data)
 
     return Generator(generation_func)
-
-
-def _load_system_prompt(template_path: str) -> str:
-    """
-    Load system prompt from a Jinja2 template.
-
-    Args:
-        template_path: Path to the system prompt template
-
-    Returns:
-        Rendered system prompt
-    """
-    from jinja2 import Environment, FileSystemLoader, StrictUndefined
-
-    # Validate template path
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"System prompt template not found: {template_path}")
-
-    try:
-        # Get the directory and filename separately
-        template_dir = os.path.dirname(template_path)
-        template_filename = os.path.basename(template_path)
-
-        # Create Jinja2 environment
-        env = Environment(
-            loader=FileSystemLoader(template_dir),
-            undefined=StrictUndefined,  # Raise errors for undefined variables
-        )
-
-        # Load and render the template
-        template = env.get_template(template_filename)
-        rendered_prompt = template.render()
-
-        # Validate that the rendered prompt is not empty
-        if not rendered_prompt or not rendered_prompt.strip():
-            raise RuntimeError(
-                f"Rendered system prompt is empty: {template_path}"
-            )
-
-        return rendered_prompt
-
-    except Exception as e:
-        raise RuntimeError(
-            f"Error loading system prompt template {template_path}: {str(e)}"
-        ) from e

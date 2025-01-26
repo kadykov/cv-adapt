@@ -10,12 +10,12 @@ from cv_adapter.dto.cv import ExperienceDTO
 from cv_adapter.dto.mapper import map_experience
 from cv_adapter.models.language_context_models import Experience
 from cv_adapter.services.generators.protocols import (
-    Generator, 
-    GenerationContext, 
+    Generator,
+    GenerationContext,
     ExperienceGeneratorProtocol
 )
 from cv_adapter.services.generators.utils import (
-    load_system_prompt, 
+    load_system_prompt,
     prepare_context
 )
 
@@ -71,7 +71,7 @@ def create_experience_generator(
         if core_competence_generator:
             core_competences = core_competence_generator(context)
             core_competences_str = "\n".join([
-                f"{comp.title}: {comp.description}" 
+                f"{comp.title}: {comp.description}"
                 for comp in core_competences
             ])
 
@@ -83,8 +83,8 @@ def create_experience_generator(
 
         # Prepare context string
         context_str = prepare_context(
-            context_template_path, 
-            context, 
+            context_template_path,
+            context,
             core_competences=core_competences_str
         )
 
@@ -98,48 +98,3 @@ def create_experience_generator(
         return [map_experience(exp) for exp in result.data]
 
     return Generator(generation_func)
-
-
-def _load_system_prompt(template_path: str) -> str:
-    """
-    Load system prompt from a Jinja2 template.
-
-    Args:
-        template_path: Path to the system prompt template
-
-    Returns:
-        Rendered system prompt
-    """
-    from jinja2 import Environment, FileSystemLoader, StrictUndefined
-
-    # Validate template path
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"System prompt template not found: {template_path}")
-
-    try:
-        # Get the directory and filename separately
-        template_dir = os.path.dirname(template_path)
-        template_filename = os.path.basename(template_path)
-
-        # Create Jinja2 environment
-        env = Environment(
-            loader=FileSystemLoader(template_dir),
-            undefined=StrictUndefined,  # Raise errors for undefined variables
-        )
-
-        # Load and render the template
-        template = env.get_template(template_filename)
-        rendered_prompt = template.render()
-
-        # Validate that the rendered prompt is not empty
-        if not rendered_prompt or not rendered_prompt.strip():
-            raise RuntimeError(
-                f"Rendered system prompt is empty: {template_path}"
-            )
-
-        return rendered_prompt
-
-    except Exception as e:
-        raise RuntimeError(
-            f"Error loading system prompt template {template_path}: {str(e)}"
-        ) from e
