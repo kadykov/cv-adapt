@@ -32,10 +32,13 @@ Project Structure:
      - `constants.py`: Project-wide constants
    - `services/`: Business logic services
      - `generators/`: Specialized generator services
-       * `base.py`: Abstract base class for generators
-         - Provides template-based generation framework
-         - Supports fail-fast design principles
-         - Enables flexible context and prompt generation
+       * `protocols.py`: Generator protocols and base classes
+         - Defines flexible, type-safe generator interfaces
+         - Supports protocol-based design
+         - Enables precise type checking for generators
+       * `utils.py`: Shared utility functions for generators
+         - Provides common template loading and context preparation
+         - Supports consistent generation across different generators
        * `competence_generator.py`: Generates core competences
        * `summary_generator.py`: Generates professional CV summaries
        * `education_generator.py`: Generates education sections
@@ -46,6 +49,15 @@ Project Structure:
          - Supports dynamic prompt and context generation
          - Enables language-specific template customization
          - Provides clear separation between generation logic and templates
+
+     Generator Design Principles:
+       * Protocol-based design with type-safe generation
+       * Flexible generation context
+       * Support for language-specific generation
+       * Consistent template-based generation approach
+       * Decoupled generation logic and template rendering
+       * Supports single DTO or list of DTOs generation
+       * Immediate validation and error handling
    - `dto/`: Data Transfer Objects (DTOs)
      - `cv.py`: DTO classes for decoupled data representation
        * Provides data transfer objects for CV components
