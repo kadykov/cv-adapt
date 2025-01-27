@@ -1,4 +1,4 @@
-{% if language != ENGLISH %}
+{% if language.code != 'en' %}
 Language Requirements:
 Generate all competences in {{ language.name.title() }}, following professional terminology conventions.
 {% endif %}
