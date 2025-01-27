@@ -95,7 +95,7 @@ def test_core_competence_generator_dto_output() -> None:
 
         # Temporarily replace the agent creation in the function
         original_agent_creation = cv_adapter.services.generators.competence_generator.Agent
-        cv_adapter.services.generators.competence_generator.Agent = lambda *args, **kwargs: mock_agent
+        cv_adapter.services.generators.competence_generator.Agent = lambda *args, **kwargs: mock_agent # type: ignore
 
         try:
             # Create generator
@@ -125,4 +125,4 @@ def test_core_competence_generator_dto_output() -> None:
             mock_agent.run_sync.assert_called_once()
         finally:
             # Restore the original Agent class
-            cv_adapter.services.generators.competence_generator.Agent = original_agent_creation
+            cv_adapter.services.generators.competence_generator.Agent = original_agent_creation # type: ignore
