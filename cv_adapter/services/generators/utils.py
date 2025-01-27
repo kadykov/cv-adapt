@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from cv_adapter.services.generators.protocols import GenerationContext
+from cv_adapter.services.generators.protocols import BaseGenerationContext
 
 
 def load_system_prompt(template_path: str) -> str:
@@ -50,7 +50,7 @@ def load_system_prompt(template_path: str) -> str:
 
 
 def prepare_context(
-    context_template_path: str, context: GenerationContext, **extra_context: Any
+    context_template_path: str, context: BaseGenerationContext, **extra_context: Any
 ) -> str:
     """
     Prepare context for generation using Jinja2 template.

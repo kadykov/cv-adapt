@@ -12,7 +12,7 @@ from cv_adapter.models.language_context_models import CoreCompetence, CoreCompet
 from cv_adapter.services.generators.competence_generator import (
     create_core_competence_generator,
 )
-from cv_adapter.services.generators.protocols import GenerationContext
+from cv_adapter.services.generators.protocols import CoreCompetenceGenerationContext
 
 
 def test_competence_generator_default_templates() -> None:
@@ -114,7 +114,7 @@ def test_core_competence_generator_dto_output() -> None:
             generator = create_core_competence_generator(ai_model="test")
 
             # Prepare test context
-            context = GenerationContext(
+            context = CoreCompetenceGenerationContext(
                 cv="Senior Software Engineer with 10 years of experience",
                 job_description="Seeking a Project Manager for innovative tech team",
                 language=ENGLISH,

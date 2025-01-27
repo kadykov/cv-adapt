@@ -10,8 +10,8 @@ from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.services.generators.protocols import (
-    GenerationContext,
-    Generator,
+    CoreCompetenceGenerator,
+    CoreCompetenceGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
@@ -20,7 +20,7 @@ def create_core_competence_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[List[CoreCompetenceDTO]]:
+) -> CoreCompetenceGenerator[List[CoreCompetenceDTO]]:
     """
     Create a core competence generator.
 
@@ -49,12 +49,12 @@ def create_core_competence_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: GenerationContext) -> List[CoreCompetenceDTO]:
+    def generation_func(context: CoreCompetenceGenerationContext) -> List[CoreCompetenceDTO]:
         """
         Generate core competences based on context.
 
         Args:
-            context: Generation context
+            context: Core competence generation context
 
         Returns:
             List of generated core competences
@@ -74,4 +74,4 @@ def create_core_competence_generator(
         # Map to DTOs
         return map_core_competences(result.data)
 
-    return Generator(generation_func)
+    return CoreCompetenceGenerator(generation_func)
