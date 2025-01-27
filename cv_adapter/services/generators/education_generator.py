@@ -25,7 +25,7 @@ def create_education_generator(
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
     core_competence_generator: Optional[Generator] = None,
-) -> Generator[EducationDTO]:
+) -> Generator[List[EducationDTO]]:
     """
     Create an education generator.
 
