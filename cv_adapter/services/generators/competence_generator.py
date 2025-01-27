@@ -48,6 +48,12 @@ def create_core_competence_generator(
             os.path.dirname(__file__), "templates", "competence_context.j2"
         )
 
+    # Create agent with system prompt outside of generation_func
+    agent = Agent(
+        ai_model,
+        system_prompt=load_system_prompt(system_prompt_template_path)
+    )
+
     def generation_func(context: GenerationContext) -> List[CoreCompetenceDTO]:
         """
         Generate core competences based on context.
@@ -63,12 +69,6 @@ def create_core_competence_generator(
             raise ValueError("CV text is required")
         if not context.job_description:
             raise ValueError("Job description is required")
-
-        # Create agent with system prompt
-        agent = Agent(
-            ai_model,
-            system_prompt=load_system_prompt(system_prompt_template_path)
-        )
 
         # Prepare context string
         context_str = prepare_context(context_template_path, context)
