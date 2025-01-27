@@ -1,9 +1,9 @@
 import os
-from typing import Any
-from unittest.mock import Mock
+from typing import Any, Callable, Type, cast
 
 import pytest
 from pydantic_ai import Agent
+from unittest.mock import Mock
 
 import cv_adapter.services.generators.competence_generator
 from cv_adapter.dto.cv import CoreCompetenceDTO
@@ -12,8 +12,6 @@ from cv_adapter.models.language_context_models import CoreCompetences, CoreCompe
 from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.competence_generator import create_core_competence_generator
 from cv_adapter.services.generators.protocols import GenerationContext
-
-# Removed test_model fixture
 
 
 def test_competence_generator_default_templates() -> None:
@@ -93,9 +91,20 @@ def test_core_competence_generator_dto_output() -> None:
             )
         )
 
+        # Store the original Agent class
+        original_agent_creation: Type[Agent[Any, Any]] = cv_adapter.services.generators.competence_generator.Agent
+
         # Temporarily replace the agent creation in the function
-        original_agent_creation = cv_adapter.services.generators.competence_generator.Agent
-        cv_adapter.services.generators.competence_generator.Agent = lambda *args, **kwargs: mock_agent # type: ignore
+        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
+            return cast(Agent[Any, Any], mock_agent)
+
+        # Temporarily modify the Agent class
+        # type: ignore[assignment, misc]
+        # Dynamically replacing the Agent class with a mock factory function 
+        # for testing purposes. This is a valid testing technique that 
+        # cannot be statically type-checked.
+        original_agent_factory = cv_adapter.services.generators.competence_generator.Agent
+        cv_adapter.services.generators.competence_generator.Agent = mock_agent_factory  # type: ignore[assignment, misc]
 
         try:
             # Create generator
@@ -125,4 +134,4 @@ def test_core_competence_generator_dto_output() -> None:
             mock_agent.run_sync.assert_called_once()
         finally:
             # Restore the original Agent class
-            cv_adapter.services.generators.competence_generator.Agent = original_agent_creation # type: ignore
+            cv_adapter.services.generators.competence_generator.Agent = original_agent_factory  # type: ignore[assignment, misc]
