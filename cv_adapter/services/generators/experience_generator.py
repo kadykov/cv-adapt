@@ -10,14 +10,10 @@ from cv_adapter.dto.cv import ExperienceDTO
 from cv_adapter.dto.mapper import map_experience
 from cv_adapter.models.language_context_models import Experience
 from cv_adapter.services.generators.protocols import (
-    Generator,
     GenerationContext,
-    ExperienceGeneratorProtocol
+    Generator,
 )
-from cv_adapter.services.generators.utils import (
-    load_system_prompt,
-    prepare_context
-)
+from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
 def create_experience_generator(
@@ -70,29 +66,22 @@ def create_experience_generator(
         core_competences_str = ""
         if core_competence_generator:
             core_competences = core_competence_generator(context)
-            core_competences_str = "\n".join([
-                f"{comp.title}: {comp.description}"
-                for comp in core_competences
-            ])
+            core_competences_str = "\n".join(
+                [f"{comp.title}: {comp.description}" for comp in core_competences]
+            )
 
         # Create agent with system prompt
         agent = Agent(
-            ai_model,
-            system_prompt=load_system_prompt(system_prompt_template_path)
+            ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
         )
 
         # Prepare context string
         context_str = prepare_context(
-            context_template_path,
-            context,
-            core_competences=core_competences_str
+            context_template_path, context, core_competences=core_competences_str
         )
 
         # Generate experiences
-        result = agent.run_sync(
-            context_str,
-            result_type=list[Experience]
-        )
+        result = agent.run_sync(context_str, result_type=list[Experience])
 
         # Map to DTOs
         return [map_experience(exp) for exp in result.data]

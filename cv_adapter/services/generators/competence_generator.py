@@ -10,14 +10,10 @@ from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.services.generators.protocols import (
-    Generator,
     GenerationContext,
-    CoreCompetenceGeneratorProtocol
+    Generator,
 )
-from cv_adapter.services.generators.utils import (
-    load_system_prompt,
-    prepare_context
-)
+from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
 def create_core_competence_generator(
@@ -50,8 +46,7 @@ def create_core_competence_generator(
 
     # Create agent with system prompt outside of generation_func
     agent = Agent(
-        ai_model,
-        system_prompt=load_system_prompt(system_prompt_template_path)
+        ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
     def generation_func(context: GenerationContext) -> List[CoreCompetenceDTO]:
@@ -74,10 +69,7 @@ def create_core_competence_generator(
         context_str = prepare_context(context_template_path, context)
 
         # Generate competences
-        result = agent.run_sync(
-            context_str,
-            result_type=CoreCompetences
-        )
+        result = agent.run_sync(context_str, result_type=CoreCompetences)
 
         # Map to DTOs
         return map_core_competences(result.data)

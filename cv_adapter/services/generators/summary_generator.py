@@ -1,7 +1,7 @@
 """Service for generating CV summaries."""
 
 import os
-from typing import Optional, List
+from typing import Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
@@ -11,14 +11,10 @@ from cv_adapter.dto.mapper import map_summary
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import (
-    Generator, 
-    GenerationContext, 
-    GeneratorProtocol
+    GenerationContext,
+    Generator,
 )
-from cv_adapter.services.generators.utils import (
-    load_system_prompt, 
-    prepare_context
-)
+from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
 def create_summary_generator(
@@ -77,29 +73,22 @@ def create_summary_generator(
         core_competences_str = ""
         if core_competence_generator:
             core_competences = core_competence_generator(context)
-            core_competences_str = "\n".join([
-                f"{comp.title}: {comp.description}" 
-                for comp in core_competences
-            ])
+            core_competences_str = "\n".join(
+                [f"{comp.title}: {comp.description}" for comp in core_competences]
+            )
 
         # Create agent with system prompt
         agent = Agent(
-            ai_model,
-            system_prompt=load_system_prompt(system_prompt_template_path)
+            ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
         )
 
         # Prepare context string
         context_str = prepare_context(
-            context_template_path, 
-            context, 
-            core_competences=core_competences_str
+            context_template_path, context, core_competences=core_competences_str
         )
 
         # Generate summary
-        result = agent.run_sync(
-            context_str,
-            result_type=CVSummary
-        )
+        result = agent.run_sync(context_str, result_type=CVSummary)
 
         # Map to DTO
         return map_summary(result.data)

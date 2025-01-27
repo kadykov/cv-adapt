@@ -1,29 +1,27 @@
 from typing import (
-    Protocol, 
-    TypeVar, 
-    Generic, 
-    List, 
-    Callable, 
-    Optional, 
+    Callable,
+    Generic,
+    Optional,
+    Protocol,
+    TypeVar,
     runtime_checkable,
-    Union
 )
 
-from cv_adapter.dto.language import Language, ENGLISH
 from cv_adapter.dto.cv import CoreCompetenceDTO, ExperienceDTO, SkillGroupDTO
+from cv_adapter.dto.language import ENGLISH, Language
 
-
-T = TypeVar('T', covariant=True)
+T = TypeVar("T", covariant=True)
 
 
 class GenerationContext:
     """Comprehensive context for CV component generation."""
+
     def __init__(
         self,
         cv: str,
         job_description: str,
         language: Optional[Language] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
     ):
         """
         Initialize generation context.
@@ -44,10 +42,11 @@ class GenerationContext:
 class GeneratorProtocol(Protocol[T]):
     """
     Protocol defining the interface for generators.
-    
-    Generators return a type T, which can be a single DTO, 
+
+    Generators return a type T, which can be a single DTO,
     a list of DTOs, or a custom wrapped type.
     """
+
     def __call__(self, context: GenerationContext) -> T:
         """
         Generate output based on the given context.
@@ -68,10 +67,8 @@ class Generator(Generic[T]):
     Generates outputs based on a generation context.
     Validation is handled by Pydantic models during generation.
     """
-    def __init__(
-        self, 
-        generation_func: Callable[[GenerationContext], T]
-    ):
+
+    def __init__(self, generation_func: Callable[[GenerationContext], T]):
         """
         Initialize the generator.
 
@@ -79,11 +76,8 @@ class Generator(Generic[T]):
             generation_func: Core generation logic
         """
         self._generate = generation_func
-    
-    def __call__(
-        self, 
-        context: GenerationContext
-    ) -> T:
+
+    def __call__(self, context: GenerationContext) -> T:
         """
         Generate output.
 
@@ -99,14 +93,17 @@ class Generator(Generic[T]):
 # Type-specific generator protocols can be added here if needed
 class CoreCompetenceGeneratorProtocol(GeneratorProtocol[CoreCompetenceDTO], Protocol):
     """Specific protocol for core competence generators."""
+
     pass
 
 
 class ExperienceGeneratorProtocol(GeneratorProtocol[ExperienceDTO], Protocol):
     """Specific protocol for experience generators."""
+
     pass
 
 
 class SkillsGeneratorProtocol(GeneratorProtocol[SkillGroupDTO], Protocol):
     """Specific protocol for skills generators."""
+
     pass

@@ -1,7 +1,7 @@
 """Shared utility functions for generators."""
 
 import os
-from typing import Optional, Any, Dict
+from typing import Any, Dict
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
@@ -39,9 +39,7 @@ def load_system_prompt(template_path: str) -> str:
 
         # Validate that the rendered prompt is not empty
         if not rendered_prompt or not rendered_prompt.strip():
-            raise RuntimeError(
-                f"Rendered system prompt is empty: {template_path}"
-            )
+            raise RuntimeError(f"Rendered system prompt is empty: {template_path}")
 
         return rendered_prompt
 
@@ -52,9 +50,7 @@ def load_system_prompt(template_path: str) -> str:
 
 
 def prepare_context(
-    context_template_path: str,
-    context: GenerationContext,
-    **extra_context: Any
+    context_template_path: str, context: GenerationContext, **extra_context: Any
 ) -> str:
     """
     Prepare context for generation using Jinja2 template.
@@ -87,7 +83,7 @@ def prepare_context(
             "job_description": context.job_description,
             "language": context.language,
             "notes": context.notes,
-            **extra_context
+            **extra_context,
         }
 
         # Render the template
@@ -101,6 +97,5 @@ def prepare_context(
 
     except Exception as e:
         raise RuntimeError(
-            f"Failed to process context template "
-            f"{context_template_path}: {str(e)}"
+            f"Failed to process context template {context_template_path}: {str(e)}"
         ) from e
