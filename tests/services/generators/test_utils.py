@@ -1,28 +1,10 @@
-from datetime import date
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
-from cv_adapter.dto.cv import (
-    CVDTO,
-    CoreCompetenceDTO,
-    EducationDTO,
-    ExperienceDTO,
-    InstitutionDTO,
-    PersonalInfoDTO,
-    SkillDTO,
-    SkillGroupDTO,
-    SummaryDTO,
-    TitleDTO,
-)
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.services.generators.protocols import GenerationContext
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
-
-
-class JobDescriptionDTO(BaseModel):
-    title: str
 
 def create_test_template(tmp_path: Path, filename: str, content: str) -> str:
     """Create a temporary template file for testing."""
@@ -61,8 +43,8 @@ def test_prepare_context_success(tmp_path: Path) -> None:
     # Create a test template
     template_content = """
     Language: {{ language }}
-    Job Title: {{ job_description.title }}
-    CV Name: {{ cv.personal_info.full_name }}
+    Job Title: {{ job_description }}
+    CV Name: {{ cv }}
     Notes: {{ notes }}
     Extra: {{ extra_info }}
     """
@@ -71,37 +53,30 @@ def test_prepare_context_success(tmp_path: Path) -> None:
     )
 
     # Prepare test data
-    cv_dto = CVDTO(
-        personal_info=PersonalInfoDTO(full_name="John Doe"),
-        title=TitleDTO(text="Software Engineer"),
-        summary=SummaryDTO(text="Professional summary"),
-        core_competences=[CoreCompetenceDTO(text="Core competence")],
-        experiences=[
-            ExperienceDTO(
-                company=InstitutionDTO(name="Test Company"),
-                position="Software Engineer",
-                start_date=date(2020, 1, 1),
-                description="Work experience",
-            )
-        ],
-        education=[
-            EducationDTO(
-                university=InstitutionDTO(name="Test University"),
-                degree="Computer Science",
-                start_date=date(2016, 1, 1),
-                end_date=date(2020, 1, 1),
-            )
-        ],
-        skills=[
-            SkillGroupDTO(name="Programming", skills=[SkillDTO(text="Python")])
-        ],
-        language=ENGLISH,
-    )
+    cv_markdown = """# John Doe
+
+## Professional Summary
+Experienced software engineer with a strong background in Python development.
+
+## Work Experience
+### Software Engineer at Tech Company
+- Developed scalable web applications
+- Implemented efficient backend solutions
+
+## Education
+### Computer Science Degree
+University of Technology, 2016-2020
+
+## Skills
+- Python
+- Backend Development
+- Cloud Computing"""
+
     context = GenerationContext(
-        cv=str(cv_dto),
-        job_description=str(JobDescriptionDTO(title="Software Engineer")),
+        cv=cv_markdown,
+        job_description="Senior Software Engineer position at Innovative Tech",
         language=ENGLISH,
-        notes="Test context",
+        notes="Test context for CV generation",
     )
 
     # Prepare context with extra info
@@ -109,45 +84,38 @@ def test_prepare_context_success(tmp_path: Path) -> None:
 
     # Verify the rendered context
     assert "Language: en" in result
-    assert "Job Title: Software Engineer" in result
-    assert "CV Name: John Doe" in result
-    assert "Notes: Test context" in result
+    assert "Job Title: Senior Software Engineer position at Innovative Tech" in result
+    assert "CV Name: # John Doe" in result
+    assert "Notes: Test context for CV generation" in result
     assert "Extra: Additional details" in result
 
 
 def test_prepare_context_file_not_found() -> None:
     """Test handling of non-existent context template."""
-    cv_dto = CVDTO(
-        personal_info=PersonalInfoDTO(full_name="John Doe"),
-        title=TitleDTO(text="Software Engineer"),
-        summary=SummaryDTO(text="Professional summary"),
-        core_competences=[CoreCompetenceDTO(text="Core competence")],
-        experiences=[
-            ExperienceDTO(
-                company=InstitutionDTO(name="Test Company"),
-                position="Software Engineer",
-                start_date=date(2020, 1, 1),
-                description="Work experience",
-            )
-        ],
-        education=[
-            EducationDTO(
-                university=InstitutionDTO(name="Test University"),
-                degree="Computer Science",
-                start_date=date(2016, 1, 1),
-                end_date=date(2020, 1, 1),
-            )
-        ],
-        skills=[
-            SkillGroupDTO(name="Programming", skills=[SkillDTO(text="Python")])
-        ],
-        language=ENGLISH,
-    )
+    cv_markdown = """# John Doe
+
+## Professional Summary
+Experienced software engineer with a strong background in Python development.
+
+## Work Experience
+### Software Engineer at Tech Company
+- Developed scalable web applications
+- Implemented efficient backend solutions
+
+## Education
+### Computer Science Degree
+University of Technology, 2016-2020
+
+## Skills
+- Python
+- Backend Development
+- Cloud Computing"""
+
     context = GenerationContext(
-        cv=str(cv_dto),
-        job_description=str(JobDescriptionDTO(title="Software Engineer")),
+        cv=cv_markdown,
+        job_description="Senior Software Engineer position",
         language=ENGLISH,
-        notes="Test context",
+        notes="Test context for file not found scenario",
     )
 
     with pytest.raises(ValueError, match="Context template file does not exist"):
@@ -158,37 +126,30 @@ def test_prepare_context_empty_template(tmp_path: Path) -> None:
     """Test handling of an empty context template."""
     template_path = create_test_template(tmp_path, "empty_context.txt", "")
 
-    cv_dto = CVDTO(
-        personal_info=PersonalInfoDTO(full_name="John Doe"),
-        title=TitleDTO(text="Software Engineer"),
-        summary=SummaryDTO(text="Professional summary"),
-        core_competences=[CoreCompetenceDTO(text="Core competence")],
-        experiences=[
-            ExperienceDTO(
-                company=InstitutionDTO(name="Test Company"),
-                position="Software Engineer",
-                start_date=date(2020, 1, 1),
-                description="Work experience",
-            )
-        ],
-        education=[
-            EducationDTO(
-                university=InstitutionDTO(name="Test University"),
-                degree="Computer Science",
-                start_date=date(2016, 1, 1),
-                end_date=date(2020, 1, 1),
-            )
-        ],
-        skills=[
-            SkillGroupDTO(name="Programming", skills=[SkillDTO(text="Python")])
-        ],
-        language=ENGLISH,
-    )
+    cv_markdown = """# John Doe
+
+## Professional Summary
+Experienced software engineer with a strong background in Python development.
+
+## Work Experience
+### Software Engineer at Tech Company
+- Developed scalable web applications
+- Implemented efficient backend solutions
+
+## Education
+### Computer Science Degree
+University of Technology, 2016-2020
+
+## Skills
+- Python
+- Backend Development
+- Cloud Computing"""
+
     context = GenerationContext(
-        cv=str(cv_dto),
-        job_description=str(JobDescriptionDTO(title="Software Engineer")),
+        cv=cv_markdown,
+        job_description="Senior Software Engineer position",
         language=ENGLISH,
-        notes="Test context",
+        notes="Test context for empty template scenario",
     )
 
     with pytest.raises(RuntimeError, match="Rendered context template is empty"):

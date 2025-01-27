@@ -29,7 +29,7 @@ class GenerationContext:
         Initialize generation context.
 
         Args:
-            cv: Current CV content
+            cv: Detailed CV content provided by the user as a Markdown string
             job_description: Target job description
             language: Language for generation
             notes: Additional generation notes
