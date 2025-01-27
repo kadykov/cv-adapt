@@ -51,7 +51,7 @@ class ComponentGenerationContext(BaseGenerationContext):
         self,
         cv: str,
         job_description: str,
-        core_competences: List[CoreCompetenceDTO],
+        core_competences: str,
         language: Optional[Language] = None,
         notes: Optional[str] = None,
     ):
@@ -61,7 +61,7 @@ class ComponentGenerationContext(BaseGenerationContext):
         Args:
             cv: Detailed CV content provided by the user as a Markdown string
             job_description: Target job description
-            core_competences: List of core competences to use in generation
+            core_competences: Formatted string of core competences to use in generation
             language: Language for generation
             notes: Additional generation notes
         """

@@ -8,8 +8,8 @@ from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.mapper import map_title
 from cv_adapter.models.language_context_models import Title
 from cv_adapter.services.generators.protocols import (
-    GenerationContext,
-    Generator,
+    ComponentGenerator,
+    ComponentGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
@@ -18,8 +18,7 @@ def create_title_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-    core_competence_generator: Optional[Generator] = None,
-) -> Generator[cv_dto.TitleDTO]:
+) -> ComponentGenerator[cv_dto.TitleDTO]:
     """
     Create a title generator.
 
@@ -27,7 +26,6 @@ def create_title_generator(
         ai_model: AI model to use
         system_prompt_template_path: Optional path to system prompt template
         context_template_path: Optional path to context template
-        core_competence_generator: Optional generator for core competences
 
     Returns:
         A generator for professional titles
@@ -44,12 +42,12 @@ def create_title_generator(
             os.path.dirname(__file__), "templates", "title_context.j2"
         )
 
-    def generation_func(context: GenerationContext) -> cv_dto.TitleDTO:
+    def generation_func(context: ComponentGenerationContext) -> cv_dto.TitleDTO:
         """
         Generate title based on context.
 
         Args:
-            context: Generation context
+            context: Component generation context with core competences
 
         Returns:
             Generated professional title
@@ -60,14 +58,6 @@ def create_title_generator(
         if not context.job_description:
             raise ValueError("Job description is required")
 
-        # Optional: generate core competences if generator is provided
-        core_competences_str = ""
-        if core_competence_generator:
-            core_competences = core_competence_generator(context)
-            core_competences_str = "\n".join(
-                [f"{comp.title}: {comp.description}" for comp in core_competences]
-            )
-
         # Create agent with system prompt
         agent = Agent(
             ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
@@ -75,7 +65,7 @@ def create_title_generator(
 
         # Prepare context string
         context_str = prepare_context(
-            context_template_path, context, core_competences=core_competences_str
+            context_template_path, context, core_competences=context.core_competences
         )
 
         # Generate title
@@ -84,4 +74,4 @@ def create_title_generator(
         # Map to DTO
         return map_title(result.data)
 
-    return Generator(generation_func)
+    return ComponentGenerator(generation_func)
