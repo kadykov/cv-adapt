@@ -1,16 +1,17 @@
 import os
-from typing import Any, Callable, Type, cast
-
-import pytest
-from pydantic_ai import Agent
+from typing import Any, cast
 from unittest.mock import Mock
+
+from pydantic_ai import Agent
 
 import cv_adapter.services.generators.competence_generator
 from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context_models import CoreCompetences, CoreCompetence
 from cv_adapter.models.language_context import language_context
-from cv_adapter.services.generators.competence_generator import create_core_competence_generator
+from cv_adapter.models.language_context_models import CoreCompetence, CoreCompetences
+from cv_adapter.services.generators.competence_generator import (
+    create_core_competence_generator,
+)
 from cv_adapter.services.generators.protocols import GenerationContext
 
 
@@ -73,7 +74,7 @@ def test_competence_generator_custom_templates(tmp_path: Any) -> None:
 
 
 def test_core_competence_generator_dto_output() -> None:
-    """Test that the core competence generator returns a valid list of CoreCompetenceDTO."""
+    """Test core competence generator returns a valid CoreCompetenceDTO list."""
     # Set language context before the test
     with language_context(ENGLISH):
         # Create a mock agent
@@ -86,25 +87,27 @@ def test_core_competence_generator_dto_output() -> None:
                     CoreCompetence(text="Agile Software Development"),
                     CoreCompetence(text="Technical Problem Solving"),
                     CoreCompetence(text="Continuous Improvement Methodology"),
-                    CoreCompetence(text="Enterprise Software Architecture")
+                    CoreCompetence(text="Enterprise Software Architecture"),
                 ]
             )
         )
-
-        # Store the original Agent class
-        original_agent_creation: Type[Agent[Any, Any]] = cv_adapter.services.generators.competence_generator.Agent
 
         # Temporarily replace the agent creation in the function
         def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
             return cast(Agent[Any, Any], mock_agent)
 
         # Temporarily modify the Agent class
-        # type: ignore[assignment, misc]
-        # Dynamically replacing the Agent class with a mock factory function 
-        # for testing purposes. This is a valid testing technique that 
+        # Dynamically replacing the Agent class with a mock factory function
+        # for testing purposes. This is a valid testing technique that
         # cannot be statically type-checked.
-        original_agent_factory = cv_adapter.services.generators.competence_generator.Agent
-        cv_adapter.services.generators.competence_generator.Agent = mock_agent_factory  # type: ignore[assignment, misc]
+        original_agent_factory = getattr(
+            cv_adapter.services.generators.competence_generator, "Agent"
+        )
+        setattr(
+            cv_adapter.services.generators.competence_generator,
+            "Agent",
+            mock_agent_factory,
+        )
 
         try:
             # Create generator
@@ -114,7 +117,7 @@ def test_core_competence_generator_dto_output() -> None:
             context = GenerationContext(
                 cv="Senior Software Engineer with 10 years of experience",
                 job_description="Seeking a Project Manager for innovative tech team",
-                language=ENGLISH
+                language=ENGLISH,
             )
 
             # Generate competences
@@ -134,4 +137,8 @@ def test_core_competence_generator_dto_output() -> None:
             mock_agent.run_sync.assert_called_once()
         finally:
             # Restore the original Agent class
-            cv_adapter.services.generators.competence_generator.Agent = original_agent_factory  # type: ignore[assignment, misc]
+            setattr(
+                cv_adapter.services.generators.competence_generator,
+                "Agent",
+                original_agent_factory,
+            )
