@@ -10,7 +10,7 @@ from typing import (
 )
 
 from cv_adapter.dto.language import Language, ENGLISH
-from cv_adapter.dto.cv import CoreCompetenceDTO, ExperienceDTO
+from cv_adapter.dto.cv import CoreCompetenceDTO, ExperienceDTO, SkillGroupDTO
 
 
 T = TypeVar('T', covariant=True)
@@ -104,4 +104,9 @@ class CoreCompetenceGeneratorProtocol(GeneratorProtocol[CoreCompetenceDTO], Prot
 
 class ExperienceGeneratorProtocol(GeneratorProtocol[ExperienceDTO], Protocol):
     """Specific protocol for experience generators."""
+    pass
+
+
+class SkillsGeneratorProtocol(GeneratorProtocol[SkillGroupDTO], Protocol):
+    """Specific protocol for skills generators."""
     pass
