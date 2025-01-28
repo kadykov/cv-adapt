@@ -10,7 +10,7 @@ from cv_adapter.dto.cv import SkillGroupDTO
 from cv_adapter.dto.mapper import map_skill_group
 from cv_adapter.models.language_context_models import SkillGroup
 from cv_adapter.services.generators.protocols import (
-    ComponentGenerator,
+    Generator,
     ComponentGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
@@ -20,7 +20,7 @@ def create_skills_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> ComponentGenerator[List[SkillGroupDTO]]:
+) -> Generator[ComponentGenerationContext, List[SkillGroupDTO]]:
     """
     Create a skills generator.
 
@@ -76,4 +76,4 @@ def create_skills_generator(
         # Map to DTOs
         return [map_skill_group(skill_group) for skill_group in result.data]
 
-    return ComponentGenerator(generation_func)
+    return Generator(generation_func)

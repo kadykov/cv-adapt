@@ -11,7 +11,7 @@ from cv_adapter.dto.mapper import map_summary
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import (
-    ComponentGenerator,
+    Generator,
     ComponentGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
@@ -22,7 +22,7 @@ def create_summary_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> ComponentGenerator[cv_dto.SummaryDTO]:
+) -> Generator[ComponentGenerationContext, cv_dto.SummaryDTO]:
     """
     Create a summary generator.
 
@@ -83,4 +83,4 @@ def create_summary_generator(
         # Map to DTO
         return map_summary(result.data)
 
-    return ComponentGenerator(generation_func)
+    return Generator(generation_func)

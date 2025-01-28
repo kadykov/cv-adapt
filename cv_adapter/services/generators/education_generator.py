@@ -10,7 +10,7 @@ from cv_adapter.dto.cv import EducationDTO
 from cv_adapter.dto.mapper import map_education
 from cv_adapter.models.language_context_models import Education
 from cv_adapter.services.generators.protocols import (
-    ComponentGenerator,
+    Generator,
     ComponentGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
@@ -20,7 +20,7 @@ def create_education_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> ComponentGenerator[List[EducationDTO]]:
+) -> Generator[ComponentGenerationContext, List[EducationDTO]]:
     """
     Create an education generator.
 
@@ -76,4 +76,4 @@ def create_education_generator(
         # Map to DTOs
         return [map_education(edu) for edu in result.data]
 
-    return ComponentGenerator(generation_func)
+    return Generator(generation_func)

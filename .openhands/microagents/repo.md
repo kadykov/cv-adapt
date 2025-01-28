@@ -32,10 +32,12 @@ Project Structure:
      - `constants.py`: Project-wide constants
    - `services/`: Business logic services
      - `generators/`: Specialized generator services
-       * `protocols.py`: Generator protocols and base classes
-         - Defines flexible, type-safe generator interfaces
-         - Supports protocol-based design
+       * `protocols.py`: Universal generator protocol and base classes
+         - Defines a single, flexible, type-safe generator interface
+         - Supports universal protocol-based design
          - Enables precise type checking for generators
+         - Provides a generic `Generator` and `GeneratorProtocol`
+         - Supports flexible context and output type handling
        * `utils.py`: Shared utility functions for generators
          - Provides common template loading and context preparation
          - Supports consistent generation across different generators
@@ -51,13 +53,16 @@ Project Structure:
          - Provides clear separation between generation logic and templates
 
      Generator Design Principles:
-       * Protocol-based design with type-safe generation
-       * Flexible generation context
+       * Universal generator protocol with type-safe generation
+       * Single, flexible generator interface
+       * Supports generic context and output type handling
+       * Flexible generation context with type parameters
        * Support for language-specific generation
        * Consistent template-based generation approach
        * Decoupled generation logic and template rendering
        * Supports single DTO or list of DTOs generation
        * Immediate validation and error handling
+       * Simplified type system with universal generator
    - `dto/`: Data Transfer Objects (DTOs)
      - `cv.py`: DTO classes for decoupled data representation
        * Provides data transfer objects for CV components

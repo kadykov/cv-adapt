@@ -8,7 +8,7 @@ from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.mapper import map_title
 from cv_adapter.models.language_context_models import Title
 from cv_adapter.services.generators.protocols import (
-    ComponentGenerator,
+    Generator,
     ComponentGenerationContext,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
@@ -18,7 +18,7 @@ def create_title_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> ComponentGenerator[cv_dto.TitleDTO]:
+) -> Generator[ComponentGenerationContext, cv_dto.TitleDTO]:
     """
     Create a title generator.
 
@@ -74,4 +74,4 @@ def create_title_generator(
         # Map to DTO
         return map_title(result.data)
 
-    return ComponentGenerator(generation_func)
+    return Generator(generation_func)
