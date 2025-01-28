@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.services.generators.protocols import GenerationContext
+from cv_adapter.services.generators.protocols import BaseGenerationContext
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 def create_test_template(tmp_path: Path, filename: str, content: str) -> str:
@@ -72,7 +72,7 @@ University of Technology, 2016-2020
 - Backend Development
 - Cloud Computing"""
 
-    context = GenerationContext(
+    context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position at Innovative Tech",
         language=ENGLISH,
@@ -111,7 +111,7 @@ University of Technology, 2016-2020
 - Backend Development
 - Cloud Computing"""
 
-    context = GenerationContext(
+    context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position",
         language=ENGLISH,
@@ -145,7 +145,7 @@ University of Technology, 2016-2020
 - Backend Development
 - Cloud Computing"""
 
-    context = GenerationContext(
+    context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position",
         language=ENGLISH,
