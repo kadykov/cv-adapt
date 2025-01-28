@@ -44,6 +44,11 @@ def create_education_generator(
             os.path.dirname(__file__), "templates", "education_context.j2"
         )
 
+    # Create agent with system prompt
+    agent = Agent(
+        ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
+    )
+
     def generation_func(context: ComponentGenerationContext) -> List[EducationDTO]:
         """
         Generate educational experiences based on context.
@@ -59,11 +64,6 @@ def create_education_generator(
             raise ValueError("CV text is required")
         if not context.job_description:
             raise ValueError("Job description is required")
-
-        # Create agent with system prompt
-        agent = Agent(
-            ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
-        )
 
         # Prepare context string
         context_str = prepare_context(
