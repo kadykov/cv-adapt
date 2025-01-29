@@ -105,7 +105,6 @@ def test_title_generator_dto_output() -> None:
                 cv="Senior Software Engineer with 10 years of experience",
                 job_description="Seeking a Project Manager for innovative tech team",
                 core_competences="Technical Leadership, Strategic Problem Solving",
-                language=ENGLISH,
             )
 
             # Generate title
@@ -140,7 +139,6 @@ def test_title_generator_raises_error_on_empty_parameters() -> None:
                     cv="",
                     job_description="Valid job",
                     core_competences="Valid competences",
-                    language=ENGLISH,
                 )
             )
 
@@ -151,7 +149,6 @@ def test_title_generator_raises_error_on_empty_parameters() -> None:
                     cv="Valid CV",
                     job_description="",
                     core_competences="Valid competences",
-                    language=ENGLISH,
                 )
             )
 
@@ -162,6 +159,5 @@ def test_title_generator_raises_error_on_empty_parameters() -> None:
                     cv="Valid CV",
                     job_description="Valid job",
                     core_competences="",
-                    language=ENGLISH,
                 )
             )

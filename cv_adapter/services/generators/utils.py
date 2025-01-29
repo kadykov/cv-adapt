@@ -6,6 +6,7 @@ from typing import Any, Dict
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from cv_adapter.dto.language import ENGLISH
+from cv_adapter.models.language_context import get_current_language
 from cv_adapter.services.generators.protocols import BaseGenerationContext
 
 
@@ -82,7 +83,7 @@ def prepare_context(
         template_context: Dict[str, Any] = {
             "cv": context.cv,
             "job_description": context.job_description,
-            "language": context.language,
+            "language": get_current_language(),
             "notes": context.notes,
             "ENGLISH": ENGLISH,
             **extra_context,

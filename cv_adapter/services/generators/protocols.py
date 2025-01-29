@@ -7,8 +7,6 @@ from typing import (
     runtime_checkable,
 )
 
-from cv_adapter.dto.language import ENGLISH, Language
-
 T = TypeVar("T", covariant=True)
 C = TypeVar("C", contravariant=True)
 
@@ -20,7 +18,6 @@ class BaseGenerationContext:
         self,
         cv: str,
         job_description: str,
-        language: Optional[Language] = None,
         notes: Optional[str] = None,
     ):
         """
@@ -29,12 +26,10 @@ class BaseGenerationContext:
         Args:
             cv: Detailed CV content provided by the user as a Markdown string
             job_description: Target job description
-            language: Language for generation
             notes: Additional generation notes
         """
         self.cv = cv
         self.job_description = job_description
-        self.language = language or ENGLISH
         self.notes = notes
 
 
@@ -52,7 +47,6 @@ class ComponentGenerationContext(BaseGenerationContext):
         cv: str,
         job_description: str,
         core_competences: str,
-        language: Optional[Language] = None,
         notes: Optional[str] = None,
     ):
         """
@@ -62,10 +56,9 @@ class ComponentGenerationContext(BaseGenerationContext):
             cv: Detailed CV content provided by the user as a Markdown string
             job_description: Target job description
             core_competences: Formatted string of core competences to use in generation
-            language: Language for generation
             notes: Additional generation notes
         """
-        super().__init__(cv, job_description, language, notes)
+        super().__init__(cv, job_description, notes)
         self.core_competences = core_competences
 
 

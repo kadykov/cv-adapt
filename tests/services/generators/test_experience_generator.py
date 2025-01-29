@@ -4,7 +4,7 @@ from typing import Dict, TypedDict, cast
 import pytest
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
-from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.language import ENGLISH
 from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.experience_generator import (
     create_experience_generator,
@@ -16,7 +16,6 @@ class GeneratorParams(TypedDict):
     cv: str
     job_description: str
     core_competences: str
-    language: Language
 
 
 def test_experience_generator_dto_output() -> None:
@@ -31,7 +30,6 @@ def test_experience_generator_dto_output() -> None:
             cv="Experienced software engineer with 10 years of expertise",
             job_description="Seeking a senior software engineer with leadership skills",
             core_competences="Technical Leadership, Strategic Problem Solving",
-            language=ENGLISH,
         )
 
         # Generate experiences
@@ -70,11 +68,10 @@ def test_experience_generator_raises_error_on_empty_parameters(
         generator = create_experience_generator(ai_model="test")
 
         # Create base params with explicit typing
-        base_params: Dict[str, str | Language] = {
+        base_params: Dict[str, str] = {
             "cv": "Valid CV text",
             "job_description": "Valid job description",
             "core_competences": "Valid core competences",
-            "language": ENGLISH,
         }
         # Create new dict with empty parameter
         modified_params = {**base_params, invalid_param: ""}
@@ -84,7 +81,6 @@ def test_experience_generator_raises_error_on_empty_parameters(
             "cv": cast(str, modified_params["cv"]),
             "job_description": cast(str, modified_params["job_description"]),
             "core_competences": cast(str, modified_params["core_competences"]),
-            "language": cast(Language, modified_params["language"]),
         }
 
         context = ComponentGenerationContext(**params)

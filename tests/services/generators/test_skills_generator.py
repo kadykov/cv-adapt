@@ -125,7 +125,6 @@ def test_skills_generator_dto_output() -> None:
                     "with full-stack development skills"
                 ),
                 core_competences="Technical Leadership, Advanced Learning",
-                language=ENGLISH,
             )
 
             # Generate skills
@@ -175,7 +174,6 @@ def test_skills_generator_raises_error_on_empty_parameters() -> None:
                     cv="",
                     job_description="Valid job",
                     core_competences="Valid competences",
-                    language=ENGLISH,
                 )
             )
 
@@ -186,7 +184,6 @@ def test_skills_generator_raises_error_on_empty_parameters() -> None:
                     cv="Valid CV",
                     job_description="",
                     core_competences="Valid competences",
-                    language=ENGLISH,
                 )
             )
 
@@ -197,6 +194,5 @@ def test_skills_generator_raises_error_on_empty_parameters() -> None:
                     cv="Valid CV",
                     job_description="Valid job",
                     core_competences="",
-                    language=ENGLISH,
                 )
             )

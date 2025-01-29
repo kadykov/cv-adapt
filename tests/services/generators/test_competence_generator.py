@@ -117,7 +117,6 @@ def test_core_competence_generator_dto_output() -> None:
             context = CoreCompetenceGenerationContext(
                 cv="Senior Software Engineer with 10 years of experience",
                 job_description="Seeking a Project Manager for innovative tech team",
-                language=ENGLISH,
             )
 
             # Generate competences

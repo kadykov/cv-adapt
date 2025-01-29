@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -39,7 +40,10 @@ def test_load_system_prompt_empty_template(tmp_path: Path) -> None:
         load_system_prompt(template_path)
 
 
-def test_prepare_context_success(tmp_path: Path) -> None:
+@patch(
+    "cv_adapter.services.generators.utils.get_current_language", return_value=ENGLISH
+)
+def test_prepare_context_success(mock_get_language: MagicMock, tmp_path: Path) -> None:
     """Test successful context preparation."""
     # Create a test template
     template_content = """
@@ -76,7 +80,6 @@ University of Technology, 2016-2020
     context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position at Innovative Tech",
-        language=ENGLISH,
         notes="Test context for CV generation",
     )
 
@@ -91,7 +94,10 @@ University of Technology, 2016-2020
     assert "Extra: Additional details" in result
 
 
-def test_prepare_context_file_not_found() -> None:
+@patch(
+    "cv_adapter.services.generators.utils.get_current_language", return_value=ENGLISH
+)
+def test_prepare_context_file_not_found(mock_get_language: MagicMock) -> None:
     """Test handling of non-existent context template."""
     cv_markdown = """# John Doe
 
@@ -115,7 +121,6 @@ University of Technology, 2016-2020
     context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position",
-        language=ENGLISH,
         notes="Test context for file not found scenario",
     )
 
@@ -123,7 +128,10 @@ University of Technology, 2016-2020
         prepare_context("/path/to/nonexistent/template.txt", context)
 
 
-def test_prepare_context_non_english_language(tmp_path: Path) -> None:
+@patch("cv_adapter.services.generators.utils.get_current_language", return_value=FRENCH)
+def test_prepare_context_non_english_language(
+    mock_get_language: MagicMock, tmp_path: Path
+) -> None:
     """Test context preparation with non-English language."""
     # Create a test template
     template_content = """
@@ -149,7 +157,6 @@ def test_prepare_context_non_english_language(tmp_path: Path) -> None:
     context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position",
-        language=FRENCH,
         notes="Test context for French language",
     )
 
@@ -164,7 +171,12 @@ def test_prepare_context_non_english_language(tmp_path: Path) -> None:
     assert "Notes: Test context for French language" in result
 
 
-def test_prepare_context_empty_template(tmp_path: Path) -> None:
+@patch(
+    "cv_adapter.services.generators.utils.get_current_language", return_value=ENGLISH
+)
+def test_prepare_context_empty_template(
+    mock_get_language: MagicMock, tmp_path: Path
+) -> None:
     """Test handling of an empty context template."""
     template_path = create_test_template(tmp_path, "empty_context.txt", "")
 
@@ -190,7 +202,6 @@ University of Technology, 2016-2020
     context = BaseGenerationContext(
         cv=cv_markdown,
         job_description="Senior Software Engineer position",
-        language=ENGLISH,
         notes="Test context for empty template scenario",
     )
 
