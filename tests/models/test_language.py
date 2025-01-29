@@ -10,8 +10,8 @@ from cv_adapter.dto.language import (
     ITALIAN,
     SPANISH,
     Language,
-    LanguageCode,
 )
+from cv_adapter.models.context import language_context
 from cv_adapter.models.language import (
     LanguageValidationMixin,
     detect_language,
@@ -162,30 +162,26 @@ def test_language_validation_mixin(
     language: Language, text: str, should_pass: bool
 ) -> None:
     """Test LanguageValidationMixin with various language combinations."""
-    if should_pass:
-        model: SampleModel = SampleModel(language=language, text=text)
-        assert model.language == language
-        assert model.text == text.strip()
-    else:
-        with pytest.raises(ValidationError) as exc_info:
-            SampleModel(language=language, text=text)
-        assert "Text language mismatch" in str(exc_info.value)
+    with language_context(language):
+        if should_pass:
+            model: SampleModel = SampleModel(text=text)
+            assert model.text == text.strip()
+        else:
+            with pytest.raises(ValidationError) as exc_info:
+                SampleModel(text=text)
+            assert "Text language mismatch" in str(exc_info.value)
 
 
-def test_language_validation_mixin_invalid_language() -> None:
-    """Test LanguageValidationMixin with invalid language value."""
-    with pytest.raises(ValidationError) as exc_info:
-        SampleModel(language="invalid", text="Some text")  # type: ignore[arg-type]
-    assert "Input should be a valid dictionary or instance of Language" in str(
-        exc_info.value
-    )
+def test_language_validation_mixin_no_language_context() -> None:
+    """Test LanguageValidationMixin when no language context is set."""
+    with pytest.raises(RuntimeError) as exc_info:
+        SampleModel(text="Some text")
+    assert "Language context not set" in str(exc_info.value)
 
 
 def test_language_validation_mixin_multi_line_language_mismatch() -> None:
     """Test language validation with multi-line text and language mismatch."""
-    with pytest.raises(ValidationError) as exc_info:
-        SampleModel(
-            language=Language.get(LanguageCode.ENGLISH),
-            text="C'est un texte\nen français avec\nplusieurs phrases.",
-        )
-    assert "Text language mismatch" in str(exc_info.value)
+    with language_context(ENGLISH):
+        with pytest.raises(ValidationError) as exc_info:
+            SampleModel(text="C'est un texte\nen français avec\nplusieurs phrases.")
+        assert "Text language mismatch" in str(exc_info.value)

@@ -8,8 +8,8 @@ from pydantic_ai import Agent
 import cv_adapter.services.generators.title_generator
 from cv_adapter.dto.cv import TitleDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context import language_context
-from cv_adapter.models.language_context_models import Title
+from cv_adapter.models.components import Title
+from cv_adapter.models.context import language_context
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
 from cv_adapter.services.generators.title_generator import create_title_generator
 

@@ -1,19 +1,20 @@
-"""Language context management for CV generation."""
+"""Context management for CV generation."""
 
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Iterator, Optional
+from typing import TYPE_CHECKING, Iterator, Optional
 
-from .language import Language
+if TYPE_CHECKING:
+    from .language import Language
 
 # Thread-safe context variable
-current_language: ContextVar[Optional[Language]] = ContextVar(
+current_language: ContextVar[Optional["Language"]] = ContextVar(
     "current_language", default=None
 )
 
 
 @contextmanager
-def language_context(language: Language) -> Iterator[None]:
+def language_context(language: "Language") -> Iterator[None]:
     """Context manager for setting the current language.
 
     Args:
@@ -36,7 +37,7 @@ def language_context(language: Language) -> Iterator[None]:
         current_language.reset(token)
 
 
-def get_current_language() -> Language:
+def get_current_language() -> "Language":
     """Get the current language from context.
 
     Returns:

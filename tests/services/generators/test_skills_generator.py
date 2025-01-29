@@ -8,8 +8,8 @@ from pydantic_ai import Agent
 import cv_adapter.services.generators.skills_generator
 from cv_adapter.dto.cv import SkillDTO, SkillGroupDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context import language_context
-from cv_adapter.models.language_context_models import Skill, SkillGroup
+from cv_adapter.models.components import Skill, SkillGroup
+from cv_adapter.models.context import language_context
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
 from cv_adapter.services.generators.skills_generator import create_skills_generator
 

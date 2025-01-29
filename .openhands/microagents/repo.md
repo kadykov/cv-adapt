@@ -23,9 +23,9 @@ Project Structure:
        * `PersonalInfo`: Model for handling personal information
      - `language.py`: Language support and validation
        * Defines language-related constants and validation
-     - `language_context.py`: Language context management
+     - `context.py`: Language context management
        * Provides thread-safe language context handling
-     - `language_context_models.py`: Language-aware data models
+     - `context_models.py`: Language-aware data models
        * Supports multilingual validation and generation
      - `validators.py`: Custom validation utilities
      - `summary.py`: Summary-related models

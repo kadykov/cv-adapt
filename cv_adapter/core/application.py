@@ -9,7 +9,7 @@ from cv_adapter.dto.cv import (
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH, Language
-from cv_adapter.models.language_context import language_context
+from cv_adapter.models.context import language_context
 from cv_adapter.renderers.markdown import (
     CoreCompetencesRenderer,
     MinimalMarkdownRenderer,

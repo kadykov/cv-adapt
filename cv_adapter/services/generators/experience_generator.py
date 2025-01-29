@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import ExperienceDTO
 from cv_adapter.dto.mapper import map_experience
-from cv_adapter.models.language_context_models import Experience
+from cv_adapter.models.components import Experience
 from cv_adapter.services.generators.protocols import (
     ComponentGenerationContext,
     Generator,

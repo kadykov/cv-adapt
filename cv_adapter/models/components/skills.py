@@ -1,23 +1,18 @@
-"""Language context models for CV components."""
+"""Models for skills-related CV components."""
 
-from datetime import date
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .constants import (
-    BODY_LINE_LENGTH,
+from ..constants import (
     HALF_LINE_LENGTH,
     MAX_CORE_COMPETENCES,
-    MAX_EXPERIENCE_DESCRIPTION_LENGTH,
     MAX_WORDS_PER_SUBSUBTITLE,
     MIN_CORE_COMPETENCES,
     MIN_SKILLS_IN_GROUP,
     SUBSUBTITLE_LINE_LENGTH,
-    SUBTITLE_LINE_LENGTH,
-    TITLE_LINE_LENGTH,
 )
-from .validators import LanguageValidatedStr
+from ..validators import LanguageValidatedStr
 
 
 class CoreCompetence(BaseModel):
@@ -89,101 +84,6 @@ class CoreCompetences(BaseModel):
 
     def __len__(self) -> int:
         return len(self.items)
-
-
-class Institution(BaseModel):
-    """Base model for institutions with language validation."""
-
-    name: LanguageValidatedStr = Field(
-        ..., max_length=SUBTITLE_LINE_LENGTH
-    )  # H2 - Company/University name
-    description: Optional[LanguageValidatedStr] = Field(
-        None, max_length=BODY_LINE_LENGTH
-    )
-    location: Optional[LanguageValidatedStr] = Field(None, max_length=HALF_LINE_LENGTH)
-
-    @field_validator("name", "description", "location")
-    @classmethod
-    def validate_single_line(cls, v: Optional[str]) -> Optional[str]:
-        """Validate that the field is a single line."""
-        if v is None:
-            return v
-        v = v.strip()
-        if "\n" in v:
-            raise ValueError("field must be a single line")
-        return v
-
-
-class Company(Institution):
-    """Represents a company in the CV."""
-
-    pass
-
-
-class University(Institution):
-    """Represents a university in the CV."""
-
-    pass
-
-
-class Experience(BaseModel):
-    """Represents a professional experience entry."""
-
-    company: Company
-    position: LanguageValidatedStr = Field(
-        ..., max_length=SUBSUBTITLE_LINE_LENGTH
-    )  # H3 - Position title
-    start_date: date
-    end_date: Optional[date]
-    description: LanguageValidatedStr = Field(
-        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
-    )
-    technologies: List[str]
-
-
-class Education(BaseModel):
-    """Represents an educational experience entry."""
-
-    university: University
-    degree: LanguageValidatedStr = Field(
-        ..., max_length=SUBSUBTITLE_LINE_LENGTH
-    )  # H3 - Degree title
-    start_date: date
-    end_date: Optional[date]
-    description: LanguageValidatedStr = Field(
-        ..., max_length=MAX_EXPERIENCE_DESCRIPTION_LENGTH
-    )
-
-    @field_validator("degree")
-    @classmethod
-    def validate_degree(cls, v: str) -> str:
-        """Validate that the degree is a single line."""
-        v = v.strip()
-        if "\n" in v:
-            raise ValueError("degree must be a single line")
-        return v
-
-
-class Title(BaseModel):
-    """Represents a professional title."""
-
-    text: LanguageValidatedStr = Field(
-        ..., max_length=TITLE_LINE_LENGTH * 2
-    )  # Allow up to 2 lines
-
-    @model_validator(mode="after")
-    def validate_text(self) -> "Title":
-        """Validate title text length and line count."""
-        text = self.text.strip()
-        if len(text.split("\n")) > 2:
-            raise ValueError("title must not exceed 2 lines")
-        for line in text.split("\n"):
-            if len(line.strip()) > TITLE_LINE_LENGTH:
-                raise ValueError(
-                    f"each line in title must not exceed {TITLE_LINE_LENGTH} chars"
-                )
-        self.text = text
-        return self
 
 
 class Skill(BaseModel):

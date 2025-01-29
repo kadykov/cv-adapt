@@ -9,8 +9,8 @@ from pydantic_ai import Agent
 import cv_adapter.services.generators.education_generator
 from cv_adapter.dto.cv import EducationDTO, InstitutionDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context import language_context
-from cv_adapter.models.language_context_models import Education, University
+from cv_adapter.models.components import Education, University
+from cv_adapter.models.context import language_context
 from cv_adapter.services.generators.education_generator import (
     create_education_generator,
 )

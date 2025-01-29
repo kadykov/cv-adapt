@@ -3,7 +3,7 @@
 import pytest
 
 from cv_adapter.dto.language import FRENCH
-from cv_adapter.models.language_context import language_context
+from cv_adapter.models.context import language_context
 from cv_adapter.models.validators import validate_language
 
 

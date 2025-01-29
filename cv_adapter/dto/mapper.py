@@ -2,9 +2,20 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Dict, Mapping, Optional, Union
 
 from cv_adapter.dto import cv as cv_dto
-from cv_adapter.models import language_context_models
 from cv_adapter.models import personal_info as personal_info_models
-from cv_adapter.models.summary import CVSummary
+from cv_adapter.models.components import (
+    Company,
+    CoreCompetence,
+    CoreCompetences,
+    CVSummary,
+    Education,
+    Experience,
+    Skill,
+    SkillGroup,
+    Skills,
+    Title,
+    University,
+)
 
 
 @dataclass(frozen=True)
@@ -78,19 +89,19 @@ def map_personal_info(
 
 
 def map_core_competence(
-    core_competence: language_context_models.CoreCompetence,
+    core_competence: CoreCompetence,
 ) -> cv_dto.CoreCompetenceDTO:
     return cv_dto.CoreCompetenceDTO(text=core_competence.text)
 
 
 def map_core_competences(
-    core_competences: language_context_models.CoreCompetences,
+    core_competences: CoreCompetences,
 ) -> list[cv_dto.CoreCompetenceDTO]:
     return [map_core_competence(cc) for cc in core_competences.items]
 
 
 def map_institution(
-    institution: language_context_models.Institution,
+    institution: University | Company,
 ) -> cv_dto.InstitutionDTO:
     return cv_dto.InstitutionDTO(
         name=institution.name,
@@ -100,7 +111,7 @@ def map_institution(
 
 
 def map_experience(
-    experience: language_context_models.Experience,
+    experience: Experience,
 ) -> cv_dto.ExperienceDTO:
     return cv_dto.ExperienceDTO(
         company=map_institution(experience.company),
@@ -112,7 +123,7 @@ def map_experience(
     )
 
 
-def map_education(education: language_context_models.Education) -> cv_dto.EducationDTO:
+def map_education(education: Education) -> cv_dto.EducationDTO:
     return cv_dto.EducationDTO(
         university=map_institution(education.university),
         degree=education.degree,
@@ -122,23 +133,23 @@ def map_education(education: language_context_models.Education) -> cv_dto.Educat
     )
 
 
-def map_skill(skill: language_context_models.Skill) -> cv_dto.SkillDTO:
+def map_skill(skill: Skill) -> cv_dto.SkillDTO:
     return cv_dto.SkillDTO(text=skill.text)
 
 
 def map_skill_group(
-    skill_group: language_context_models.SkillGroup,
+    skill_group: SkillGroup,
 ) -> cv_dto.SkillGroupDTO:
     return cv_dto.SkillGroupDTO(
         name=skill_group.name, skills=[map_skill(skill) for skill in skill_group.skills]
     )
 
 
-def map_skills(skills: language_context_models.Skills) -> list[cv_dto.SkillGroupDTO]:
+def map_skills(skills: Skills) -> list[cv_dto.SkillGroupDTO]:
     return [map_skill_group(group) for group in skills.groups]
 
 
-def map_title(title: language_context_models.Title) -> cv_dto.TitleDTO:
+def map_title(title: Title) -> cv_dto.TitleDTO:
     return cv_dto.TitleDTO(text=title.text)
 
 

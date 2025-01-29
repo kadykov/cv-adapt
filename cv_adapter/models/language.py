@@ -5,11 +5,12 @@ from pydantic import BaseModel, ValidationInfo, field_validator
 
 from cv_adapter.dto.language import Language, LanguageCode
 
+from .context import get_current_language
+
 
 class LanguageValidationMixin(BaseModel):
     """Mixin for adding language validation to Pydantic models."""
 
-    language: Language
     text: str
 
     @field_validator("text")
@@ -27,9 +28,8 @@ class LanguageValidationMixin(BaseModel):
         Raises:
             ValueError: If detected language does not match expected language
         """
-        language = info.data.get("language")
-        if not language:
-            return v
+
+        language = get_current_language()
 
         # Replace newlines with spaces to handle multi-line text
         text_single_line = v.replace("\n", " ").strip()

@@ -5,7 +5,7 @@ import pytest
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context import language_context
+from cv_adapter.models.context import language_context
 from cv_adapter.services.generators.experience_generator import (
     create_experience_generator,
 )

@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import EducationDTO
 from cv_adapter.dto.mapper import map_education
-from cv_adapter.models.language_context_models import Education
+from cv_adapter.models.components import Education
 from cv_adapter.services.generators.protocols import (
     ComponentGenerationContext,
     Generator,

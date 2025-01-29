@@ -8,8 +8,8 @@ from pydantic_ai import Agent
 import cv_adapter.services.generators.summary_generator
 from cv_adapter.dto.cv import SummaryDTO
 from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.language_context import language_context
-from cv_adapter.models.summary import CVSummary
+from cv_adapter.models.components import CVSummary
+from cv_adapter.models.context import language_context
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
 from cv_adapter.services.generators.summary_generator import create_summary_generator
@@ -84,7 +84,6 @@ def test_summary_generator_dto_output() -> None:
         mock_agent.run_sync.return_value = Mock(
             data=CVSummary(
                 text="Experienced software engineer with proven track record.",
-                language=ENGLISH,
             )
         )
 

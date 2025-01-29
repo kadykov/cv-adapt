@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import SkillGroupDTO
 from cv_adapter.dto.mapper import map_skill_group
-from cv_adapter.models.language_context_models import SkillGroup
+from cv_adapter.models.components import SkillGroup
 from cv_adapter.services.generators.protocols import (
     ComponentGenerationContext,
     Generator,

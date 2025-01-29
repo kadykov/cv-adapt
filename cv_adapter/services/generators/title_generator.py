@@ -6,7 +6,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.mapper import map_title
-from cv_adapter.models.language_context_models import Title
+from cv_adapter.models.components import Title
 from cv_adapter.services.generators.protocols import (
     ComponentGenerationContext,
     Generator,

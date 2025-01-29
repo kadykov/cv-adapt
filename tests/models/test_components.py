@@ -6,27 +6,26 @@ import pytest
 from pydantic import ValidationError
 
 from cv_adapter.dto.language import FRENCH
-from cv_adapter.models.language_context import language_context
-from cv_adapter.models.language_context_models import (
+from cv_adapter.models.components import (
     Company,
     CoreCompetence,
     CoreCompetences,
     Education,
     Experience,
-    Institution,
     Skill,
     SkillGroup,
     Skills,
     Title,
     University,
 )
+from cv_adapter.models.context import language_context
 
 
 def test_institution_validation() -> None:
     """Test institution model validation."""
     with language_context(FRENCH):
         # Valid French institution
-        institution = Institution(
+        institution = Company(
             name="Société Technologique",
             description="Entreprise de développement logiciel",
             location="Paris, La France",
@@ -35,7 +34,7 @@ def test_institution_validation() -> None:
 
         # Invalid multi-line name
         with pytest.raises(ValidationError) as exc_info:
-            Institution(
+            Company(
                 name="Société\nTechnologique",
                 description="Entreprise de développement logiciel",
                 location="Paris, France",
@@ -44,7 +43,7 @@ def test_institution_validation() -> None:
 
         # Obvious language mismatch
         with pytest.raises(ValidationError) as exc_info:
-            Institution(
+            Company(
                 name="Large Technology Corporation",
                 description="Cutting-edge software development company",
                 location="San Francisco, California",

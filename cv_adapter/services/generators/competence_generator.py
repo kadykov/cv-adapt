@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
-from cv_adapter.models.language_context_models import CoreCompetences
+from cv_adapter.models.components import CoreCompetences
 from cv_adapter.services.generators.protocols import (
     CoreCompetenceGenerationContext,
     Generator,

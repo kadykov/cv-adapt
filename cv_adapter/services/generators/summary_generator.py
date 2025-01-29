@@ -8,7 +8,7 @@ from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.mapper import map_summary
-from cv_adapter.models.summary import CVSummary
+from cv_adapter.models.components import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import (
     ComponentGenerationContext,

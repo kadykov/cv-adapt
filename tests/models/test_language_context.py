@@ -3,7 +3,7 @@
 import pytest
 
 from cv_adapter.dto.language import FRENCH, GERMAN
-from cv_adapter.models.language_context import get_current_language, language_context
+from cv_adapter.models.context import get_current_language, language_context
 
 
 def test_language_context_sets_language() -> None:

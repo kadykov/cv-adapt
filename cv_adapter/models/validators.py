@@ -4,8 +4,8 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from .context import get_current_language
 from .language import detect_language
-from .language_context import get_current_language
 
 
 def validate_language(text: str) -> str:
