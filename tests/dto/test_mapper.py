@@ -195,7 +195,7 @@ def test_map_summary() -> None:
     """Test mapping a summary."""
     summary = CVSummary(
         language=ENGLISH,
-        text="Experienced software engineer with a passion for innovative solutions",
+        text=("Experienced software engineer with a passion for innovative solutions"),
     )
     dto = map_summary(summary)
 
@@ -288,7 +288,9 @@ def test_map_cv() -> None:
         ),
         "summary": CVSummary(
             language=ENGLISH,
-            text="Experienced software engineer with a passion for innovative solutions",
+            text=(
+                "Experienced software engineer with a passion for innovative solutions"
+            ),
         ),
     }
 
