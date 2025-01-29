@@ -25,7 +25,7 @@
         "ms-toolsai.jupyter",
         "charliermarsh.ruff",
         "ms-python.isort",
-        "task.vscode-task"
+        "saoudrizwan.claude-dev"
       ]
     }
   }
