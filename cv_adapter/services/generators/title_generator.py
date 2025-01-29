@@ -60,8 +60,10 @@ def create_title_generator(
         # Validate input parameters
         if not context.cv or not context.cv.strip():
             raise ValueError("CV text is required")
-        if not context.job_description:
+        if not context.job_description or not context.job_description.strip():
             raise ValueError("Job description is required")
+        if not context.core_competences or not context.core_competences.strip():
+            raise ValueError("Core competences are required")
 
         # Prepare context string
         context_str = prepare_context(
