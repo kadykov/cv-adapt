@@ -1,8 +1,8 @@
 import os
-import pytest
 from typing import Any, cast
 from unittest.mock import Mock
 
+import pytest
 from pydantic_ai import Agent
 
 import cv_adapter.services.generators.summary_generator
@@ -84,7 +84,7 @@ def test_summary_generator_dto_output() -> None:
         mock_agent.run_sync.return_value = Mock(
             data=CVSummary(
                 text="Experienced software engineer with proven track record.",
-                language=ENGLISH
+                language=ENGLISH,
             )
         )
 
@@ -105,8 +105,7 @@ def test_summary_generator_dto_output() -> None:
         try:
             # Create generator
             generator = create_summary_generator(
-                renderer=MinimalMarkdownRenderer(),
-                ai_model="test"
+                renderer=MinimalMarkdownRenderer(), ai_model="test"
             )
 
             # Prepare test context
@@ -124,7 +123,9 @@ def test_summary_generator_dto_output() -> None:
             assert isinstance(result, SummaryDTO)
             assert isinstance(result.text, str)
             assert len(result.text) > 0
-            assert result.text == "Experienced software engineer with proven track record."
+            assert (
+                result.text == "Experienced software engineer with proven track record."
+            )
 
             # Verify agent was called with correct arguments
             mock_agent.run_sync.assert_called_once()
@@ -141,8 +142,7 @@ def test_summary_generator_raises_error_on_empty_parameters() -> None:
     """Test that generator raises ValueError when required parameters are empty."""
     with language_context(ENGLISH):
         generator = create_summary_generator(
-            renderer=MinimalMarkdownRenderer(),
-            ai_model="test"
+            renderer=MinimalMarkdownRenderer(), ai_model="test"
         )
 
         # Test empty CV

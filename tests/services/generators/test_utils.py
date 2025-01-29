@@ -6,6 +6,7 @@ from cv_adapter.dto.language import ENGLISH
 from cv_adapter.services.generators.protocols import BaseGenerationContext
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
+
 def create_test_template(tmp_path: Path, filename: str, content: str) -> str:
     """Create a temporary template file for testing."""
     template_path = tmp_path / filename

@@ -10,8 +10,8 @@ from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.language_context_models import CoreCompetences
 from cv_adapter.services.generators.protocols import (
-    Generator,
     CoreCompetenceGenerationContext,
+    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
@@ -49,7 +49,9 @@ def create_core_competence_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: CoreCompetenceGenerationContext) -> List[CoreCompetenceDTO]:
+    def generation_func(
+        context: CoreCompetenceGenerationContext,
+    ) -> List[CoreCompetenceDTO]:
         """
         Generate core competences based on context.
 

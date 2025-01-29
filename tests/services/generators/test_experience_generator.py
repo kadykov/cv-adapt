@@ -1,11 +1,14 @@
 from datetime import date
+from typing import Dict, TypedDict, cast
+
 import pytest
-from typing import Dict, List, TypedDict, cast
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
 from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.models.language_context import language_context
-from cv_adapter.services.generators.experience_generator import create_experience_generator
+from cv_adapter.services.generators.experience_generator import (
+    create_experience_generator,
+)
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
 
 
@@ -56,8 +59,13 @@ def test_experience_generator_dto_output() -> None:
 
 
 @pytest.mark.parametrize("invalid_param", ["cv", "job_description", "core_competences"])
-def test_experience_generator_raises_error_on_empty_parameters(invalid_param: str) -> None:
-    """Test that generator raises ValueError when required parameters are empty strings."""
+def test_experience_generator_raises_error_on_empty_parameters(
+    invalid_param: str,
+) -> None:
+    """Test that generator raises ValueError when required parameters are empty strings.
+
+    Tests each required parameter with an empty string value.
+    """
     with language_context(ENGLISH):
         generator = create_experience_generator(ai_model="test")
 

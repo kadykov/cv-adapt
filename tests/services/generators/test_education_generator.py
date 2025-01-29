@@ -1,9 +1,9 @@
 import os
 from datetime import date
-import pytest
 from typing import Any, cast
 from unittest.mock import Mock
 
+import pytest
 from pydantic_ai import Agent
 
 import cv_adapter.services.generators.education_generator
@@ -11,8 +11,10 @@ from cv_adapter.dto.cv import EducationDTO, InstitutionDTO
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.models.language_context import language_context
 from cv_adapter.models.language_context_models import Education, University
+from cv_adapter.services.generators.education_generator import (
+    create_education_generator,
+)
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
-from cv_adapter.services.generators.education_generator import create_education_generator
 
 
 def test_education_generator_default_templates() -> None:
@@ -51,8 +53,8 @@ def test_education_generator_custom_templates(tmp_path: Any) -> None:
     # Create custom templates
     system_prompt_path = tmp_path / "system_prompt.j2"
     system_prompt_path.write_text(
-        "An expert CV analyst that helps identify and describe educational experiences. "
-        "Generate educational experiences that match job requirements."
+        "An expert CV analyst that helps identify and describe educational "
+        "experiences. Generate educational experiences that match job requirements."
     )
 
     context_template_path = tmp_path / "context.j2"
@@ -85,12 +87,12 @@ def test_education_generator_dto_output() -> None:
                     university=University(
                         name="Tech University",
                         description="Leading technology and engineering institution",
-                        location="San Francisco, CA"
+                        location="San Francisco, CA",
                     ),
                     degree="Master of Science in Computer Science",
                     start_date=date(2018, 9, 1),
                     end_date=date(2020, 5, 15),
-                    description="Specialized in machine learning and AI technologies"
+                    description="Specialized in machine learning and AI technologies",
                 )
             ]
         )
@@ -141,7 +143,10 @@ def test_education_generator_dto_output() -> None:
             # Verify specific education details
             assert education.university.name == "Tech University"
             assert education.degree == "Master of Science in Computer Science"
-            assert education.description == "Specialized in machine learning and AI technologies"
+            assert (
+                education.description
+                == "Specialized in machine learning and AI technologies"
+            )
             assert education.university.location == "San Francisco, CA"
             assert education.start_date == date(2018, 9, 1)
             assert education.end_date == date(2020, 5, 15)

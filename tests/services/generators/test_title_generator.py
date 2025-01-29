@@ -1,8 +1,8 @@
 import os
-import pytest
 from typing import Any, cast
 from unittest.mock import Mock
 
+import pytest
 from pydantic_ai import Agent
 
 import cv_adapter.services.generators.title_generator
@@ -79,9 +79,7 @@ def test_title_generator_dto_output() -> None:
         # Create a mock agent
         mock_agent = Mock(spec=Agent)
         mock_agent.run_sync.return_value = Mock(
-            data=Title(
-                text="Senior Software Engineer"
-            )
+            data=Title(text="Senior Software Engineer")
         )
 
         # Temporarily replace the agent creation in the function

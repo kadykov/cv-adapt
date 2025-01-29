@@ -11,8 +11,8 @@ from cv_adapter.dto.mapper import map_summary
 from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import (
-    Generator,
     ComponentGenerationContext,
+    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 

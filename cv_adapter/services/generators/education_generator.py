@@ -10,8 +10,8 @@ from cv_adapter.dto.cv import EducationDTO
 from cv_adapter.dto.mapper import map_education
 from cv_adapter.models.language_context_models import Education
 from cv_adapter.services.generators.protocols import (
-    Generator,
     ComponentGenerationContext,
+    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 

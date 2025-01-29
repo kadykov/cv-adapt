@@ -1,17 +1,13 @@
 from typing import (
-    Any,
     Callable,
     Generic,
-    List,
     Optional,
     Protocol,
     TypeVar,
     runtime_checkable,
 )
 
-from cv_adapter.dto.cv import CoreCompetenceDTO, ExperienceDTO, SkillGroupDTO
 from cv_adapter.dto.language import ENGLISH, Language
-
 
 T = TypeVar("T", covariant=True)
 C = TypeVar("C", contravariant=True)
@@ -44,6 +40,7 @@ class BaseGenerationContext:
 
 class CoreCompetenceGenerationContext(BaseGenerationContext):
     """Context for generating core competences."""
+
     pass
 
 

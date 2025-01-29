@@ -1,8 +1,8 @@
 import os
-import pytest
 from typing import Any, cast
 from unittest.mock import Mock
 
+import pytest
 from pydantic_ai import Agent
 
 import cv_adapter.services.generators.skills_generator
@@ -86,7 +86,7 @@ def test_skills_generator_dto_output() -> None:
                         Skill(text="Python"),
                         Skill(text="JavaScript"),
                         Skill(text="TypeScript"),
-                    ]
+                    ],
                 ),
                 SkillGroup(
                     name="Frameworks",
@@ -94,7 +94,7 @@ def test_skills_generator_dto_output() -> None:
                         Skill(text="React"),
                         Skill(text="Django"),
                         Skill(text="FastAPI"),
-                    ]
+                    ],
                 ),
             ]
         )
