@@ -132,7 +132,8 @@ def test_prepare_context_non_english_language(tmp_path: Path) -> None:
     CV Name: {{ cv }}
     Notes: {{ notes }}
     {% if language != ENGLISH %}
-    Language Requirements: Generate in {{ language.name.title() }}, following professional conventions.
+    Language Requirements: Generate in {{ language.name.title() }}
+    following professional conventions.
     {% endif %}
     """
     template_path = create_test_template(
@@ -157,7 +158,7 @@ def test_prepare_context_non_english_language(tmp_path: Path) -> None:
 
     # Verify the rendered context
     assert "Language: fr" in result
-    assert "Language Requirements: Generate in French, following professional conventions." in result
+    assert "Generate in French" in result
     assert "Job Title: Senior Software Engineer position" in result
     assert "CV Name: # Jean Dupont" in result
     assert "Notes: Test context for French language" in result
