@@ -14,12 +14,12 @@ from cv_adapter.renderers.markdown import (
     CoreCompetencesRenderer,
     MinimalMarkdownRenderer,
 )
-from cv_adapter.services.generators.competence_generator import CompetenceGenerator
-from cv_adapter.services.generators.education_generator import EducationGenerator
-from cv_adapter.services.generators.experience_generator import ExperienceGenerator
-from cv_adapter.services.generators.skills_generator import SkillsGenerator
-from cv_adapter.services.generators.summary_generator import SummaryGenerator
-from cv_adapter.services.generators.title_generator import TitleGenerator
+from cv_adapter.services.generators.competence_generator import create_core_competence_generator
+from cv_adapter.services.generators.education_generator import create_education_generator
+from cv_adapter.services.generators.experience_generator import create_experience_generator
+from cv_adapter.services.generators.skills_generator import create_skills_generator
+from cv_adapter.services.generators.summary_generator import create_summary_generator
+from cv_adapter.services.generators.title_generator import create_title_generator
 
 
 class CVAdapterApplication:
@@ -34,14 +34,14 @@ class CVAdapterApplication:
         Args:
             ai_model: AI model to use for all generators. Defaults to OpenAI GPT-4o.
         """
-        self.competence_generator = CompetenceGenerator(ai_model=ai_model)
-        self.experience_generator = ExperienceGenerator(ai_model=ai_model)
-        self.education_generator = EducationGenerator(ai_model=ai_model)
-        self.skills_generator = SkillsGenerator(ai_model=ai_model)
-        self.summary_generator = SummaryGenerator(
+        self.competence_generator = create_core_competence_generator(ai_model=ai_model)
+        self.experience_generator = create_experience_generator(ai_model=ai_model)
+        self.education_generator = create_education_generator(ai_model=ai_model)
+        self.skills_generator = create_skills_generator(ai_model=ai_model)
+        self.summary_generator = create_summary_generator(
             MinimalMarkdownRenderer(), ai_model=ai_model
         )
-        self.title_generator = TitleGenerator(ai_model=ai_model)
+        self.title_generator = create_title_generator(ai_model=ai_model)
 
     def generate_cv(
         self,

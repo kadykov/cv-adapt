@@ -21,12 +21,7 @@ from cv_adapter.dto.cv import (
 )
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.renderers.markdown import CoreCompetencesRenderer
-from cv_adapter.services.generators.competence_generator import CompetenceGenerator
-from cv_adapter.services.generators.education_generator import EducationGenerator
-from cv_adapter.services.generators.experience_generator import ExperienceGenerator
-from cv_adapter.services.generators.skills_generator import SkillsGenerator
-from cv_adapter.services.generators.summary_generator import SummaryGenerator
-from cv_adapter.services.generators.title_generator import TitleGenerator
+from cv_adapter.services.generators.protocols import Generator
 
 
 @pytest.fixture
@@ -69,12 +64,12 @@ def test_init_with_custom_ai_model() -> None:
             app = CVAdapterApplication(ai_model=model)
 
             # Verify that all generators are correctly initialized
-            assert isinstance(app.competence_generator, CompetenceGenerator)
-            assert isinstance(app.experience_generator, ExperienceGenerator)
-            assert isinstance(app.education_generator, EducationGenerator)
-            assert isinstance(app.skills_generator, SkillsGenerator)
-            assert isinstance(app.summary_generator, SummaryGenerator)
-            assert isinstance(app.title_generator, TitleGenerator)
+            assert isinstance(app.competence_generator, Generator)
+            assert isinstance(app.experience_generator, Generator)
+            assert isinstance(app.education_generator, Generator)
+            assert isinstance(app.skills_generator, Generator)
+            assert isinstance(app.summary_generator, Generator)
+            assert isinstance(app.title_generator, Generator)
 
             # Verify AI model initialization
             # Note: Can't directly check AI model attribute
