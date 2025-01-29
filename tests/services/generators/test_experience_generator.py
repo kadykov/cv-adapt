@@ -1,5 +1,6 @@
 from datetime import date
 from typing import List
+import pytest
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
 from cv_adapter.dto.language import ENGLISH
@@ -45,3 +46,24 @@ def test_experience_generator_dto_output() -> None:
         assert experience.start_date is not None
         assert experience.description is not None
         assert len(experience.technologies) > 0
+
+
+@pytest.mark.parametrize("invalid_param", ["cv", "job_description", "core_competences"])
+def test_experience_generator_raises_error_on_empty_parameters(invalid_param: str) -> None:
+    """Test that generator raises ValueError when required parameters are empty strings."""
+    with language_context(ENGLISH):
+        generator = create_experience_generator(ai_model="test")
+        
+        valid_params = {
+            "cv": "Valid CV text",
+            "job_description": "Valid job description",
+            "core_competences": "Valid core competences",
+            "language": ENGLISH,
+        }
+        # Set the invalid parameter to an empty string
+        valid_params[invalid_param] = ""
+        
+        context = ComponentGenerationContext(**valid_params)
+        
+        with pytest.raises(ValueError):
+            generator(context)

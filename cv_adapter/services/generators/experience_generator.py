@@ -64,6 +64,8 @@ def create_experience_generator(
             raise ValueError("CV text is required")
         if not context.job_description:
             raise ValueError("Job description is required")
+        if not context.core_competences or not context.core_competences.strip():
+            raise ValueError("Core competences are required")
 
         # Prepare context string
         context_str = prepare_context(
