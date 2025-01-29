@@ -1,0 +1,14 @@
+CV:
+{{ cv }}
+
+Job Description:
+{{ job_description }}
+
+{% if language != ENGLISH %}
+Language Requirements: Generate in {{ language.name.title() }}, following professional conventions.
+{% endif %}
+
+{% if notes is defined and notes %}
+Additional Notes:
+{{ notes }}
+{% endif %}

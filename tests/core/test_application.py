@@ -21,12 +21,7 @@ from cv_adapter.dto.cv import (
 )
 from cv_adapter.dto.language import ENGLISH
 from cv_adapter.renderers.markdown import CoreCompetencesRenderer
-from cv_adapter.services.generators.competence_generator import CompetenceGenerator
-from cv_adapter.services.generators.education_generator import EducationGenerator
-from cv_adapter.services.generators.experience_generator import ExperienceGenerator
-from cv_adapter.services.generators.skills_generator import SkillsGenerator
-from cv_adapter.services.generators.summary_generator import SummaryGenerator
-from cv_adapter.services.generators.title_generator import TitleGenerator
+from cv_adapter.services.generators.protocols import Generator
 
 
 @pytest.fixture
@@ -69,12 +64,12 @@ def test_init_with_custom_ai_model() -> None:
             app = CVAdapterApplication(ai_model=model)
 
             # Verify that all generators are correctly initialized
-            assert isinstance(app.competence_generator, CompetenceGenerator)
-            assert isinstance(app.experience_generator, ExperienceGenerator)
-            assert isinstance(app.education_generator, EducationGenerator)
-            assert isinstance(app.skills_generator, SkillsGenerator)
-            assert isinstance(app.summary_generator, SummaryGenerator)
-            assert isinstance(app.title_generator, TitleGenerator)
+            assert isinstance(app.competence_generator, Generator)
+            assert isinstance(app.experience_generator, Generator)
+            assert isinstance(app.education_generator, Generator)
+            assert isinstance(app.skills_generator, Generator)
+            assert isinstance(app.summary_generator, Generator)
+            assert isinstance(app.title_generator, Generator)
 
             # Verify AI model initialization
             # Note: Can't directly check AI model attribute
@@ -149,12 +144,12 @@ def test_generate_cv(
     )
 
     # Configure mock generators
-    mock_services["competence_generator"].generate.return_value = core_competences_dto
-    mock_services["experience_generator"].generate.return_value = experiences_dto
-    mock_services["education_generator"].generate.return_value = education_dto
-    mock_services["skills_generator"].generate.return_value = skills_dto
-    mock_services["summary_generator"].generate.return_value = summary_dto
-    mock_services["title_generator"].generate.return_value = title_dto
+    mock_services["competence_generator"].return_value = core_competences_dto
+    mock_services["experience_generator"].return_value = experiences_dto
+    mock_services["education_generator"].return_value = education_dto
+    mock_services["skills_generator"].return_value = skills_dto
+    mock_services["summary_generator"].return_value = summary_dto
+    mock_services["title_generator"].return_value = title_dto
 
     # Execute
     result = app.generate_cv(
@@ -210,32 +205,56 @@ def test_generate_cv(
     core_competences_md = CoreCompetencesRenderer.render_to_markdown(
         core_competences_dto
     )
-    mock_services["competence_generator"].generate.assert_called_once_with(
+    from cv_adapter.services.generators.protocols import (
+        BaseGenerationContext,
+        ComponentGenerationContext,
+        CoreCompetenceGenerationContext,
+    )
+
+    # Helper function to compare context objects
+    def context_matches(
+        actual_context: BaseGenerationContext,
+        expected_context: BaseGenerationContext,
+    ) -> bool:
+        return (
+            actual_context.cv == expected_context.cv
+            and actual_context.job_description == expected_context.job_description
+            and actual_context.notes == expected_context.notes
+        )
+
+    def component_context_matches(
+        actual_context: ComponentGenerationContext,
+        expected_context: ComponentGenerationContext,
+    ) -> bool:
+        return (
+            context_matches(actual_context, expected_context)
+            and actual_context.core_competences == expected_context.core_competences
+        )
+
+    # Verify competence generator call
+    assert mock_services["competence_generator"].call_count == 1
+    actual_comp_context = mock_services["competence_generator"].call_args[0][0]
+    expected_comp_context = CoreCompetenceGenerationContext(
         cv=detailed_cv_text,
         job_description=job_description,
         notes=notes,
     )
-    mock_services["experience_generator"].generate.assert_called_once_with(
+    assert context_matches(actual_comp_context, expected_comp_context)
+
+    # Verify other generator calls
+    expected_component_context = ComponentGenerationContext(
         cv=detailed_cv_text,
         job_description=job_description,
         core_competences=core_competences_md,
         notes=notes,
     )
-    mock_services["education_generator"].generate.assert_called_once_with(
-        cv=detailed_cv_text,
-        job_description=job_description,
-        core_competences=core_competences_md,
-        notes=notes,
-    )
-    mock_services["skills_generator"].generate.assert_called_once_with(
-        cv=detailed_cv_text,
-        job_description=job_description,
-        core_competences=core_competences_md,
-        notes=notes,
-    )
-    mock_services["title_generator"].generate.assert_called_once_with(
-        cv=detailed_cv_text,
-        job_description=job_description,
-        core_competences=core_competences_md,
-        notes=notes,
-    )
+
+    for generator_name in [
+        "experience_generator",
+        "education_generator",
+        "skills_generator",
+        "title_generator",
+    ]:
+        assert mock_services[generator_name].call_count == 1
+        actual_context = mock_services[generator_name].call_args[0][0]
+        assert component_context_matches(actual_context, expected_component_context)

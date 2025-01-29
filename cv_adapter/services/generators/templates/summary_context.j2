@@ -1,0 +1,20 @@
+Based on the CV and job description below, create a concise and impactful CV summary. The summary should be a single paragraph of no more than 50 words that highlights the candidate's key strengths and experience in relation to the job requirements.
+
+{% if language != 'ENGLISH' %}
+Language Requirements:
+Generate the summary in {{ language.name.title() }}, following professional communication conventions for that language.
+{% endif %}
+
+CV:
+{{ cv }}
+
+Job Description:
+{{ job_description }}
+
+Core Competences:
+{{ core_competences }}
+
+{% if notes %}
+User Notes for Consideration:
+{{ notes }}
+{% endif %}

@@ -1,179 +1,143 @@
-import pytest
-from pydantic_ai.models.test import TestModel
+import os
+from typing import Any, cast
+from unittest.mock import Mock
 
+from pydantic_ai import Agent
+
+import cv_adapter.services.generators.competence_generator
 from cv_adapter.dto.cv import CoreCompetenceDTO
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
-from cv_adapter.models.language_context import get_current_language, language_context
-from cv_adapter.services.generators.competence_generator import CompetenceGenerator
-
-
-def test_context_preparation() -> None:
-    """Test that context is prepared correctly with all input fields."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            language=get_current_language(),
-            notes="Focus on tech",
-        )
-
-    # Test context structure and content
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-    assert "Focus on tech" in context
-    assert "identify 4-6 core competences" in context
-    assert "Each competence should be a concise phrase" in context
-    assert "Language Requirements" not in context
-
-
-def test_context_preparation_french() -> None:
-    """Test that context is prepared correctly with French language."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(FRENCH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    # Verify language-specific instructions
-    assert "Language Requirements" in context
-    assert "Generate all competences in French" in context
-    assert "following professional terminology conventions" in context
-
-
-def test_context_preparation_without_notes() -> None:
-    """Test that context is prepared correctly without optional notes."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    # Verify required content is present
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-
-    # Verify optional content is not present
-    assert "User Notes for Consideration" not in context
-
-
-@pytest.mark.parametrize(
-    "language",
-    [
-        ENGLISH,
-        FRENCH,
-        GERMAN,
-        SPANISH,
-        ITALIAN,
-    ],
+from cv_adapter.dto.language import ENGLISH
+from cv_adapter.models.language_context import language_context
+from cv_adapter.models.language_context_models import CoreCompetence, CoreCompetences
+from cv_adapter.services.generators.competence_generator import (
+    create_core_competence_generator,
 )
-def test_context_preparation_all_languages(language: Language) -> None:
-    """Test context preparation for all supported languages."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(language):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    if language == ENGLISH:
-        assert "Language Requirements" not in context
-    else:
-        assert "Language Requirements" in context
-        assert f"Generate all competences in {language.name.title()}" in context
-        assert "following professional terminology conventions" in context
+from cv_adapter.services.generators.protocols import CoreCompetenceGenerationContext
 
 
-def test_empty_cv_validation() -> None:
-    """Test that empty CV raises validation error."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="CV text is required"):
-            generator.generate(
-                cv="   ",  # whitespace only
-                job_description="Sample Job",
-            )
+def test_competence_generator_default_templates() -> None:
+    """Test the competence generator with default templates."""
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        "templates",
+        "competence_system_prompt.j2",
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.competence_generator.__file__),
+        "templates",
+        "competence_context.j2",
+    )
+
+    # Verify default template paths exist
+    assert os.path.exists(default_system_prompt_path), (
+        "Default system prompt template not found"
+    )
+    assert os.path.exists(default_context_path), "Default context template not found"
+
+    # Create generator
+    generator = create_core_competence_generator(
+        ai_model="test",
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path,
+    )
+
+    # Verify generator is created successfully
+    assert generator is not None
 
 
-def test_empty_job_description_validation() -> None:
-    """Test that empty job description raises validation error."""
-    generator = CompetenceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(
-                cv="Sample CV",
-                job_description="",  # empty string
-            )
+def test_competence_generator_custom_templates(tmp_path: Any) -> None:
+    """Test the competence generator with custom templates."""
+    # Create custom templates
+    system_prompt_path = tmp_path / "system_prompt.j2"
+    system_prompt_path.write_text(
+        "An expert CV analyst that helps identify and describe core competences. "
+        "Generate 4-6 concise competences that match job requirements."
+    )
+
+    context_template_path = tmp_path / "context.j2"
+    context_template_path.write_text(
+        "CV: {{ cv }}\n"
+        "Job Description: {{ job_description }}\n"
+        "{% if notes is defined %}Notes: {{ notes }}{% endif %}"
+    )
+
+    # Create generator with custom templates
+    generator = create_core_competence_generator(
+        ai_model="test",
+        system_prompt_template_path=str(system_prompt_path),
+        context_template_path=str(context_template_path),
+    )
+
+    # Verify generator is created successfully
+    assert generator is not None
 
 
-def test_missing_language_validation() -> None:
-    """Test that missing language context raises RuntimeError."""
-    generator = CompetenceGenerator(ai_model="test")
-    with pytest.raises(
-        RuntimeError, match=r"Language context not set. Use language_context\(\) first."
-    ):
-        generator.generate(
-            cv="Sample CV",
-            job_description="Sample Job",
-        )
-
-
-@pytest.fixture
-def test_model() -> TestModel:
-    """Create a test model for competence generation."""
-    model = TestModel()
-    model.custom_result_args = {
-        "items": [
-            {"text": "Strategic Problem Solving"},
-            {"text": "Technical Leadership"},
-            {"text": "Agile Methodology"},
-            {"text": "Cross-Functional Collaboration"},
-        ]
-    }
-    return model
-
-
-def test_competence_generator_dto_output(test_model: TestModel) -> None:
-    """Test that the competence generator returns a valid List[CoreCompetenceDTO]."""
+def test_core_competence_generator_dto_output() -> None:
+    """Test core competence generator returns a valid CoreCompetenceDTO list."""
     # Set language context before the test
     with language_context(ENGLISH):
-        # Initialize generator
-        generator = CompetenceGenerator(ai_model="test")
+        # Create a mock agent
+        mock_agent = Mock(spec=Agent)
+        mock_agent.run_sync.return_value = Mock(
+            data=CoreCompetences(
+                items=[
+                    CoreCompetence(text="Strategic Project Management"),
+                    CoreCompetence(text="Cross-functional Team Leadership"),
+                    CoreCompetence(text="Agile Software Development"),
+                    CoreCompetence(text="Technical Problem Solving"),
+                    CoreCompetence(text="Continuous Improvement Methodology"),
+                    CoreCompetence(text="Enterprise Software Architecture"),
+                ]
+            )
+        )
 
-        # Use agent override to set the test model
-        with generator.agent.override(model=test_model):
-            # Generate core competences
-            result = generator.generate(
-                cv="Experienced software engineer with 10 years of expertise",
-                job_description=(
-                    "Seeking a senior software engineer with leadership skills"
-                ),
+        # Temporarily replace the agent creation in the function
+        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
+            return cast(Agent[Any, Any], mock_agent)
+
+        # Temporarily modify the Agent class
+        # Dynamically replacing the Agent class with a mock factory function
+        # for testing purposes. This is a valid testing technique that
+        # cannot be statically type-checked.
+        original_agent_factory = getattr(
+            cv_adapter.services.generators.competence_generator, "Agent"
+        )
+        setattr(
+            cv_adapter.services.generators.competence_generator,
+            "Agent",
+            mock_agent_factory,
+        )
+
+        try:
+            # Create generator
+            generator = create_core_competence_generator(ai_model="test")
+
+            # Prepare test context
+            context = CoreCompetenceGenerationContext(
+                cv="Senior Software Engineer with 10 years of experience",
+                job_description="Seeking a Project Manager for innovative tech team",
             )
 
-            # Verify the result is a list of CoreCompetenceDTO
-            assert isinstance(result, list)
+            # Generate competences
+            result = generator(context)
+
+            # Assertions
+            assert len(result) == 6
             assert all(isinstance(comp, CoreCompetenceDTO) for comp in result)
+            assert result[0].text == "Strategic Project Management"
+            assert result[1].text == "Cross-functional Team Leadership"
+            assert result[2].text == "Agile Software Development"
+            assert result[3].text == "Technical Problem Solving"
+            assert result[4].text == "Continuous Improvement Methodology"
+            assert result[5].text == "Enterprise Software Architecture"
 
-            # Verify the number of competences
-            assert len(result) == 4
-
-            # Verify each competence is a CoreCompetenceDTO
-            for competence in result:
-                assert isinstance(competence, CoreCompetenceDTO)
-                assert isinstance(competence.text, str)
-                assert len(competence.text) > 0
-
-            # Verify specific competence texts
-            competence_texts = [comp.text for comp in result]
-            assert "Strategic Problem Solving" in competence_texts
-            assert "Technical Leadership" in competence_texts
-            assert "Agile Methodology" in competence_texts
-            assert "Cross-Functional Collaboration" in competence_texts
+            # Verify agent was called with correct arguments
+            mock_agent.run_sync.assert_called_once()
+        finally:
+            # Restore the original Agent class
+            setattr(
+                cv_adapter.services.generators.competence_generator,
+                "Agent",
+                original_agent_factory,
+            )

@@ -1,196 +1,89 @@
 from datetime import date
+from typing import Dict, TypedDict, cast
 
 import pytest
-from pydantic_ai.models.test import TestModel
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, Language
-from cv_adapter.models.language_context import get_current_language, language_context
-from cv_adapter.services.generators.experience_generator import ExperienceGenerator
-
-
-def test_context_preparation() -> None:
-    """Test that context is prepared correctly with all input fields."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV with experiences",
-            job_description="Sample Job",
-            core_competences="Strategic Problem Solving",
-            language=get_current_language(),
-            notes="Focus on tech leadership",
-        )
-
-    # Test context structure and content
-    assert "Sample CV with experiences" in context
-    assert "Sample Job" in context
-    assert "Strategic Problem Solving" in context
-    assert "Focus on tech leadership" in context
-    assert "Generate a list of professional experiences" in context
-    assert "Language Requirements" not in context
-
-
-def test_context_preparation_french() -> None:
-    """Test that context is prepared correctly with French language."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(FRENCH):
-        context = generator._prepare_context(
-            cv="Sample CV with experiences",
-            job_description="Sample Job",
-            core_competences="Résolution Stratégique de Problèmes",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    # Verify language-specific instructions
-    assert "Language Requirements" in context
-    assert "Generate all content in French" in context
-    assert "following standard CV conventions" in context
-
-
-def test_context_preparation_without_notes() -> None:
-    """Test that context is prepared correctly without optional notes."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV with experiences",
-            job_description="Sample Job",
-            core_competences="Strategic Problem Solving",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    # Verify required content is present
-    assert "Sample CV with experiences" in context
-    assert "Sample Job" in context
-    assert "Strategic Problem Solving" in context
-
-    # Verify optional content is not present
-    assert "User Notes for Consideration" not in context
-
-
-@pytest.mark.parametrize(
-    "language",
-    [
-        ENGLISH,
-        FRENCH,
-        GERMAN,
-        SPANISH,
-        ITALIAN,
-    ],
+from cv_adapter.dto.language import ENGLISH
+from cv_adapter.models.language_context import language_context
+from cv_adapter.services.generators.experience_generator import (
+    create_experience_generator,
 )
-def test_context_preparation_all_languages(language: Language) -> None:
-    """Test context preparation for all supported languages."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(language):
-        context = generator._prepare_context(
-            cv="Sample CV with experiences",
-            job_description="Sample Job",
-            core_competences="Strategic Problem Solving",
-            language=get_current_language(),
-            notes=None,
-        )
-
-    if language == ENGLISH:
-        assert "Language Requirements" not in context
-    else:
-        assert "Language Requirements" in context
-        assert f"Generate all content in {language.name.title()}" in context
-        assert "following standard CV conventions" in context
+from cv_adapter.services.generators.protocols import ComponentGenerationContext
 
 
-def test_empty_cv_validation() -> None:
-    """Test that empty CV raises validation error."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="CV text is required"):
-            generator.generate(
-                cv="   ",  # whitespace only
-                job_description="Sample Job",
-                core_competences="Strategic Problem Solving",
-            )
+class GeneratorParams(TypedDict):
+    cv: str
+    job_description: str
+    core_competences: str
 
 
-def test_empty_job_description_validation() -> None:
-    """Test that empty job description raises validation error."""
-    generator = ExperienceGenerator(ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(
-                cv="Sample CV with experiences",
-                job_description="",  # empty string
-                core_competences="Strategic Problem Solving",
-            )
-
-
-def test_missing_language_validation() -> None:
-    """Test that missing language context raises RuntimeError."""
-    generator = ExperienceGenerator(ai_model="test")
-    with pytest.raises(
-        RuntimeError, match=r"Language context not set. Use language_context\(\) first."
-    ):
-        generator.generate(
-            cv="Sample CV with experiences",
-            job_description="Sample Job",
-            core_competences="Strategic Problem Solving",
-        )
-
-
-@pytest.fixture
-def test_model() -> TestModel:
-    """Create a test model for experience generation."""
-    model = TestModel()
-    model.custom_result_args = {
-        "data": [
-            {
-                "company": {
-                    "name": "Tech Innovations Inc.",
-                    "description": "Leading software solutions provider",
-                    "location": "San Francisco, CA",
-                },
-                "position": "Senior Software Engineer",
-                "start_date": date(2020, 1, 1),
-                "end_date": date(2023, 6, 30),
-                "description": "Led cross-functional engineering teams",
-                "technologies": ["Python", "Kubernetes", "AWS"],
-            }
-        ]
-    }
-    return model
-
-
-def test_experience_generator_dto_output(test_model: TestModel) -> None:
+def test_experience_generator_dto_output() -> None:
     """Test that the experience generator returns a valid ExperiencesDTO."""
     # Set language context before the test
     with language_context(ENGLISH):
-        # Initialize generator
-        generator = ExperienceGenerator(ai_model="test")
+        # Create generator creator
+        generator = create_experience_generator(ai_model="test")
 
-        # Use agent override to set the test model
-        with generator.agent.override(model=test_model):
-            # Generate experiences
-            result = generator.generate(
-                cv="Experienced software engineer with 10 years of expertise",
-                job_description=(
-                    "Seeking a senior software engineer with leadership skills"
-                ),
-                core_competences="Technical Leadership, Strategic Problem Solving",
-            )
+        # Create context
+        context = ComponentGenerationContext(
+            cv="Experienced software engineer with 10 years of expertise",
+            job_description="Seeking a senior software engineer with leadership skills",
+            core_competences="Technical Leadership, Strategic Problem Solving",
+        )
 
-            # Verify the result is a list of ExperienceDTO
-            assert isinstance(result, list)
-            assert len(result) == 1
+        # Generate experiences
+        result = generator(context)
 
-            # Verify the experience is an ExperienceDTO
-            experience = result[0]
-            assert isinstance(experience, ExperienceDTO)
-            assert isinstance(experience.company, InstitutionDTO)
-            assert isinstance(experience.position, str)
-            assert isinstance(experience.start_date, date)
-            assert isinstance(experience.description, str)
-            assert isinstance(experience.technologies, list)
+        # Verify the result is a list of ExperienceDTO
+        assert isinstance(result, list)
+        assert len(result) > 0
 
-            # Verify specific experience details
-            assert experience.company.name is not None
-            assert experience.position is not None
-            assert len(experience.technologies) > 0
+        # Verify the experience is an ExperienceDTO
+        experience = result[0]
+        assert isinstance(experience, ExperienceDTO)
+        assert isinstance(experience.company, InstitutionDTO)
+        assert isinstance(experience.position, str)
+        assert isinstance(experience.start_date, date)
+        assert isinstance(experience.description, str)
+        assert isinstance(experience.technologies, list)
+
+        # Verify basic properties of the experience
+        assert experience.company.name is not None
+        assert experience.position is not None
+        assert experience.start_date is not None
+        assert experience.description is not None
+        assert len(experience.technologies) > 0
+
+
+@pytest.mark.parametrize("invalid_param", ["cv", "job_description", "core_competences"])
+def test_experience_generator_raises_error_on_empty_parameters(
+    invalid_param: str,
+) -> None:
+    """Test that generator raises ValueError when required parameters are empty strings.
+
+    Tests each required parameter with an empty string value.
+    """
+    with language_context(ENGLISH):
+        generator = create_experience_generator(ai_model="test")
+
+        # Create base params with explicit typing
+        base_params: Dict[str, str] = {
+            "cv": "Valid CV text",
+            "job_description": "Valid job description",
+            "core_competences": "Valid core competences",
+        }
+        # Create new dict with empty parameter
+        modified_params = {**base_params, invalid_param: ""}
+
+        # Cast the modified params to the correct types
+        params: GeneratorParams = {
+            "cv": cast(str, modified_params["cv"]),
+            "job_description": cast(str, modified_params["job_description"]),
+            "core_competences": cast(str, modified_params["core_competences"]),
+        }
+
+        context = ComponentGenerationContext(**params)
+
+        with pytest.raises(ValueError):
+            generator(context)

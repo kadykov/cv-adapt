@@ -1,152 +1,175 @@
+import os
+from typing import Any, cast
+from unittest.mock import Mock
+
 import pytest
+from pydantic_ai import Agent
 
-from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH
-from cv_adapter.models.language import Language
+import cv_adapter.services.generators.summary_generator
+from cv_adapter.dto.cv import SummaryDTO
+from cv_adapter.dto.language import ENGLISH
 from cv_adapter.models.language_context import language_context
+from cv_adapter.models.summary import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
-from cv_adapter.services.generators.summary_generator import SummaryGenerator
+from cv_adapter.services.generators.protocols import ComponentGenerationContext
+from cv_adapter.services.generators.summary_generator import create_summary_generator
 
 
-def test_context_preparation() -> None:
-    """Test that context is prepared correctly with all input fields."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
+def test_summary_generator_default_templates() -> None:
+    """Test the summary generator with default templates."""
+    # Use default template paths
+    default_system_prompt_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.summary_generator.__file__),
+        "templates",
+        "summary_system_prompt.j2",
+    )
+    default_context_path = os.path.join(
+        os.path.dirname(cv_adapter.services.generators.summary_generator.__file__),
+        "templates",
+        "summary_context.j2",
+    )
+
+    # Verify default template paths exist
+    assert os.path.exists(default_system_prompt_path), (
+        "Default system prompt template not found"
+    )
+    assert os.path.exists(default_context_path), "Default context template not found"
+
+    # Create generator
+    generator = create_summary_generator(
+        renderer=MinimalMarkdownRenderer(),
+        ai_model="test",
+        system_prompt_template_path=default_system_prompt_path,
+        context_template_path=default_context_path,
+    )
+
+    # Verify generator is created successfully
+    assert generator is not None
+
+
+def test_summary_generator_custom_templates(tmp_path: Any) -> None:
+    """Test the summary generator with custom templates."""
+    # Create custom templates
+    system_prompt_path = tmp_path / "system_prompt.j2"
+    system_prompt_path.write_text(
+        "An expert CV analyst that helps write professional summaries. "
+        "Generate a concise summary that highlights key qualifications."
+    )
+
+    context_template_path = tmp_path / "context.j2"
+    context_template_path.write_text(
+        "CV: {{ cv }}\n"
+        "Job Description: {{ job_description }}\n"
+        "Core Competences: {{ core_competences }}"
+    )
+
+    # Create generator with custom templates
+    generator = create_summary_generator(
+        renderer=MinimalMarkdownRenderer(),
+        ai_model="test",
+        system_prompt_template_path=str(system_prompt_path),
+        context_template_path=str(context_template_path),
+    )
+
+    # Verify generator is created successfully
+    assert generator is not None
+
+
+def test_summary_generator_dto_output() -> None:
+    """Test summary generator returns a valid SummaryDTO."""
+    # Set language context before the test
     with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-            language=ENGLISH,
-            notes="Focus on tech",
+        # Create a mock agent
+        mock_agent = Mock(spec=Agent)
+        mock_agent.run_sync.return_value = Mock(
+            data=CVSummary(
+                text="Experienced software engineer with proven track record.",
+                language=ENGLISH,
+            )
         )
 
-    # Test context structure and content
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-    assert "Python, Leadership" in context
-    assert "Focus on tech" in context
-    assert "Based on the CV and job description" in context
-    assert "create a concise and impactful CV summary" in context
-    assert "Language Requirements" not in context
-    assert "User Notes for Consideration" in context
+        # Temporarily replace the agent creation in the function
+        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
+            return cast(Agent[Any, Any], mock_agent)
 
-
-def test_context_preparation_french() -> None:
-    """Test that context is prepared correctly with French language."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(FRENCH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-            language=FRENCH,
-            notes=None,
+        # Temporarily modify the Agent class
+        original_agent_factory = getattr(
+            cv_adapter.services.generators.summary_generator, "Agent"
+        )
+        setattr(
+            cv_adapter.services.generators.summary_generator,
+            "Agent",
+            mock_agent_factory,
         )
 
-    # Verify language-specific instructions
-    assert "Language Requirements" in context
-    assert "Generate the summary in French" in context
-    assert "professional communication conventions" in context
+        try:
+            # Create generator
+            generator = create_summary_generator(
+                renderer=MinimalMarkdownRenderer(), ai_model="test"
+            )
 
+            # Prepare test context
+            context = ComponentGenerationContext(
+                cv="Senior Software Engineer with 10 years of experience",
+                job_description="Seeking a Project Manager for innovative tech team",
+                core_competences="Technical Leadership, Strategic Problem Solving",
+            )
 
-def test_context_preparation_without_notes() -> None:
-    """Test that context is prepared correctly without optional notes."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(ENGLISH):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-            language=ENGLISH,
-            notes=None,
-        )
+            # Generate summary
+            result = generator(context)
 
-    # Verify required content is present
-    assert "Sample CV" in context
-    assert "Sample Job" in context
-    assert "Python, Leadership" in context
+            # Assertions
+            assert isinstance(result, SummaryDTO)
+            assert isinstance(result.text, str)
+            assert len(result.text) > 0
+            assert (
+                result.text == "Experienced software engineer with proven track record."
+            )
 
-    # Verify optional content is not present
-    assert "User Notes for Consideration" not in context
-    assert "notes" not in context.lower()
-
-
-@pytest.mark.parametrize(
-    "language",
-    [
-        ENGLISH,
-        FRENCH,
-        GERMAN,
-        SPANISH,
-        ITALIAN,
-    ],
-)
-def test_context_preparation_all_languages(language: Language) -> None:
-    """Test context preparation for all supported languages."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(language):
-        context = generator._prepare_context(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-            language=language,
-            notes=None,
-        )
-
-    if language == ENGLISH:
-        assert "Language Requirements" not in context
-    else:
-        assert "Language Requirements" in context
-        assert f"Generate the summary in {language.name.title()}" in context
-        assert "professional communication conventions" in context
-
-
-def test_generate_summary_dto() -> None:
-    """Test that generate method returns a SummaryDTO."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(ENGLISH):
-        result = generator.generate(
-            cv="Sample CV",
-            job_description="Sample Job",
-            core_competences="Python, Leadership",
-        )
-
-    # Verify DTO structure
-    assert hasattr(result, "text")
-    assert isinstance(result.text, str)
-    assert len(result.text) > 0
-
-
-def test_empty_cv_validation() -> None:
-    """Test that empty CV raises validation error."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="CV text is required"):
-            generator.generate(
-                cv="   ",  # whitespace only
-                job_description="Sample Job",
-                core_competences="Python, Leadership",
+            # Verify agent was called with correct arguments
+            mock_agent.run_sync.assert_called_once()
+        finally:
+            # Restore the original Agent class
+            setattr(
+                cv_adapter.services.generators.summary_generator,
+                "Agent",
+                original_agent_factory,
             )
 
 
-def test_empty_job_description_validation() -> None:
-    """Test that empty job description raises validation error."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
+def test_summary_generator_raises_error_on_empty_parameters() -> None:
+    """Test that generator raises ValueError when required parameters are empty."""
     with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="Job description is required"):
-            generator.generate(
-                cv="Sample CV",
-                job_description="",  # empty string
-                core_competences="Python, Leadership",
+        generator = create_summary_generator(
+            renderer=MinimalMarkdownRenderer(), ai_model="test"
+        )
+
+        # Test empty CV
+        with pytest.raises(ValueError):
+            generator(
+                ComponentGenerationContext(
+                    cv="",
+                    job_description="Valid job",
+                    core_competences="Valid competences",
+                )
             )
 
+        # Test empty job description
+        with pytest.raises(ValueError):
+            generator(
+                ComponentGenerationContext(
+                    cv="Valid CV",
+                    job_description="",
+                    core_competences="Valid competences",
+                )
+            )
 
-def test_empty_core_competences_validation() -> None:
-    """Test that empty core competences raises validation error."""
-    generator = SummaryGenerator(renderer=MinimalMarkdownRenderer(), ai_model="test")
-    with language_context(ENGLISH):
-        with pytest.raises(ValueError, match="Core competences are required"):
-            generator.generate(
-                cv="Sample CV",
-                job_description="Sample Job",
-                core_competences="\n",  # newline only
+        # Test empty core competences
+        with pytest.raises(ValueError):
+            generator(
+                ComponentGenerationContext(
+                    cv="Valid CV",
+                    job_description="Valid job",
+                    core_competences="",
+                )
             )

@@ -22,6 +22,7 @@ from cv_adapter.dto.mapper import (
 from cv_adapter.models import language_context_models as lcm
 from cv_adapter.models import personal_info as pi
 from cv_adapter.models.language_context import language_context
+from cv_adapter.models.summary import CVSummary
 
 
 def with_language_context(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -192,11 +193,14 @@ def test_map_title() -> None:
 
 def test_map_summary() -> None:
     """Test mapping a summary."""
-    summary = "Experienced software engineer with a passion for innovative solutions"
+    summary = CVSummary(
+        language=ENGLISH,
+        text=("Experienced software engineer with a passion for innovative solutions"),
+    )
     dto = map_summary(summary)
 
     assert isinstance(dto, cv_dto.SummaryDTO)
-    assert dto.text == summary
+    assert dto.text == summary.text
 
 
 def create_minimal_cv_dict() -> Dict[str, Any]:
@@ -282,8 +286,11 @@ def test_map_cv() -> None:
             full_name="John Doe",
             contacts={"email": "john.doe@example.com", "phone": "+1234567890"},
         ),
-        "summary": (
-            "Experienced software engineer with a passion for innovative solutions"
+        "summary": CVSummary(
+            language=ENGLISH,
+            text=(
+                "Experienced software engineer with a passion for innovative solutions"
+            ),
         ),
     }
 

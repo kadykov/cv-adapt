@@ -1,114 +1,79 @@
 """Service for generating core competences based on CV and job description."""
 
+import os
+from typing import List, Optional
+
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import CoreCompetenceDTO
-from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.dto.mapper import map_core_competences
-from cv_adapter.models.language_context import get_current_language
 from cv_adapter.models.language_context_models import CoreCompetences
+from cv_adapter.services.generators.protocols import (
+    CoreCompetenceGenerationContext,
+    Generator,
+)
+from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-class CompetenceGenerator:
-    """Generates relevant core competences based on CV and job description."""
+def create_core_competence_generator(
+    ai_model: KnownModelName = "openai:gpt-4o",
+    system_prompt_template_path: Optional[str] = None,
+    context_template_path: Optional[str] = None,
+) -> Generator[CoreCompetenceGenerationContext, List[CoreCompetenceDTO]]:
+    """
+    Create a core competence generator.
 
-    def __init__(self, ai_model: KnownModelName = "openai:gpt-4o") -> None:
-        """Initialize the generator with an AI model.
+    Args:
+        ai_model: AI model to use
+        system_prompt_template_path: Optional path to system prompt template
+        context_template_path: Optional path to context template
 
-        Args:
-            ai_model: AI model to use. Defaults to OpenAI GPT-4o.
-        """
-        self.agent = Agent(
-            ai_model,
-            system_prompt=(
-                "An expert CV analyst that helps identify and describe core "
-                "competences. Each competence is a concise phrase (1-5 words) "
-                "representing a key skill. Capable of generating competences "
-                "in multiple languages with professional standards."
-            ),
+    Returns:
+        A generator for core competences
+    """
+    # Set default system prompt template if not provided
+    if system_prompt_template_path is None:
+        system_prompt_template_path = os.path.join(
+            os.path.dirname(__file__), "templates", "competence_system_prompt.j2"
         )
 
-    def generate(
-        self,
-        cv: str,
-        job_description: str,
-        notes: str | None = None,
-    ) -> list[CoreCompetenceDTO]:
-        """Generate core competences based on CV and job description.
+    # Set default context template if not provided
+    if context_template_path is None:
+        context_template_path = os.path.join(
+            os.path.dirname(__file__), "templates", "competence_context.j2"
+        )
+
+    # Create agent with system prompt outside of generation_func
+    agent = Agent(
+        ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
+    )
+
+    def generation_func(
+        context: CoreCompetenceGenerationContext,
+    ) -> List[CoreCompetenceDTO]:
+        """
+        Generate core competences based on context.
 
         Args:
-            cv: Text of the CV
-            job_description: Job description text
-            notes: Optional additional notes for context
+            context: Core competence generation context
 
         Returns:
-            DTO containing core competences relevant for the job
-
-        Raises:
-            ValueError: If input parameters are invalid
-            RuntimeError: If language context is not set
+            List of generated core competences
         """
         # Validate input parameters
-        if not cv or not cv.strip():
+        if not context.cv or not context.cv.strip():
             raise ValueError("CV text is required")
-        if not job_description:
+        if not context.job_description:
             raise ValueError("Job description is required")
 
-        # Get the current language from context
-        language = get_current_language()
+        # Prepare context string
+        context_str = prepare_context(context_template_path, context)
 
-        context = self._prepare_context(
-            cv=cv,
-            job_description=job_description,
-            language=language,
-            notes=notes,
-        )
+        # Generate competences
+        result = agent.run_sync(context_str, result_type=CoreCompetences)
 
-        # Use the agent to generate competences
-        result = self.agent.run_sync(
-            context,
-            result_type=CoreCompetences,
-        )
-
-        # Convert to DTO using mapper
+        # Map to DTOs
         return map_core_competences(result.data)
 
-    def _prepare_context(
-        self,
-        cv: str,
-        job_description: str,
-        language: Language,
-        notes: str | None = None,
-    ) -> str:
-        """Prepare context for core competences generation.
-
-        Args:
-            cv: Text of the CV
-            job_description: Job description text
-            language: Target language for generation
-            notes: Optional additional notes for context
-
-        Returns:
-            Prepared context string for the AI
-        """
-        context = (
-            "Based on the CV and job description below, identify 4-6 core competences "
-            "that best match the requirements. Each competence should be a concise "
-            "phrase (1-5 words) that represents a key skill or area of expertise.\n\n"
-        )
-
-        # Add language-specific instructions if not English
-        if language != ENGLISH:
-            context += (
-                "\nLanguage Requirements:\n"
-                f"Generate all competences in {language.name.title()}, "
-                f"following professional terminology conventions.\n"
-            )
-
-        context += f"CV:\n{cv}\n\nJob Description:\n{job_description}\n"
-
-        if notes:
-            context += f"\nUser Notes for Consideration:\n{notes}"
-
-        return context
+    return Generator(generation_func)

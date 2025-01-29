@@ -32,12 +32,37 @@ Project Structure:
      - `constants.py`: Project-wide constants
    - `services/`: Business logic services
      - `generators/`: Specialized generator services
+       * `protocols.py`: Universal generator protocol and base classes
+         - Defines a single, flexible, type-safe generator interface
+         - Supports universal protocol-based design
+         - Enables precise type checking for generators
+         - Provides a generic `Generator` and `GeneratorProtocol`
+         - Supports flexible context and output type handling
+       * `utils.py`: Shared utility functions for generators
+         - Provides common template loading and context preparation
+         - Supports consistent generation across different generators
        * `competence_generator.py`: Generates core competences
        * `summary_generator.py`: Generates professional CV summaries
        * `education_generator.py`: Generates education sections
        * `experience_generator.py`: Generates experience sections
        * `skills_generator.py`: Generates and organizes skills
        * `title_generator.py`: Generates professional titles
+       * `templates/`: Jinja2 templates for generators
+         - Supports dynamic prompt and context generation
+         - Enables language-specific template customization
+         - Provides clear separation between generation logic and templates
+
+     Generator Design Principles:
+       * Universal generator protocol with type-safe generation
+       * Single, flexible generator interface
+       * Supports generic context and output type handling
+       * Flexible generation context with type parameters
+       * Support for language-specific generation
+       * Consistent template-based generation approach
+       * Decoupled generation logic and template rendering
+       * Supports single DTO or list of DTOs generation
+       * Immediate validation and error handling
+       * Simplified type system with universal generator
    - `dto/`: Data Transfer Objects (DTOs)
      - `cv.py`: DTO classes for decoupled data representation
        * Provides data transfer objects for CV components
@@ -193,15 +218,36 @@ Development Guidelines:
      * Supports multilingual validation and generation
      * Allows language-specific metadata configuration
    - Generator Design:
-     * Generators focus on business logic
+     * Generators use template-based generation framework
+     * Implements strict "fail-fast" design principles
+     * Decouples generation logic from prompt templates
+     * Enables dynamic context and prompt generation
      * Adapt content to language-specific conventions
      * Use direct language parameter in method signatures
-     * Prepare context for LLM interactions
+     * Prepare context for LLM interactions with immediate validation
    - Key Principles:
      * Language is a first-class concept
-     * Validation is context-aware
+     * Validation is context-aware and immediate
      * Decoupled data representation
      * Flexible and extensible design
+     * Template-driven generation
+     * Strict error handling with immediate failure
+     * Supports language-specific template customization
+   - Template Generation Features:
+     * Jinja2-based template system
+     * Dynamic prompt and context generation
+     * Language-aware template rendering
+     * Supports optional context parameters
+     * Provides clear separation of concerns
+     * Enables easy template modification without code changes
+     * Immediate validation of template paths and rendering
+     * Raises specific exceptions for configuration and rendering errors
+     * Prevents silent failures or unexpected behavior
+     * Conditional language-specific template rendering
+     * Supports dynamic content injection based on language context
+     * Flexible template inheritance and customization
+     * Handles language-specific requirements within templates
+     * Decouples language-specific logic from generation code
 
 7. Working with Renderers and DTOs:
    - Rendering System Overview:
