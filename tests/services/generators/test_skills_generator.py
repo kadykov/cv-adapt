@@ -83,20 +83,18 @@ def test_skills_generator_dto_output() -> None:
                 SkillGroup(
                     name="Programming Languages",
                     skills=[
-                        Skill(text="Python", language=ENGLISH),
-                        Skill(text="JavaScript", language=ENGLISH),
-                        Skill(text="TypeScript", language=ENGLISH),
-                    ],
-                    language=ENGLISH,
+                        Skill(text="Python"),
+                        Skill(text="JavaScript"),
+                        Skill(text="TypeScript"),
+                    ]
                 ),
                 SkillGroup(
                     name="Frameworks",
                     skills=[
-                        Skill(text="React", language=ENGLISH),
-                        Skill(text="Django", language=ENGLISH),
-                        Skill(text="FastAPI", language=ENGLISH),
-                    ],
-                    language=ENGLISH,
+                        Skill(text="React"),
+                        Skill(text="Django"),
+                        Skill(text="FastAPI"),
+                    ]
                 ),
             ]
         )

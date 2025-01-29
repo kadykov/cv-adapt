@@ -80,8 +80,7 @@ def test_title_generator_dto_output() -> None:
         mock_agent = Mock(spec=Agent)
         mock_agent.run_sync.return_value = Mock(
             data=Title(
-                text="Senior Software Engineer",
-                language=ENGLISH
+                text="Senior Software Engineer"
             )
         )
 

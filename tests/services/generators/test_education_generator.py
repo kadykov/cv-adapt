@@ -85,14 +85,12 @@ def test_education_generator_dto_output() -> None:
                     university=University(
                         name="Tech University",
                         description="Leading technology and engineering institution",
-                        location="San Francisco, CA",
-                        language=ENGLISH,
+                        location="San Francisco, CA"
                     ),
                     degree="Master of Science in Computer Science",
                     start_date=date(2018, 9, 1),
                     end_date=date(2020, 5, 15),
-                    description="Specialized in machine learning and AI technologies",
-                    language=ENGLISH,
+                    description="Specialized in machine learning and AI technologies"
                 )
             ]
         )

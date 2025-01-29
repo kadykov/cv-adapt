@@ -1,12 +1,19 @@
 from datetime import date
-from typing import List
 import pytest
+from typing import Dict, List, TypedDict, cast
 
 from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.models.language_context import language_context
 from cv_adapter.services.generators.experience_generator import create_experience_generator
 from cv_adapter.services.generators.protocols import ComponentGenerationContext
+
+
+class GeneratorParams(TypedDict):
+    cv: str
+    job_description: str
+    core_competences: str
+    language: Language
 
 
 def test_experience_generator_dto_output() -> None:
@@ -53,17 +60,26 @@ def test_experience_generator_raises_error_on_empty_parameters(invalid_param: st
     """Test that generator raises ValueError when required parameters are empty strings."""
     with language_context(ENGLISH):
         generator = create_experience_generator(ai_model="test")
-        
-        valid_params = {
+
+        # Create base params with explicit typing
+        base_params: Dict[str, str | Language] = {
             "cv": "Valid CV text",
             "job_description": "Valid job description",
             "core_competences": "Valid core competences",
             "language": ENGLISH,
         }
-        # Set the invalid parameter to an empty string
-        valid_params[invalid_param] = ""
-        
-        context = ComponentGenerationContext(**valid_params)
-        
+        # Create new dict with empty parameter
+        modified_params = {**base_params, invalid_param: ""}
+
+        # Cast the modified params to the correct types
+        params: GeneratorParams = {
+            "cv": cast(str, modified_params["cv"]),
+            "job_description": cast(str, modified_params["job_description"]),
+            "core_competences": cast(str, modified_params["core_competences"]),
+            "language": cast(Language, modified_params["language"]),
+        }
+
+        context = ComponentGenerationContext(**params)
+
         with pytest.raises(ValueError):
             generator(context)
