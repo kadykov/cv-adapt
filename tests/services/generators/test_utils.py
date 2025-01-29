@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.language import ENGLISH, FRENCH
 from cv_adapter.services.generators.protocols import BaseGenerationContext
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
@@ -121,6 +121,46 @@ University of Technology, 2016-2020
 
     with pytest.raises(ValueError, match="Context template file does not exist"):
         prepare_context("/path/to/nonexistent/template.txt", context)
+
+
+def test_prepare_context_non_english_language(tmp_path: Path) -> None:
+    """Test context preparation with non-English language."""
+    # Create a test template
+    template_content = """
+    Language: {{ language }}
+    Job Title: {{ job_description }}
+    CV Name: {{ cv }}
+    Notes: {{ notes }}
+    {% if language != ENGLISH %}
+    Language Requirements: Generate in {{ language.name.title() }}, following professional conventions.
+    {% endif %}
+    """
+    template_path = create_test_template(
+        tmp_path, "context_template.txt", template_content
+    )
+
+    # Prepare test data
+    cv_markdown = """# Jean Dupont
+
+    ## Professional Summary
+    Software engineer with Python experience."""
+
+    context = BaseGenerationContext(
+        cv=cv_markdown,
+        job_description="Senior Software Engineer position",
+        language=FRENCH,
+        notes="Test context for French language",
+    )
+
+    # Prepare context
+    result = prepare_context(template_path, context)
+
+    # Verify the rendered context
+    assert "Language: fr" in result
+    assert "Language Requirements: Generate in French, following professional conventions." in result
+    assert "Job Title: Senior Software Engineer position" in result
+    assert "CV Name: # Jean Dupont" in result
+    assert "Notes: Test context for French language" in result
 
 
 def test_prepare_context_empty_template(tmp_path: Path) -> None:
