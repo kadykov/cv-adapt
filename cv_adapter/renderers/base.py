@@ -13,7 +13,7 @@ from typing import (
 )
 
 from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, MinimalCVDTO, SkillGroupDTO
-from cv_adapter.dto.language import ENGLISH, FRENCH, Language
+from cv_adapter.dto.language import ENGLISH, Language, LanguageLabels
 
 
 class RendererError(Exception):
@@ -46,6 +46,9 @@ class ListItem(Protocol):
 class RenderingConfig:
     """Configuration for rendering."""
 
+    # Language for rendering
+    language: Language
+
     # Customizable section rendering strategies
     core_competences_renderer: Optional[
         Callable[[List[CoreCompetenceDTO], Language], List[str]]
@@ -56,23 +59,16 @@ class RenderingConfig:
         None
     )
 
-    # Customizable section labels
-    section_labels: Dict[Language, Dict[str, str]] = field(
-        default_factory=lambda: {
-            ENGLISH: {
-                "experience": "Professional Experience",
-                "education": "Education",
-                "skills": "Skills",
-                "core_competences": "Core Competences",
-            },
-            FRENCH: {
-                "experience": "Expérience Professionnelle",
-                "education": "Formation",
-                "skills": "Compétences",
-                "core_competences": "Compétences Clés",
-            },
+    @property
+    def section_labels(self) -> Dict[str, str]:
+        """Get section labels for the current language."""
+        labels = LanguageLabels.get(self.language)
+        return {
+            "experience": labels.experience,
+            "education": labels.education,
+            "skills": labels.skills,
+            "core_competences": labels.core_competences,
         }
-    )
 
     # Rendering options
     include_yaml_header: bool = True
@@ -96,7 +92,7 @@ class BaseRenderer(ABC, Generic[CVDTOType]):
         Args:
             config: Optional rendering configuration
         """
-        self.config = config or RenderingConfig()
+        self.config = config or RenderingConfig(language=ENGLISH)
 
     @abstractmethod
     def render_to_string(self, cv_dto: CVDTOType) -> str:

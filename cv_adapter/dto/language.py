@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import ClassVar, Dict, Optional
+from typing import ClassVar, Dict, Final, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class LanguageCode(str, Enum):
@@ -63,7 +63,83 @@ class Language(BaseModel):
         return f"Language(code={self.code}, name='{self.name}')"
 
 
-# Predefined language instances
+class LanguageLabels(BaseModel):
+    """Language-specific labels for CV sections."""
+
+    model_config = ConfigDict(frozen=True)
+
+    language: Language
+    experience: str
+    education: str
+    skills: str
+    core_competences: str
+
+    # Class-level registry
+    _registry: ClassVar[Dict[LanguageCode, "LanguageLabels"]] = {}
+
+    def __init__(self, **data: object) -> None:
+        """Register the language labels in the class registry."""
+        super().__init__(**data)
+        self.__class__.register(self)
+
+    @classmethod
+    def register(cls, labels: "LanguageLabels") -> None:
+        """Register language labels in the class registry."""
+        cls._registry[labels.language.code] = labels
+
+    @classmethod
+    def get(cls, language: Language) -> "LanguageLabels":
+        """Retrieve labels for a language."""
+        labels = cls._registry.get(language.code)
+        if labels is None:
+            raise KeyError(f"Labels for language {language.code} not found")
+        return labels
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, language: Language) -> Language:
+        """Ensure the language exists in the Language registry."""
+        if language.code not in Language._registry:
+            raise ValueError(f"Language {language.code} not registered")
+        return language
+
+
+# Predefined language labels
+DEFAULT_LABELS: Final[Dict[LanguageCode, Dict[str, str]]] = {
+    LanguageCode.ENGLISH: {
+        "experience": "Professional Experience",
+        "education": "Education",
+        "skills": "Skills",
+        "core_competences": "Core Competences",
+    },
+    LanguageCode.FRENCH: {
+        "experience": "Expérience Professionnelle",
+        "education": "Formation",
+        "skills": "Compétences",
+        "core_competences": "Compétences Clés",
+    },
+    LanguageCode.GERMAN: {
+        "experience": "Berufserfahrung",
+        "education": "Ausbildung",
+        "skills": "Fähigkeiten",
+        "core_competences": "Kernkompetenzen",
+    },
+    LanguageCode.SPANISH: {
+        "experience": "Experiencia Profesional",
+        "education": "Educación",
+        "skills": "Habilidades",
+        "core_competences": "Competencias Principales",
+    },
+    LanguageCode.ITALIAN: {
+        "experience": "Esperienza Professionale",
+        "education": "Istruzione",
+        "skills": "Competenze",
+        "core_competences": "Competenze Chiave",
+    },
+}
+
+
+# Initialize predefined language instances
 ENGLISH = Language(
     code=LanguageCode.ENGLISH,
     name="English",
@@ -108,3 +184,7 @@ ITALIAN = Language(
     decimal_separator=",",
     thousands_separator=".",
 )
+
+# Initialize predefined language labels
+for lang_code, labels in DEFAULT_LABELS.items():
+    LanguageLabels(language=Language.get(lang_code), **labels)

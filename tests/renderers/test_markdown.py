@@ -75,36 +75,26 @@ def test_core_competences_renderer_to_markdown() -> None:
 
 def test_base_markdown_renderer_section_labels() -> None:
     """Test section labels in BaseMarkdownRenderer."""
-    config = RenderingConfig(
-        section_labels={
-            ENGLISH: {
-                "experience": "Professional Experience",
-                "education": "Education",
-                "skills": "Skills",
-            },
-            FRENCH: {
-                "experience": "Expérience Professionnelle",
-                "education": "Formation",
-                "skills": "Compétences",
-            },
-        }
-    )
-    renderer = BaseMarkdownRenderer(config)
-
     # Test English labels
+    renderer = BaseMarkdownRenderer(RenderingConfig(language=ENGLISH))
     assert (
         renderer._get_section_label("experience", ENGLISH) == "Professional Experience"
     )
     assert renderer._get_section_label("education", ENGLISH) == "Education"
     assert renderer._get_section_label("skills", ENGLISH) == "Skills"
+    assert (
+        renderer._get_section_label("core_competences", ENGLISH) == "Core Competences"
+    )
 
     # Test French labels
+    renderer = BaseMarkdownRenderer(RenderingConfig(language=FRENCH))
     assert (
         renderer._get_section_label("experience", FRENCH)
         == "Expérience Professionnelle"
     )
     assert renderer._get_section_label("education", FRENCH) == "Formation"
     assert renderer._get_section_label("skills", FRENCH) == "Compétences"
+    assert renderer._get_section_label("core_competences", FRENCH) == "Compétences Clés"
 
 
 def test_base_markdown_renderer_custom_renderers() -> None:
@@ -117,7 +107,9 @@ def test_base_markdown_renderer_custom_renderers() -> None:
             f"- {cc.text}" for cc in core_competences
         ]
 
-    config = RenderingConfig(core_competences_renderer=custom_core_competences_renderer)
+    config = RenderingConfig(
+        language=ENGLISH, core_competences_renderer=custom_core_competences_renderer
+    )
     renderer = BaseMarkdownRenderer(config)
 
     core_competences = [
@@ -252,7 +244,7 @@ def test_markdown_renderer_header_section(sample_cv_dto: CVDTO) -> None:
 
 def test_markdown_renderer_header_section_disabled() -> None:
     """Test header section generation when disabled."""
-    config = RenderingConfig(include_header=False)
+    config = RenderingConfig(language=ENGLISH, include_header=False)
     renderer = MarkdownRenderer(config)
     sample_cv_dto = CVDTO(
         personal_info=PersonalInfoDTO(full_name="John Doe"),

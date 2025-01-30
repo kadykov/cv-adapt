@@ -4,7 +4,7 @@ from typing import Any, Generic, List, Optional, Sequence
 import yaml
 
 from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, MinimalCVDTO, SkillGroupDTO
-from cv_adapter.dto.language import ENGLISH, FRENCH, Language
+from cv_adapter.dto.language import ENGLISH, Language
 from cv_adapter.renderers.base import (
     BaseRenderer,
     CVDTOType,
@@ -68,7 +68,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Args:
             config: Optional rendering configuration
         """
-        self.config = config or RenderingConfig()
+        self.config = config or RenderingConfig(language=ENGLISH)
 
     def _get_section_label(self, section: str, language: Language) -> str:
         """Get language-specific section labels.
@@ -80,9 +80,7 @@ class BaseMarkdownRenderer(BaseRenderer, Generic[CVDTOType]):
         Returns:
             Localized section label
         """
-        return self.config.section_labels.get(
-            language, self.config.section_labels[ENGLISH]
-        )[section]
+        return self.config.section_labels[section]
 
     def _render_core_competences(
         self, core_competences: List[CoreCompetenceDTO], language: Language
@@ -224,22 +222,7 @@ class MarkdownRenderer(BaseMarkdownRenderer[CVDTO]):
             config: Optional rendering configuration
         """
         if config is None:
-            config = RenderingConfig(
-                section_labels={
-                    ENGLISH: {
-                        "experience": "Professional Experience",
-                        "education": "Education",
-                        "skills": "Skills",
-                        "core_competences": "Core Competences",
-                    },
-                    FRENCH: {
-                        "experience": "Expérience Professionnelle",
-                        "education": "Formation",
-                        "skills": "Compétences",
-                        "core_competences": "Compétences Clés",
-                    },
-                }
-            )
+            config = RenderingConfig(language=ENGLISH)
         super().__init__(config)
 
     def _render_yaml_header(self, cv_dto: CVDTO) -> List[str]:
