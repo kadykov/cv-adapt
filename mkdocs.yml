@@ -1,6 +1,7 @@
 ---
 site_name: CV Adapt
 site_description: Application for adapting CV and generating cover letters based on job descriptions
+site_url: https://github.kadykov.com/cv-adapt/
 repo_url: https://github.com/kadykov/cv-adapt
 repo_name: kadykov/cv-adapt
 
