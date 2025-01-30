@@ -4,6 +4,8 @@ Thank you for your interest in contributing to CV Adapt! This document provides 
 
 ## Development Setup
 
+The project includes a devcontainer configuration to provide a consistent development environment. If you're using VS Code with the Remote - Containers extension, you can open the project in a container that has all the necessary dependencies pre-configured.
+
 1. Fork and clone the repository:
    ```bash
    git clone https://github.com/your-username/cv-adapt.git
@@ -81,7 +83,8 @@ When adding new features or making changes:
 
 3. Generate API documentation:
    ```bash
-   mkdocs serve  # Preview documentation
+   just docs     # Build documentation
+   just serve-docs  # Preview documentation locally
    ```
 
 ### 4. Testing

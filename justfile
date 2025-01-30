@@ -5,6 +5,7 @@ default:
 install:
     uv sync --frozen --group dev --quiet
     bash -c 'source ./.venv/bin/activate'
+    uv pip install -e .
     uv run pre-commit install
 
 # Run tests
@@ -45,3 +46,11 @@ all:
     just format
     just pre-commit
     just test
+
+# Build documentation
+docs:
+    uv run mkdocs build --strict
+
+# Serve documentation locally
+serve-docs:
+    uv run mkdocs serve
