@@ -1,0 +1,72 @@
+{% if config.include_yaml_header -%}
+---
+full_name: {{ cv.personal_info.full_name }}
+contacts:
+  {%- if cv.personal_info.email %}
+  email: {{ cv.personal_info.email.value }}
+  {%- endif %}
+  {%- if cv.personal_info.phone %}
+  phone: {{ cv.personal_info.phone.value }}
+  {%- endif %}
+  {%- if cv.personal_info.location %}
+  location: {{ cv.personal_info.location.value }}
+  {%- endif %}
+  {%- if cv.personal_info.linkedin %}
+  linkedin: {{ cv.personal_info.linkedin.value }}
+  {%- endif %}
+  {%- if cv.personal_info.github %}
+  github: {{ cv.personal_info.github.value }}
+  {%- endif %}
+---
+{% endif %}
+
+{%- if config.include_header %}
+## {{ cv.title.text }}
+
+{{ cv.summary.text }}
+{% endif %}
+
+{%- for section in config.include_sections %}
+{%- if section == 'core_competences' and cv.core_competences %}
+## {{ config.section_labels.core_competences }}
+
+{% for competence in cv.core_competences -%}
+* {{ competence.text }}
+{% endfor %}
+{%- endif %}
+
+{%- if section == 'experience' and cv.experiences %}
+## {{ config.section_labels.experience }}
+
+{% for exp in cv.experiences -%}
+### {{ exp.position }} | {{ exp.company.name }}
+*{{ exp.start_date.strftime('%Y') }} - {{ exp.end_date.strftime('%Y') if exp.end_date else 'Present' }}*
+
+{{ exp.description }}
+{% if exp.technologies %}**Technologies:** {{ exp.technologies|join(', ') }}{% endif %}
+
+{% endfor %}
+{%- endif %}
+
+{%- if section == 'education' and cv.education %}
+## {{ config.section_labels.education }}
+
+{% for edu in cv.education -%}
+### {{ edu.degree }} | {{ edu.university.name }}
+*{{ edu.start_date.strftime('%Y') }} - {{ edu.end_date.strftime('%Y') if edu.end_date else 'Present' }}*
+
+{{ edu.description }}
+
+{% endfor %}
+{%- endif %}
+
+{%- if section == 'skills' and cv.skills %}
+## {{ config.section_labels.skills }}
+
+{% for group in cv.skills -%}
+### {{ group.name }}
+{{ group.skills|map(attribute='text')|join(', ') }}
+
+{% endfor %}
+{%- endif %}
+{%- endfor %}
