@@ -1,0 +1,51 @@
+{% for section in config.include_sections %}
+{%- if section == 'core_competences' and cv.core_competences %}
+## {{ config.section_labels.core_competences }}
+
+{% for competence in cv.core_competences -%}
+* {{ competence.text }}
+{% endfor %}
+{% endif %}
+
+{%- if section == 'experience' and cv.experiences %}
+## {{ config.section_labels.experience }}
+
+{% for exp in cv.experiences -%}
+### {{ exp.position }} at {{ exp.company.name }}
+{% if exp.company.location %}Location: {{ exp.company.location }}{% endif %}
+Duration: {{ exp.start_date.strftime('%B %Y') }} - {{ exp.end_date.strftime('%B %Y') if exp.end_date else 'Present' }}
+
+{{ exp.description }}
+{% if exp.technologies %}
+Technologies: {{ exp.technologies|join(', ') }}
+{% endif %}
+
+{% endfor %}
+{%- endif %}
+
+{%- if section == 'education' and cv.education %}
+## {{ config.section_labels.education }}
+
+{% for edu in cv.education -%}
+### {{ edu.degree }}
+Institution: {{ edu.university.name }}
+{% if edu.university.location %}Location: {{ edu.university.location }}{% endif %}
+Duration: {{ edu.start_date.strftime('%B %Y') }} - {{ edu.end_date.strftime('%B %Y') if edu.end_date else 'Present' }}
+
+{{ edu.description }}
+
+{% endfor %}
+{%- endif %}
+
+{%- if section == 'skills' and cv.skills %}
+## {{ config.section_labels.skills }}
+
+{% for group in cv.skills -%}
+### {{ group.name }}
+{% for skill in group.skills -%}
+* {{ skill.text }}
+{% endfor %}
+
+{% endfor %}
+{%- endif %}
+{%- endfor %}

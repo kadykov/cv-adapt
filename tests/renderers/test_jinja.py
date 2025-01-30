@@ -12,6 +12,7 @@ from cv_adapter.dto.cv import (
     EducationDTO,
     ExperienceDTO,
     InstitutionDTO,
+    MinimalCVDTO,
     PersonalInfoDTO,
     SkillDTO,
     SkillGroupDTO,
@@ -84,6 +85,53 @@ def sample_cv_dto() -> CVDTO:
     )
 
 
+@pytest.fixture
+def sample_minimal_cv_dto() -> MinimalCVDTO:
+    """Create a sample MinimalCVDTO for testing."""
+    return MinimalCVDTO(
+        language=ENGLISH,
+        title=TitleDTO(text="Software Engineer"),
+        core_competences=[
+            CoreCompetenceDTO(text="Leadership"),
+            CoreCompetenceDTO(text="Problem Solving"),
+        ],
+        experiences=[
+            ExperienceDTO(
+                position="Software Engineer",
+                company=InstitutionDTO(
+                    name="Tech Corp",
+                    location="San Francisco, USA",
+                ),
+                start_date=datetime(2021, 1, 1),
+                end_date=None,
+                description="Developing web applications",
+                technologies=["Python", "Django"],
+            )
+        ],
+        education=[
+            EducationDTO(
+                degree="Computer Science",
+                university=InstitutionDTO(
+                    name="University",
+                    location="Boston, USA",
+                ),
+                start_date=datetime(2017, 9, 1),
+                end_date=datetime(2021, 6, 1),
+                description="Bachelor's degree",
+            )
+        ],
+        skills=[
+            SkillGroupDTO(
+                name="Programming",
+                skills=[
+                    SkillDTO(text="Python"),
+                    SkillDTO(text="JavaScript"),
+                ],
+            )
+        ],
+    )
+
+
 def test_jinja2_renderer_default_template(sample_cv_dto: CVDTO, tmp_path: Path) -> None:
     """Test Jinja2 renderer with default template."""
     renderer = Jinja2Renderer()
@@ -141,6 +189,56 @@ def test_jinja2_renderer_with_config(sample_cv_dto: CVDTO) -> None:
     assert "Tech Corp" not in output
     assert "Tech University" not in output
     assert "---" not in output  # YAML header should be excluded
+
+
+def test_jinja2_renderer_minimal_template(
+    sample_minimal_cv_dto: MinimalCVDTO, tmp_path: Path
+) -> None:
+    """Test Jinja2 renderer with MinimalCVDTO using minimal template."""
+    renderer = Jinja2Renderer()
+    output = renderer.render_to_string(sample_minimal_cv_dto)
+
+    # Basic content checks
+    assert "Leadership" in output
+    assert "Problem Solving" in output
+    assert "Software Engineer at Tech Corp" in output
+    assert "Location: San Francisco, USA" in output
+    assert "Technologies: Python, Django" in output
+    assert "Computer Science" in output
+    assert "Institution: University" in output
+    assert "Location: Boston, USA" in output
+    assert "Programming" in output
+    assert "* Python" in output
+    assert "* JavaScript" in output
+
+    # Test file rendering
+    output_file = tmp_path / "minimal_cv.md"
+    renderer.render_to_file(sample_minimal_cv_dto, output_file)
+    assert output_file.exists()
+    assert output_file.read_text() == output
+
+
+def test_jinja2_renderer_minimal_with_config(
+    sample_minimal_cv_dto: MinimalCVDTO,
+) -> None:
+    """Test Jinja2 renderer with MinimalCVDTO and custom config."""
+    config = RenderingConfig(
+        language=ENGLISH,
+        include_sections=["skills", "core_competences"],
+    )
+    renderer = Jinja2Renderer(config=config)
+    output = renderer.render_to_string(sample_minimal_cv_dto)
+
+    # Check that only included sections are present
+    assert "Programming" in output
+    assert "* Python" in output
+    assert "* JavaScript" in output
+    assert "Leadership" in output
+    assert "Problem Solving" in output
+
+    # Check that excluded sections are not present
+    assert "Tech Corp" not in output
+    assert "University" not in output
 
 
 def test_jinja2_renderer_error_handling(sample_cv_dto: CVDTO, tmp_path: Path) -> None:

@@ -19,7 +19,7 @@ class Jinja2Renderer(BaseRenderer, Generic[CVDTOType]):
     def __init__(
         self,
         template_path: Optional[Path] = None,
-        template_name: str = "base.j2",
+        template_name: Optional[str] = None,
         config: Optional[RenderingConfig] = None,
     ):
         """Initialize the renderer with optional configuration.
@@ -27,7 +27,8 @@ class Jinja2Renderer(BaseRenderer, Generic[CVDTOType]):
         Args:
             template_path: Optional path to custom templates directory.
                          If not provided, uses default templates.
-            template_name: Name of the template file to use (default: base.j2)
+            template_name: Optional name of the template file to use.
+                         If not provided, will be selected based on CV type.
             config: Optional rendering configuration
         """
         super().__init__(config or RenderingConfig(language=ENGLISH))
@@ -79,7 +80,14 @@ class Jinja2Renderer(BaseRenderer, Generic[CVDTOType]):
             RendererError: If rendering fails
         """
         try:
-            template = self.env.get_template(self.template_name)
+            # Select template based on CV type if not explicitly provided
+            template_name = self.template_name
+            if template_name is None:
+                template_name = (
+                    "minimal.j2" if isinstance(cv_dto, MinimalCVDTO) else "base.j2"
+                )
+
+            template = self.env.get_template(template_name)
             return template.render(
                 cv=cv_dto,
                 config=self.config,
