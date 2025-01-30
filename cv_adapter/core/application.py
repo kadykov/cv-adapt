@@ -14,22 +14,16 @@ from cv_adapter.renderers.markdown import (
     CoreCompetencesRenderer,
     MinimalMarkdownRenderer,
 )
-from cv_adapter.services.generators.competence_generator import (
-    create_core_competence_generator,
-)
-from cv_adapter.services.generators.education_generator import (
-    create_education_generator,
-)
-from cv_adapter.services.generators.experience_generator import (
-    create_experience_generator,
-)
-from cv_adapter.services.generators.protocols import (
+from cv_adapter.services.generators import (
     ComponentGenerationContext,
     CoreCompetenceGenerationContext,
+    create_core_competence_generator,
+    create_education_generator,
+    create_experience_generator,
+    create_skills_generator,
+    create_summary_generator,
+    create_title_generator,
 )
-from cv_adapter.services.generators.skills_generator import create_skills_generator
-from cv_adapter.services.generators.summary_generator import create_summary_generator
-from cv_adapter.services.generators.title_generator import create_title_generator
 
 
 class CVAdapterApplication:
