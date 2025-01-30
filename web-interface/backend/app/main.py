@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from cv_adapter.core.application import CVAdapterApplication
-from cv_adapter.dto.cv import PersonalInfoDTO
+from cv_adapter.dto.cv import CVDTO, ContactDTO, PersonalInfoDTO
 from cv_adapter.services.generators import CoreCompetenceGenerationContext
 
 app = FastAPI(title="CV Adapter Web Interface")
@@ -28,10 +28,10 @@ class GenerateCompetencesRequest(BaseModel):
 
 
 class PersonalInfo(BaseModel):
-    name: str
-    email: str
-    phone: Optional[str] = None
-    location: Optional[str] = None
+    full_name: str
+    email: ContactDTO
+    phone: Optional[ContactDTO] = None
+    location: Optional[ContactDTO] = None
 
 
 class GenerateCVRequest(BaseModel):
@@ -47,7 +47,9 @@ cv_adapter = CVAdapterApplication()
 
 
 @app.post("/api/generate-competences")
-async def generate_competences(request: GenerateCompetencesRequest):
+async def generate_competences(
+    request: GenerateCompetencesRequest,
+) -> dict[str, list[str]]:
     try:
         # Generate core competences
         context = CoreCompetenceGenerationContext(
@@ -66,11 +68,11 @@ async def generate_competences(request: GenerateCompetencesRequest):
 
 
 @app.post("/api/generate-cv")
-async def generate_cv(request: GenerateCVRequest):
+async def generate_cv(request: GenerateCVRequest) -> CVDTO:
     try:
-        # Convert personal info
+        # Convert personal info to DTO
         personal_info = PersonalInfoDTO(
-            name=request.personal_info.name,
+            full_name=request.personal_info.full_name,
             email=request.personal_info.email,
             phone=request.personal_info.phone,
             location=request.personal_info.location,
@@ -83,16 +85,12 @@ async def generate_cv(request: GenerateCVRequest):
         #     notes=request.notes,
         # )
 
-        # Override generated competences with approved ones
-        competences = request.approved_competences
-
-        # Generate complete CV with approved competences
+        # Generate complete CV
         cv = cv_adapter.generate_cv(
             cv_text=request.cv_text,
             job_description=request.job_description,
             personal_info=personal_info,
             notes=request.notes,
-            core_competences=competences,
         )
 
         return cv
