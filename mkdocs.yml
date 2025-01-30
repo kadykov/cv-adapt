@@ -64,6 +64,7 @@ nav:
   - Tutorials:
       - tutorials/index.md
       - Quick Start: tutorials/quickstart.md
+      - Web Interface: tutorials/web-interface.md
   - How-to Guides:
       - how-to/index.md
       - Language Support: how-to/language-support.md
