@@ -1,0 +1,81 @@
+---
+site_name: CV Adapt
+site_description: Application for adapting CV and generating cover letters based on job descriptions
+repo_url: https://github.com/kadykov/cv-adapt
+repo_name: kadykov/cv-adapt
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - footnotes
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [cv_adapter]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            docstring_style: google
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - tutorials/index.md
+      - Quick Start: tutorials/quickstart.md
+  - How-to Guides:
+      - how-to/index.md
+      - Language Support: how-to/language-support.md
+      - Custom Renderers: how-to/custom-renderers.md
+  - Reference:
+      - reference/index.md
+      - API:
+          - Core: reference/api/core.md
+          - Models: reference/api/models.md
+          - Services: reference/api/services.md
+          - Renderers: reference/api/renderers.md
+  - Explanation:
+      - explanation/index.md
+      - Architecture: explanation/architecture.md
+      - Design Principles: explanation/design-principles.md
+      - Multilingual System: explanation/multilingual-system.md

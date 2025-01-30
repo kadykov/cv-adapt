@@ -6,7 +6,6 @@
   "python.testing.pytestEnabled": true,
   "spellright.language": [],
   "spellright.documentTypes": [
-    "latex",
-    "plaintext"
+    "latex"
   ]
 }
