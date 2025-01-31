@@ -12,17 +12,20 @@ function App() {
   const [generatedCV, setGeneratedCV] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    location: ''
+    full_name: '',
+    email: { text: '' },
+    phone: { text: '' },
+    location: { text: '' }
   });
+
+  const [notes, setNotes] = useState('');
+  const [language, setLanguage] = useState('en');
 
   const handleGenerateCompetences = async () => {
     setIsGenerating(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/api/generate-competences', {
+      const response = await fetch(`http://localhost:8000/api/generate-competences?language_code=${language}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,6 +33,7 @@ function App() {
         body: JSON.stringify({
           cv_text: cvText,
           job_description: jobDescription,
+          notes: notes || undefined
         }),
       });
       if (!response.ok) {
@@ -54,7 +58,7 @@ function App() {
     setIsGeneratingCV(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/api/generate-cv', {
+      const response = await fetch(`http://localhost:8000/api/generate-cv?language_code=${language}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,8 +66,14 @@ function App() {
         body: JSON.stringify({
           cv_text: cvText,
           job_description: jobDescription,
-          personal_info: personalInfo,
+          personal_info: {
+            full_name: personalInfo.full_name,
+            email: personalInfo.email,
+            phone: personalInfo.phone.text ? personalInfo.phone : undefined,
+            location: personalInfo.location.text ? personalInfo.location : undefined
+          },
           approved_competences: approvedCompetences,
+          notes: notes || undefined
         }),
       });
       if (!response.ok) {
@@ -102,12 +112,34 @@ function App() {
             />
           </div>
           <div className="input-group">
+            <label htmlFor="language">Language</label>
+            <select
+              id="language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="de">German</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+            </select>
+          </div>
+          <div className="input-group">
             <label htmlFor="job-description">Job Description</label>
             <textarea
               id="job-description"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the job description here..."
+            placeholder="Paste the job description here..."
+          />
+          </div>
+          <div className="input-group">
+            <label htmlFor="notes">Additional Notes (Optional)</label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional notes or context..."
             />
           </div>
           <button
@@ -150,8 +182,8 @@ function App() {
                     <input
                       type="text"
                       id="name"
-                      value={personalInfo.name}
-                      onChange={(e) => setPersonalInfo({...personalInfo, name: e.target.value})}
+                      value={personalInfo.full_name}
+                      onChange={(e) => setPersonalInfo({...personalInfo, full_name: e.target.value})}
                       required
                     />
                   </div>
@@ -160,8 +192,8 @@ function App() {
                     <input
                       type="email"
                       id="email"
-                      value={personalInfo.email}
-                      onChange={(e) => setPersonalInfo({...personalInfo, email: e.target.value})}
+                      value={personalInfo.email.text}
+                      onChange={(e) => setPersonalInfo({...personalInfo, email: { text: e.target.value }})}
                       required
                     />
                   </div>
@@ -170,8 +202,8 @@ function App() {
                     <input
                       type="tel"
                       id="phone"
-                      value={personalInfo.phone}
-                      onChange={(e) => setPersonalInfo({...personalInfo, phone: e.target.value})}
+                      value={personalInfo.phone.text}
+                      onChange={(e) => setPersonalInfo({...personalInfo, phone: { text: e.target.value }})}
                     />
                   </div>
                   <div className="form-group">
@@ -179,15 +211,15 @@ function App() {
                     <input
                       type="text"
                       id="location"
-                      value={personalInfo.location}
-                      onChange={(e) => setPersonalInfo({...personalInfo, location: e.target.value})}
+                      value={personalInfo.location.text}
+                      onChange={(e) => setPersonalInfo({...personalInfo, location: { text: e.target.value }})}
                     />
                   </div>
                 </div>
                 <button
                   className="generate-cv-button"
                   onClick={handleGenerateCV}
-                  disabled={isGeneratingCV || !personalInfo.name || !personalInfo.email}
+                  disabled={isGeneratingCV || !personalInfo.full_name || !personalInfo.email.text}
                 >
                   {isGeneratingCV ? 'Generating CV...' : 'Generate Final CV'}
                 </button>
