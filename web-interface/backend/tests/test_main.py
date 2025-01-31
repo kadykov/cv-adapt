@@ -3,7 +3,14 @@ from unittest.mock import patch
 from app.main import app
 from fastapi.testclient import TestClient
 
-from cv_adapter.dto.cv import CoreCompetenceDTO
+from cv_adapter.dto.cv import (
+    CVDTO,
+    ContactDTO,
+    CoreCompetenceDTO,
+    PersonalInfoDTO,
+    SummaryDTO,
+    TitleDTO,
+)
 from cv_adapter.dto.language import ENGLISH, FRENCH
 from cv_adapter.models.context import get_current_language, language_context
 
@@ -131,3 +138,208 @@ def test_generate_competences_success() -> None:
             job_description=test_request["job_description"],
             notes=None,
         )
+
+
+def test_generate_cv_with_competences_success() -> None:
+    """Test successful CV generation with competences."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+        "personal_info": {
+            "full_name": "John Doe",
+            "email": {"value": "john@example.com", "type": "Email"},
+            "phone": {"value": "+1234567890", "type": "Phone"},
+            "location": {"value": "New York, USA", "type": "Location"},
+        },
+        "approved_competences": ["Competence 1", "Competence 2"],
+        "notes": "Additional notes",
+    }
+
+    expected_personal_info = PersonalInfoDTO(
+        full_name="John Doe",
+        email=ContactDTO(value="john@example.com", type="Email", icon=None, url=None),
+        phone=ContactDTO(value="+1234567890", type="Phone", icon=None, url=None),
+        location=ContactDTO(
+            value="New York, USA", type="Location", icon=None, url=None
+        ),
+    )
+    expected_competences = [
+        CoreCompetenceDTO(text="Competence 1"),
+        CoreCompetenceDTO(text="Competence 2"),
+    ]
+
+    # Mock CV response
+    mock_cv = CVDTO(
+        personal_info=expected_personal_info,
+        core_competences=expected_competences,
+        title=TitleDTO(text="Software Engineer"),
+        summary=SummaryDTO(text="Test summary"),
+        experiences=[],
+        education=[],
+        skills=[],
+        language=ENGLISH,
+    )
+
+    with (
+        language_context(ENGLISH),
+        patch(
+            "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+        ) as mock_generate,
+    ):
+        mock_generate.return_value = mock_cv
+
+        # Make request to endpoint
+        response = client.post(
+            "/api/generate-cv",
+            json=test_request,
+        )
+
+        # Check response
+        assert response.status_code == 200
+        result = response.json()
+        assert result["personal_info"]["full_name"] == "John Doe"
+        assert result["personal_info"]["email"]["value"] == "john@example.com"
+        assert result["core_competences"] == [
+            {"text": "Competence 1"},
+            {"text": "Competence 2"},
+        ]
+
+        # Verify generate was called with correct arguments and proper DTO conversion
+        mock_generate.assert_called_once()
+        call_args = mock_generate.call_args[1]
+        assert call_args["cv_text"] == test_request["cv_text"]
+        assert call_args["job_description"] == test_request["job_description"]
+        assert call_args["notes"] == test_request["notes"]
+        assert isinstance(call_args["personal_info"], PersonalInfoDTO)
+        assert [c.text for c in call_args["core_competences"]] == test_request[
+            "approved_competences"
+        ]
+
+
+def test_generate_cv_minimal_info() -> None:
+    """Test CV generation with minimal required information."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+        "personal_info": {
+            "full_name": "John Doe",
+            "email": {"value": "john@example.com", "type": "Email"},
+        },
+        "approved_competences": ["Competence 1"],
+    }
+
+    mock_cv = CVDTO(
+        personal_info=PersonalInfoDTO(
+            full_name="John Doe",
+            email=ContactDTO(
+                value="john@example.com", type="Email", icon=None, url=None
+            ),
+            phone=None,
+            location=None,
+        ),
+        core_competences=[CoreCompetenceDTO(text="Competence 1")],
+        title=TitleDTO(text="Software Engineer"),
+        summary=SummaryDTO(text="Test summary"),
+        experiences=[],
+        education=[],
+        skills=[],
+        language=ENGLISH,
+    )
+
+    with (
+        language_context(ENGLISH),
+        patch(
+            "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+        ) as mock_generate,
+    ):
+        mock_generate.return_value = mock_cv
+
+        response = client.post(
+            "/api/generate-cv",
+            json=test_request,
+        )
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["personal_info"]["full_name"] == "John Doe"
+        assert result["personal_info"]["email"]["value"] == "john@example.com"
+        assert result["personal_info"]["phone"] is None
+        assert result["personal_info"]["location"] is None
+        assert len(result["core_competences"]) == 1
+
+
+def test_generate_cv_language_context() -> None:
+    """Test that language context is correctly set during CV generation."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+        "personal_info": {
+            "full_name": "John Doe",
+            "email": {"value": "john@example.com", "type": "Email"},
+        },
+        "approved_competences": ["Competence 1"],
+    }
+
+    mock_cv = CVDTO(
+        personal_info=PersonalInfoDTO(
+            full_name="John Doe",
+            email=ContactDTO(
+                value="john@example.com", type="Email", icon=None, url=None
+            ),
+        ),
+        core_competences=[CoreCompetenceDTO(text="Competence 1")],
+        title=TitleDTO(text="Software Engineer"),
+        summary=SummaryDTO(text="Test summary"),
+        experiences=[],
+        education=[],
+        skills=[],
+        language=FRENCH,
+    )
+
+    with patch(
+        "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+    ) as mock_generate:
+
+        def verify_language_context(*args: object, **kwargs: object) -> CVDTO:
+            current_language = get_current_language()
+            assert current_language == FRENCH, (
+                f"Expected FRENCH language context, got {current_language}"
+            )
+            return mock_cv
+
+        mock_generate.side_effect = verify_language_context
+
+        response = client.post(
+            "/api/generate-cv",
+            json=test_request,
+            params={"language_code": "fr"},
+        )
+
+        assert response.status_code == 200
+        mock_generate.assert_called_once()
+
+
+def test_generate_cv_error_handling() -> None:
+    """Test error handling in CV generation endpoint."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+        "personal_info": {
+            "full_name": "John Doe",
+            "email": {"value": "john@example.com", "type": "Email"},
+        },
+        "approved_competences": ["Competence 1"],
+    }
+
+    with patch(
+        "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+    ) as mock_generate:
+        mock_generate.side_effect = Exception("Test error")
+
+        response = client.post(
+            "/api/generate-cv",
+            json=test_request,
+        )
+
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Test error"
