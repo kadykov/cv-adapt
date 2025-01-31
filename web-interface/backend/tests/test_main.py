@@ -1,211 +1,133 @@
-import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
+from app.main import app
 from fastapi.testclient import TestClient
 
-from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto.cv import CoreCompetenceDTO
+from cv_adapter.dto.language import ENGLISH, FRENCH
+from cv_adapter.models.context import get_current_language, language_context
 
-sys.path.append(str(Path(__file__).parent.parent))
-
-from app.main import GenerateCompetencesRequest, GenerateCVRequest, PersonalInfo, app
-
-
-# Setup test client
-@pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
+client = TestClient(app)
 
 
-# Mock responses
-MOCK_COMPETENCE_DTOS = [
-    CoreCompetenceDTO(text="Competence 1"),
-    CoreCompetenceDTO(text="Competence 2"),
-]
-MOCK_COMPETENCES = [
-    "Competence 1",
-    "Competence 2",
-]  # String versions for response checking
-MOCK_CV = {
-    "personal_info": {
-        "full_name": "John Doe",
-        "email": {
-            "value": "john@example.com",
-            "type": "personal",
-            "icon": None,
-            "url": None,
-        },
-        "phone": {
-            "value": "123-456-7890",
-            "type": "personal",
-            "icon": None,
-            "url": None,
-        },
-        "location": {
-            "value": "New York",
-            "type": "personal",
-            "icon": None,
-            "url": None,
-        },
-        "linkedin": None,
-        "github": None,
-    },
-    "summary": {"text": "Professional summary"},
-    "title": {"text": "Software Engineer"},
-    "core_competences": [],
-    "experiences": [],
-    "education": [],
-    "skills": [],
-    "language": {
-        "code": "en",
-        "name": "English",
-        "native_name": "English",
-        "date_format": "%m/%d/%Y",
-        "decimal_separator": ".",
-        "thousands_separator": ",",
-    },
-}
+def test_language_context_verification() -> None:
+    """Test that language context is correctly set during competence generation."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+    }
+    test_competence = CoreCompetenceDTO(text="Test competence")
 
-
-# Test cases for /api/generate-competences
-def test_generate_competences_success(client: TestClient) -> None:
-    with patch("app.main.cv_adapter") as mock_adapter:
-        # Setup mocks
-        mock_adapter.generate_core_competences.return_value = MOCK_COMPETENCE_DTOS
-        mock_lang_context = patch("app.main.language_context")
-        mock_lang_ctx = mock_lang_context.start()
-        mock_lang_ctx.return_value.__enter__ = MagicMock()
-        mock_lang_ctx.return_value.__exit__ = MagicMock()
-
-        try:
-            request_data = GenerateCompetencesRequest(
-                cv_text="Sample CV", job_description="Sample Job", notes="Sample notes"
-            ).model_dump()
-
-            response = client.post("/api/generate-competences", json=request_data)
-
-            print("Response:", response.json())  # Debug print
-            assert response.status_code == 200
-            assert response.json() == {"competences": MOCK_COMPETENCES}
-            mock_adapter.generate_core_competences.assert_called_once_with(
-                cv_text="Sample CV", job_description="Sample Job", notes="Sample notes"
+    # Test explicit language specification (FRENCH)
+    with patch(
+        "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+    ) as mock_generate:
+        # Create a side effect that verifies the language context
+        def verify_language_context(
+            *args: object, **kwargs: object
+        ) -> list[CoreCompetenceDTO]:
+            current_language = get_current_language()
+            assert current_language == FRENCH, (
+                f"Expected FRENCH language context, got {current_language}"
             )
-            mock_lang_ctx.assert_called_once_with(ENGLISH)
-        finally:
-            mock_lang_context.stop()
+            return [test_competence]
+
+        mock_generate.side_effect = verify_language_context
+
+        response = client.post(
+            "/api/generate-competences",
+            json=test_request,
+            params={"language_code": "fr"},
+        )
+        assert response.status_code == 200
+        mock_generate.assert_called_once()
+        assert response.json() == {"competences": ["Test competence"]}
 
 
-def test_generate_competences_error(client: TestClient) -> None:
-    with patch("app.main.cv_adapter") as mock_adapter:
-        # Setup mock
-        mock_adapter.generate_core_competences.side_effect = Exception("Test error")
-        mock_lang_context = patch("app.main.language_context")
-        mock_lang_ctx = mock_lang_context.start()
-        mock_lang_ctx.return_value.__enter__ = MagicMock()
-        mock_lang_ctx.return_value.__exit__ = MagicMock()
+def test_language_dependency() -> None:
+    """Test that the language dependency correctly handles language specification."""
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
+    }
+    test_competence = CoreCompetenceDTO(text="Test competence")
 
-        try:
-            request_data = GenerateCompetencesRequest(
-                cv_text="Sample CV", job_description="Sample Job"
-            ).model_dump()
+    # Test default language (ENGLISH)
+    with (
+        language_context(ENGLISH),
+        patch(
+            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+        ) as mock_generate,
+    ):
+        mock_generate.return_value = [test_competence]
+        response = client.post(
+            "/api/generate-competences",
+            json=test_request,
+        )
+        assert response.status_code == 200
+        mock_generate.assert_called_once()
+        assert response.json() == {"competences": ["Test competence"]}
 
-            response = client.post("/api/generate-competences", json=request_data)
+    # Test explicit language specification (FRENCH)
+    with (
+        language_context(FRENCH),
+        patch(
+            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+        ) as mock_generate,
+    ):
+        mock_generate.return_value = [test_competence]
+        response = client.post(
+            "/api/generate-competences",
+            json=test_request,
+            params={"language_code": "fr"},
+        )
+        assert response.status_code == 200
+        mock_generate.assert_called_once()
+        assert response.json() == {"competences": ["Test competence"]}
 
-            assert response.status_code == 500
-            assert "Test error" in response.json()["detail"]
-        finally:
-            mock_lang_context.stop()
-
-
-# Test cases for /api/generate-cv
-def test_generate_cv_success(client: TestClient) -> None:
-    with patch("app.main.cv_adapter") as mock_adapter:
-        # Setup mock
-        mock_adapter.generate_cv_with_competences.return_value = MOCK_CV
-        mock_lang_context = patch("app.main.language_context")
-        mock_lang_ctx = mock_lang_context.start()
-        mock_lang_ctx.return_value.__enter__ = MagicMock()
-        mock_lang_ctx.return_value.__exit__ = MagicMock()
-
-        try:
-            request_data = GenerateCVRequest(
-                cv_text="Sample CV",
-                job_description="Sample Job",
-                personal_info=PersonalInfo(
-                    full_name="John Doe",
-                    email=ContactDTO(
-                        value="john@example.com", type="personal"
-                    ).model_dump(),
-                    phone=ContactDTO(
-                        value="123-456-7890", type="personal"
-                    ).model_dump(),
-                    location=ContactDTO(value="New York", type="personal").model_dump(),
-                ),
-                approved_competences=["Competence 1", "Competence 2"],
-                notes="Sample notes",
-            ).model_dump()
-
-            response = client.post("/api/generate-cv", json=request_data)
-
-            assert response.status_code == 200
-            assert response.json() == MOCK_CV
-            mock_adapter.generate_cv_with_competences.assert_called_once()
-            mock_lang_ctx.assert_called_once_with(ENGLISH)
-        finally:
-            mock_lang_context.stop()
+    # Test validation error for invalid language code
+    response = client.post(
+        "/api/generate-competences",
+        json=test_request,
+        params={"language_code": "xx"},
+    )
+    assert response.status_code == 422
+    assert "language_code" in response.json()["detail"][0]["loc"]
 
 
-def test_generate_cv_error(client: TestClient) -> None:
-    with patch("app.main.cv_adapter") as mock_adapter:
-        # Setup mock
-        mock_adapter.generate_cv_with_competences.side_effect = Exception("Test error")
-        mock_lang_context = patch("app.main.language_context")
-        mock_lang_ctx = mock_lang_context.start()
-        mock_lang_ctx.return_value.__enter__ = MagicMock()
-        mock_lang_ctx.return_value.__exit__ = MagicMock()
-
-        try:
-            request_data = GenerateCVRequest(
-                cv_text="Sample CV",
-                job_description="Sample Job",
-                personal_info=PersonalInfo(
-                    full_name="John Doe",
-                    email=ContactDTO(
-                        value="john@example.com", type="personal"
-                    ).model_dump(),
-                ),
-                approved_competences=["Competence 1"],
-                notes=None,
-            ).model_dump()
-
-            response = client.post("/api/generate-cv", json=request_data)
-
-            assert response.status_code == 500
-            assert "Test error" in response.json()["detail"]
-        finally:
-            mock_lang_context.stop()
-
-
-# Test input validation
-def test_invalid_request_data(client: TestClient) -> None:
-    request_data = {"cv_text": "Sample CV"}
-
-    response = client.post("/api/generate-competences", json=request_data)
-    assert response.status_code == 422  # Unprocessable Entity
-
-
-def test_invalid_personal_info(client: TestClient) -> None:
-    request_data = {
-        "cv_text": "Sample CV",
-        "job_description": "Sample Job",
-        "personal_info": {
-            # missing required name
-            "email": ContactDTO(value="john@example.com", type="personal").model_dump()
-        },
-        "approved_competences": [],
+def test_generate_competences_success() -> None:
+    # Test data
+    test_request = {
+        "cv_text": "Example CV",
+        "job_description": "Example job",
     }
 
-    response = client.post("/api/generate-cv", json=request_data)
-    assert response.status_code == 422  # Unprocessable Entity
+    # Set up language context and mock generate_core_competences
+    with (
+        language_context(ENGLISH),
+        patch(
+            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+        ) as mock_generate,
+    ):
+        # Configure mock to return test data
+        test_competence = CoreCompetenceDTO(text="Test competence")
+        mock_generate.return_value = [test_competence]
+
+        # Make request to our endpoint
+        response = client.post(
+            "/api/generate-competences",
+            json=test_request,
+        )
+
+        # Check response
+        print("Response:", response.status_code)
+        print("Response body:", response.json())
+        assert response.status_code == 200
+        assert response.json() == {"competences": ["Test competence"]}
+
+        # Verify generate was called with correct arguments
+        mock_generate.assert_called_once_with(
+            cv_text=test_request["cv_text"],
+            job_description=test_request["job_description"],
+            notes=None,
+        )

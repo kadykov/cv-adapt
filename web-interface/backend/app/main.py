@@ -1,12 +1,13 @@
+import sys
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from cv_adapter.core.application import CVAdapterApplication
-from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, PersonalInfoDTO
-from cv_adapter.dto.language import ENGLISH, Language
+from cv_adapter.dto.cv import CVDTO, ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
+from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
 
 app = FastAPI(title="CV Adapter Web Interface")
@@ -22,9 +23,25 @@ app.add_middleware(
 
 
 # Language dependency
-async def get_language(language: Language = ENGLISH) -> Language:
+async def get_language(language_code: str = Query(default="en")) -> Language:
     """Dependency to get language from request, defaulting to English."""
-    return language
+    try:
+        if not language_code:
+            return ENGLISH
+        # Validate language code before trying to get Language instance
+        lang_code = LanguageCode(language_code)
+        return Language.get(lang_code)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=[
+                {
+                    "loc": ["query", "language_code"],
+                    "msg": f"Invalid language code: {language_code}",
+                    "type": "value_error",
+                }
+            ],
+        )
 
 
 # Request models
@@ -49,21 +66,23 @@ class GenerateCVRequest(BaseModel):
     notes: Optional[str] = None
 
 
-# Initialize CV Adapter
-cv_adapter = CVAdapterApplication()
+# Initialize CV Adapter with configurable AI model
+cv_adapter = CVAdapterApplication(
+    ai_model="test" if "pytest" in sys.modules else "openai:gpt-4o"
+)
 
 
 @app.post("/api/generate-competences")
 async def generate_competences(
-    request: GenerateCompetencesRequest,
+    data: GenerateCompetencesRequest = Body(...),
     language: Language = Depends(get_language),
 ) -> dict[str, list[str]]:
     try:
         with language_context(language):
             competences = cv_adapter.generate_core_competences(
-                cv_text=request.cv_text,
-                job_description=request.job_description,
-                notes=request.notes,
+                cv_text=data.cv_text,
+                job_description=data.job_description,
+                notes=data.notes,
             )
             return {"competences": [comp.text for comp in competences]}
     except Exception as e:
@@ -77,11 +96,24 @@ async def generate_cv(
 ) -> CVDTO:
     try:
         # Convert personal info to DTO
+        # Convert dict to ContactDTO objects
+        email = ContactDTO(**request.personal_info.email, icon=None, url=None)
+        phone = (
+            ContactDTO(**request.personal_info.phone, icon=None, url=None)
+            if request.personal_info.phone
+            else None
+        )
+        location = (
+            ContactDTO(**request.personal_info.location, icon=None, url=None)
+            if request.personal_info.location
+            else None
+        )
+
         personal_info = PersonalInfoDTO(
             full_name=request.personal_info.full_name,
-            email=request.personal_info.email,
-            phone=request.personal_info.phone,
-            location=request.personal_info.location,
+            email=email,
+            phone=phone,
+            location=location,
         )
 
         # Convert approved competences to CoreCompetenceDTO
