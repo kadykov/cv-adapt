@@ -11,7 +11,7 @@ Guidelines for generating education section:
 4. Ensure all dates, university names and degrees match the original CV
 5. Do not modify the official degree titles
 
-{% if language != 'ENGLISH' %}
+{% if language != ENGLISH %}
 Language Requirements:
 Generate the education section in {{ language.name.title() }}, following academic terminology and conventions for that language.
 {% endif %}

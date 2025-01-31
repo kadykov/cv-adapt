@@ -20,14 +20,50 @@ from cv_adapter.dto.cv import (
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH
+from cv_adapter.models.context import get_current_language, language_context
 from cv_adapter.renderers.markdown import CoreCompetencesRenderer
-from cv_adapter.services.generators.protocols import Generator
+from cv_adapter.services.generators.protocols import (
+    BaseGenerationContext,
+    ComponentGenerationContext,
+    CoreCompetenceGenerationContext,
+    Generator,
+)
+
+
+# Helper function to compare context objects
+def context_matches(
+    actual_context: BaseGenerationContext,
+    expected_context: BaseGenerationContext,
+) -> bool:
+    return (
+        actual_context.cv == expected_context.cv
+        and actual_context.job_description == expected_context.job_description
+        and actual_context.notes == expected_context.notes
+    )
+
+
+def component_context_matches(
+    actual_context: ComponentGenerationContext,
+    expected_context: ComponentGenerationContext,
+) -> bool:
+    return (
+        context_matches(actual_context, expected_context)
+        and actual_context.core_competences == expected_context.core_competences
+    )
 
 
 @pytest.fixture
 def mock_services() -> Dict[str, Mock]:
+    def mock_generator(context: BaseGenerationContext) -> list[CoreCompetenceDTO]:
+        # Ensure language context is set before proceeding
+        _ = get_current_language()
+        # Return the configured return value
+        return list(mock_generator.return_value)  # type: ignore[attr-defined]
+
+    mock_generator.return_value = []  # type: ignore[attr-defined]  # Default return value
+    competence_mock = Mock(wraps=mock_generator)
     return {
-        "competence_generator": Mock(),
+        "competence_generator": competence_mock,
         "experience_generator": Mock(),
         "education_generator": Mock(),
         "skills_generator": Mock(),
@@ -71,14 +107,65 @@ def test_init_with_custom_ai_model() -> None:
             assert isinstance(app.summary_generator, Generator)
             assert isinstance(app.title_generator, Generator)
 
-            # Verify AI model initialization
-            # Note: Can't directly check AI model attribute
-
 
 @pytest.fixture
 def detailed_cv_text() -> str:
     """Fixture to provide a sample CV text."""
     return "Existing CV text for John Doe"
+
+
+def test_generate_cv_without_language_context(
+    app: CVAdapterApplication, detailed_cv_text: str
+) -> None:
+    """Test that generating CV without language context raises RuntimeError."""
+    with pytest.raises(RuntimeError, match="Language context not set"):
+        app.generate_cv(
+            cv_text=detailed_cv_text,
+            job_description="Job description",
+            personal_info=PersonalInfoDTO(
+                full_name="John Doe",
+                email=ContactDTO(
+                    value="john@example.com",
+                    type="email",
+                    icon="email",
+                    url="mailto:john@example.com",
+                ),
+            ),
+        )
+
+
+def test_generate_core_competences_without_language_context(
+    app: CVAdapterApplication, detailed_cv_text: str
+) -> None:
+    """Test that generating core competences without language context raises
+    RuntimeError."""
+    with pytest.raises(RuntimeError, match="Language context not set"):
+        app.generate_core_competences(
+            cv_text=detailed_cv_text,
+            job_description="Job description",
+        )
+
+
+def test_generate_cv_with_competences_without_language_context(
+    app: CVAdapterApplication, detailed_cv_text: str
+) -> None:
+    """Test that generating CV with competences without language context raises
+    RuntimeError."""
+    with pytest.raises(RuntimeError, match="Language context not set"):
+        app.generate_cv_with_competences(
+            cv_text=detailed_cv_text,
+            job_description="Job description",
+            personal_info=PersonalInfoDTO(
+                full_name="John Doe",
+                email=ContactDTO(
+                    value="john@example.com",
+                    type="email",
+                    icon="email",
+                    url="mailto:john@example.com",
+                ),
+            ),
+            core_competences=[CoreCompetenceDTO(text="Python")],
+        )
 
 
 def test_generate_cv(
@@ -151,14 +238,14 @@ def test_generate_cv(
     mock_services["summary_generator"].return_value = summary_dto
     mock_services["title_generator"].return_value = title_dto
 
-    # Execute
-    result = app.generate_cv(
-        cv_text=detailed_cv_text,
-        job_description=job_description,
-        personal_info=personal_info_dto,
-        notes=notes,
-        language=ENGLISH,
-    )
+    # Execute with language context
+    with language_context(ENGLISH):
+        result = app.generate_cv(
+            cv_text=detailed_cv_text,
+            job_description=job_description,
+            personal_info=personal_info_dto,
+            notes=notes,
+        )
 
     # Verify
     assert isinstance(result, CVDTO)
@@ -205,31 +292,6 @@ def test_generate_cv(
     core_competences_md = CoreCompetencesRenderer.render_to_markdown(
         core_competences_dto
     )
-    from cv_adapter.services.generators.protocols import (
-        BaseGenerationContext,
-        ComponentGenerationContext,
-        CoreCompetenceGenerationContext,
-    )
-
-    # Helper function to compare context objects
-    def context_matches(
-        actual_context: BaseGenerationContext,
-        expected_context: BaseGenerationContext,
-    ) -> bool:
-        return (
-            actual_context.cv == expected_context.cv
-            and actual_context.job_description == expected_context.job_description
-            and actual_context.notes == expected_context.notes
-        )
-
-    def component_context_matches(
-        actual_context: ComponentGenerationContext,
-        expected_context: ComponentGenerationContext,
-    ) -> bool:
-        return (
-            context_matches(actual_context, expected_context)
-            and actual_context.core_competences == expected_context.core_competences
-        )
 
     # Verify competence generator call
     assert mock_services["competence_generator"].call_count == 1
@@ -242,6 +304,188 @@ def test_generate_cv(
     assert context_matches(actual_comp_context, expected_comp_context)
 
     # Verify other generator calls
+    expected_component_context = ComponentGenerationContext(
+        cv=detailed_cv_text,
+        job_description=job_description,
+        core_competences=core_competences_md,
+        notes=notes,
+    )
+
+    for generator_name in [
+        "experience_generator",
+        "education_generator",
+        "skills_generator",
+        "title_generator",
+    ]:
+        assert mock_services[generator_name].call_count == 1
+        actual_context = mock_services[generator_name].call_args[0][0]
+        assert component_context_matches(actual_context, expected_component_context)
+
+
+def test_generate_core_competences(
+    app: CVAdapterApplication, mock_services: Dict[str, Mock], detailed_cv_text: str
+) -> None:
+    """Test generating core competences separately."""
+    # Setup
+    job_description = "Looking for a Python developer"
+    notes = "Focus on Python experience"
+    core_competences_dto = [
+        CoreCompetenceDTO(text="Python"),
+        CoreCompetenceDTO(text="JavaScript"),
+        CoreCompetenceDTO(text="TypeScript"),
+        CoreCompetenceDTO(text="React"),
+    ]
+    mock_services["competence_generator"].return_value = core_competences_dto
+
+    # Execute with language context
+    with language_context(ENGLISH):
+        result = app.generate_core_competences(
+            cv_text=detailed_cv_text,
+            job_description=job_description,
+            notes=notes,
+        )
+
+    # Verify
+    assert result == core_competences_dto
+    mock_services["competence_generator"].assert_called_once()
+    actual_context = mock_services["competence_generator"].call_args[0][0]
+    expected_context = CoreCompetenceGenerationContext(
+        cv=detailed_cv_text,
+        job_description=job_description,
+        notes=notes,
+    )
+    assert (
+        actual_context.cv == expected_context.cv
+        and actual_context.job_description == expected_context.job_description
+        and actual_context.notes == expected_context.notes
+    )
+
+
+def test_generate_cv_with_competences(
+    app: CVAdapterApplication, mock_services: Dict[str, Mock], detailed_cv_text: str
+) -> None:
+    """Test generating CV with pre-generated core competences."""
+    # Setup
+    job_description = "Looking for a Python developer"
+    notes = "Focus on Python experience"
+    core_competences_dto = [
+        CoreCompetenceDTO(text="Python"),
+        CoreCompetenceDTO(text="JavaScript"),
+        CoreCompetenceDTO(text="TypeScript"),
+        CoreCompetenceDTO(text="React"),
+    ]
+    experiences_dto = [
+        ExperienceDTO(
+            company=InstitutionDTO(
+                name="Tech Corp",
+                description="Tech company",
+                location="San Francisco",
+            ),
+            position="Senior Dev",
+            start_date=date(2020, 1, 1),
+            end_date=date(2023, 1, 1),
+            description="Python development",
+            technologies=["Python", "Git"],
+        )
+    ]
+    education_dto = [
+        EducationDTO(
+            university=InstitutionDTO(
+                name="University",
+                description="Top university",
+                location="New York",
+            ),
+            degree="MSc Computer Science",
+            start_date=date(2016, 9, 1),
+            end_date=date(2020, 6, 1),
+            description="Advanced CS studies",
+        )
+    ]
+    skills_dto = [
+        SkillGroupDTO(
+            name="Programming",
+            skills=[SkillDTO(text="Python")],
+        )
+    ]
+    summary_dto = SummaryDTO(text="Generated summary")
+    title_dto = TitleDTO(text="Senior Python Developer")
+    personal_info_dto = PersonalInfoDTO(
+        full_name="John Doe",
+        email=ContactDTO(
+            value="john@example.com",
+            type="email",
+            icon="email",
+            url="mailto:john@example.com",
+        ),
+        phone=ContactDTO(
+            value="+1234567890", type="phone", icon="phone", url="tel:+1234567890"
+        ),
+    )
+
+    # Configure mock generators
+    mock_services["experience_generator"].return_value = experiences_dto
+    mock_services["education_generator"].return_value = education_dto
+    mock_services["skills_generator"].return_value = skills_dto
+    mock_services["summary_generator"].return_value = summary_dto
+    mock_services["title_generator"].return_value = title_dto
+
+    # Execute with language context
+    with language_context(ENGLISH):
+        result = app.generate_cv_with_competences(
+            cv_text=detailed_cv_text,
+            job_description=job_description,
+            personal_info=personal_info_dto,
+            core_competences=core_competences_dto,
+            notes=notes,
+        )
+
+    # Verify
+    assert isinstance(result, CVDTO)
+    assert result.summary == summary_dto
+    assert [cc.model_dump() for cc in result.core_competences] == [
+        cc.model_dump() for cc in core_competences_dto
+    ]
+    assert len(result.experiences) == len(experiences_dto)
+    for result_exp, expected_exp in zip(result.experiences, experiences_dto):
+        assert result_exp.company.name == expected_exp.company.name
+        assert result_exp.company.description == expected_exp.company.description
+        assert result_exp.company.location == expected_exp.company.location
+        assert result_exp.position == expected_exp.position
+        assert result_exp.start_date == expected_exp.start_date
+        assert result_exp.end_date == expected_exp.end_date
+        assert result_exp.description == expected_exp.description
+        assert result_exp.technologies == expected_exp.technologies
+
+    assert len(result.education) == len(education_dto)
+    for result_edu, expected_edu in zip(result.education, education_dto):
+        assert result_edu.university.name == expected_edu.university.name
+        assert result_edu.university.description == expected_edu.university.description
+        assert result_edu.university.location == expected_edu.university.location
+        assert result_edu.degree == expected_edu.degree
+        assert result_edu.start_date == expected_edu.start_date
+        assert result_edu.end_date == expected_edu.end_date
+        assert result_edu.description == expected_edu.description
+
+    assert len(result.skills) == len(skills_dto)
+    for result_group, expected_group in zip(result.skills, skills_dto):
+        assert result_group.name == expected_group.name
+        assert len(result_group.skills) == len(expected_group.skills)
+        for result_skill, expected_skill in zip(
+            result_group.skills, expected_group.skills
+        ):
+            assert result_skill.text == expected_skill.text
+
+    assert result.personal_info.model_dump() == personal_info_dto.model_dump()
+    assert result.title.model_dump() == title_dto.model_dump()
+    assert result.language == ENGLISH
+
+    # Verify competence generator was not called
+    mock_services["competence_generator"].assert_not_called()
+
+    # Verify other generator calls with correct context
+    core_competences_md = CoreCompetencesRenderer.render_to_markdown(
+        core_competences_dto
+    )
     expected_component_context = ComponentGenerationContext(
         cv=detailed_cv_text,
         job_description=job_description,

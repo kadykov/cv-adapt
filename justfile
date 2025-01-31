@@ -23,9 +23,8 @@ test-cov:
 
 # Run linting checks
 lint *ARGS='.':
-    just format {{ARGS}}
-    uv run ruff check --fix {{ARGS}}
-    uv run mypy {{ARGS}}
+    just ruff {{ARGS}}
+    just mypy {{ARGS}}
 
 # Run ruff on a specific file or directory with auto-fixes
 ruff *ARGS='.':
