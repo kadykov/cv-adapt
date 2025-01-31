@@ -9,8 +9,7 @@ from cv_adapter.dto.cv import (
     PersonalInfoDTO,
     TitleDTO,
 )
-from cv_adapter.dto.language import ENGLISH, Language
-from cv_adapter.models.context import language_context
+from cv_adapter.models.context import get_current_language
 from cv_adapter.renderers.markdown import (
     CoreCompetencesRenderer,
     MinimalMarkdownRenderer,
@@ -77,7 +76,6 @@ class CVAdapterApplication:
         cv_text: str,
         job_description: str,
         notes: Optional[str] = None,
-        language: Language = ENGLISH,
     ) -> List[CoreCompetenceDTO]:
         """Generate core competences for review.
 
@@ -85,19 +83,20 @@ class CVAdapterApplication:
             cv_text: The original detailed CV text
             job_description: The job description to adapt the CV for
             notes: Optional user notes to guide the generation process
-            language: Language for generation. Defaults to English.
 
         Returns:
             List of generated core competences for review
+
+        Raises:
+            RuntimeError: If language context is not set
         """
-        with language_context(language):
-            return self.competence_generator(
-                CoreCompetenceGenerationContext(
-                    cv=cv_text,
-                    job_description=job_description,
-                    notes=notes,
-                )
+        return self.competence_generator(
+            CoreCompetenceGenerationContext(
+                cv=cv_text,
+                job_description=job_description,
+                notes=notes,
             )
+        )
 
     def generate_cv_with_competences(
         self,
@@ -106,7 +105,6 @@ class CVAdapterApplication:
         personal_info: PersonalInfoDTO,
         core_competences: List[CoreCompetenceDTO],
         notes: Optional[str] = None,
-        language: Language = ENGLISH,
     ) -> CVDTO:
         """Generate a complete CV using provided core competences.
 
@@ -116,75 +114,78 @@ class CVAdapterApplication:
             personal_info: Personal information to include in the CV
             core_competences: Pre-generated and confirmed core competences
             notes: Optional user notes to guide the generation process
-            language: Language for CV generation. Defaults to English.
 
         Returns:
             A new CV DTO adapted to the job description
+
+        Raises:
+            RuntimeError: If language context is not set
         """
-        with language_context(language):
-            # Convert competences to markdown for other generators
-            core_competences_md = CoreCompetencesRenderer.render_to_markdown(
-                core_competences
-            )
+        # Get current language from context
+        language = get_current_language()
+        # Convert competences to markdown for other generators
+        core_competences_md = CoreCompetencesRenderer.render_to_markdown(
+            core_competences
+        )
 
-            # Generate other components
-            experiences_dto = self.experience_generator(
-                ComponentGenerationContext(
-                    cv=cv_text,
-                    job_description=job_description,
-                    core_competences=core_competences_md,
-                    notes=notes,
-                )
+        # Generate other components
+        experiences_dto = self.experience_generator(
+            ComponentGenerationContext(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
             )
+        )
 
-            education_dto = self.education_generator(
-                ComponentGenerationContext(
-                    cv=cv_text,
-                    job_description=job_description,
-                    core_competences=core_competences_md,
-                    notes=notes,
-                )
+        education_dto = self.education_generator(
+            ComponentGenerationContext(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
             )
+        )
 
-            skills_dto = self.skills_generator(
-                ComponentGenerationContext(
-                    cv=cv_text,
-                    job_description=job_description,
-                    core_competences=core_competences_md,
-                    notes=notes,
-                )
+        skills_dto = self.skills_generator(
+            ComponentGenerationContext(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
             )
+        )
 
-            title_dto: TitleDTO = self.title_generator(
-                ComponentGenerationContext(
-                    cv=cv_text,
-                    job_description=job_description,
-                    core_competences=core_competences_md,
-                    notes=notes,
-                )
+        title_dto: TitleDTO = self.title_generator(
+            ComponentGenerationContext(
+                cv=cv_text,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
             )
+        )
 
-            # Create minimal CV for summary generation
-            minimal_cv_dto = MinimalMarkdownRenderer().render_to_string(
-                MinimalCVDTO(
-                    title=title_dto,
-                    core_competences=core_competences,
-                    experiences=experiences_dto,
-                    education=education_dto,
-                    skills=skills_dto,
-                    language=language,
-                )
+        # Create minimal CV for summary generation
+        minimal_cv_dto = MinimalMarkdownRenderer().render_to_string(
+            MinimalCVDTO(
+                title=title_dto,
+                core_competences=core_competences,
+                experiences=experiences_dto,
+                education=education_dto,
+                skills=skills_dto,
+                language=language,
             )
+        )
 
-            # Generate summary
-            summary_dto = self.summary_generator(
-                ComponentGenerationContext(
-                    cv=minimal_cv_dto,
-                    job_description=job_description,
-                    core_competences=core_competences_md,
-                    notes=notes,
-                )
+        # Generate summary
+        summary_dto = self.summary_generator(
+            ComponentGenerationContext(
+                cv=minimal_cv_dto,
+                job_description=job_description,
+                core_competences=core_competences_md,
+                notes=notes,
             )
+        )
 
         # Create final CV
         return CVDTO(
@@ -204,7 +205,6 @@ class CVAdapterApplication:
         job_description: str,
         personal_info: PersonalInfoDTO,
         notes: Optional[str] = None,
-        language: Language = ENGLISH,
     ) -> CVDTO:
         """Generate a new CV adapted to the job description in a single step.
 
@@ -229,7 +229,6 @@ class CVAdapterApplication:
             cv_text=cv_text,
             job_description=job_description,
             notes=notes,
-            language=language,
         )
 
         # 2. Generate complete CV using the generated competences
@@ -239,5 +238,4 @@ class CVAdapterApplication:
             personal_info=personal_info,
             core_competences=core_competences,
             notes=notes,
-            language=language,
         )
