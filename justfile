@@ -59,3 +59,17 @@ docs:
 # Serve documentation locally
 serve-docs:
     uv run mkdocs serve
+
+# Serve backend API on port 8000
+serve-backend:
+    cd web-interface/backend && uvicorn app.main:app --reload --port 8000
+
+# Serve frontend development server on port 3000
+serve-frontend:
+    cd web-interface/frontend && npm start
+
+# Serve complete web interface (both frontend and backend)
+serve-web:
+    just serve-backend & \
+    just serve-frontend & \
+    wait
