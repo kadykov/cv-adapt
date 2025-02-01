@@ -1,6 +1,7 @@
 # Quick Start Tutorial
 
 This tutorial will guide you through the basics of using CV Adapt to generate and customize CVs. By the end, you'll understand how to:
+
 - Set up CV Adapt in your project
 - Generate a basic CV
 - Work with different languages
@@ -71,6 +72,7 @@ app = AsyncCVAdapterApplication()
 ### 4. Prepare Your Input
 
 You'll need:
+
 1. Your existing CV text
 2. The job description you're targeting
 
@@ -139,6 +141,7 @@ The two-step approach allows you to review and potentially modify the generated 
 ## Working with Different Languages
 
 CV Adapt supports multiple languages out of the box:
+
 - 🇬🇧 English (default)
 - 🇫🇷 French
 - 🇩🇪 German

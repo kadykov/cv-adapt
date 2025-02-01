@@ -3,6 +3,7 @@ The experiences should be selected from the CV and adapted to match
 the job requirements and prove the core competences.
 
 Guidelines for generating experiences:
+
 1. Select only relevant experiences that demonstrate required skills
 2. For each experience, write a description that:
    - Focuses on achievements and responsibilities matching requirements
@@ -15,22 +16,27 @@ Guidelines for generating experiences:
 
 {% if language != ENGLISH %}
 Language Requirements:
+
 Generate all content in {{ language.name.title() }}, following standard
 CV conventions for that language.
 {% endif %}
 
 CV:
+
 {{ cv }}
 
 Job Description:
+
 {{ job_description }}
 
 {% if core_competences %}
 Core Competences to Prove:
+
 {{ core_competences }}
 {% endif %}
 
 {% if notes %}
 User Notes for Consideration:
+
 {{ notes }}
 {% endif %}

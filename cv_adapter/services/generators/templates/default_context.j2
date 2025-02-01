@@ -1,7 +1,9 @@
 CV:
+
 {{ cv }}
 
 Job Description:
+
 {{ job_description }}
 
 {% if language != ENGLISH %}
@@ -10,5 +12,6 @@ Language Requirements: Generate in {{ language.name.title() }}, following profes
 
 {% if notes is defined and notes %}
 Additional Notes:
+
 {{ notes }}
 {% endif %}

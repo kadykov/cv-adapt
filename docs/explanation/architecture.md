@@ -7,12 +7,12 @@ This document explains the architectural design of CV Adapt, its core components
 CV Adapt follows a modular, layered architecture with clear separation of concerns:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  Application Layer                   │
-│           (CVAdapterApplication, Core Logic)         │
+┌────────────────────────────────────────────────────┐
+│                 Application Layer                  │
+│          (CVAdapterApplication, Core Logic)        │
 ├─────────────┬─────────────────────────┬────────────┤
-│   Models    │       Services          │  Renderers  │
-│  (Domain)   │    (Business Logic)     │  (Output)   │
+│   Models    │       Services          │  Renderers │
+│  (Domain)   │    (Business Logic)     │  (Output)  │
 └─────────────┴─────────────────────────┴────────────┘
 ```
 
@@ -100,6 +100,7 @@ class GeneratorProtocol(Protocol[T]):
 ```
 
 This enables:
+
 - Easy extension
 - Type safety
 - Clear contracts

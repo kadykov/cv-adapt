@@ -5,6 +5,7 @@ This guide explains how to effectively test generator components in cv-adapt usi
 ## Important: Using the Test Model
 
 When writing tests for generators, it is **critical** to use the "test" model by setting `ai_model="test"` when creating generator instances. This ensures that tests:
+
 - Don't attempt to use real API keys
 - Don't make actual API calls
 - Run consistently and quickly
@@ -15,6 +16,7 @@ For more information about testing AI models, see the [Pydantic AI TestModel doc
 ## Overview
 
 Generator tests follow a standardized approach using:
+
 - A base test class with common test patterns
 - Shared fixtures in conftest.py
 - Consistent mocking strategies
@@ -56,6 +58,7 @@ class TestMyGenerator(BaseGeneratorTest[MyContextType]):
 ```
 
 The base class provides tests for:
+
 - Generator creation
 - Default template loading
 - Custom template support

@@ -33,6 +33,7 @@ just all  # Runs all checks
 ```
 
 This includes:
+
 - Code formatting with ruff
 - Type checking with mypy
 - Running tests with pytest

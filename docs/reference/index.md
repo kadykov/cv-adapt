@@ -6,12 +6,14 @@ Welcome to CV Adapt's API reference documentation. This section provides detaile
 
 ### [Core API](api/core.md)
 Core functionality including:
+
 - `CVAdapterApplication` - Main application class
 - Application configuration
 - Core interfaces and protocols
 
 ### [Models](api/models.md)
 Data models and validation:
+
 - Personal information models
 - Language models
 - CV component models
@@ -19,6 +21,7 @@ Data models and validation:
 
 ### [Services](api/services.md)
 Business logic and generators:
+
 - Component generators
 - Generator protocols
 - Utility services
@@ -26,6 +29,7 @@ Business logic and generators:
 
 ### [Renderers](api/renderers.md)
 Output generation:
+
 - Base renderer interfaces
 - Markdown renderer
 - YAML renderer
