@@ -75,7 +75,7 @@ class TestTitleGenerator(BaseGeneratorTest):
 
             try:
                 # Create generator and generate title
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(base_context)
 
                 # Verify the result
@@ -93,7 +93,7 @@ class TestTitleGenerator(BaseGeneratorTest):
     @pytest.mark.asyncio
     async def test_title_generator_validation_job_description(self) -> None:
         """Test title generator validation for job description."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Job description is required"):
             await generator(
                 ComponentGenerationContext(
@@ -107,7 +107,7 @@ class TestTitleGenerator(BaseGeneratorTest):
     @pytest.mark.asyncio
     async def test_title_generator_validation_core_competences(self) -> None:
         """Test title generator validation for core competences."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Core competences are required"):
             await generator(
                 ComponentGenerationContext(

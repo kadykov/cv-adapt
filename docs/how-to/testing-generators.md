@@ -2,6 +2,16 @@
 
 This guide explains how to effectively test generator components in cv-adapt using the established patterns and infrastructure.
 
+## Important: Using the Test Model
+
+When writing tests for generators, it is **critical** to use the "test" model by setting `ai_model="test"` when creating generator instances. This ensures that tests:
+- Don't attempt to use real API keys
+- Don't make actual API calls
+- Run consistently and quickly
+- Work in CI environments
+
+For more information about testing AI models, see the [Pydantic AI TestModel documentation](https://ai.pydantic.dev/testing-evals/?h#unit-testing-with-testmodel).
+
 ## Overview
 
 Generator tests follow a standardized approach using:
@@ -97,7 +107,7 @@ Generator tests should include:
 
            # Patch agent class
            try:
-               generator = await self.create_generator()
+               generator = await self.create_generator(ai_model="test")
                result = await generator(base_context)
 
                # Verify result
@@ -112,7 +122,7 @@ Generator tests should include:
    ```python
    async def test_specific_validation(self) -> None:
        """Test specific validation rules."""
-       generator = await self.create_generator()
+       generator = await self.create_generator(ai_model="test")
        with pytest.raises(ValueError, match="expected message"):
            await generator(invalid_context)
    ```
@@ -179,7 +189,7 @@ class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
             mock_agent.run.return_value = Mock(data=mock_experience)
 
             try:
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(base_context)
 
                 assert isinstance(result, list)
@@ -191,7 +201,7 @@ class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
 
     @pytest.mark.asyncio
     async def test_validation_rules(self) -> None:
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError):
             await generator(self.get_invalid_context())
 ```

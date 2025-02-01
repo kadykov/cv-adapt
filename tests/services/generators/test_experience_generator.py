@@ -91,7 +91,7 @@ class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
 
             try:
                 # Create generator and generate experience
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(base_context)
 
                 # Verify the result
@@ -124,7 +124,7 @@ class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
     @pytest.mark.asyncio
     async def test_experience_generator_validation_job_description(self) -> None:
         """Test experience generator validation for job description."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Job description is required"):
             await generator(
                 ComponentGenerationContext(
@@ -138,7 +138,7 @@ class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
     @pytest.mark.asyncio
     async def test_experience_generator_validation_core_competences(self) -> None:
         """Test experience generator validation for core competences."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Core competences are required"):
             await generator(
                 ComponentGenerationContext(

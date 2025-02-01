@@ -89,7 +89,7 @@ class TestEducationGenerator(BaseGeneratorTest):
 
             try:
                 # Create generator and generate education
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(base_context)
 
                 # Verify the result
@@ -127,7 +127,7 @@ class TestEducationGenerator(BaseGeneratorTest):
     ) -> None:
         """Test education generator validation for job description."""
         with language_ctx:
-            generator = await self.create_generator()
+            generator = await self.create_generator(ai_model="test")
             with pytest.raises(ValueError, match="Job description is required"):
                 await generator(
                     ComponentGenerationContext(
@@ -145,7 +145,7 @@ class TestEducationGenerator(BaseGeneratorTest):
     ) -> None:
         """Test education generator validation for core competences."""
         with language_ctx:
-            generator = await self.create_generator()
+            generator = await self.create_generator(ai_model="test")
             with pytest.raises(ValueError, match="Core competences are required"):
                 await generator(
                     ComponentGenerationContext(

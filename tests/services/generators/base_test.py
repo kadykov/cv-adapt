@@ -1,4 +1,9 @@
-"""Base test class for generator tests."""
+"""Base test class for generator tests.
+
+IMPORTANT: All test cases must use ai_model="test" when creating generator instances.
+This ensures tests don't require real API keys and work reliably in all environments.
+See: https://ai.pydantic.dev/testing-evals/?h#unit-testing-with-testmodel
+"""
 
 import os
 from typing import Any, Generic, TypeVar
@@ -37,7 +42,7 @@ class BaseGeneratorTest(Generic[TContext]):
     @pytest.mark.asyncio
     async def test_generator_creation(self) -> None:
         """Test generator creation."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         assert isinstance(generator, AsyncGenerator)
 
     @pytest.mark.asyncio
@@ -67,6 +72,6 @@ class BaseGeneratorTest(Generic[TContext]):
     @pytest.mark.asyncio
     async def test_validation(self) -> None:
         """Test input validation."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError):
             await generator(self.get_invalid_context())

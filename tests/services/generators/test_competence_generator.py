@@ -82,7 +82,7 @@ class TestCompetenceGenerator(BaseGeneratorTest[CoreCompetenceGenerationContext]
 
             try:
                 # Create generator and generate competences
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(competence_context)
 
                 # Verify the result
@@ -105,7 +105,7 @@ class TestCompetenceGenerator(BaseGeneratorTest[CoreCompetenceGenerationContext]
     @pytest.mark.asyncio
     async def test_competence_generator_validation_job_description(self) -> None:
         """Test competence generator validation for job description."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Job description is required"):
             await generator(
                 CoreCompetenceGenerationContext(

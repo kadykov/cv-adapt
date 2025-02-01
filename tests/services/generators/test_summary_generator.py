@@ -22,6 +22,7 @@ class TestSummaryGenerator(BaseGeneratorTest):
     """Test cases for summary generator."""
 
     generator_type = AsyncGenerator
+
     default_template_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
         "cv_adapter",
@@ -83,7 +84,7 @@ class TestSummaryGenerator(BaseGeneratorTest):
 
             try:
                 # Create generator and generate summary
-                generator = await self.create_generator()
+                generator = await self.create_generator(ai_model="test")
                 result = await generator(base_context)
 
                 # Verify the result
@@ -101,7 +102,7 @@ class TestSummaryGenerator(BaseGeneratorTest):
     @pytest.mark.asyncio
     async def test_summary_generator_validation_job_description(self) -> None:
         """Test summary generator validation for job description."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Job description is required"):
             await generator(
                 ComponentGenerationContext(
@@ -115,7 +116,7 @@ class TestSummaryGenerator(BaseGeneratorTest):
     @pytest.mark.asyncio
     async def test_summary_generator_validation_core_competences(self) -> None:
         """Test summary generator validation for core competences."""
-        generator = await self.create_generator()
+        generator = await self.create_generator(ai_model="test")
         with pytest.raises(ValueError, match="Core competences are required"):
             await generator(
                 ComponentGenerationContext(

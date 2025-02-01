@@ -46,7 +46,7 @@ def personal_info() -> PersonalInfoDTO:
 @pytest.mark.asyncio
 async def test_init_custom_ai_model() -> None:
     """Test application initialization with different AI models."""
-    test_models: list[KnownModelName] = ["openai:gpt-3.5-turbo", "openai:gpt-4o"]  # type: ignore[list-item]
+    test_models: list[KnownModelName] = ["test"]  # type: ignore[list-item]
     for model in test_models:
         app = AsyncCVAdapterApplication(ai_model=model)
         assert app.ai_model == model
@@ -59,7 +59,7 @@ async def test_generate_cv_without_language_context(
 ) -> None:
     """Test that generating CV without language context raises RuntimeError."""
     with patch("pydantic_ai.models.openai.AsyncOpenAI"):
-        app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+        app = AsyncCVAdapterApplication(ai_model="test")
         with pytest.raises(RuntimeError, match="Language context not set"):
             await app.generate_cv("cv text", "job description", personal_info)
 
@@ -68,7 +68,7 @@ async def test_generate_cv_without_language_context(
 async def test_generate_core_competences_without_language_context() -> None:
     """Test that generating competences without language context raises RuntimeError."""
     with patch("pydantic_ai.models.openai.AsyncOpenAI"):
-        app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+        app = AsyncCVAdapterApplication(ai_model="test")
         with pytest.raises(RuntimeError, match="Language context not set"):
             await app.generate_core_competences("cv text", "job description")
 
@@ -79,7 +79,7 @@ async def test_generate_cv_with_competences_without_language_context(
 ) -> None:
     """Test RuntimeError is raised when language context is not set."""
     with patch("pydantic_ai.models.openai.AsyncOpenAI"):
-        app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+        app = AsyncCVAdapterApplication(ai_model="test")
         with pytest.raises(RuntimeError, match="Language context not set"):
             await app.generate_cv_with_competences(
                 "cv text",
@@ -94,7 +94,7 @@ async def test_generate_core_competences() -> None:
     """Test generating core competences."""
     mock_competences = [CoreCompetenceDTO(text="Python")]
 
-    app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+    app = AsyncCVAdapterApplication(ai_model="test")
     await app._initialize_generators()
 
     # Mock the generator after initialization
@@ -132,7 +132,7 @@ async def test_generate_cv_with_competences(personal_info: PersonalInfoDTO) -> N
     mock_summary = SummaryDTO(text="Experienced developer")
     competences = [CoreCompetenceDTO(text="Python")]
 
-    app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+    app = AsyncCVAdapterApplication(ai_model="test")
     await app._initialize_generators()
 
     # Mock all generators after initialization using cast to handle type compatibility
@@ -186,7 +186,7 @@ async def test_generate_cv(personal_info: PersonalInfoDTO) -> None:
     mock_title = TitleDTO(text="Senior Developer")
     mock_summary = SummaryDTO(text="Experienced developer")
 
-    app = AsyncCVAdapterApplication(ai_model="openai:gpt-4o")
+    app = AsyncCVAdapterApplication(ai_model="test")
     await app._initialize_generators()
 
     # Mock all generators after initialization using cast to handle type compatibility
