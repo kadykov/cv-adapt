@@ -6,6 +6,7 @@ These guides help you solve specific problems with CV Adapt. Each guide focuses 
 
 ### [Language Support](language-support.md)
 Learn how to:
+
 - Configure language settings
 - Switch between languages
 - Handle language-specific formatting
@@ -13,10 +14,20 @@ Learn how to:
 
 ### [Custom Renderers](custom-renderers.md)
 Discover how to:
+
 - Create custom renderers
 - Implement rendering interfaces
 - Handle different output formats
 - Work with DTOs and models
+
+### [Testing Generators](testing-generators.md)
+Learn how to:
+
+- Use the BaseGeneratorTest class
+- Work with common test fixtures
+- Implement proper mocking strategies
+- Handle resource cleanup
+- Ensure type safety in tests
 
 ## Coming Soon
 

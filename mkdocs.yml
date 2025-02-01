@@ -35,7 +35,11 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - pymdownx.details
   - pymdownx.tabbed:
@@ -45,6 +49,9 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_javascript:
+  - https://unpkg.com/mermaid/dist/mermaid.min.js
 
 plugins:
   - search
@@ -69,6 +76,7 @@ nav:
       - how-to/index.md
       - Language Support: how-to/language-support.md
       - Custom Renderers: how-to/custom-renderers.md
+      - Testing Generators: how-to/testing-generators.md
   - Reference:
       - reference/index.md
       - API:

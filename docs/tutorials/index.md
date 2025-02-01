@@ -6,6 +6,7 @@ Welcome to CV Adapt tutorials! These step-by-step guides will help you learn how
 
 ### [Quick Start](quickstart.md)
 Learn the basics of CV Adapt in this introductory tutorial. You'll learn how to:
+
 - Install CV Adapt
 - Set up your first CV generation project
 - Generate a basic CV with multilingual support

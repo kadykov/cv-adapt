@@ -1,6 +1,7 @@
 Generate a list of educational experiences tailored to the job. The experiences should be selected from the CV and adapted to match the job requirements and prove the core competences.
 
 Guidelines for generating education section:
+
 1. Select relevant educational experiences that match job requirements
 2. For each education entry, write a description that:
    - Focuses on relevant coursework, research, and projects
@@ -13,19 +14,24 @@ Guidelines for generating education section:
 
 {% if language != ENGLISH %}
 Language Requirements:
+
 Generate the education section in {{ language.name.title() }}, following academic terminology and conventions for that language.
 {% endif %}
 
 CV:
+
 {{ cv }}
 
 Job Description:
+
 {{ job_description }}
 
 Core Competences to Prove:
+
 {{ core_competences }}
 
 {% if notes %}
 User Notes for Consideration:
+
 {{ notes }}
 {% endif %}

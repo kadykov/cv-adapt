@@ -1,6 +1,7 @@
 Generate a list of skills organized in logical groups based on the CV and tailored to the job requirements. The skills should demonstrate the core competences and match the job requirements.
 
 Guidelines for generating skills:
+
 1. Extract skills from CV experiences and education
 2. Organize skills in logical groups (e.g., 'Programming', 'Analytics')
 3. Ensure each skill:
@@ -13,19 +14,24 @@ Guidelines for generating skills:
 
 {% if language != ENGLISH %}
 Language Requirements:
+
 Generate skills in {{ language.name.title() }}, following professional skill terminology and categorization conventions for that language.
 {% endif %}
 
 CV:
+
 {{ cv }}
 
 Job Description:
+
 {{ job_description }}
 
 Core Competences to Prove:
+
 {{ core_competences }}
 
 {% if notes %}
 User Notes for Consideration:
+
 {{ notes }}
 {% endif %}

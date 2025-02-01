@@ -8,17 +8,17 @@ from cv_adapter.dto import cv as cv_dto
 from cv_adapter.dto.mapper import map_title
 from cv_adapter.models.components import Title
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     ComponentGenerationContext,
-    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-def create_title_generator(
+async def create_title_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[ComponentGenerationContext, cv_dto.TitleDTO]:
+) -> AsyncGenerator[ComponentGenerationContext, cv_dto.TitleDTO]:
     """
     Create a title generator.
 
@@ -28,7 +28,7 @@ def create_title_generator(
         context_template_path: Optional path to context template
 
     Returns:
-        A generator for professional titles
+        An async generator for professional titles
     """
     # Set default system prompt template if not provided
     if system_prompt_template_path is None:
@@ -47,7 +47,7 @@ def create_title_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: ComponentGenerationContext) -> cv_dto.TitleDTO:
+    async def generation_func(context: ComponentGenerationContext) -> cv_dto.TitleDTO:
         """
         Generate title based on context.
 
@@ -71,9 +71,9 @@ def create_title_generator(
         )
 
         # Generate title
-        result = agent.run_sync(context_str, result_type=Title)
+        result = await agent.run(context_str, result_type=Title)
 
         # Map to DTO
         return map_title(result.data)
 
-    return Generator(generation_func)
+    return AsyncGenerator(generation_func)

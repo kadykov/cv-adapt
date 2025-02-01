@@ -10,19 +10,19 @@ from cv_adapter.dto.cv import CoreCompetenceDTO
 from cv_adapter.dto.mapper import map_core_competences
 from cv_adapter.models.components import CoreCompetences
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     CoreCompetenceGenerationContext,
-    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-def create_core_competence_generator(
+async def create_core_competence_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[CoreCompetenceGenerationContext, List[CoreCompetenceDTO]]:
+) -> AsyncGenerator[CoreCompetenceGenerationContext, List[CoreCompetenceDTO]]:
     """
-    Create a core competence generator.
+    Create an async core competence generator.
 
     Args:
         ai_model: AI model to use
@@ -30,7 +30,7 @@ def create_core_competence_generator(
         context_template_path: Optional path to context template
 
     Returns:
-        A generator for core competences
+        An async generator for core competences
     """
     # Set default system prompt template if not provided
     if system_prompt_template_path is None:
@@ -49,7 +49,7 @@ def create_core_competence_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(
+    async def generation_func(
         context: CoreCompetenceGenerationContext,
     ) -> List[CoreCompetenceDTO]:
         """
@@ -64,16 +64,16 @@ def create_core_competence_generator(
         # Validate input parameters
         if not context.cv or not context.cv.strip():
             raise ValueError("CV text is required")
-        if not context.job_description:
+        if not context.job_description.strip():
             raise ValueError("Job description is required")
 
         # Prepare context string
         context_str = prepare_context(context_template_path, context)
 
         # Generate competences
-        result = agent.run_sync(context_str, result_type=CoreCompetences)
+        result = await agent.run(context_str, result_type=CoreCompetences)
 
         # Map to DTOs
         return map_core_competences(result.data)
 
-    return Generator(generation_func)
+    return AsyncGenerator(generation_func)

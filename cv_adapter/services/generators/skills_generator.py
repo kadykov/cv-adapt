@@ -10,19 +10,19 @@ from cv_adapter.dto.cv import SkillGroupDTO
 from cv_adapter.dto.mapper import map_skill_group
 from cv_adapter.models.components import SkillGroup
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     ComponentGenerationContext,
-    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-def create_skills_generator(
+async def create_skills_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[ComponentGenerationContext, List[SkillGroupDTO]]:
+) -> AsyncGenerator[ComponentGenerationContext, List[SkillGroupDTO]]:
     """
-    Create a skills generator.
+    Create an async skills generator.
 
     Args:
         ai_model: AI model to use
@@ -49,7 +49,9 @@ def create_skills_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: ComponentGenerationContext) -> List[SkillGroupDTO]:
+    async def generation_func(
+        context: ComponentGenerationContext,
+    ) -> List[SkillGroupDTO]:
         """
         Generate skills based on context.
 
@@ -73,9 +75,9 @@ def create_skills_generator(
         )
 
         # Generate skills
-        result = agent.run_sync(context_str, result_type=list[SkillGroup])
+        result = await agent.run(context_str, result_type=list[SkillGroup])
 
         # Map to DTOs
         return [map_skill_group(skill_group) for skill_group in result.data]
 
-    return Generator(generation_func)
+    return AsyncGenerator(generation_func)

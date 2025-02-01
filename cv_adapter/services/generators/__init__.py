@@ -2,6 +2,7 @@
 """
 This package contains generator services for different CV components.
 Each generator is responsible for generating a specific section of the CV.
+Generators are async by default, utilizing concurrent execution where possible.
 """
 
 from cv_adapter.services.generators.competence_generator import (
@@ -14,20 +15,28 @@ from cv_adapter.services.generators.experience_generator import (
     create_experience_generator,
 )
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     ComponentGenerationContext,
     CoreCompetenceGenerationContext,
 )
-from cv_adapter.services.generators.skills_generator import create_skills_generator
-from cv_adapter.services.generators.summary_generator import create_summary_generator
-from cv_adapter.services.generators.title_generator import create_title_generator
+from cv_adapter.services.generators.skills_generator import (
+    create_skills_generator,
+)
+from cv_adapter.services.generators.summary_generator import (
+    create_summary_generator,
+)
+from cv_adapter.services.generators.title_generator import (
+    create_title_generator,
+)
 
 __all__ = [
+    "AsyncGenerator",
+    "ComponentGenerationContext",
+    "CoreCompetenceGenerationContext",
     "create_core_competence_generator",
     "create_education_generator",
     "create_experience_generator",
     "create_skills_generator",
     "create_summary_generator",
     "create_title_generator",
-    "ComponentGenerationContext",
-    "CoreCompetenceGenerationContext",
 ]

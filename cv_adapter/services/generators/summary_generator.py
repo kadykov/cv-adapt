@@ -11,20 +11,20 @@ from cv_adapter.dto.mapper import map_summary
 from cv_adapter.models.components import CVSummary
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     ComponentGenerationContext,
-    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-def create_summary_generator(
+async def create_summary_generator(
     renderer: MinimalMarkdownRenderer,
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[ComponentGenerationContext, cv_dto.SummaryDTO]:
+) -> AsyncGenerator[ComponentGenerationContext, cv_dto.SummaryDTO]:
     """
-    Create a summary generator.
+    Create an async summary generator.
 
     Args:
         renderer: MinimalMarkdownRenderer instance to use for CV rendering
@@ -33,10 +33,9 @@ def create_summary_generator(
         context_template_path: Optional path to context template
 
     Returns:
-        A generator for CV summaries
+        An async generator for CV summaries
     """
     # Store renderer for potential future use
-    # Note: This is a placeholder. Consider how the renderer might be used.
     _ = renderer
 
     # Set default system prompt template if not provided
@@ -56,9 +55,9 @@ def create_summary_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: ComponentGenerationContext) -> cv_dto.SummaryDTO:
+    async def generation_func(context: ComponentGenerationContext) -> cv_dto.SummaryDTO:
         """
-        Generate summary based on context.
+        Generate summary based on context asynchronously.
 
         Args:
             context: Component generation context with core competences
@@ -80,9 +79,9 @@ def create_summary_generator(
         )
 
         # Generate summary
-        result = agent.run_sync(context_str, result_type=CVSummary)
+        result = await agent.run(context_str, result_type=CVSummary)
 
         # Map to DTO
         return map_summary(result.data)
 
-    return Generator(generation_func)
+    return AsyncGenerator(generation_func)

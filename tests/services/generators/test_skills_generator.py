@@ -1,198 +1,148 @@
+"""Tests for skills generator."""
+
 import os
-from typing import Any, cast
-from unittest.mock import Mock
+from contextlib import AbstractContextManager
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic_ai import Agent
 
-import cv_adapter.services.generators.skills_generator
-from cv_adapter.dto.cv import SkillDTO, SkillGroupDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto import cv as cv_dto
 from cv_adapter.models.components import Skill, SkillGroup
-from cv_adapter.models.context import language_context
-from cv_adapter.services.generators.protocols import ComponentGenerationContext
-from cv_adapter.services.generators.skills_generator import create_skills_generator
+from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
+    ComponentGenerationContext,
+)
+from cv_adapter.services.generators.skills_generator import (
+    create_skills_generator,
+)
+
+from .base_test import BaseGeneratorTest
 
 
-def test_skills_generator_default_templates() -> None:
-    """Test the skills generator with default templates."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.skills_generator.__file__),
+class TestSkillsGenerator(BaseGeneratorTest):
+    """Test cases for skills generator."""
+
+    generator_type = AsyncGenerator
+    default_template_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "cv_adapter",
+        "services",
+        "generators",
         "templates",
-        "skills_system_prompt.j2",
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.skills_generator.__file__),
-        "templates",
-        "skills_context.j2",
     )
 
-    # Verify default template paths exist
-    assert os.path.exists(default_system_prompt_path), (
-        "Default system prompt template not found"
-    )
-    assert os.path.exists(default_context_path), "Default context template not found"
-
-    # Create generator
-    generator = create_skills_generator(
-        ai_model="test",
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path,
-    )
-
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_skills_generator_custom_templates(tmp_path: Any) -> None:
-    """Test the skills generator with custom templates."""
-    # Create custom templates
-    system_prompt_path = tmp_path / "system_prompt.j2"
-    system_prompt_path.write_text(
-        "An expert CV analyst that helps identify and organize skills. "
-        "Generate skill groups that match job requirements."
-    )
-
-    context_template_path = tmp_path / "context.j2"
-    context_template_path.write_text(
-        "CV: {{ cv }}\n"
-        "Job Description: {{ job_description }}\n"
-        "Core Competences: {{ core_competences }}"
-    )
-
-    # Create generator with custom templates
-    generator = create_skills_generator(
-        ai_model="test",
-        system_prompt_template_path=str(system_prompt_path),
-        context_template_path=str(context_template_path),
-    )
-
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_skills_generator_dto_output() -> None:
-    """Test skills generator returns a valid List[SkillGroupDTO]."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Create a mock agent
-        mock_agent = Mock(spec=Agent)
-        mock_agent.run_sync.return_value = Mock(
-            data=[
-                SkillGroup(
-                    name="Programming Languages",
-                    skills=[
-                        Skill(text="Python"),
-                        Skill(text="JavaScript"),
-                        Skill(text="TypeScript"),
-                    ],
-                ),
-                SkillGroup(
-                    name="Frameworks",
-                    skills=[
-                        Skill(text="React"),
-                        Skill(text="Django"),
-                        Skill(text="FastAPI"),
-                    ],
-                ),
-            ]
+    @pytest.fixture
+    def base_context(self) -> ComponentGenerationContext:
+        """Create a test context."""
+        return ComponentGenerationContext(
+            cv="Experienced software engineer with diverse technical skills",
+            job_description=(
+                "Seeking a senior software engineer with full-stack development skills"
+            ),
+            core_competences="Technical Leadership Advanced Learning",
+            notes=None,
         )
 
-        # Temporarily replace the agent creation in the function
-        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
-            return cast(Agent[Any, Any], mock_agent)
+    async def create_generator(self, **kwargs: Any) -> AsyncGenerator:
+        """Create skills generator instance."""
+        return await create_skills_generator(**kwargs)
 
-        # Temporarily modify the Agent class
-        original_agent_factory = getattr(
-            cv_adapter.services.generators.skills_generator, "Agent"
+    def get_default_template_paths(self) -> dict[str, str]:
+        """Get paths to default templates."""
+        return {
+            "system_prompt": os.path.join(
+                self.default_template_dir, "skills_system_prompt.j2"
+            ),
+            "context": os.path.join(self.default_template_dir, "skills_context.j2"),
+        }
+
+    def get_invalid_context(self) -> ComponentGenerationContext:
+        """Get invalid context for validation tests."""
+        return ComponentGenerationContext(
+            cv="",  # Invalid: empty CV
+            job_description="Test job",
+            core_competences="Test competences",
+            notes=None,
         )
-        setattr(
-            cv_adapter.services.generators.skills_generator,
-            "Agent",
-            mock_agent_factory,
-        )
 
-        try:
-            # Create generator
-            generator = create_skills_generator(ai_model="test")
-
-            # Prepare test context
-            context = ComponentGenerationContext(
-                cv="Experienced software engineer with diverse technical skills",
-                job_description=(
-                    "Seeking a senior software engineer "
-                    "with full-stack development skills"
-                ),
-                core_competences="Technical Leadership, Advanced Learning",
+    @pytest.mark.asyncio
+    async def test_skills_generation(
+        self,
+        mock_agent: AsyncMock,
+        mock_agent_factory: Any,
+        base_context: ComponentGenerationContext,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test skills generation with mocked agent."""
+        with language_ctx:
+            # Configure mock agent response
+            mock_agent.run.return_value = Mock(
+                data=[
+                    SkillGroup(
+                        name="Programming Languages",
+                        skills=[
+                            Skill(text="Python"),
+                            Skill(text="JavaScript"),
+                            Skill(text="TypeScript"),
+                        ],
+                    ),
+                    SkillGroup(
+                        name="Frameworks",
+                        skills=[
+                            Skill(text="React"),
+                            Skill(text="Django"),
+                            Skill(text="FastAPI"),
+                        ],
+                    ),
+                ]
             )
 
-            # Generate skills
-            result = generator(context)
+            # Patch the Agent class
+            from cv_adapter.services.generators import skills_generator as sg
 
-            # Verify the result is a list of SkillGroupDTO
-            assert isinstance(result, list)
-            assert all(isinstance(group, SkillGroupDTO) for group in result)
+            original_agent = getattr(sg, "Agent")
+            setattr(sg, "Agent", mock_agent_factory)
 
-            # Verify skill groups
-            assert len(result) == 2
-            assert result[0].name == "Programming Languages"
-            assert result[1].name == "Frameworks"
+            try:
+                # Create generator and generate skills
+                generator = await self.create_generator(ai_model="test")
+                result = await generator(base_context)
 
-            # Verify each skill group
-            for group in result:
-                assert isinstance(group, SkillGroupDTO)
-                assert isinstance(group.name, str)
-                assert len(group.skills) == 3
+                # Verify the result is a list of SkillGroupDTO
+                assert isinstance(result, list)
+                assert len(result) == 2
 
-                # Verify each skill
-                for skill in group.skills:
-                    assert isinstance(skill, SkillDTO)
-                    assert isinstance(skill.text, str)
-                    assert len(skill.text) > 0
+                # Verify each skill group
+                for group in result:
+                    assert isinstance(group, cv_dto.SkillGroupDTO)
+                    assert isinstance(group.name, str)
+                    assert len(group.skills) == 3
 
-            # Verify agent was called with correct arguments
-            mock_agent.run_sync.assert_called_once()
-        finally:
-            # Restore the original Agent class
-            setattr(
-                cv_adapter.services.generators.skills_generator,
-                "Agent",
-                original_agent_factory,
-            )
+                    # Verify each skill
+                    for skill in group.skills:
+                        assert isinstance(skill, cv_dto.SkillDTO)
+                        assert isinstance(skill.text, str)
+                        assert len(skill.text) > 0
 
+                # Verify specific skill group details
+                assert result[0].name == "Programming Languages"
+                assert result[1].name == "Frameworks"
 
-def test_skills_generator_raises_error_on_empty_parameters() -> None:
-    """Test that generator raises ValueError when required parameters are empty."""
-    with language_context(ENGLISH):
-        generator = create_skills_generator(ai_model="test")
+                # Verify programming languages skills
+                programming_skills = result[0].skills
+                assert programming_skills[0].text == "Python"
+                assert programming_skills[1].text == "JavaScript"
+                assert programming_skills[2].text == "TypeScript"
 
-        # Test empty CV
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="",
-                    job_description="Valid job",
-                    core_competences="Valid competences",
-                )
-            )
+                # Verify framework skills
+                framework_skills = result[1].skills
+                assert framework_skills[0].text == "React"
+                assert framework_skills[1].text == "Django"
+                assert framework_skills[2].text == "FastAPI"
 
-        # Test empty job description
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="",
-                    core_competences="Valid competences",
-                )
-            )
-
-        # Test empty core competences
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="Valid job",
-                    core_competences="",
-                )
-            )
+                # Verify agent was called
+                mock_agent.run.assert_called_once()
+            finally:
+                # Restore the original Agent class
+                setattr(sg, "Agent", original_agent)

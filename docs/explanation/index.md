@@ -6,6 +6,7 @@ This section provides in-depth explanations of CV Adapt's concepts, architecture
 
 ### [Architecture](architecture.md)
 Understanding CV Adapt's architecture:
+
 - High-level system overview
 - Component interactions
 - Data flow
@@ -14,6 +15,7 @@ Understanding CV Adapt's architecture:
 
 ### [Design Principles](design-principles.md)
 Core principles that guide CV Adapt's development:
+
 - Type safety and validation
 - Generator protocol design
 - Template-based generation
@@ -22,6 +24,7 @@ Core principles that guide CV Adapt's development:
 
 ### [Multilingual System](multilingual-system.md)
 Deep dive into CV Adapt's multilingual support:
+
 - Language context management
 - Thread-safe language handling
 - Language-specific validation
@@ -42,6 +45,7 @@ This section focuses on the explanation mode, providing deep insights into CV Ad
 ## Contributing to Documentation
 
 We welcome contributions to our explanation documentation. If you'd like to:
+
 - Clarify existing concepts
 - Add new architectural insights
 - Improve design principles documentation

@@ -1,4 +1,5 @@
 from typing import (
+    Awaitable,
     Callable,
     Generic,
     Optional,
@@ -63,17 +64,17 @@ class ComponentGenerationContext(BaseGenerationContext):
 
 
 @runtime_checkable
-class GeneratorProtocol(Protocol[C, T]):
+class AsyncGeneratorProtocol(Protocol[C, T]):
     """
-    Universal generator protocol for creating outputs.
+    Universal async generator protocol for creating outputs.
 
     Supports flexible context and output types.
     Can generate a single DTO, list of DTOs, or custom type.
     """
 
-    def __call__(self, context: C) -> T:
+    async def __call__(self, context: C) -> T:
         """
-        Generate output based on the given context.
+        Generate output based on the given context asynchronously.
 
         Args:
             context: Generation context of type C
@@ -84,26 +85,26 @@ class GeneratorProtocol(Protocol[C, T]):
         ...
 
 
-class Generator(Generic[C, T]):
+class AsyncGenerator(Generic[C, T]):
     """
-    Universal generator for creating outputs.
+    Universal async generator for creating outputs.
 
     Generates outputs based on a flexible generation context.
     Validation is handled by Pydantic models during generation.
     """
 
-    def __init__(self, generation_func: Callable[[C], T]):
+    def __init__(self, generation_func: Callable[[C], Awaitable[T]]):
         """
-        Initialize the generator.
+        Initialize the async generator.
 
         Args:
-            generation_func: Core generation logic
+            generation_func: Core async generation logic
         """
         self._generate = generation_func
 
-    def __call__(self, context: C) -> T:
+    async def __call__(self, context: C) -> T:
         """
-        Generate output.
+        Generate output asynchronously.
 
         Args:
             context: Generation context
@@ -111,7 +112,4 @@ class Generator(Generic[C, T]):
         Returns:
             Generated output
         """
-        return self._generate(context)
-
-
-# Intentionally left empty to remove type-specific aliases
+        return await self._generate(context)

@@ -1,174 +1,128 @@
+"""Tests for summary generator."""
+
 import os
-from typing import Any, cast
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic_ai import Agent
 
-import cv_adapter.services.generators.summary_generator
-from cv_adapter.dto.cv import SummaryDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto import cv as cv_dto
 from cv_adapter.models.components import CVSummary
-from cv_adapter.models.context import language_context
 from cv_adapter.renderers.markdown import MinimalMarkdownRenderer
-from cv_adapter.services.generators.protocols import ComponentGenerationContext
+from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
+    ComponentGenerationContext,
+)
 from cv_adapter.services.generators.summary_generator import create_summary_generator
 
+from .base_test import BaseGeneratorTest
 
-def test_summary_generator_default_templates() -> None:
-    """Test the summary generator with default templates."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.summary_generator.__file__),
+
+class TestSummaryGenerator(BaseGeneratorTest):
+    """Test cases for summary generator."""
+
+    generator_type = AsyncGenerator
+
+    default_template_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "cv_adapter",
+        "services",
+        "generators",
         "templates",
-        "summary_system_prompt.j2",
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.summary_generator.__file__),
-        "templates",
-        "summary_context.j2",
     )
 
-    # Verify default template paths exist
-    assert os.path.exists(default_system_prompt_path), (
-        "Default system prompt template not found"
-    )
-    assert os.path.exists(default_context_path), "Default context template not found"
+    @pytest.fixture
+    def renderer(self) -> MinimalMarkdownRenderer:
+        """Create a test renderer."""
+        return MinimalMarkdownRenderer()
 
-    # Create generator
-    generator = create_summary_generator(
-        renderer=MinimalMarkdownRenderer(),
-        ai_model="test",
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path,
-    )
+    async def create_generator(self, **kwargs: Any) -> AsyncGenerator:
+        """Create summary generator instance."""
+        if "renderer" not in kwargs:
+            kwargs["renderer"] = MinimalMarkdownRenderer()
+        return await create_summary_generator(**kwargs)
 
-    # Verify generator is created successfully
-    assert generator is not None
+    def get_default_template_paths(self) -> dict[str, str]:
+        """Get paths to default templates."""
+        return {
+            "system_prompt": os.path.join(
+                self.default_template_dir, "summary_system_prompt.j2"
+            ),
+            "context": os.path.join(self.default_template_dir, "summary_context.j2"),
+        }
 
-
-def test_summary_generator_custom_templates(tmp_path: Any) -> None:
-    """Test the summary generator with custom templates."""
-    # Create custom templates
-    system_prompt_path = tmp_path / "system_prompt.j2"
-    system_prompt_path.write_text(
-        "An expert CV analyst that helps write professional summaries. "
-        "Generate a concise summary that highlights key qualifications."
-    )
-
-    context_template_path = tmp_path / "context.j2"
-    context_template_path.write_text(
-        "CV: {{ cv }}\n"
-        "Job Description: {{ job_description }}\n"
-        "Core Competences: {{ core_competences }}"
-    )
-
-    # Create generator with custom templates
-    generator = create_summary_generator(
-        renderer=MinimalMarkdownRenderer(),
-        ai_model="test",
-        system_prompt_template_path=str(system_prompt_path),
-        context_template_path=str(context_template_path),
-    )
-
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_summary_generator_dto_output() -> None:
-    """Test summary generator returns a valid SummaryDTO."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Create a mock agent
-        mock_agent = Mock(spec=Agent)
-        mock_agent.run_sync.return_value = Mock(
-            data=CVSummary(
-                text="Experienced software engineer with proven track record.",
-            )
+    def get_invalid_context(self) -> ComponentGenerationContext:
+        """Get invalid context for validation tests."""
+        return ComponentGenerationContext(
+            cv="",  # Invalid: empty CV
+            job_description="Test job",
+            core_competences="Test competences",
+            notes=None,
         )
 
-        # Temporarily replace the agent creation in the function
-        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
-            return cast(Agent[Any, Any], mock_agent)
-
-        # Temporarily modify the Agent class
-        original_agent_factory = getattr(
-            cv_adapter.services.generators.summary_generator, "Agent"
-        )
-        setattr(
-            cv_adapter.services.generators.summary_generator,
-            "Agent",
-            mock_agent_factory,
-        )
-
-        try:
-            # Create generator
-            generator = create_summary_generator(
-                renderer=MinimalMarkdownRenderer(), ai_model="test"
+    @pytest.mark.asyncio
+    async def test_summary_generation(
+        self,
+        mock_agent: AsyncMock,
+        mock_agent_factory: Any,
+        base_context: ComponentGenerationContext,
+        language_ctx: Any,
+    ) -> None:
+        """Test summary generation with mocked agent."""
+        with language_ctx:
+            # Configure mock agent response
+            mock_summary_text = (
+                "Experienced software engineer specialized in full-stack development"
             )
+            mock_agent.run.return_value = Mock(data=CVSummary(text=mock_summary_text))
 
-            # Prepare test context
-            context = ComponentGenerationContext(
-                cv="Senior Software Engineer with 10 years of experience",
-                job_description="Seeking a Project Manager for innovative tech team",
-                core_competences="Technical Leadership, Strategic Problem Solving",
-            )
+            # Patch the Agent class
+            from cv_adapter.services.generators import summary_generator as sg
 
-            # Generate summary
-            result = generator(context)
+            original_agent = getattr(sg, "Agent")
+            setattr(sg, "Agent", mock_agent_factory)
 
-            # Assertions
-            assert isinstance(result, SummaryDTO)
-            assert isinstance(result.text, str)
-            assert len(result.text) > 0
-            assert (
-                result.text == "Experienced software engineer with proven track record."
-            )
+            try:
+                # Create generator and generate summary
+                generator = await self.create_generator(ai_model="test")
+                result = await generator(base_context)
 
-            # Verify agent was called with correct arguments
-            mock_agent.run_sync.assert_called_once()
-        finally:
-            # Restore the original Agent class
-            setattr(
-                cv_adapter.services.generators.summary_generator,
-                "Agent",
-                original_agent_factory,
-            )
+                # Verify the result
+                assert isinstance(result, cv_dto.SummaryDTO)
+                assert isinstance(result.text, str)
+                assert len(result.text) > 0
+                assert result.text == mock_summary_text
 
+                # Verify agent was called
+                mock_agent.run.assert_called_once()
+            finally:
+                # Restore the original Agent class
+                setattr(sg, "Agent", original_agent)
 
-def test_summary_generator_raises_error_on_empty_parameters() -> None:
-    """Test that generator raises ValueError when required parameters are empty."""
-    with language_context(ENGLISH):
-        generator = create_summary_generator(
-            renderer=MinimalMarkdownRenderer(), ai_model="test"
-        )
-
-        # Test empty CV
-        with pytest.raises(ValueError):
-            generator(
+    @pytest.mark.asyncio
+    async def test_summary_generator_validation_job_description(self) -> None:
+        """Test summary generator validation for job description."""
+        generator = await self.create_generator(ai_model="test")
+        with pytest.raises(ValueError, match="Job description is required"):
+            await generator(
                 ComponentGenerationContext(
-                    cv="",
-                    job_description="Valid job",
-                    core_competences="Valid competences",
+                    cv="Test CV",
+                    job_description="",  # Invalid: empty job description
+                    core_competences="Test competences",
+                    notes=None,
                 )
             )
 
-        # Test empty job description
-        with pytest.raises(ValueError):
-            generator(
+    @pytest.mark.asyncio
+    async def test_summary_generator_validation_core_competences(self) -> None:
+        """Test summary generator validation for core competences."""
+        generator = await self.create_generator(ai_model="test")
+        with pytest.raises(ValueError, match="Core competences are required"):
+            await generator(
                 ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="",
-                    core_competences="Valid competences",
-                )
-            )
-
-        # Test empty core competences
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="Valid job",
-                    core_competences="",
+                    cv="Test CV",
+                    job_description="Test job",
+                    core_competences="",  # Invalid: empty core competences
+                    notes=None,
                 )
             )

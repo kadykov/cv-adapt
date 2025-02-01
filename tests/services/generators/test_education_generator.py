@@ -1,88 +1,72 @@
+"""Tests for education generator."""
+
 import os
+from contextlib import AbstractContextManager
 from datetime import date
-from typing import Any, cast
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic_ai import Agent
 
-import cv_adapter.services.generators.education_generator
-from cv_adapter.dto.cv import EducationDTO, InstitutionDTO
-from cv_adapter.dto.language import ENGLISH
+from cv_adapter.dto import cv as cv_dto
 from cv_adapter.models.components import Education, University
-from cv_adapter.models.context import language_context
 from cv_adapter.services.generators.education_generator import (
     create_education_generator,
 )
-from cv_adapter.services.generators.protocols import ComponentGenerationContext
+from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
+    ComponentGenerationContext,
+)
+
+from .base_test import BaseGeneratorTest
 
 
-def test_education_generator_default_templates() -> None:
-    """Test the education generator with default templates."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.education_generator.__file__),
+class TestEducationGenerator(BaseGeneratorTest):
+    """Test cases for education generator."""
+
+    generator_type = AsyncGenerator
+    default_template_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "cv_adapter",
+        "services",
+        "generators",
         "templates",
-        "education_system_prompt.j2",
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.education_generator.__file__),
-        "templates",
-        "education_context.j2",
     )
 
-    # Verify default template paths exist
-    assert os.path.exists(default_system_prompt_path), (
-        "Default system prompt template not found"
-    )
-    assert os.path.exists(default_context_path), "Default context template not found"
+    async def create_generator(self, **kwargs: Any) -> AsyncGenerator:
+        """Create education generator instance."""
+        return await create_education_generator(**kwargs)
 
-    # Create generator
-    generator = create_education_generator(
-        ai_model="test",
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path,
-    )
+    def get_default_template_paths(self) -> dict[str, str]:
+        """Get paths to default templates."""
+        return {
+            "system_prompt": os.path.join(
+                self.default_template_dir, "education_system_prompt.j2"
+            ),
+            "context": os.path.join(self.default_template_dir, "education_context.j2"),
+        }
 
-    # Verify generator is created successfully
-    assert generator is not None
+    def get_invalid_context(self) -> ComponentGenerationContext:
+        """Get invalid context for validation tests."""
+        return ComponentGenerationContext(
+            cv="",  # Invalid: empty CV
+            job_description="Test job",
+            core_competences="Test competences",
+            notes=None,
+        )
 
-
-def test_education_generator_custom_templates(tmp_path: Any) -> None:
-    """Test the education generator with custom templates."""
-    # Create custom templates
-    system_prompt_path = tmp_path / "system_prompt.j2"
-    system_prompt_path.write_text(
-        "An expert CV analyst that helps identify and describe educational "
-        "experiences. Generate educational experiences that match job requirements."
-    )
-
-    context_template_path = tmp_path / "context.j2"
-    context_template_path.write_text(
-        "CV: {{ cv }}\n"
-        "Job Description: {{ job_description }}\n"
-        "Core Competences: {{ core_competences }}"
-    )
-
-    # Create generator with custom templates
-    generator = create_education_generator(
-        ai_model="test",
-        system_prompt_template_path=str(system_prompt_path),
-        context_template_path=str(context_template_path),
-    )
-
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_education_generator_dto_output() -> None:
-    """Test education generator returns a valid List[EducationDTO]."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Create a mock agent
-        mock_agent = Mock(spec=Agent)
-        mock_agent.run_sync.return_value = Mock(
-            data=[
+    @pytest.mark.asyncio
+    async def test_education_generation(
+        self,
+        mock_agent: AsyncMock,
+        mock_agent_factory: Any,
+        base_context: ComponentGenerationContext,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test education generation with mocked agent."""
+        with language_ctx:
+            # Configure mock agent response
+            mock_education = [
                 Education(
                     university=University(
                         name="Tech University",
@@ -95,93 +79,79 @@ def test_education_generator_dto_output() -> None:
                     description="Specialized in machine learning and AI technologies",
                 )
             ]
-        )
+            mock_agent.run.return_value = Mock(data=mock_education)
 
-        # Temporarily replace the agent creation in the function
-        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
-            return cast(Agent[Any, Any], mock_agent)
+            # Patch the Agent class
+            from cv_adapter.services.generators import education_generator as eg
 
-        # Temporarily modify the Agent class
-        original_agent_factory = getattr(
-            cv_adapter.services.generators.education_generator, "Agent"
-        )
-        setattr(
-            cv_adapter.services.generators.education_generator,
-            "Agent",
-            mock_agent_factory,
-        )
+            original_agent = getattr(eg, "Agent")
+            setattr(eg, "Agent", mock_agent_factory)
 
-        try:
-            # Create generator
-            generator = create_education_generator(ai_model="test")
+            try:
+                # Create generator and generate education
+                generator = await self.create_generator(ai_model="test")
+                result = await generator(base_context)
 
-            # Prepare test context
-            context = ComponentGenerationContext(
-                cv="Experienced software engineer with advanced academic background",
-                job_description=(
-                    "Seeking a senior software engineer with advanced technical skills"
-                ),
-                core_competences="Technical Leadership, Advanced Learning",
-            )
+                # Verify the result
+                assert isinstance(result, list)
+                assert len(result) == 1
 
-            # Generate education
-            result = generator(context)
+                education = result[0]
+                assert isinstance(education, cv_dto.EducationDTO)
+                assert isinstance(education.university, cv_dto.InstitutionDTO)
+                assert isinstance(education.degree, str)
+                assert isinstance(education.start_date, date)
+                assert isinstance(education.description, str)
 
-            # Verify the result is a list of EducationDTO
-            assert isinstance(result, list)
-            assert len(result) == 1
-
-            # Verify the education is an EducationDTO
-            education = result[0]
-            assert isinstance(education, EducationDTO)
-            assert isinstance(education.university, InstitutionDTO)
-            assert isinstance(education.degree, str)
-            assert isinstance(education.start_date, date)
-            assert isinstance(education.description, str)
-
-            # Verify specific education details
-            assert education.university.name == "Tech University"
-            assert education.degree == "Master of Science in Computer Science"
-            assert (
-                education.description
-                == "Specialized in machine learning and AI technologies"
-            )
-            assert education.university.location == "San Francisco, CA"
-            assert education.start_date == date(2018, 9, 1)
-            assert education.end_date == date(2020, 5, 15)
-
-            # Verify agent was called with correct arguments
-            mock_agent.run_sync.assert_called_once()
-        finally:
-            # Restore the original Agent class
-            setattr(
-                cv_adapter.services.generators.education_generator,
-                "Agent",
-                original_agent_factory,
-            )
-
-
-def test_education_generator_raises_error_on_empty_parameters() -> None:
-    """Test that generator raises ValueError when required parameters are empty."""
-    with language_context(ENGLISH):
-        generator = create_education_generator(ai_model="test")
-
-        # Test empty CV
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="",
-                    job_description="Valid job",
-                    core_competences="Valid competences",
+                # Verify specific values from mock
+                assert education.university.name == "Tech University"
+                assert education.degree == "Master of Science in Computer Science"
+                assert (
+                    education.description
+                    == "Specialized in machine learning and AI technologies"
                 )
-            )
+                assert education.university.location == "San Francisco, CA"
+                assert education.start_date == date(2018, 9, 1)
+                assert education.end_date == date(2020, 5, 15)
 
-        # Test empty job description
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="",
-                    core_competences="Valid competences",
+                # Verify agent was called
+                mock_agent.run.assert_called_once()
+            finally:
+                # Restore the original Agent class
+                setattr(eg, "Agent", original_agent)
+
+    @pytest.mark.asyncio
+    async def test_education_generator_validation_job_description(
+        self,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test education generator validation for job description."""
+        with language_ctx:
+            generator = await self.create_generator(ai_model="test")
+            with pytest.raises(ValueError, match="Job description is required"):
+                await generator(
+                    ComponentGenerationContext(
+                        cv="Test CV",
+                        job_description="",  # Invalid: empty job description
+                        core_competences="Test competences",
+                        notes=None,
+                    )
                 )
-            )
+
+    @pytest.mark.asyncio
+    async def test_education_generator_validation_core_competences(
+        self,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test education generator validation for core competences."""
+        with language_ctx:
+            generator = await self.create_generator(ai_model="test")
+            with pytest.raises(ValueError, match="Core competences are required"):
+                await generator(
+                    ComponentGenerationContext(
+                        cv="Test CV",
+                        job_description="Test job",
+                        core_competences="",  # Invalid: empty core competences
+                        notes=None,
+                    )
+                )

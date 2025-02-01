@@ -10,17 +10,17 @@ from cv_adapter.dto.cv import EducationDTO
 from cv_adapter.dto.mapper import map_education
 from cv_adapter.models.components import Education
 from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
     ComponentGenerationContext,
-    Generator,
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
 
-def create_education_generator(
+async def create_education_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,
     context_template_path: Optional[str] = None,
-) -> Generator[ComponentGenerationContext, List[EducationDTO]]:
+) -> AsyncGenerator[ComponentGenerationContext, List[EducationDTO]]:
     """
     Create an education generator.
 
@@ -30,7 +30,7 @@ def create_education_generator(
         context_template_path: Optional path to context template
 
     Returns:
-        A generator for educational experiences
+        An async generator for educational experiences
     """
     # Set default system prompt template if not provided
     if system_prompt_template_path is None:
@@ -49,7 +49,9 @@ def create_education_generator(
         ai_model, system_prompt=load_system_prompt(system_prompt_template_path)
     )
 
-    def generation_func(context: ComponentGenerationContext) -> List[EducationDTO]:
+    async def generation_func(
+        context: ComponentGenerationContext,
+    ) -> List[EducationDTO]:
         """
         Generate educational experiences based on context.
 
@@ -62,8 +64,10 @@ def create_education_generator(
         # Validate input parameters
         if not context.cv or not context.cv.strip():
             raise ValueError("CV text is required")
-        if not context.job_description:
+        if not context.job_description.strip():
             raise ValueError("Job description is required")
+        if not context.core_competences or not context.core_competences.strip():
+            raise ValueError("Core competences are required")
 
         # Prepare context string
         context_str = prepare_context(
@@ -71,9 +75,9 @@ def create_education_generator(
         )
 
         # Generate educational experiences
-        result = agent.run_sync(context_str, result_type=list[Education])
+        result = await agent.run(context_str, result_type=list[Education])
 
         # Map to DTOs
         return [map_education(edu) for edu in result.data]
 
-    return Generator(generation_func)
+    return AsyncGenerator(generation_func)
