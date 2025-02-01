@@ -1,4 +1,5 @@
 from typing import (
+    Awaitable,
     Callable,
     Generic,
     Optional,
@@ -114,4 +115,53 @@ class Generator(Generic[C, T]):
         return self._generate(context)
 
 
-# Intentionally left empty to remove type-specific aliases
+@runtime_checkable
+class AsyncGeneratorProtocol(Protocol[C, T]):
+    """
+    Universal async generator protocol for creating outputs.
+
+    Supports flexible context and output types.
+    Can generate a single DTO, list of DTOs, or custom type.
+    """
+
+    async def __call__(self, context: C) -> T:
+        """
+        Generate output based on the given context asynchronously.
+
+        Args:
+            context: Generation context of type C
+
+        Returns:
+            Generated output of type T
+        """
+        ...
+
+
+class AsyncGenerator(Generic[C, T]):
+    """
+    Universal async generator for creating outputs.
+
+    Generates outputs based on a flexible generation context.
+    Validation is handled by Pydantic models during generation.
+    """
+
+    def __init__(self, generation_func: Callable[[C], Awaitable[T]]):
+        """
+        Initialize the async generator.
+
+        Args:
+            generation_func: Core async generation logic
+        """
+        self._generate = generation_func
+
+    async def __call__(self, context: C) -> T:
+        """
+        Generate output asynchronously.
+
+        Args:
+            context: Generation context
+
+        Returns:
+            Generated output
+        """
+        return await self._generate(context)
