@@ -1,163 +1,119 @@
+"""Tests for title generator."""
+
 import os
-from typing import Any, cast
-from unittest.mock import Mock
+from contextlib import AbstractContextManager
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic_ai import Agent
 
-import cv_adapter.services.generators.title_generator
 from cv_adapter.dto.cv import TitleDTO
-from cv_adapter.dto.language import ENGLISH
 from cv_adapter.models.components import Title
-from cv_adapter.models.context import language_context
-from cv_adapter.services.generators.protocols import ComponentGenerationContext
+from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
+    ComponentGenerationContext,
+)
 from cv_adapter.services.generators.title_generator import create_title_generator
 
+from .base_test import BaseGeneratorTest
 
-def test_title_generator_default_templates() -> None:
-    """Test the title generator with default templates."""
-    # Use default template paths
-    default_system_prompt_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.title_generator.__file__),
+
+class TestTitleGenerator(BaseGeneratorTest):
+    """Test cases for title generator."""
+
+    generator_type = AsyncGenerator
+    default_template_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "cv_adapter",
+        "services",
+        "generators",
         "templates",
-        "title_system_prompt.j2",
-    )
-    default_context_path = os.path.join(
-        os.path.dirname(cv_adapter.services.generators.title_generator.__file__),
-        "templates",
-        "title_context.j2",
     )
 
-    # Verify default template paths exist
-    assert os.path.exists(default_system_prompt_path), (
-        "Default system prompt template not found"
-    )
-    assert os.path.exists(default_context_path), "Default context template not found"
+    async def create_generator(self, **kwargs: Any) -> AsyncGenerator:
+        """Create title generator instance."""
+        return await create_title_generator(**kwargs)
 
-    # Create generator
-    generator = create_title_generator(
-        ai_model="test",
-        system_prompt_template_path=default_system_prompt_path,
-        context_template_path=default_context_path,
-    )
+    def get_default_template_paths(self) -> dict[str, str]:
+        """Get paths to default templates."""
+        return {
+            "system_prompt": os.path.join(
+                self.default_template_dir, "title_system_prompt.j2"
+            ),
+            "context": os.path.join(self.default_template_dir, "title_context.j2"),
+        }
 
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_title_generator_custom_templates(tmp_path: Any) -> None:
-    """Test the title generator with custom templates."""
-    # Create custom templates
-    system_prompt_path = tmp_path / "system_prompt.j2"
-    system_prompt_path.write_text(
-        "An expert CV analyst that helps write professional titles. "
-        "Generate a concise title that highlights key qualifications."
-    )
-
-    context_template_path = tmp_path / "context.j2"
-    context_template_path.write_text(
-        "CV: {{ cv }}\n"
-        "Job Description: {{ job_description }}\n"
-        "Core Competences: {{ core_competences }}"
-    )
-
-    # Create generator with custom templates
-    generator = create_title_generator(
-        ai_model="test",
-        system_prompt_template_path=str(system_prompt_path),
-        context_template_path=str(context_template_path),
-    )
-
-    # Verify generator is created successfully
-    assert generator is not None
-
-
-def test_title_generator_dto_output() -> None:
-    """Test title generator returns a valid TitleDTO."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Create a mock agent
-        mock_agent = Mock(spec=Agent)
-        mock_agent.run_sync.return_value = Mock(
-            data=Title(text="Senior Software Engineer")
+    def get_invalid_context(self) -> ComponentGenerationContext:
+        """Get invalid context for validation tests."""
+        return ComponentGenerationContext(
+            cv="",  # Invalid: empty CV
+            job_description="Test job",
+            core_competences="Test competences",
+            notes=None,
         )
 
-        # Temporarily replace the agent creation in the function
-        def mock_agent_factory(*args: Any, **kwargs: Any) -> Agent[Any, Any]:
-            return cast(Agent[Any, Any], mock_agent)
-
-        # Temporarily modify the Agent class
-        original_agent_factory = getattr(
-            cv_adapter.services.generators.title_generator, "Agent"
-        )
-        setattr(
-            cv_adapter.services.generators.title_generator,
-            "Agent",
-            mock_agent_factory,
-        )
-
-        try:
-            # Create generator
-            generator = create_title_generator(ai_model="test")
-
-            # Prepare test context
-            context = ComponentGenerationContext(
-                cv="Senior Software Engineer with 10 years of experience",
-                job_description="Seeking a Project Manager for innovative tech team",
-                core_competences="Technical Leadership, Strategic Problem Solving",
+    @pytest.mark.asyncio
+    async def test_title_generation(
+        self,
+        mock_agent: AsyncMock,
+        mock_agent_factory: Any,
+        base_context: ComponentGenerationContext,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test title generation with mocked agent."""
+        with language_ctx:
+            # Configure mock agent response
+            mock_agent.run.return_value = Mock(
+                data=Title(text="Senior Software Engineer")
             )
 
-            # Generate title
-            result = generator(context)
+            # Patch the Agent class
+            import cv_adapter.services.generators.title_generator as title_generator
 
-            # Assertions
-            assert isinstance(result, TitleDTO)
-            assert isinstance(result.text, str)
-            assert len(result.text) > 0
-            assert result.text == "Senior Software Engineer"
+            original_agent = getattr(title_generator, "Agent")
+            setattr(title_generator, "Agent", mock_agent_factory)
 
-            # Verify agent was called with correct arguments
-            mock_agent.run_sync.assert_called_once()
-        finally:
-            # Restore the original Agent class
-            setattr(
-                cv_adapter.services.generators.title_generator,
-                "Agent",
-                original_agent_factory,
-            )
+            try:
+                # Create generator and generate title
+                generator = await self.create_generator()
+                result = await generator(base_context)
 
+                # Verify the result
+                assert isinstance(result, TitleDTO)
+                assert isinstance(result.text, str)
+                assert len(result.text) > 0
+                assert result.text == "Senior Software Engineer"
 
-def test_title_generator_raises_error_on_empty_parameters() -> None:
-    """Test that generator raises ValueError when required parameters are empty."""
-    with language_context(ENGLISH):
-        generator = create_title_generator(ai_model="test")
+                # Verify agent was called
+                mock_agent.run.assert_called_once()
+            finally:
+                # Restore the original Agent class
+                setattr(title_generator, "Agent", original_agent)
 
-        # Test empty CV
-        with pytest.raises(ValueError):
-            generator(
+    @pytest.mark.asyncio
+    async def test_title_generator_validation_job_description(self) -> None:
+        """Test title generator validation for job description."""
+        generator = await self.create_generator()
+        with pytest.raises(ValueError, match="Job description is required"):
+            await generator(
                 ComponentGenerationContext(
-                    cv="",
-                    job_description="Valid job",
-                    core_competences="Valid competences",
+                    cv="Test CV",
+                    job_description="",  # Invalid: empty job description
+                    core_competences="Test competences",
+                    notes=None,
                 )
             )
 
-        # Test empty job description
-        with pytest.raises(ValueError):
-            generator(
+    @pytest.mark.asyncio
+    async def test_title_generator_validation_core_competences(self) -> None:
+        """Test title generator validation for core competences."""
+        generator = await self.create_generator()
+        with pytest.raises(ValueError, match="Core competences are required"):
+            await generator(
                 ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="",
-                    core_competences="Valid competences",
-                )
-            )
-
-        # Test empty core competences
-        with pytest.raises(ValueError):
-            generator(
-                ComponentGenerationContext(
-                    cv="Valid CV",
-                    job_description="Valid job",
-                    core_competences="",
+                    cv="Test CV",
+                    job_description="Test job",
+                    core_competences="",  # Invalid: empty core competences
+                    notes=None,
                 )
             )

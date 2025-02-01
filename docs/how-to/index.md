@@ -18,6 +18,14 @@ Discover how to:
 - Handle different output formats
 - Work with DTOs and models
 
+### [Testing Generators](testing-generators.md)
+Learn how to:
+- Use the BaseGeneratorTest class
+- Work with common test fixtures
+- Implement proper mocking strategies
+- Handle resource cleanup
+- Ensure type safety in tests
+
 ## Coming Soon
 
 - How to extend CV generation with custom components

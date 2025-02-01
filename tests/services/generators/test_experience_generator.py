@@ -1,89 +1,150 @@
+"""Tests for experience generator."""
+
+import os
+from contextlib import AbstractContextManager
 from datetime import date
-from typing import Dict, TypedDict, cast
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from cv_adapter.dto.cv import ExperienceDTO, InstitutionDTO
-from cv_adapter.dto.language import ENGLISH
-from cv_adapter.models.context import language_context
+from cv_adapter.dto import cv as cv_dto
+from cv_adapter.models.components import Experience
+from cv_adapter.models.components.experience import Company
 from cv_adapter.services.generators.experience_generator import (
     create_experience_generator,
 )
-from cv_adapter.services.generators.protocols import ComponentGenerationContext
+from cv_adapter.services.generators.protocols import (
+    AsyncGenerator,
+    ComponentGenerationContext,
+)
+
+from .base_test import BaseGeneratorTest
 
 
-class GeneratorParams(TypedDict):
-    cv: str
-    job_description: str
-    core_competences: str
+class TestExperienceGenerator(BaseGeneratorTest[ComponentGenerationContext]):
+    """Test cases for experience generator."""
 
+    generator_type = AsyncGenerator
+    default_template_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "cv_adapter",
+        "services",
+        "generators",
+        "templates",
+    )
 
-def test_experience_generator_dto_output() -> None:
-    """Test that the experience generator returns a valid ExperiencesDTO."""
-    # Set language context before the test
-    with language_context(ENGLISH):
-        # Create generator creator
-        generator = create_experience_generator(ai_model="test")
+    async def create_generator(self, **kwargs: Any) -> AsyncGenerator:
+        """Create experience generator instance."""
+        return await create_experience_generator(**kwargs)
 
-        # Create context
-        context = ComponentGenerationContext(
-            cv="Experienced software engineer with 10 years of expertise",
-            job_description="Seeking a senior software engineer with leadership skills",
-            core_competences="Technical Leadership, Strategic Problem Solving",
+    def get_default_template_paths(self) -> dict[str, str]:
+        """Get paths to default templates."""
+        return {
+            "system_prompt": os.path.join(
+                self.default_template_dir, "experience_system_prompt.j2"
+            ),
+            "context": os.path.join(self.default_template_dir, "experience_context.j2"),
+        }
+
+    def get_invalid_context(self) -> ComponentGenerationContext:
+        """Get invalid context for validation tests."""
+        return ComponentGenerationContext(
+            cv="",  # Invalid: empty CV
+            job_description="Test job",
+            core_competences="Test competences",
+            notes=None,
         )
 
-        # Generate experiences
-        result = generator(context)
+    @pytest.mark.asyncio
+    async def test_experience_generation(
+        self,
+        mock_agent: AsyncMock,
+        mock_agent_factory: Any,
+        base_context: ComponentGenerationContext,
+        language_ctx: AbstractContextManager[None],
+    ) -> None:
+        """Test experience generation with mocked agent."""
+        with language_ctx:
+            # Configure mock agent response
+            mock_experience = [
+                Experience(
+                    company=Company(
+                        name="Tech Corp",
+                        description="Leading technology company",
+                        location="San Francisco",
+                    ),
+                    position="Senior Software Engineer",
+                    start_date=date(2020, 1, 1),
+                    end_date=date(2023, 1, 1),
+                    description="Led development of cloud-native applications",
+                    technologies=["Python", "Docker", "Kubernetes"],
+                )
+            ]
+            mock_agent.run.return_value = Mock(data=mock_experience)
 
-        # Verify the result is a list of ExperienceDTO
-        assert isinstance(result, list)
-        assert len(result) > 0
+            # Patch the Agent class
+            from cv_adapter.services.generators import experience_generator as xg
 
-        # Verify the experience is an ExperienceDTO
-        experience = result[0]
-        assert isinstance(experience, ExperienceDTO)
-        assert isinstance(experience.company, InstitutionDTO)
-        assert isinstance(experience.position, str)
-        assert isinstance(experience.start_date, date)
-        assert isinstance(experience.description, str)
-        assert isinstance(experience.technologies, list)
+            original_agent = getattr(xg, "Agent")
+            setattr(xg, "Agent", mock_agent_factory)
 
-        # Verify basic properties of the experience
-        assert experience.company.name is not None
-        assert experience.position is not None
-        assert experience.start_date is not None
-        assert experience.description is not None
-        assert len(experience.technologies) > 0
+            try:
+                # Create generator and generate experience
+                generator = await self.create_generator()
+                result = await generator(base_context)
 
+                # Verify the result
+                assert isinstance(result, list)
+                assert len(result) > 0
 
-@pytest.mark.parametrize("invalid_param", ["cv", "job_description", "core_competences"])
-def test_experience_generator_raises_error_on_empty_parameters(
-    invalid_param: str,
-) -> None:
-    """Test that generator raises ValueError when required parameters are empty strings.
+                experience = result[0]
+                assert isinstance(experience, cv_dto.ExperienceDTO)
+                assert isinstance(experience.company, cv_dto.InstitutionDTO)
+                assert isinstance(experience.position, str)
+                assert isinstance(experience.start_date, date)
+                assert isinstance(experience.description, str)
+                assert isinstance(experience.technologies, list)
 
-    Tests each required parameter with an empty string value.
-    """
-    with language_context(ENGLISH):
-        generator = create_experience_generator(ai_model="test")
+                # Verify specific values from mock
+                assert experience.company.name == "Tech Corp"
+                assert experience.position == "Senior Software Engineer"
+                assert (
+                    experience.description
+                    == "Led development of cloud-native applications"
+                )
+                assert "Python" in experience.technologies
 
-        # Create base params with explicit typing
-        base_params: Dict[str, str] = {
-            "cv": "Valid CV text",
-            "job_description": "Valid job description",
-            "core_competences": "Valid core competences",
-        }
-        # Create new dict with empty parameter
-        modified_params = {**base_params, invalid_param: ""}
+                # Verify agent was called
+                mock_agent.run.assert_called_once()
+            finally:
+                # Restore the original Agent class
+                setattr(xg, "Agent", original_agent)
 
-        # Cast the modified params to the correct types
-        params: GeneratorParams = {
-            "cv": cast(str, modified_params["cv"]),
-            "job_description": cast(str, modified_params["job_description"]),
-            "core_competences": cast(str, modified_params["core_competences"]),
-        }
+    @pytest.mark.asyncio
+    async def test_experience_generator_validation_job_description(self) -> None:
+        """Test experience generator validation for job description."""
+        generator = await self.create_generator()
+        with pytest.raises(ValueError, match="Job description is required"):
+            await generator(
+                ComponentGenerationContext(
+                    cv="Test CV",
+                    job_description="",  # Invalid: empty job description
+                    core_competences="Test competences",
+                    notes=None,
+                )
+            )
 
-        context = ComponentGenerationContext(**params)
-
-        with pytest.raises(ValueError):
-            generator(context)
+    @pytest.mark.asyncio
+    async def test_experience_generator_validation_core_competences(self) -> None:
+        """Test experience generator validation for core competences."""
+        generator = await self.create_generator()
+        with pytest.raises(ValueError, match="Core competences are required"):
+            await generator(
+                ComponentGenerationContext(
+                    cv="Test CV",
+                    job_description="Test job",
+                    core_competences="",  # Invalid: empty core competences
+                    notes=None,
+                )
+            )
