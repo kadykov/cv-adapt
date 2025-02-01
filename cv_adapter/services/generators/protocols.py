@@ -1,7 +1,16 @@
-from typing import Awaitable, Callable, Generic, Optional, Protocol, TypeVar, runtime_checkable
+from typing import (
+    Awaitable,
+    Callable,
+    Generic,
+    Optional,
+    Protocol,
+    TypeVar,
+    runtime_checkable,
+)
 
 T = TypeVar("T", covariant=True)
 C = TypeVar("C", contravariant=True)
+
 
 class BaseGenerationContext:
     """Base context for CV component generation with common fields."""
@@ -24,10 +33,12 @@ class BaseGenerationContext:
         self.job_description = job_description
         self.notes = notes
 
+
 class CoreCompetenceGenerationContext(BaseGenerationContext):
     """Context for generating core competences."""
 
     pass
+
 
 class ComponentGenerationContext(BaseGenerationContext):
     """Context for generating CV components that require core competences."""
@@ -51,6 +62,7 @@ class ComponentGenerationContext(BaseGenerationContext):
         super().__init__(cv, job_description, notes)
         self.core_competences = core_competences
 
+
 @runtime_checkable
 class AsyncGeneratorProtocol(Protocol[C, T]):
     """
@@ -71,6 +83,7 @@ class AsyncGeneratorProtocol(Protocol[C, T]):
             Generated output of type T
         """
         ...
+
 
 class AsyncGenerator(Generic[C, T]):
     """

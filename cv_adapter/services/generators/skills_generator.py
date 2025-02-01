@@ -1,7 +1,7 @@
 """Service for generating skills based on CV and job description."""
 
 import os
-from typing import Awaitable, List, Optional, Union
+from typing import List, Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName

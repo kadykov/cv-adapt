@@ -1,13 +1,17 @@
-from typing import List, Optional
 import asyncio
+from typing import List, Optional, cast
 
 from pydantic_ai.models import KnownModelName
 
 from cv_adapter.dto.cv import (
     CVDTO,
     CoreCompetenceDTO,
+    EducationDTO,
+    ExperienceDTO,
     MinimalCVDTO,
     PersonalInfoDTO,
+    SkillGroupDTO,
+    SummaryDTO,
     TitleDTO,
 )
 from cv_adapter.models.context import get_current_language
@@ -25,6 +29,8 @@ from cv_adapter.services.generators import (
     create_summary_generator,
     create_title_generator,
 )
+from cv_adapter.services.generators.protocols import AsyncGenerator
+
 
 class AsyncCVAdapterApplication:
     """Asynchronous main application class that orchestrates the CV adaptation workflow.
@@ -49,8 +55,6 @@ class AsyncCVAdapterApplication:
 
     The two-step approach allows users to review and potentially modify the generated
     core competences before they are used to generate the rest of the CV components.
-    This can be particularly useful when you want to ensure the core competences
-    accurately reflect the candidate's strengths in relation to the job requirements.
     """
 
     def __init__(
@@ -62,14 +66,53 @@ class AsyncCVAdapterApplication:
         Args:
             ai_model: AI model to use for all generators. Defaults to OpenAI GPT-4o.
         """
-        self.competence_generator = asyncio.create_task(create_core_competence_generator(ai_model=ai_model))
-        self.experience_generator = asyncio.create_task(create_experience_generator(ai_model=ai_model))
-        self.education_generator = asyncio.create_task(create_education_generator(ai_model=ai_model))
-        self.skills_generator = asyncio.create_task(create_skills_generator(ai_model=ai_model))
-        self.summary_generator = asyncio.create_task(create_summary_generator(
-            MinimalMarkdownRenderer(), ai_model=ai_model
-        ))
-        self.title_generator = asyncio.create_task(create_title_generator(ai_model=ai_model))
+        self.ai_model = ai_model
+        self._initialized = False
+        self.competence_generator: Optional[
+            AsyncGenerator[CoreCompetenceGenerationContext, List[CoreCompetenceDTO]]
+        ] = None
+        self.experience_generator: Optional[
+            AsyncGenerator[ComponentGenerationContext, List[ExperienceDTO]]
+        ] = None
+        self.education_generator: Optional[
+            AsyncGenerator[ComponentGenerationContext, List[EducationDTO]]
+        ] = None
+        self.skills_generator: Optional[
+            AsyncGenerator[ComponentGenerationContext, List[SkillGroupDTO]]
+        ] = None
+        self.summary_generator: Optional[
+            AsyncGenerator[ComponentGenerationContext, SummaryDTO]
+        ] = None
+        self.title_generator: Optional[
+            AsyncGenerator[ComponentGenerationContext, TitleDTO]
+        ] = None
+
+    async def _initialize_generators(self) -> None:
+        """Initialize all generators asynchronously."""
+        if self._initialized:
+            return
+
+        self.competence_generator = await create_core_competence_generator(
+            ai_model=self.ai_model
+        )
+        self.experience_generator = await create_experience_generator(
+            ai_model=self.ai_model
+        )
+        self.education_generator = await create_education_generator(
+            ai_model=self.ai_model
+        )
+        self.skills_generator = await create_skills_generator(ai_model=self.ai_model)
+        self.summary_generator = await create_summary_generator(
+            MinimalMarkdownRenderer(), ai_model=self.ai_model
+        )
+        self.title_generator = await create_title_generator(ai_model=self.ai_model)
+
+        self._initialized = True
+
+    async def _ensure_initialized(self) -> None:
+        """Ensure all generators are initialized before use."""
+        if not self._initialized:
+            await self._initialize_generators()
 
     async def generate_core_competences(
         self,
@@ -88,16 +131,18 @@ class AsyncCVAdapterApplication:
             List of generated core competences for review
 
         Raises:
-            RuntimeError: If language context is not set
+            RuntimeError: If language context is not set or generator not initialized
         """
-        generator = await self.competence_generator
-        return await generator(
-            CoreCompetenceGenerationContext(
-                cv=cv_text,
-                job_description=job_description,
-                notes=notes,
-            )
+        await self._ensure_initialized()
+        if not self.competence_generator:
+            raise RuntimeError("Competence generator not initialized")
+
+        context = CoreCompetenceGenerationContext(
+            cv=cv_text,
+            job_description=job_description,
+            notes=notes,
         )
+        return await self.competence_generator(context)
 
     async def generate_cv_with_competences(
         self,
@@ -120,8 +165,41 @@ class AsyncCVAdapterApplication:
             A new CV DTO adapted to the job description
 
         Raises:
-            RuntimeError: If language context is not set
+            RuntimeError: If language context is not set or generators not initialized
         """
+        await self._ensure_initialized()
+        if not all(
+            [
+                self.experience_generator,
+                self.education_generator,
+                self.skills_generator,
+                self.title_generator,
+                self.summary_generator,
+            ]
+        ):
+            raise RuntimeError("One or more generators not initialized")
+
+        # Cast generators to help mypy understand they're not None after the check
+        experience_gen = cast(
+            AsyncGenerator[ComponentGenerationContext, List[ExperienceDTO]],
+            self.experience_generator,
+        )
+        education_gen = cast(
+            AsyncGenerator[ComponentGenerationContext, List[EducationDTO]],
+            self.education_generator,
+        )
+        skills_gen = cast(
+            AsyncGenerator[ComponentGenerationContext, List[SkillGroupDTO]],
+            self.skills_generator,
+        )
+        title_gen = cast(
+            AsyncGenerator[ComponentGenerationContext, TitleDTO], self.title_generator
+        )
+        summary_gen = cast(
+            AsyncGenerator[ComponentGenerationContext, SummaryDTO],
+            self.summary_generator,
+        )
+
         # Get current language from context
         language = get_current_language()
         # Convert competences to markdown for other generators
@@ -138,16 +216,6 @@ class AsyncCVAdapterApplication:
         )
 
         # Generate independent components concurrently
-        generators = await asyncio.gather(
-            self.experience_generator,
-            self.education_generator,
-            self.skills_generator,
-            self.title_generator,
-        )
-
-        experience_gen, education_gen, skills_gen, title_gen = generators
-
-        # Run generators concurrently
         experiences_dto, education_dto, skills_dto, title_dto = await asyncio.gather(
             experience_gen(generation_context),
             education_gen(generation_context),
@@ -168,7 +236,6 @@ class AsyncCVAdapterApplication:
         )
 
         # Generate summary using minimal CV
-        summary_gen = await self.summary_generator
         summary_dto = await summary_gen(
             ComponentGenerationContext(
                 cv=minimal_cv_dto,

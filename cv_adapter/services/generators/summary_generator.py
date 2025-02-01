@@ -1,7 +1,7 @@
 """Service for generating CV summaries."""
 
 import os
-from typing import Awaitable, Optional, Union
+from typing import Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models import KnownModelName

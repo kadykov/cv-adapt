@@ -45,14 +45,27 @@ personal_info = PersonalInfo(
 )
 ```
 
-### 3. Initialize the Application
+### 3. Choose Your Application Type
+
+CV Adapt provides both synchronous and asynchronous APIs. Choose the one that best fits your needs:
+
+#### Synchronous API
 
 ```python
-# Create an application instance with default language (English)
+# Create a synchronous application instance
 app = CVAdapterApplication()
 
 # Or specify a different language
 app = CVAdapterApplication(language=Language.FRENCH)
+```
+
+#### Asynchronous API
+
+```python
+from cv_adapter.core.async_application import AsyncCVAdapterApplication
+
+# Create an async application instance
+app = AsyncCVAdapterApplication()
 ```
 
 ### 4. Prepare Your Input
@@ -77,6 +90,8 @@ We are looking for a Software Engineer with...
 
 ### 5. Generate the CV
 
+#### Using the Synchronous API
+
 ```python
 # Generate a CV adapted to the job description
 cv = app.generate_cv(
@@ -85,6 +100,41 @@ cv = app.generate_cv(
     personal_info=personal_info
 )
 ```
+
+#### Using the Asynchronous API
+
+The async API offers two approaches:
+
+1. Single-step generation (similar to sync API):
+```python
+# Generate a CV in one step
+cv = await app.generate_cv(
+    cv_text=cv_text,
+    job_description=job_description,
+    personal_info=personal_info
+)
+```
+
+2. Two-step generation with core competences review:
+```python
+# First generate core competences for review
+core_competences = await app.generate_core_competences(
+    cv_text=cv_text,
+    job_description=job_description
+)
+
+# Review and optionally modify core_competences here...
+
+# Then generate complete CV with reviewed competences
+cv = await app.generate_cv_with_competences(
+    cv_text=cv_text,
+    job_description=job_description,
+    personal_info=personal_info,
+    core_competences=core_competences
+)
+```
+
+The two-step approach allows you to review and potentially modify the generated core competences before they are used to generate the rest of the CV components.
 
 ## Working with Different Languages
 

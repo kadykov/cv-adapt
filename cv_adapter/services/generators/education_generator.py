@@ -15,6 +15,7 @@ from cv_adapter.services.generators.protocols import (
 )
 from cv_adapter.services.generators.utils import load_system_prompt, prepare_context
 
+
 async def create_education_generator(
     ai_model: KnownModelName = "openai:gpt-4o",
     system_prompt_template_path: Optional[str] = None,

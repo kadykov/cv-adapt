@@ -1,8 +1,10 @@
 # Services Reference
 
-This section documents CV Adapt's services, including component generators and utility functions.
+This section documents CV Adapt's services, including asynchronous component generators and utility functions.
 
 ## Generator Protocols
+
+All component generators in CV Adapt are asynchronous, implementing the AsyncGenerator protocol. This enables efficient concurrent generation of CV components while maintaining control over the generation process.
 
 ::: cv_adapter.services.generators.protocols
     options:
@@ -13,42 +15,44 @@ This section documents CV Adapt's services, including component generators and u
 
 ## Component Generators
 
-### Title Generator
+All generators are asynchronous and can be created using their respective factory functions (e.g., `create_title_generator()`).
+
+### Title Generator (Async)
 ::: cv_adapter.services.generators.title_generator
     options:
         show_root_heading: true
         show_source: true
         heading_level: 3
 
-### Summary Generator
+### Summary Generator (Async)
 ::: cv_adapter.services.generators.summary_generator
     options:
         show_root_heading: true
         show_source: true
         heading_level: 3
 
-### Experience Generator
+### Experience Generator (Async)
 ::: cv_adapter.services.generators.experience_generator
     options:
         show_root_heading: true
         show_source: true
         heading_level: 3
 
-### Education Generator
+### Education Generator (Async)
 ::: cv_adapter.services.generators.education_generator
     options:
         show_root_heading: true
         show_source: true
         heading_level: 3
 
-### Skills Generator
+### Skills Generator (Async)
 ::: cv_adapter.services.generators.skills_generator
     options:
         show_root_heading: true
         show_source: true
         heading_level: 3
 
-### Competence Generator
+### Competence Generator (Async)
 ::: cv_adapter.services.generators.competence_generator
     options:
         show_root_heading: true
