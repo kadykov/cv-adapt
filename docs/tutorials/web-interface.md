@@ -1,121 +1,136 @@
 # Web Interface Tutorial
 
-The CV Adapter provides a web interface that allows users to interactively generate CVs through a user-friendly interface. This tutorial will guide you through using the web interface.
+This guide covers how to use and develop the web interface for the CV Adapter.
 
-## Starting the Web Interface
+## Architecture
 
-1. Start the backend server:
+The web interface consists of two parts:
+- A FastAPI backend that exposes the CV generation functionality
+- A React frontend that provides a user interface for the CV generation
+
+## Type Safety and API Integration
+
+### Type Generation
+
+We use TypeScript in the frontend and maintain type safety between frontend and backend through generated types:
+
 ```bash
-cd web-interface/backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload
+# Generate TypeScript types from backend models
+python web-interface/backend/scripts/generate_typescript_types.py
 ```
+
+This script generates TypeScript interfaces from our Pydantic models, ensuring type consistency between frontend and backend.
+
+### Runtime Validation
+
+We use Zod for runtime validation of API requests and responses:
+
+```typescript
+// Example of validating API response
+const response = await fetch('/api/generate-cv');
+const data = await response.json();
+const validatedData = validateCV(data); // Throws if data is invalid
+```
+
+The validation schemas are defined in `web-interface/frontend/src/validation/api.validation.ts`.
+
+### API Client
+
+Type-safe API functions are provided in `web-interface/frontend/src/api/cv.ts`:
+
+```typescript
+// Example usage
+const competences = await generateCompetences({
+  cv_text: "My CV content",
+  job_description: "Job requirements"
+});
+```
+
+## Testing
+
+### Frontend Tests
+
+1. Type Validation Tests:
+   - Located in `web-interface/frontend/src/validation/api.validation.test.ts`
+   - Test both valid and invalid data scenarios
+   - Ensure runtime type safety
+
+2. API Integration Tests:
+   - Located in `web-interface/frontend/src/tests/api.test.ts`
+   - Test TypeScript interface compliance
+   - Verify type definitions match actual use
+
+### Backend Tests
+
+Integration tests for the API endpoints are located in `web-interface/backend/tests/integration/test_cv_generation.py`.
+
+## Development
+
+### Setting Up the Development Environment
+
+1. Install frontend dependencies:
+   ```bash
+   cd web-interface/frontend
+   npm install
+   ```
 
 2. Start the frontend development server:
-```bash
-cd web-interface/frontend
-npm install
-npm start
-```
+   ```bash
+   npm start
+   ```
 
-The web interface will be available at `http://localhost:3000`.
+3. Start the backend server:
+   ```bash
+   cd web-interface/backend
+   uvicorn app.main:app --reload
+   ```
 
-## Using the Web Interface
+### Making Changes
 
-### Step 1: Input Your Information
-1. Paste your existing CV text into the "Your CV" text area
-2. Paste the job description you're applying for into the "Job Description" text area
-3. Click "Generate Core Competences"
+When making changes to the API:
 
-### Step 2: Review and Select Competences
-1. Review the AI-generated core competences
-2. Select the competences you want to include in your CV using the checkboxes
-3. Once you've selected at least one competence, you'll see the personal information form
+1. Update the Pydantic models in the backend
+2. Regenerate TypeScript types
+3. Update validation schemas if needed
+4. Update tests to cover new functionality
+5. Run the test suite to ensure type safety
 
-### Step 3: Add Personal Information
-1. Fill in your personal information:
-   - Name (required)
-   - Email (required)
-   - Phone (optional)
-   - Location (optional)
+### Best Practices
 
-### Step 4: Generate Final CV
-1. Click "Generate Final CV" to create your customized CV
-2. Review the generated CV in the modal window
-3. Use the "Download CV" button to save your CV
+1. Always use the generated TypeScript types for API interactions
+2. Add runtime validation for all API calls
+3. Write tests for new API endpoints and data structures
+4. Keep backend models and frontend types in sync
+5. Use the provided API client functions instead of direct fetch calls
 
-## Features
+## Common Issues
 
-- Interactive competence selection
-- Real-time validation
-- Error handling and feedback
-- Personal information management
-- CV preview and download capabilities
-- Responsive design for various screen sizes
+### Type Mismatch Errors
 
-## Technical Details
+If you encounter type mismatch errors:
 
-The web interface consists of two main components:
+1. Check that TypeScript types are up to date:
+   ```bash
+   python web-interface/backend/scripts/generate_typescript_types.py
+   ```
 
-### Frontend (React)
-- Built with React and TypeScript
-- Uses modern React features (hooks, functional components)
-- Styled with CSS modules
-- Error handling and loading states
-- Modal system for CV preview
+2. Verify runtime validation with Zod schemas
+3. Run the validation tests to catch potential issues
 
-### Backend (FastAPI)
-- RESTful API endpoints
-- CORS support for local development
-- Integration with core CV Adapter functionality
-- Error handling and validation
-- Support for custom notes and configurations
+### API Integration Issues
 
-## API Endpoints
+When facing API integration issues:
 
-### Generate Competences
-```http
-POST /api/generate-competences
-Content-Type: application/json
+1. Verify that the response matches the expected TypeScript interface
+2. Check runtime validation errors
+3. Review the API client functions for correct typing
+4. Run the test suite to catch type mismatches
 
-{
-  "cv_text": "string",
-  "job_description": "string",
-  "notes": "string (optional)"
-}
-```
+## Future Improvements
 
-### Generate CV
-```http
-POST /api/generate-cv
-Content-Type: application/json
+Consider implementing:
 
-{
-  "cv_text": "string",
-  "job_description": "string",
-  "personal_info": {
-    "name": "string",
-    "email": "string",
-    "phone": "string (optional)",
-    "location": "string (optional)"
-  },
-  "approved_competences": ["string"],
-  "notes": "string (optional)"
-}
-```
-
-## Error Handling
-
-The web interface provides clear error messages for various scenarios:
-- Network connectivity issues
-- Invalid input data
-- Server-side processing errors
-- Missing required fields
-
-## Customization
-
-The web interface can be customized through:
-- Environment variables for API endpoints
-- CSS styling
-- Component-level props
-- Backend configuration options
+1. Mock Service Worker (MSW) for API mocking in tests
+2. Continuous Integration checks for type safety
+3. API response type guards in React components
+4. OpenAPI/Swagger documentation generation

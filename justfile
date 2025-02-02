@@ -60,15 +60,26 @@ serve-docs:
     uv run mkdocs serve
 
 # Serve backend API on port 8000
-serve-backend:
-    cd web-interface/backend && uvicorn app.main:app --reload --port 8000
+# ARGS can include uvicorn arguments
+serve-backend *ARGS='':
+    cd web-interface/backend && uvicorn app.main:app --reload --port 8000 {{ARGS}}
+
+# Serve backend API with debug logging
+serve-backend-debug *ARGS='':
+    cd web-interface/backend && LOG_LEVEL=debug uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
 
 # Serve frontend development server on port 3000
 serve-frontend:
     cd web-interface/frontend && npm start
 
 # Serve complete web interface (both frontend and backend)
-serve-web:
-    just serve-backend & \
+serve-web *ARGS='':
+    just serve-backend {{ARGS}} & \
+    just serve-frontend & \
+    wait
+
+# Serve complete web interface with debug logging
+serve-web-debug *ARGS='':
+    just serve-backend-debug {{ARGS}} & \
     just serve-frontend & \
     wait

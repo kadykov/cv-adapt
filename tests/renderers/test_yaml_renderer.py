@@ -27,8 +27,8 @@ def sample_cv() -> CVDTO:
     return CVDTO(
         personal_info=PersonalInfoDTO(
             full_name="John Doe",
-            email=ContactDTO(value="john@example.com", type=None, icon=None, url=None),
-            phone=ContactDTO(value="+1234567890", type=None, icon=None, url=None),
+            email=ContactDTO(value="john@example.com", type="email", icon=None, url=None),
+            phone=ContactDTO(value="+1234567890", type="phone", icon=None, url=None),
         ),
         title=TitleDTO(text="Senior Software Engineer"),
         summary=SummaryDTO(

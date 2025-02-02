@@ -10,7 +10,7 @@ class ContactDTO(BaseModel):
     """Represents a single contact method with optional metadata."""
 
     value: str
-    type: Optional[str] = Field(None, description="e.g., 'personal', 'work'")
+    type: str = Field(..., description="e.g., 'Email', 'Phone', 'Location'")
     icon: Optional[str] = Field(None, description="e.g., 'email', 'phone', 'linkedin'")
     url: Optional[str] = Field(
         None, description="Optional URL for the contact (e.g., mailto:, tel:, https://)"

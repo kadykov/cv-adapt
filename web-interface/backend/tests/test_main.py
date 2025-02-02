@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pytest
 from app.main import app
 from fastapi.testclient import TestClient
 
@@ -16,8 +17,8 @@ from cv_adapter.models.context import get_current_language, language_context
 
 client = TestClient(app)
 
-
-def test_language_context_verification() -> None:
+@pytest.mark.asyncio
+async def test_language_context_verification() -> None:
     """Test that language context is correctly set during competence generation."""
     test_request = {
         "cv_text": "Example CV",
@@ -27,10 +28,10 @@ def test_language_context_verification() -> None:
 
     # Test explicit language specification (FRENCH)
     with patch(
-        "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+        "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_core_competences"
     ) as mock_generate:
         # Create a side effect that verifies the language context
-        def verify_language_context(
+        async def verify_language_context(
             *args: object, **kwargs: object
         ) -> list[CoreCompetenceDTO]:
             current_language = get_current_language()
@@ -50,8 +51,8 @@ def test_language_context_verification() -> None:
         mock_generate.assert_called_once()
         assert response.json() == {"competences": ["Test competence"]}
 
-
-def test_language_dependency() -> None:
+@pytest.mark.asyncio
+async def test_language_dependency() -> None:
     """Test that the language dependency correctly handles language specification."""
     test_request = {
         "cv_text": "Example CV",
@@ -63,7 +64,7 @@ def test_language_dependency() -> None:
     with (
         language_context(ENGLISH),
         patch(
-            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+            "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_core_competences"
         ) as mock_generate,
     ):
         mock_generate.return_value = [test_competence]
@@ -79,7 +80,7 @@ def test_language_dependency() -> None:
     with (
         language_context(FRENCH),
         patch(
-            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+            "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_core_competences"
         ) as mock_generate,
     ):
         mock_generate.return_value = [test_competence]
@@ -101,8 +102,8 @@ def test_language_dependency() -> None:
     assert response.status_code == 422
     assert "language_code" in response.json()["detail"][0]["loc"]
 
-
-def test_generate_competences_success() -> None:
+@pytest.mark.asyncio
+async def test_generate_competences_success() -> None:
     # Test data
     test_request = {
         "cv_text": "Example CV",
@@ -113,7 +114,7 @@ def test_generate_competences_success() -> None:
     with (
         language_context(ENGLISH),
         patch(
-            "cv_adapter.core.application.CVAdapterApplication.generate_core_competences"
+            "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_core_competences"
         ) as mock_generate,
     ):
         # Configure mock to return test data
@@ -127,8 +128,6 @@ def test_generate_competences_success() -> None:
         )
 
         # Check response
-        print("Response:", response.status_code)
-        print("Response body:", response.json())
         assert response.status_code == 200
         assert response.json() == {"competences": ["Test competence"]}
 
@@ -139,8 +138,8 @@ def test_generate_competences_success() -> None:
             notes=None,
         )
 
-
-def test_generate_cv_with_competences_success() -> None:
+@pytest.mark.asyncio
+async def test_generate_cv_with_competences_success() -> None:
     """Test successful CV generation with competences."""
     test_request = {
         "cv_text": "Example CV",
@@ -183,7 +182,7 @@ def test_generate_cv_with_competences_success() -> None:
     with (
         language_context(ENGLISH),
         patch(
-            "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+            "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
         ) as mock_generate,
     ):
         mock_generate.return_value = mock_cv
@@ -215,8 +214,8 @@ def test_generate_cv_with_competences_success() -> None:
             "approved_competences"
         ]
 
-
-def test_generate_cv_minimal_info() -> None:
+@pytest.mark.asyncio
+async def test_generate_cv_minimal_info() -> None:
     """Test CV generation with minimal required information."""
     test_request = {
         "cv_text": "Example CV",
@@ -249,7 +248,7 @@ def test_generate_cv_minimal_info() -> None:
     with (
         language_context(ENGLISH),
         patch(
-            "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+            "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
         ) as mock_generate,
     ):
         mock_generate.return_value = mock_cv
@@ -267,8 +266,8 @@ def test_generate_cv_minimal_info() -> None:
         assert result["personal_info"]["location"] is None
         assert len(result["core_competences"]) == 1
 
-
-def test_generate_cv_language_context() -> None:
+@pytest.mark.asyncio
+async def test_generate_cv_language_context() -> None:
     """Test that language context is correctly set during CV generation."""
     test_request = {
         "cv_text": "Example CV",
@@ -297,10 +296,9 @@ def test_generate_cv_language_context() -> None:
     )
 
     with patch(
-        "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+        "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
     ) as mock_generate:
-
-        def verify_language_context(*args: object, **kwargs: object) -> CVDTO:
+        async def verify_language_context(*args: object, **kwargs: object) -> CVDTO:
             current_language = get_current_language()
             assert current_language == FRENCH, (
                 f"Expected FRENCH language context, got {current_language}"
@@ -318,8 +316,8 @@ def test_generate_cv_language_context() -> None:
         assert response.status_code == 200
         mock_generate.assert_called_once()
 
-
-def test_generate_cv_error_handling() -> None:
+@pytest.mark.asyncio
+async def test_generate_cv_error_handling() -> None:
     """Test error handling in CV generation endpoint."""
     test_request = {
         "cv_text": "Example CV",
@@ -332,7 +330,7 @@ def test_generate_cv_error_handling() -> None:
     }
 
     with patch(
-        "cv_adapter.core.application.CVAdapterApplication.generate_cv_with_competences"
+        "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
     ) as mock_generate:
         mock_generate.side_effect = Exception("Test error")
 

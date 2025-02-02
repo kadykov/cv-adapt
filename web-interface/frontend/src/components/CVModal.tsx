@@ -31,26 +31,29 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
         <div className="modal-body">
           <div className="cv-preview">
             <h3>Personal Information</h3>
-            <p><strong>Name:</strong> {cvData.personal_info?.name}</p>
-            <p><strong>Email:</strong> {cvData.personal_info?.email}</p>
+            <p><strong>Name:</strong> {cvData.personal_info?.full_name}</p>
+            <p><strong>Email:</strong> {cvData.personal_info?.email?.value}</p>
             {cvData.personal_info?.phone && (
-              <p><strong>Phone:</strong> {cvData.personal_info.phone}</p>
+              <p><strong>Phone:</strong> {cvData.personal_info.phone.value}</p>
             )}
             {cvData.personal_info?.location && (
-              <p><strong>Location:</strong> {cvData.personal_info.location}</p>
+              <p><strong>Location:</strong> {cvData.personal_info.location.value}</p>
             )}
+
+            <h3>Title</h3>
+            <p>{cvData.title?.text}</p>
 
             <h3>Core Competences</h3>
             <ul>
-              {cvData.core_competences?.map((competence: string, index: number) => (
-                <li key={index}>{competence}</li>
+              {cvData.core_competences?.map((competence: any, index: number) => (
+                <li key={index}>{competence.text}</li>
               ))}
             </ul>
 
             {cvData.summary && (
               <>
                 <h3>Summary</h3>
-                <p>{cvData.summary}</p>
+                <p>{cvData.summary.text}</p>
               </>
             )}
 
@@ -61,7 +64,46 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
                   {cvData.experiences.map((exp: any, index: number) => (
                     <div key={index} className="experience-item">
                       <h4>{exp.title}</h4>
-                      <p>{exp.description}</p>
+                      <p>{exp.role}</p>
+                      <p>{exp.company}</p>
+                      <p>{exp.period}</p>
+                      {exp.achievements?.map((achievement: string, i: number) => (
+                        <p key={i}>{achievement}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {cvData.education && (
+              <>
+                <h3>Education</h3>
+                <div className="education">
+                  {cvData.education.map((edu: any, index: number) => (
+                    <div key={index} className="education-item">
+                      <h4>{edu.degree}</h4>
+                      <p>{edu.institution}</p>
+                      <p>{edu.period}</p>
+                      <p>{edu.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {cvData.skills && (
+              <>
+                <h3>Skills</h3>
+                <div className="skills">
+                  {Object.entries(cvData.skills).map(([category, skills]: [string, any], index: number) => (
+                    <div key={index} className="skill-category">
+                      <h4>{category}</h4>
+                      <ul>
+                        {Array.isArray(skills) && skills.map((skill: string, i: number) => (
+                          <li key={i}>{skill}</li>
+                        ))}
+                      </ul>
                     </div>
                   ))}
                 </div>

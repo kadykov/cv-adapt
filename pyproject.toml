@@ -44,6 +44,7 @@ dev = [
     "ipywidgets>=8.1.5",
     "logfire>=3.2.0",
     "pydantic-ai[logfire]>=0.0.19",
+    "pydantic-to-typescript>=2.0.0",
 ]
 docs = [
     "mkdocs>=1.6.1",

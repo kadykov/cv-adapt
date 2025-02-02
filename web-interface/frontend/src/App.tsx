@@ -13,9 +13,9 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
     full_name: '',
-    email: { text: '' },
-    phone: { text: '' },
-    location: { text: '' }
+    email: { value: '', type: 'email' },
+    phone: { value: '', type: 'phone' },
+    location: { value: '', type: 'location' }
   });
 
   const [notes, setNotes] = useState('');
@@ -29,11 +29,12 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           cv_text: cvText,
           job_description: jobDescription,
-          notes: notes || undefined
+          notes: notes || null
         }),
       });
       if (!response.ok) {
@@ -62,6 +63,7 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           cv_text: cvText,
@@ -69,8 +71,8 @@ function App() {
           personal_info: {
             full_name: personalInfo.full_name,
             email: personalInfo.email,
-            phone: personalInfo.phone.text ? personalInfo.phone : undefined,
-            location: personalInfo.location.text ? personalInfo.location : undefined
+            phone: personalInfo.phone.value ? personalInfo.phone : undefined,
+            location: personalInfo.location.value ? personalInfo.location : undefined
           },
           approved_competences: approvedCompetences,
           notes: notes || undefined
@@ -192,8 +194,8 @@ function App() {
                     <input
                       type="email"
                       id="email"
-                      value={personalInfo.email.text}
-                      onChange={(e) => setPersonalInfo({...personalInfo, email: { text: e.target.value }})}
+                      value={personalInfo.email.value}
+                      onChange={(e) => setPersonalInfo({...personalInfo, email: { value: e.target.value, type: 'email' }})}
                       required
                     />
                   </div>
@@ -202,8 +204,8 @@ function App() {
                     <input
                       type="tel"
                       id="phone"
-                      value={personalInfo.phone.text}
-                      onChange={(e) => setPersonalInfo({...personalInfo, phone: { text: e.target.value }})}
+                      value={personalInfo.phone.value}
+                      onChange={(e) => setPersonalInfo({...personalInfo, phone: { value: e.target.value, type: 'phone' }})}
                     />
                   </div>
                   <div className="form-group">
@@ -211,15 +213,15 @@ function App() {
                     <input
                       type="text"
                       id="location"
-                      value={personalInfo.location.text}
-                      onChange={(e) => setPersonalInfo({...personalInfo, location: { text: e.target.value }})}
+                      value={personalInfo.location.value}
+                      onChange={(e) => setPersonalInfo({...personalInfo, location: { value: e.target.value, type: 'location' }})}
                     />
                   </div>
                 </div>
                 <button
                   className="generate-cv-button"
                   onClick={handleGenerateCV}
-                  disabled={isGeneratingCV || !personalInfo.full_name || !personalInfo.email.text}
+                  disabled={isGeneratingCV || !personalInfo.full_name || !personalInfo.email.value}
                 >
                   {isGeneratingCV ? 'Generating CV...' : 'Generate Final CV'}
                 </button>

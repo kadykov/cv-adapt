@@ -292,8 +292,8 @@ dev = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pydantic-ai", extra = ["logfire"] },
+    { name = "pydantic-to-typescript" },
     { name = "pytest" },
-    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "types-pyyaml" },
@@ -302,6 +302,7 @@ docs = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
+    { name = "pytest-asyncio" },
 ]
 
 [package.metadata]
@@ -326,8 +327,8 @@ dev = [
     { name = "mypy", specifier = ">=1.14.1" },
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pydantic-ai", extras = ["logfire"], specifier = ">=0.0.19" },
+    { name = "pydantic-to-typescript", specifier = ">=2.0.0" },
     { name = "pytest", specifier = ">=8.3.4" },
-    { name = "pytest-asyncio", specifier = ">=0.25.3" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "ruff", specifier = ">=0.9.1" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
@@ -336,6 +337,7 @@ docs = [
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-material", specifier = ">=9.5.50" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.27.0" },
+    { name = "pytest-asyncio", specifier = ">=0.25.3" },
 ]
 
 [[package]]
@@ -1574,6 +1576,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/31/03/cc996ae65667c0b50433756e316090ac962e718c6ff2273063a14d78c382/pydantic_graph-0.0.21.tar.gz", hash = "sha256:7c17ec8f16fc016da91c475607036a2c1f8162e01309108eb7a9006ee6f647f4", size = 13543 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/23/88/25b45ad191317bbcf542f37da3ffdf4e1bd2271d08a7822d5a2511c15060/pydantic_graph-0.0.21-py3-none-any.whl", hash = "sha256:1c6e1893a9d67503666f50c902f9210d711d63a0685198a4d41d6ca12152c695", size = 16715 },
+]
+
+[[package]]
+name = "pydantic-to-typescript"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/ac/8dc13be6720267b5edffb3b0d8c1abdcccc5743d7bda4257ab0a5dccc7b9/pydantic_to_typescript-2.0.0.tar.gz", hash = "sha256:06e92e8d10759ffebe3abdd4de14015bbf80809fa9960273be6041d8509662be", size = 35484 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/9c/f51312f3063a8b6e1e09e6527a81d3b1828ad5fc8a65c14376f85cf65502/pydantic_to_typescript-2.0.0-py3-none-any.whl", hash = "sha256:5bc5e1a940c1a39e4e3a6124bd3bda1b0fc6df85c673a4781b94a1f4150cae15", size = 9693 },
 ]
 
 [[package]]
