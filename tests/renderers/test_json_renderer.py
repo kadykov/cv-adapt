@@ -101,6 +101,50 @@ def test_json_renderer_to_file(sample_cv: CVDTO, tmp_path: Path) -> None:
     assert data["language"] == "en"  # Verify Language enum is serialized correctly
 
 
+def test_json_schema_generation() -> None:
+    """Test JSON schema generation with proper types and formats."""
+    renderer = JSONRenderer()
+    schema = renderer.get_json_schema()
+
+    # Verify schema metadata
+    assert schema["$schema"] == "http://json-schema.org/draft-07/schema#"
+    assert schema["title"] == "CV"
+    assert "description" in schema
+
+    # Check language field is properly transformed
+    assert schema["properties"]["language"]["type"] == "string"
+    assert "en" in schema["properties"]["language"]["enum"]
+
+    # Check date fields have proper format
+    experience_schema = schema["properties"]["experiences"]["items"]["properties"]
+    assert experience_schema["start_date"]["format"] == "date"
+    assert experience_schema["start_date"]["pattern"] == r"^\d{4}-\d{2}-\d{2}$"
+
+
+def test_json_schema_validation(sample_cv: CVDTO) -> None:
+    """Test JSON validation with valid and invalid data."""
+    renderer = JSONRenderer()
+    json_str = renderer.render_to_string(sample_cv)
+    data = json.loads(json_str)
+
+    # Valid data should not raise any errors
+    renderer.validate_json(data)
+
+    # Invalid data should raise RendererError
+    invalid_data = data.copy()
+    invalid_data["language"] = "invalid"  # Invalid language code
+    with pytest.raises(RendererError) as exc_info:
+        renderer.validate_json(invalid_data)
+    assert "JSON validation error" in str(exc_info.value)
+
+    # Test invalid date format
+    invalid_data = data.copy()
+    invalid_data["experiences"][0]["start_date"] = "01/01/2020"  # Wrong format
+    with pytest.raises(RendererError) as exc_info:
+        renderer.validate_json(invalid_data)
+    assert "JSON validation error" in str(exc_info.value)
+
+
 def test_json_renderer_error_handling(sample_cv: CVDTO, tmp_path: Path) -> None:
     renderer = JSONRenderer()
     non_writable_path = tmp_path / "nonexistent" / "cv.json"
