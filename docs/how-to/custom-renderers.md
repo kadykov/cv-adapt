@@ -204,17 +204,53 @@ cv_html = renderer.render(cv_dto)
    - Support right-to-left languages if needed
    - Handle language-specific content properly
 
-3. **Error Handling**
+3. **Type Handling**
+   - Properly handle special types (see JSON renderer example)
+   - Convert complex objects to serializable formats
+   - Implement recursive transformations for nested structures
+
+4. **Error Handling**
    - Validate input DTOs
    - Provide meaningful error messages
    - Handle missing or optional data gracefully
 
-4. **Performance**
+5. **Performance**
    - Cache templates and styles
    - Optimize large CV rendering
    - Consider streaming for large outputs
 
 ## Common Issues and Solutions
+
+### Issue: Special Type Handling
+
+**Problem**: Need to handle special types that aren't directly serializable.
+
+**Solution**: Implement type transformations:
+```python
+from datetime import date
+from cv_adapter.dto.language import Language
+
+class CustomRenderer(BaseRenderer):
+    def _transform_value(self, value: Any) -> Any:
+        if isinstance(value, Language):
+            # Convert Language objects to their code values
+            return value.code.value
+        elif isinstance(value, date):
+            # Convert dates to ISO format strings
+            return value.isoformat()
+        elif isinstance(value, dict):
+            # Recursively handle nested dictionaries
+            return {k: self._transform_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            # Recursively handle lists
+            return [self._transform_value(item) for item in value]
+        return value
+
+    def render(self, cv: CVDTO) -> str:
+        # Transform data before rendering
+        transformed_data = self._transform_value(cv.model_dump())
+        return self._render_transformed_data(transformed_data)
+```
 
 ### Issue: Complex Formatting
 
