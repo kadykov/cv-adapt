@@ -22,10 +22,30 @@ This section documents CV Adapt's rendering system, including base interfaces an
 
 ## JSON Renderer
 
-The JSON renderer provides serialization of CV data to JSON format, with special handling for complex types:
+The JSON renderer provides schema-aware serialization and deserialization of CV data to/from JSON format:
 
-- **Language objects**: Converted to language code strings (e.g., `Language(ENGLISH)` -> `"en"`)
-- **Date objects**: Converted to ISO format strings (e.g., `date(2023,1,1)` -> `"2023-01-01"`)
+### Features
+
+- **Schema Validation**: Built-in JSON schema generation and validation
+- **Type Transformations**:
+  - Language objects: Converted to language code strings (e.g., `Language(ENGLISH)` -> `"en"`)
+  - Date objects: Converted to ISO format strings (e.g., `date(2023,1,1)` -> `"2023-01-01"`)
+
+### Loading and Saving
+
+```python
+from cv_adapter.renderers import JSONRenderer
+
+renderer = JSONRenderer()
+
+# Save CV to file
+renderer.render_to_file(cv_dto, "cv.json")
+
+# Load CV from file
+cv_dto = renderer.load_from_file("cv.json")
+
+# Schema validation is automatic for both saving and loading
+```
 
 ::: cv_adapter.renderers.json_renderer
     options:

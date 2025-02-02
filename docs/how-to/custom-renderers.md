@@ -94,7 +94,49 @@ class HTMLRenderer(BaseRenderer):
 
 ## Advanced Features
 
-### 1. Template Support
+### 1. Schema Support and Loading Functionality
+
+For formats that can be loaded back (like JSON or YAML), implement schema validation and loading capabilities:
+
+```python
+from pydantic import TypeAdapter
+import json
+from pathlib import Path
+
+class SchemaAwareJSONRenderer(BaseRenderer[CVDTO]):
+    def get_schema(self) -> dict:
+        """Generate schema for validation."""
+        adapter = TypeAdapter(CVDTO)
+        schema = adapter.json_schema()
+
+        # Add custom type transformations
+        schema["properties"]["language"] = {
+            "type": "string",
+            "enum": ["en", "fr", "de"],  # supported languages
+            "description": "Language code"
+        }
+        return schema
+
+    def validate_data(self, data: dict) -> None:
+        """Validate data against schema."""
+        # Your validation logic here
+        if not self._is_valid(data):
+            raise RendererError("Invalid data format")
+
+    def load_from_file(self, file_path: Path) -> CVDTO:
+        """Load and validate CV from file."""
+        try:
+            with open(file_path) as f:
+                data = json.load(f)
+            self.validate_data(data)
+            return CVDTO.model_validate(data)
+        except Exception as e:
+            raise RendererError(f"Failed to load CV: {e}")
+```
+
+See the JSONRenderer implementation for a complete example of schema validation and loading support.
+
+### 2. Template Support
 
 Use Jinja2 templates for more maintainable rendering:
 

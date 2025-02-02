@@ -1,29 +1,119 @@
 import json
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Union
+
+import jsonschema
+from pydantic import TypeAdapter
 
 from cv_adapter.dto.cv import CVDTO
+from cv_adapter.dto.language import Language, LanguageCode
 from cv_adapter.renderers.base import BaseRenderer, RendererError
+
+JsonType = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
 
 
 class JSONRenderer(BaseRenderer[CVDTO]):
-    """Renderer for CV in JSON format.
+    """Renderer for CV in JSON format with schema support.
 
-    This renderer converts CV data to JSON, with special handling for:
-    - Language objects: Converted to their language code (e.g. "en", "fr")
-    - Date objects: Converted to ISO format strings (e.g. "2023-01-01")
+    This renderer provides:
+    - JSON schema generation for CV structure
+    - Schema validation for input data
+    - Special type handling for:
+        - Language objects: Converted to language code (e.g. "en", "fr")
+        - Date objects: Converted to ISO format strings (e.g. "2023-01-01")
     """
 
-    def render_to_string(self, cv_dto: CVDTO) -> str:
-        """Render CV to JSON string.
+    _schema: Dict[str, Any] = {}
 
-        The rendering process:
-        1. Converts Language objects to their code values
-           (e.g. Language(ENGLISH) -> "en")
-        2. Converts the DTO to a dictionary using model_dump()
-        3. Recursively transforms date objects to ISO format strings
-        4. Serializes to a JSON string with proper formatting
+    @classmethod
+    def get_json_schema(cls) -> Dict[str, Any]:
+        """Generate JSON Schema for CV structure.
+
+        Returns:
+            JSON Schema as a dictionary with custom transformations for:
+            - Language objects (converted to enum of language codes)
+            - Date objects (converted to ISO format date strings)
+        """
+        if not cls._schema:
+            # Get base schema from Pydantic
+            adapter = TypeAdapter(CVDTO)
+            schema = adapter.json_schema()
+
+            # Add schema metadata and type info
+            schema.update(
+                {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "title": "CV",
+                    "description": "CV data with multilingual support",
+                }
+            )
+
+            # Replace Language object schema with enum of language codes
+            schema["properties"]["language"] = {
+                "type": "string",
+                "enum": [code.value for code in LanguageCode],
+                "description": "Language code (e.g. 'en', 'fr')",
+            }
+
+            # Helper function to transform schema
+            def transform_schema(obj: Dict[str, Any]) -> None:
+                """Transform schema objects to handle dates and references."""
+                if not isinstance(obj, dict):
+                    return
+
+                # Handle $ref by inlining the referenced schema
+                if "$ref" in obj:
+                    ref_path = obj["$ref"]
+                    if ref_path.startswith("#/$defs/"):
+                        ref_name = ref_path[8:]  # Remove "#/$defs/"
+                        ref_schema = schema.get("$defs", {}).get(ref_name, {})
+                        obj.clear()  # Remove $ref
+                        obj.update(ref_schema)  # Inline referenced schema
+
+                # Handle dictionary entries
+                for key, value in list(
+                    obj.items()
+                ):  # Use list() to allow dict modification
+                    # Transform date fields
+                    if isinstance(value, dict):
+                        if key.endswith("_date"):
+                            value.update(
+                                {
+                                    "type": "string",
+                                    "format": "date",
+                                    "pattern": r"^\d{4}-\d{2}-\d{2}$",
+                                }
+                            )
+                        # Recursively process other dictionaries
+                        transform_schema(value)
+                    elif isinstance(value, list):
+                        for item in value:
+                            if isinstance(item, dict):
+                                transform_schema(item)
+
+            # Transform the entire schema
+            transform_schema(schema)
+            cls._schema = schema
+
+        return cls._schema
+
+    def validate_json(self, data: JsonType) -> None:
+        """Validate JSON data against the CV schema.
+
+        Args:
+            data: JSON data to validate
+
+        Raises:
+            RendererError: If validation fails with detailed error message
+        """
+        try:
+            jsonschema.validate(instance=data, schema=self.get_json_schema())
+        except jsonschema.exceptions.ValidationError as e:
+            raise RendererError(f"JSON validation error: {e.message}")
+
+    def render_to_string(self, cv_dto: CVDTO) -> str:
+        """Render CV to JSON string with schema validation.
 
         Args:
             cv_dto: CV DTO object to render
@@ -32,10 +122,9 @@ class JSONRenderer(BaseRenderer[CVDTO]):
             JSON string representation of the CV with transformed types:
             - Language objects become language code strings (e.g. "en")
             - Dates become ISO format strings (e.g. "2023-01-01")
-            - All other types are serialized normally
 
         Raises:
-            RendererError: If rendering fails (e.g. unsupported types)
+            RendererError: If rendering fails or validation fails
         """
         try:
             # Convert DTO to dictionary
@@ -62,6 +151,10 @@ class JSONRenderer(BaseRenderer[CVDTO]):
             # Transform dates in the dictionary
             cv_dict = transform_dates(cv_dict)
 
+            # Validate the transformed data against schema
+            self.validate_json(cv_dict)
+
+            # Convert to JSON string
             return json.dumps(
                 cv_dict,
                 indent=2,
@@ -86,3 +179,44 @@ class JSONRenderer(BaseRenderer[CVDTO]):
             file_path.write_text(self.render_to_string(cv_dto), encoding="utf-8")
         except Exception as e:
             raise RendererError(f"Error saving CV to JSON file: {e}")
+
+    def load_from_string(self, content: str) -> CVDTO:
+        """Load CV from JSON string with schema validation.
+
+        Args:
+            content: JSON string to load from
+
+        Returns:
+            Loaded CV DTO
+
+        Raises:
+            RendererError: If loading fails or schema validation fails
+        """
+        try:
+            data = json.loads(content)
+            self.validate_json(data)
+
+            # Convert language code back to Language object
+            if "language" in data and isinstance(data["language"], str):
+                data["language"] = Language.get(LanguageCode(data["language"]))
+
+            return CVDTO.model_validate(data)
+        except Exception as e:
+            raise RendererError(f"Error loading CV from JSON: {e}")
+
+    def load_from_file(self, file_path: Path) -> CVDTO:
+        """Load CV from JSON file with schema validation.
+
+        Args:
+            file_path: Path to JSON file
+
+        Returns:
+            Loaded CV DTO
+
+        Raises:
+            RendererError: If loading or validation fails
+        """
+        try:
+            return self.load_from_string(file_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            raise RendererError(f"Error loading CV from JSON file: {e}")

@@ -78,10 +78,33 @@ The renderers layer handles output generation:
   - Protocol definition
   - Error handling
 
-- **Implementations**
+- **Schema-Aware JSON Renderer**
+  - JSON schema generation
+  - Schema validation
+  - Type transformations
+  - Load/save functionality
+
+- **Other Implementations**
   - Markdown renderer
   - YAML renderer
   - Jinja2 template support
+
+The JSON renderer serves as a reference implementation for schema validation and data persistence:
+
+```python
+class SchemaAwareRenderer:
+    def get_schema(self) -> dict:
+        """Generate schema for data validation."""
+        pass
+
+    def validate(self, data: Any) -> None:
+        """Validate data against schema."""
+        pass
+
+    def load_data(self, source: Union[str, Path]) -> Any:
+        """Load and validate data."""
+        pass
+```
 
 ## Key Design Patterns
 
