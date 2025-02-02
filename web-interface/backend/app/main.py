@@ -1,16 +1,19 @@
+import json
 import sys
-import traceback
 from typing import List, Optional
 
-from fastapi import Body, Depends, FastAPI, HTTPException, Query
-from . import logger
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
-from cv_adapter.dto.cv import CVDTO, ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
+from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
+from cv_adapter.renderers.json_renderer import JSONRenderer
+
+from . import logger
 
 app = FastAPI(title="CV Adapter Web Interface")
 
@@ -22,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Language dependency
 async def get_language(language_code: str = Query(default="en")) -> Language:
@@ -47,11 +51,13 @@ async def get_language(language_code: str = Query(default="en")) -> Language:
             ],
         )
 
+
 # Request models
 class GenerateCompetencesRequest(BaseModel):
     cv_text: str
     job_description: str
     notes: Optional[str] = None
+
 
 class ContactRequest(BaseModel):
     value: str
@@ -59,11 +65,13 @@ class ContactRequest(BaseModel):
     icon: Optional[str] = None
     url: Optional[str] = None
 
+
 class PersonalInfo(BaseModel):
     full_name: str
     email: ContactRequest
     phone: Optional[ContactRequest] = None
     location: Optional[ContactRequest] = None
+
 
 class GenerateCVRequest(BaseModel):
     cv_text: str
@@ -72,10 +80,12 @@ class GenerateCVRequest(BaseModel):
     approved_competences: List[str]
     notes: Optional[str] = None
 
+
 # Initialize Async CV Adapter with configurable AI model
 cv_adapter = AsyncCVAdapterApplication(
     ai_model="test" if "pytest" in sys.modules else "openai:gpt-4o"
 )
+
 
 @app.post("/api/generate-competences")
 async def generate_competences(
@@ -83,7 +93,9 @@ async def generate_competences(
     language: Language = Depends(get_language),
 ) -> dict[str, list[str]]:
     logger.debug(f"Generating competences with language: {language.code}")
-    logger.debug(f"Request data: CV length={len(data.cv_text)}, Job desc length={len(data.job_description)}")
+    logger.debug(
+        f"Request data: CV length={len(data.cv_text)}, Job desc length={len(data.job_description)}"
+    )
     try:
         with language_context(language):
             competences = await cv_adapter.generate_core_competences(
@@ -98,13 +110,17 @@ async def generate_competences(
         logger.error(f"Error generating competences: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/generate-cv")
 async def generate_cv(
     request: GenerateCVRequest,
     language: Language = Depends(get_language),
-) -> CVDTO:
+    response: Response = None,  # type: ignore[assignment]
+) -> Response:
     logger.debug(f"Generating CV with language: {language.code}")
-    logger.debug(f"Request data: CV length={len(request.cv_text)}, Job desc length={len(request.job_description)}")
+    logger.debug(
+        f"Request data: CV length={len(request.cv_text)}, Job desc length={len(request.job_description)}"
+    )
     logger.debug(f"Approved competences: {request.approved_competences}")
     try:
         # Convert personal info to DTO
@@ -114,14 +130,14 @@ async def generate_cv(
             value=request.personal_info.email.value,
             type=request.personal_info.email.type,
             icon=request.personal_info.email.icon,
-            url=request.personal_info.email.url
+            url=request.personal_info.email.url,
         )
         phone = (
             ContactDTO(
                 value=request.personal_info.phone.value,
                 type=request.personal_info.phone.type,
                 icon=request.personal_info.phone.icon,
-                url=request.personal_info.phone.url
+                url=request.personal_info.phone.url,
             )
             if request.personal_info.phone
             else None
@@ -131,7 +147,7 @@ async def generate_cv(
                 value=request.personal_info.location.value,
                 type=request.personal_info.location.type,
                 icon=request.personal_info.location.icon,
-                url=request.personal_info.location.url
+                url=request.personal_info.location.url,
             )
             if request.personal_info.location
             else None
@@ -167,10 +183,15 @@ async def generate_cv(
         logger.debug(f"Number of experiences: {len(cv.experiences)}")
         logger.debug(f"Number of education entries: {len(cv.education)}")
         logger.debug(f"Number of skills: {len(cv.skills)}")
-        return cv
+
+        # Use JSONRenderer to serialize CV DTO
+        renderer = JSONRenderer()
+        json_str = renderer.render_to_string(cv)
+        return JSONResponse(content=json.loads(json_str))
     except Exception as e:
         logger.error(f"Error generating CV: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

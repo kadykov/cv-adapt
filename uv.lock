@@ -306,7 +306,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
-    { name = "types-jsonschema" },
     { name = "types-pyyaml" },
 ]
 docs = [
@@ -314,6 +313,7 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "pytest-asyncio" },
+    { name = "types-jsonschema" },
 ]
 
 [package.metadata]
@@ -343,7 +343,6 @@ dev = [
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "ruff", specifier = ">=0.9.1" },
-    { name = "types-jsonschema", specifier = ">=4.23.0.20241208" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
 ]
 docs = [
@@ -351,6 +350,7 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.5.50" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.27.0" },
     { name = "pytest-asyncio", specifier = ">=0.25.3" },
+    { name = "types-jsonschema", specifier = ">=4.23.0.20241208" },
 ]
 
 [[package]]

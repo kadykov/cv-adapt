@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import patch
 
 import pytest
@@ -8,14 +9,18 @@ from cv_adapter.dto.cv import (
     CVDTO,
     ContactDTO,
     CoreCompetenceDTO,
+    ExperienceDTO,
+    InstitutionDTO,
     PersonalInfoDTO,
     SummaryDTO,
     TitleDTO,
 )
 from cv_adapter.dto.language import ENGLISH, FRENCH
 from cv_adapter.models.context import get_current_language, language_context
+from cv_adapter.renderers.json_renderer import JSONRenderer
 
 client = TestClient(app)
+
 
 @pytest.mark.asyncio
 async def test_language_context_verification() -> None:
@@ -50,6 +55,7 @@ async def test_language_context_verification() -> None:
         assert response.status_code == 200
         mock_generate.assert_called_once()
         assert response.json() == {"competences": ["Test competence"]}
+
 
 @pytest.mark.asyncio
 async def test_language_dependency() -> None:
@@ -102,6 +108,7 @@ async def test_language_dependency() -> None:
     assert response.status_code == 422
     assert "language_code" in response.json()["detail"][0]["loc"]
 
+
 @pytest.mark.asyncio
 async def test_generate_competences_success() -> None:
     # Test data
@@ -137,6 +144,7 @@ async def test_generate_competences_success() -> None:
             job_description=test_request["job_description"],
             notes=None,
         )
+
 
 @pytest.mark.asyncio
 async def test_generate_cv_with_competences_success() -> None:
@@ -185,6 +193,19 @@ async def test_generate_cv_with_competences_success() -> None:
             "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
         ) as mock_generate,
     ):
+        # Add experience with date to test date serialization
+        mock_cv.experiences = [
+            ExperienceDTO(
+                company=InstitutionDTO(
+                    name="Test Company", description=None, location=None
+                ),
+                position="Software Engineer",
+                description="Test description",
+                start_date=datetime.date(2020, 1, 1),
+                end_date=datetime.date(2023, 12, 31),
+                technologies=["Python", "FastAPI"],
+            )
+        ]
         mock_generate.return_value = mock_cv
 
         # Make request to endpoint
@@ -194,6 +215,13 @@ async def test_generate_cv_with_competences_success() -> None:
         )
 
         # Check response
+        # Validate response against JSONRenderer schema
+        renderer = JSONRenderer()
+        try:
+            renderer.validate_json(response.json())
+        except Exception as e:
+            pytest.fail(f"Response JSON does not match schema: {e}")
+
         assert response.status_code == 200
         result = response.json()
         assert result["personal_info"]["full_name"] == "John Doe"
@@ -213,6 +241,7 @@ async def test_generate_cv_with_competences_success() -> None:
         assert [c.text for c in call_args["core_competences"]] == test_request[
             "approved_competences"
         ]
+
 
 @pytest.mark.asyncio
 async def test_generate_cv_minimal_info() -> None:
@@ -260,11 +289,14 @@ async def test_generate_cv_minimal_info() -> None:
 
         assert response.status_code == 200
         result = response.json()
+        # Verify required fields are present and correct
         assert result["personal_info"]["full_name"] == "John Doe"
         assert result["personal_info"]["email"]["value"] == "john@example.com"
-        assert result["personal_info"]["phone"] is None
-        assert result["personal_info"]["location"] is None
+
+        # Verify competences
         assert len(result["core_competences"]) == 1
+        assert result["core_competences"][0]["text"] == "Competence 1"
+
 
 @pytest.mark.asyncio
 async def test_generate_cv_language_context() -> None:
@@ -298,6 +330,7 @@ async def test_generate_cv_language_context() -> None:
     with patch(
         "cv_adapter.core.async_application.AsyncCVAdapterApplication.generate_cv_with_competences"
     ) as mock_generate:
+
         async def verify_language_context(*args: object, **kwargs: object) -> CVDTO:
             current_language = get_current_language()
             assert current_language == FRENCH, (
@@ -315,6 +348,7 @@ async def test_generate_cv_language_context() -> None:
 
         assert response.status_code == 200
         mock_generate.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_generate_cv_error_handling() -> None:

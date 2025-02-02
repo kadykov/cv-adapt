@@ -26,30 +26,98 @@ export type Icon = string | null;
  */
 export type Url = string | null;
 export type FullName = string;
+export type Value1 = string;
+/**
+ * e.g., 'Email', 'Phone', 'Location'
+ */
+export type Type1 = string;
+/**
+ * e.g., 'email', 'phone', 'linkedin'
+ */
+export type Icon1 = string | null;
+/**
+ * Optional URL for the contact (e.g., mailto:, tel:, https://)
+ */
+export type Url1 = string | null;
+export type Value2 = string;
+/**
+ * e.g., 'Email', 'Phone', 'Location'
+ */
+export type Type2 = string;
+/**
+ * e.g., 'email', 'phone', 'linkedin'
+ */
+export type Icon2 = string | null;
+/**
+ * Optional URL for the contact (e.g., mailto:, tel:, https://)
+ */
+export type Url2 = string | null;
+export type Value3 = string;
+/**
+ * e.g., 'Email', 'Phone', 'Location'
+ */
+export type Type3 = string;
+/**
+ * e.g., 'email', 'phone', 'linkedin'
+ */
+export type Icon3 = string | null;
+/**
+ * Optional URL for the contact (e.g., mailto:, tel:, https://)
+ */
+export type Url3 = string | null;
+export type Value4 = string;
+/**
+ * e.g., 'Email', 'Phone', 'Location'
+ */
+export type Type4 = string;
+/**
+ * e.g., 'email', 'phone', 'linkedin'
+ */
+export type Icon4 = string | null;
+/**
+ * Optional URL for the contact (e.g., mailto:, tel:, https://)
+ */
+export type Url4 = string | null;
+export type Value5 = string;
+/**
+ * e.g., 'Email', 'Phone', 'Location'
+ */
+export type Type5 = string;
+/**
+ * e.g., 'email', 'phone', 'linkedin'
+ */
+export type Icon5 = string | null;
+/**
+ * Optional URL for the contact (e.g., mailto:, tel:, https://)
+ */
+export type Url5 = string | null;
 export type Text = string;
 export type Name = string;
 export type Description = string | null;
 export type Location = string | null;
+export type Name1 = string;
+export type Description1 = string | null;
+export type Location1 = string | null;
 export type Position = string;
 export type StartDate = string;
-export type EndDate = string | null;
-export type Description1 = string;
+export type EndDate = (string | null) & string;
+export type Description2 = string;
 export type Technologies = string[];
+export type Name2 = string;
+export type Description3 = string | null;
+export type Location2 = string | null;
 export type Degree = string;
 export type StartDate1 = string;
-export type EndDate1 = string | null;
-export type Description2 = string;
+export type EndDate1 = (string | null) & string;
+export type Description4 = string;
 export type Text1 = string;
-export type Name1 = string;
-export type Skills = SkillDTO[];
+export type Name3 = string;
 export type Text2 = string;
+export type Skills = SkillDTO1[];
 export type Text3 = string;
-export type CoreCompetences = CoreCompetenceDTO[];
-export type Experiences = ExperienceDTO[];
-export type Education = EducationDTO[];
-export type Skills1 = SkillGroupDTO[];
+export type Text4 = string;
 export type LanguageCode = "en" | "fr" | "de" | "es" | "it";
-export type Name2 = string;
+export type Name4 = string;
 export type NativeName = string;
 export type DateFormat = string | null;
 export type DecimalSeparator = string | null;
@@ -60,14 +128,14 @@ export type Notes = string | null;
 export type CvText1 = string;
 export type JobDescription1 = string;
 export type FullName1 = string;
-export type Value1 = string;
-export type Type1 = string;
-export type Icon1 = string | null;
-export type Url1 = string | null;
+export type Value6 = string;
+export type Type6 = string;
+export type Icon6 = string | null;
+export type Url6 = string | null;
 export type ApprovedCompetences = string[];
 export type Notes1 = string | null;
 
-export interface Tmp1Osmq1Nt {
+export interface Tmpa6Ccg5Zm {
   ContactDTO: ContactDTO;
   PersonalInfoDTO: PersonalInfoDTO;
   CoreCompetenceDTO: CoreCompetenceDTO;
@@ -78,7 +146,6 @@ export interface Tmp1Osmq1Nt {
   SkillGroupDTO: SkillGroupDTO;
   TitleDTO: TitleDTO;
   SummaryDTO: SummaryDTO;
-  CVDTO: CVDTO;
   Language: Language;
   LanguageCode: LanguageCode;
   GenerateCompetencesRequest: GenerateCompetencesRequest;
@@ -100,11 +167,61 @@ export interface ContactDTO {
  */
 export interface PersonalInfoDTO {
   full_name: FullName;
-  email?: ContactDTO | null;
-  phone?: ContactDTO | null;
-  location?: ContactDTO | null;
-  linkedin?: ContactDTO | null;
-  github?: ContactDTO | null;
+  email?: ContactDTO1 | null;
+  phone?: ContactDTO2 | null;
+  location?: ContactDTO3 | null;
+  linkedin?: ContactDTO4 | null;
+  github?: ContactDTO5 | null;
+  [k: string]: unknown;
+}
+/**
+ * Represents a single contact method with optional metadata.
+ */
+export interface ContactDTO1 {
+  value: Value1;
+  type: Type1;
+  icon?: Icon1;
+  url?: Url1;
+  [k: string]: unknown;
+}
+/**
+ * Represents a single contact method with optional metadata.
+ */
+export interface ContactDTO2 {
+  value: Value2;
+  type: Type2;
+  icon?: Icon2;
+  url?: Url2;
+  [k: string]: unknown;
+}
+/**
+ * Represents a single contact method with optional metadata.
+ */
+export interface ContactDTO3 {
+  value: Value3;
+  type: Type3;
+  icon?: Icon3;
+  url?: Url3;
+  [k: string]: unknown;
+}
+/**
+ * Represents a single contact method with optional metadata.
+ */
+export interface ContactDTO4 {
+  value: Value4;
+  type: Type4;
+  icon?: Icon4;
+  url?: Url4;
+  [k: string]: unknown;
+}
+/**
+ * Represents a single contact method with optional metadata.
+ */
+export interface ContactDTO5 {
+  value: Value5;
+  type: Type5;
+  icon?: Icon5;
+  url?: Url5;
   [k: string]: unknown;
 }
 export interface CoreCompetenceDTO {
@@ -118,20 +235,32 @@ export interface InstitutionDTO {
   [k: string]: unknown;
 }
 export interface ExperienceDTO {
-  company: InstitutionDTO;
+  company: InstitutionDTO1;
   position: Position;
   start_date: StartDate;
   end_date?: EndDate;
-  description?: Description1;
+  description?: Description2;
   technologies?: Technologies;
   [k: string]: unknown;
 }
+export interface InstitutionDTO1 {
+  name: Name1;
+  description?: Description1;
+  location?: Location1;
+  [k: string]: unknown;
+}
 export interface EducationDTO {
-  university: InstitutionDTO;
+  university: InstitutionDTO2;
   degree: Degree;
   start_date: StartDate1;
   end_date?: EndDate1;
-  description?: Description2;
+  description?: Description4;
+  [k: string]: unknown;
+}
+export interface InstitutionDTO2 {
+  name: Name2;
+  description?: Description3;
+  location?: Location2;
   [k: string]: unknown;
 }
 export interface SkillDTO {
@@ -139,27 +268,20 @@ export interface SkillDTO {
   [k: string]: unknown;
 }
 export interface SkillGroupDTO {
-  name: Name1;
+  name: Name3;
   skills: Skills;
   [k: string]: unknown;
 }
-export interface TitleDTO {
+export interface SkillDTO1 {
   text: Text2;
   [k: string]: unknown;
 }
-export interface SummaryDTO {
+export interface TitleDTO {
   text: Text3;
   [k: string]: unknown;
 }
-export interface CVDTO {
-  personal_info: PersonalInfoDTO;
-  title: TitleDTO;
-  summary: SummaryDTO;
-  core_competences: CoreCompetences;
-  experiences: Experiences;
-  education: Education;
-  skills: Skills1;
-  language: Language;
+export interface SummaryDTO {
+  text: Text4;
   [k: string]: unknown;
 }
 /**
@@ -167,7 +289,7 @@ export interface CVDTO {
  */
 export interface Language {
   code: LanguageCode;
-  name: Name2;
+  name: Name4;
   native_name: NativeName;
   date_format?: DateFormat;
   decimal_separator?: DecimalSeparator;
@@ -196,10 +318,10 @@ export interface PersonalInfo {
   [k: string]: unknown;
 }
 export interface ContactRequest {
-  value: Value1;
-  type: Type1;
-  icon?: Icon1;
-  url?: Url1;
+  value: Value6;
+  type: Type6;
+  icon?: Icon6;
+  url?: Url6;
   [k: string]: unknown;
 }
 

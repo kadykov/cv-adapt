@@ -1,67 +1,47 @@
 import json
-import os
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 from tempfile import NamedTemporaryFile
 
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent.parent
 sys.path.append(str(backend_dir))
 
-from cv_adapter.dto.cv import (
-    ContactDTO,
-    PersonalInfoDTO,
-    CoreCompetenceDTO,
-    InstitutionDTO,
-    ExperienceDTO,
-    EducationDTO,
-    SkillDTO,
-    SkillGroupDTO,
-    TitleDTO,
-    SummaryDTO,
-    CVDTO,
-)
+from app.main import GenerateCompetencesRequest, GenerateCVRequest
+from app.main import PersonalInfo as PersonalInfoRequest
+
 from cv_adapter.dto.language import Language, LanguageCode
-from app.main import GenerateCompetencesRequest, GenerateCVRequest, PersonalInfo as PersonalInfoRequest
+from cv_adapter.renderers.json_renderer import JSONRenderer
 
 # Create types directory if it doesn't exist
 target_dir = Path(__file__).parent.parent.parent / "frontend" / "src" / "types"
 target_dir.mkdir(exist_ok=True)
 output_file = target_dir / "api.ts"
 
-# List of all models to generate types for
-models = [
-    ContactDTO,
-    PersonalInfoDTO,
-    CoreCompetenceDTO,
-    InstitutionDTO,
-    ExperienceDTO,
-    EducationDTO,
-    SkillDTO,
-    SkillGroupDTO,
-    TitleDTO,
-    SummaryDTO,
-    CVDTO,
+# Get CV schema from JSONRenderer
+cv_schema = JSONRenderer.get_json_schema()
+
+# List of models that aren't part of CV schema but need types
+additional_models = [
     Language,
     LanguageCode,
     GenerateCompetencesRequest,
     GenerateCVRequest,
+    PersonalInfoRequest,
 ]
 
 # Create a temporary JSON schema file
-with NamedTemporaryFile(mode='w', suffix='.json') as schema_file:
-    # Combine schemas from all models
-    combined_schema = {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$defs": {}
-    }
+with NamedTemporaryFile(mode="w", suffix=".json") as schema_file:
+    # Start with CV schema which already has proper $schema and $defs
+    combined_schema = cv_schema.copy()
 
-    for model in models:
-        if hasattr(model, 'model_json_schema'):
+    # Add schemas for additional models
+    for model in additional_models:
+        if hasattr(model, "model_json_schema"):
             # Handle Pydantic models
             model_schema = model.model_json_schema()
-            # Convert definitions to $defs
+            # Convert definitions to $defs if present
             if "definitions" in model_schema:
                 model_schema["$defs"] = model_schema.pop("definitions")
             if "$defs" in model_schema:
@@ -70,42 +50,52 @@ with NamedTemporaryFile(mode='w', suffix='.json') as schema_file:
             json_str = json.dumps(model_schema)
             json_str = json_str.replace('"#/definitions/', '"#/$defs/')
             model_schema = json.loads(json_str)
+            # Add to $defs
             combined_schema["$defs"][model.__name__] = model_schema
         elif isinstance(model, type) and issubclass(model, LanguageCode):
             # Handle Enum
             enum_schema = {
                 "type": "string",
                 "enum": [e.value for e in model],
-                "title": model.__name__
+                "title": model.__name__,
             }
             combined_schema["$defs"][model.__name__] = enum_schema
 
-    # Add root types for each model
-    for model in models:
-        name = model.__name__
-        combined_schema[name] = {"$ref": f"#/$defs/{name}"}
+    # Create root schema with all types as properties
+    root_schema = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {},
+        "$defs": combined_schema["$defs"],
+    }
 
-    # Write combined schema to temp file
-    try:
-        # Ensure the schema is valid JSON by loading and re-dumping it
-        json_str = json.dumps(combined_schema)
-        combined_schema = json.loads(json_str)
-        schema_json = json.dumps(combined_schema, indent=2)
+    # Add each model from CV schema and additional models to root properties
+    all_model_names = [
+        "CVDTO",
+        "ContactDTO",
+        "PersonalInfoDTO",
+        "CoreCompetenceDTO",
+        "InstitutionDTO",
+        "ExperienceDTO",
+        "EducationDTO",
+        "SkillDTO",
+        "SkillGroupDTO",
+        "TitleDTO",
+        "SummaryDTO",
+        "Language",
+        "LanguageCode",
+        "GenerateCompetencesRequest",
+        "GenerateCVRequest",
+        "PersonalInfoRequest",
+    ]
 
-        # Add simple root type to help json-schema-to-typescript
-        root_schema = {
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "$defs": combined_schema["$defs"]
-        }
-
-        # Add each model as a property in the root schema
-        for model in models:
-            name = model.__name__
+    for name in all_model_names:
+        if name in combined_schema["$defs"]:
             root_schema["properties"][name] = {"$ref": f"#/$defs/{name}"}
             root_schema["required"] = root_schema.get("required", []) + [name]
 
+    try:
+        # Write schema to temp file
         schema_json = json.dumps(root_schema, indent=2)
         schema_file.write(schema_json)
         schema_file.flush()
@@ -114,11 +104,13 @@ with NamedTemporaryFile(mode='w', suffix='.json') as schema_file:
         raise
 
     # Use npx to run json-schema-to-typescript and capture output
-    process = subprocess.run([
-        'npx',
-        'json-schema-to-typescript',
-        schema_file.name
-    ], cwd=str(target_dir.parent), check=True, capture_output=True, text=True)
+    process = subprocess.run(
+        ["npx", "json-schema-to-typescript", schema_file.name],
+        cwd=str(target_dir.parent),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
     # Write the output to our file along with additional types
     with open(output_file, "w") as f:

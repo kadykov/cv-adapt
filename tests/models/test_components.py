@@ -20,6 +20,7 @@ from cv_adapter.models.components import (
 )
 from cv_adapter.models.context import language_context
 
+
 def test_institution_validation() -> None:
     """Test institution model validation."""
     with language_context(FRENCH):
@@ -48,6 +49,7 @@ def test_institution_validation() -> None:
                 location="San Francisco, California",
             )
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_experience_validation() -> None:
     """Test experience model validation."""
@@ -83,6 +85,7 @@ def test_experience_validation() -> None:
                 technologies=["Python", "Kubernetes", "AWS"],
             )
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_education_validation() -> None:
     """Test education model validation."""
@@ -128,6 +131,7 @@ def test_education_validation() -> None:
             )
         assert "language mismatch" in str(exc_info.value).lower()
 
+
 def test_title_validation() -> None:
     """Test title model validation."""
     with language_context(FRENCH):
@@ -144,6 +148,7 @@ def test_title_validation() -> None:
         with pytest.raises(ValidationError) as exc_info:
             Title(text="Senior Software Engineer with Global Experience")
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_skill_validation() -> None:
     """Test skill model validation."""
@@ -166,6 +171,7 @@ def test_skill_validation() -> None:
                 )
             )
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_skill_group_validation() -> None:
     """Test skill group model validation."""
@@ -219,6 +225,7 @@ def test_skill_group_validation() -> None:
                 ],
             )
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_skills_validation() -> None:
     """Test skills model validation."""
@@ -290,6 +297,7 @@ def test_skills_validation() -> None:
             )
         assert "language mismatch" in str(exc_info.value).lower()
 
+
 def test_core_competence_validation() -> None:
     """Test core competence model validation."""
     with language_context(FRENCH):
@@ -316,6 +324,7 @@ def test_core_competence_validation() -> None:
         with pytest.raises(ValidationError) as exc_info:
             CoreCompetence(text="Advanced Software Architecture and Design")
         assert "language mismatch" in str(exc_info.value).lower()
+
 
 def test_core_competences_validation() -> None:
     """Test core competences collection validation."""
