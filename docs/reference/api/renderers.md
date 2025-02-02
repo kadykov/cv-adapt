@@ -20,6 +20,20 @@ This section documents CV Adapt's rendering system, including base interfaces an
         heading_level: 2
         members: true
 
+## JSON Renderer
+
+The JSON renderer provides serialization of CV data to JSON format, with special handling for complex types:
+
+- **Language objects**: Converted to language code strings (e.g., `Language(ENGLISH)` -> `"en"`)
+- **Date objects**: Converted to ISO format strings (e.g., `date(2023,1,1)` -> `"2023-01-01"`)
+
+::: cv_adapter.renderers.json_renderer
+    options:
+        show_root_heading: true
+        show_source: true
+        heading_level: 2
+        members: true
+
 ## YAML Renderer
 
 ::: cv_adapter.renderers.yaml_renderer
@@ -54,7 +68,8 @@ To create a custom renderer:
 
 1. Implement the base renderer interfaces defined in `cv_adapter.renderers.base`
 2. Work with DTOs from `cv_adapter.dto` for data representation
-3. Follow the established patterns for language support and error handling
+3. Follow the established patterns for type handling (see JSON Renderer for example)
+4. Implement proper error handling using `RendererError`
 
 Example implementation structure:
 ```python
