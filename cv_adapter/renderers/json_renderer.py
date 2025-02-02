@@ -7,7 +7,7 @@ import jsonschema
 from pydantic import TypeAdapter
 
 from cv_adapter.dto.cv import CVDTO
-from cv_adapter.dto.language import LanguageCode
+from cv_adapter.dto.language import Language, LanguageCode
 from cv_adapter.renderers.base import BaseRenderer, RendererError
 
 JsonType = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
@@ -179,3 +179,44 @@ class JSONRenderer(BaseRenderer[CVDTO]):
             file_path.write_text(self.render_to_string(cv_dto), encoding="utf-8")
         except Exception as e:
             raise RendererError(f"Error saving CV to JSON file: {e}")
+
+    def load_from_string(self, content: str) -> CVDTO:
+        """Load CV from JSON string with schema validation.
+
+        Args:
+            content: JSON string to load from
+
+        Returns:
+            Loaded CV DTO
+
+        Raises:
+            RendererError: If loading fails or schema validation fails
+        """
+        try:
+            data = json.loads(content)
+            self.validate_json(data)
+
+            # Convert language code back to Language object
+            if "language" in data and isinstance(data["language"], str):
+                data["language"] = Language.get(LanguageCode(data["language"]))
+
+            return CVDTO.model_validate(data)
+        except Exception as e:
+            raise RendererError(f"Error loading CV from JSON: {e}")
+
+    def load_from_file(self, file_path: Path) -> CVDTO:
+        """Load CV from JSON file with schema validation.
+
+        Args:
+            file_path: Path to JSON file
+
+        Returns:
+            Loaded CV DTO
+
+        Raises:
+            RendererError: If loading or validation fails
+        """
+        try:
+            return self.load_from_string(file_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            raise RendererError(f"Error loading CV from JSON file: {e}")

@@ -151,3 +151,73 @@ def test_json_renderer_error_handling(sample_cv: CVDTO, tmp_path: Path) -> None:
 
     with pytest.raises(RendererError):
         renderer.render_to_file(sample_cv, non_writable_path)
+
+
+def test_load_from_string(sample_cv: CVDTO) -> None:
+    """Test loading CV from valid JSON string."""
+    renderer = JSONRenderer()
+    # First render sample CV to JSON
+    json_str = renderer.render_to_string(sample_cv)
+
+    # Then load it back
+    loaded_cv = renderer.load_from_string(json_str)
+
+    # Verify loaded data matches original
+    assert loaded_cv.personal_info.full_name == sample_cv.personal_info.full_name
+    assert loaded_cv.title.text == sample_cv.title.text
+    assert loaded_cv.language.code == sample_cv.language.code
+    assert loaded_cv.experiences[0].start_date == sample_cv.experiences[0].start_date
+
+
+def test_load_from_file(sample_cv: CVDTO, tmp_path: Path) -> None:
+    """Test loading CV from valid JSON file."""
+    renderer = JSONRenderer()
+    file_path = tmp_path / "cv.json"
+
+    # First save sample CV to file
+    renderer.render_to_file(sample_cv, file_path)
+
+    # Then load it back
+    loaded_cv = renderer.load_from_file(file_path)
+
+    # Verify loaded data matches original
+    assert loaded_cv.personal_info.full_name == sample_cv.personal_info.full_name
+    assert loaded_cv.title.text == sample_cv.title.text
+    assert loaded_cv.language.code == sample_cv.language.code
+    assert loaded_cv.experiences[0].start_date == sample_cv.experiences[0].start_date
+
+
+def test_load_invalid_json() -> None:
+    """Test loading invalid JSON string."""
+    renderer = JSONRenderer()
+    invalid_json = "{invalid json"
+
+    with pytest.raises(RendererError) as exc_info:
+        renderer.load_from_string(invalid_json)
+    assert "Error loading CV from JSON" in str(exc_info.value)
+
+
+def test_load_invalid_schema() -> None:
+    """Test loading JSON that doesn't match schema."""
+    renderer = JSONRenderer()
+    invalid_data = {
+        "personal_info": {
+            "full_name": "John Doe",
+            "email": "invalid_email_format",  # Should be ContactDTO object
+        },
+        "language": "en",
+    }
+
+    with pytest.raises(RendererError) as exc_info:
+        renderer.load_from_string(json.dumps(invalid_data))
+    assert "JSON validation error" in str(exc_info.value)
+
+
+def test_load_from_nonexistent_file(tmp_path: Path) -> None:
+    """Test loading from nonexistent file."""
+    renderer = JSONRenderer()
+    nonexistent_file = tmp_path / "nonexistent.json"
+
+    with pytest.raises(RendererError) as exc_info:
+        renderer.load_from_file(nonexistent_file)
+    assert "Error loading CV from JSON file" in str(exc_info.value)
