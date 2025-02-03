@@ -36,7 +36,7 @@ The application layer orchestrates the CV generation workflow:
 
 ### 2. Models Layer
 
-The models layer defines the domain entities and ensures data integrity:
+The models layer defines the domain entities and ensures data integrity using Pydantic:
 
 - **Personal Information**
   - Basic contact details
@@ -78,10 +78,9 @@ The renderers layer handles output generation:
   - Protocol definition
   - Error handling
 
-- **Schema-Aware JSON Renderer**
-  - JSON schema generation
-  - Schema validation
-  - Type transformations
+- **JSON Renderer**
+  - Pydantic-based serialization
+  - Automatic type handling
   - Load/save functionality
 
 - **Other Implementations**
@@ -89,21 +88,17 @@ The renderers layer handles output generation:
   - YAML renderer
   - Jinja2 template support
 
-The JSON renderer serves as a reference implementation for schema validation and data persistence:
+The JSON renderer leverages Pydantic's built-in capabilities:
 
 ```python
-class SchemaAwareRenderer:
-    def get_schema(self) -> dict:
-        """Generate schema for data validation."""
-        pass
+class JSONRenderer(BaseRenderer[CVDTO]):
+    def render_to_string(self, cv_dto: CVDTO) -> str:
+        """Render using Pydantic's serialization."""
+        return cv_dto.model_dump_json()
 
-    def validate(self, data: Any) -> None:
-        """Validate data against schema."""
-        pass
-
-    def load_data(self, source: Union[str, Path]) -> Any:
-        """Load and validate data."""
-        pass
+    def load_from_string(self, content: str) -> CVDTO:
+        """Load with Pydantic's validation."""
+        return CVDTO.model_validate_json(content)
 ```
 
 ## Key Design Patterns
@@ -215,7 +210,7 @@ CV Adapt provides several extension points for customization:
 CV Adapt uses a comprehensive error handling strategy:
 
 1. **Validation Errors**
-   - Input validation
+   - Pydantic model validation
    - Language validation
    - Template validation
 

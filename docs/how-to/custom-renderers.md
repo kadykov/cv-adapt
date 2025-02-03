@@ -94,47 +94,49 @@ class HTMLRenderer(BaseRenderer):
 
 ## Advanced Features
 
-### 1. Schema Support and Loading Functionality
+### 1. Serialization and Loading Support
 
-For formats that can be loaded back (like JSON or YAML), implement schema validation and loading capabilities:
+For formats that can be loaded back (like JSON or YAML), leverage Pydantic's built-in capabilities:
 
 ```python
-from pydantic import TypeAdapter
-import json
 from pathlib import Path
+from cv_adapter.renderers.base import BaseRenderer, RendererError
+from cv_adapter.dto.cv import CVDTO
 
-class SchemaAwareJSONRenderer(BaseRenderer[CVDTO]):
-    def get_schema(self) -> dict:
-        """Generate schema for validation."""
-        adapter = TypeAdapter(CVDTO)
-        schema = adapter.json_schema()
+class SerializableRenderer(BaseRenderer[CVDTO]):
+    """Example renderer with serialization support using Pydantic."""
 
-        # Add custom type transformations
-        schema["properties"]["language"] = {
-            "type": "string",
-            "enum": ["en", "fr", "de"],  # supported languages
-            "description": "Language code"
-        }
-        return schema
-
-    def validate_data(self, data: dict) -> None:
-        """Validate data against schema."""
-        # Your validation logic here
-        if not self._is_valid(data):
-            raise RendererError("Invalid data format")
-
-    def load_from_file(self, file_path: Path) -> CVDTO:
-        """Load and validate CV from file."""
+    def render_to_string(self, cv_dto: CVDTO) -> str:
+        """Convert CV to string format."""
         try:
-            with open(file_path) as f:
-                data = json.load(f)
-            self.validate_data(data)
-            return CVDTO.model_validate(data)
+            # Use Pydantic's built-in serialization
+            return cv_dto.model_dump_json(indent=2)
+        except Exception as e:
+            raise RendererError(f"Failed to render CV: {e}")
+
+    def render_to_file(self, cv_dto: CVDTO, file_path: Path) -> None:
+        """Save CV to file."""
+        try:
+            file_path.write_text(self.render_to_string(cv_dto), encoding="utf-8")
+        except Exception as e:
+            raise RendererError(f"Failed to save CV: {e}")
+
+    def load_from_string(self, content: str) -> CVDTO:
+        """Load CV from string with automatic validation."""
+        try:
+            return CVDTO.model_validate_json(content)
         except Exception as e:
             raise RendererError(f"Failed to load CV: {e}")
+
+    def load_from_file(self, file_path: Path) -> CVDTO:
+        """Load CV from file."""
+        try:
+            return self.load_from_string(file_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            raise RendererError(f"Failed to load CV file: {e}")
 ```
 
-See the JSONRenderer implementation for a complete example of schema validation and loading support.
+See the JSONRenderer implementation for a complete example of leveraging Pydantic's capabilities.
 
 ### 2. Template Support
 
@@ -156,7 +158,7 @@ class TemplatedHTMLRenderer(JinjaRenderer):
         return self.template.render(cv=cv)
 ```
 
-### 2. Styling Support
+### 3. Styling Support
 
 Add CSS styling capabilities:
 
@@ -182,7 +184,7 @@ class StyledHTMLRenderer(HTMLRenderer):
         """
 ```
 
-### 3. Configuration Options
+### 4. Configuration Options
 
 Make your renderer configurable:
 
@@ -236,23 +238,23 @@ cv_html = renderer.render(cv_dto)
 
 ## Best Practices
 
-1. **Separation of Concerns**
+1. **Leverage Pydantic**
+   - Use Pydantic's built-in serialization when possible
+   - Take advantage of automatic validation
+   - Let Pydantic handle complex type conversions
+
+2. **Separation of Concerns**
    - Keep rendering logic separate from data processing
    - Use templates for complex layouts
    - Separate styling from structure
 
-2. **Language Support**
+3. **Language Support**
    - Always use the language context for formatting
    - Support right-to-left languages if needed
    - Handle language-specific content properly
 
-3. **Type Handling**
-   - Properly handle special types (see JSON renderer example)
-   - Convert complex objects to serializable formats
-   - Implement recursive transformations for nested structures
-
 4. **Error Handling**
-   - Validate input DTOs
+   - Use RendererError for all errors
    - Provide meaningful error messages
    - Handle missing or optional data gracefully
 
@@ -267,31 +269,18 @@ cv_html = renderer.render(cv_dto)
 
 **Problem**: Need to handle special types that aren't directly serializable.
 
-**Solution**: Implement type transformations:
+**Solution**: Let Pydantic handle serialization through model configuration:
 ```python
+from pydantic import BaseModel
 from datetime import date
-from cv_adapter.dto.language import Language
 
-class CustomRenderer(BaseRenderer):
-    def _transform_value(self, value: Any) -> Any:
-        if isinstance(value, Language):
-            # Convert Language objects to their code values
-            return value.code.value
-        elif isinstance(value, date):
-            # Convert dates to ISO format strings
-            return value.isoformat()
-        elif isinstance(value, dict):
-            # Recursively handle nested dictionaries
-            return {k: self._transform_value(v) for k, v in value.items()}
-        elif isinstance(value, list):
-            # Recursively handle lists
-            return [self._transform_value(item) for item in value]
-        return value
+class CustomDTO(BaseModel):
+    start_date: date
 
-    def render(self, cv: CVDTO) -> str:
-        # Transform data before rendering
-        transformed_data = self._transform_value(cv.model_dump())
-        return self._render_transformed_data(transformed_data)
+    class Config:
+        json_encoders = {
+            date: lambda d: d.isoformat()
+        }
 ```
 
 ### Issue: Complex Formatting

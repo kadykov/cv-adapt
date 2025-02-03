@@ -22,14 +22,13 @@ This section documents CV Adapt's rendering system, including base interfaces an
 
 ## JSON Renderer
 
-The JSON renderer provides schema-aware serialization and deserialization of CV data to/from JSON format:
+The JSON renderer provides JSON serialization and deserialization of CV data using Pydantic's native capabilities:
 
 ### Features
 
-- **Schema Validation**: Built-in JSON schema generation and validation
-- **Type Transformations**:
-  - Language objects: Converted to language code strings (e.g., `Language(ENGLISH)` -> `"en"`)
-  - Date objects: Converted to ISO format strings (e.g., `date(2023,1,1)` -> `"2023-01-01"`)
+- **Native Pydantic Integration**: Uses Pydantic's built-in JSON serialization and validation
+- **UTF-8 Encoded Files**: All file operations use UTF-8 encoding
+- **Automatic Type Handling**: All types (including dates and language objects) are handled by Pydantic
 
 ### Loading and Saving
 
@@ -44,7 +43,7 @@ renderer.render_to_file(cv_dto, "cv.json")
 # Load CV from file
 cv_dto = renderer.load_from_file("cv.json")
 
-# Schema validation is automatic for both saving and loading
+# Validation is automatic through Pydantic
 ```
 
 ::: cv_adapter.renderers.json_renderer
@@ -88,7 +87,7 @@ To create a custom renderer:
 
 1. Implement the base renderer interfaces defined in `cv_adapter.renderers.base`
 2. Work with DTOs from `cv_adapter.dto` for data representation
-3. Follow the established patterns for type handling (see JSON Renderer for example)
+3. Consider leveraging Pydantic's built-in capabilities for data handling
 4. Implement proper error handling using `RendererError`
 
 Example implementation structure:
