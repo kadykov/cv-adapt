@@ -50,6 +50,9 @@ all:
     just format
     just pre-commit
     just test
+    just test-backend
+    just generate-types
+    just test-frontend
 
 # Build documentation
 docs:
