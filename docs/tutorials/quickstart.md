@@ -171,7 +171,7 @@ cv = app.generate_cv(
 
 ## Saving and Loading CVs
 
-CV Adapt supports saving CVs to JSON files and loading them back:
+CV Adapt supports saving CVs to JSON format using Pydantic's serialization:
 
 ```python
 from cv_adapter.renderers import JSONRenderer
@@ -179,17 +179,15 @@ from cv_adapter.renderers import JSONRenderer
 # Create a JSON renderer
 renderer = JSONRenderer()
 
-# Save CV to file
+# Save CV to file with automatic type handling
 renderer.render_to_file(cv.to_dto(), "my_cv.json")
 
-# Load CV from file later
+# Load CV from file with automatic validation
 loaded_cv_dto = renderer.load_from_file("my_cv.json")
 
 # Convert back to CV model if needed
 loaded_cv = app.mapper.to_model(loaded_cv_dto)
 ```
-
-The JSON renderer ensures data consistency through schema validation during both saving and loading operations.
 
 ## What's Next?
 

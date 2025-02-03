@@ -80,7 +80,8 @@ def sample_cv() -> CVDTO:
     )
 
 
-def test_json_renderer_to_string(sample_cv: CVDTO, tmp_path: Path) -> None:
+def test_json_renderer_to_string(sample_cv: CVDTO) -> None:
+    """Test rendering CV to JSON string using Pydantic's serialization."""
     renderer = JSONRenderer()
     json_str = renderer.render_to_string(sample_cv)
 
@@ -88,10 +89,13 @@ def test_json_renderer_to_string(sample_cv: CVDTO, tmp_path: Path) -> None:
     data = json.loads(json_str)
     assert data["personal_info"]["full_name"] == "John Doe"
     assert data["title"]["text"] == "Senior Software Engineer"
-    assert isinstance(data, dict)  # Ensure it's a valid JSON object
+    assert isinstance(data, dict)
+    # Language is now serialized as an object by Pydantic
+    assert data["language"]["code"] == "en"
 
 
 def test_json_renderer_to_file(sample_cv: CVDTO, tmp_path: Path) -> None:
+    """Test saving CV to JSON file."""
     renderer = JSONRenderer()
     file_path = tmp_path / "cv.json"
     renderer.render_to_file(sample_cv, file_path)
@@ -99,72 +103,16 @@ def test_json_renderer_to_file(sample_cv: CVDTO, tmp_path: Path) -> None:
     assert file_path.exists()
     data = json.loads(file_path.read_text())
     assert data["personal_info"]["full_name"] == "John Doe"
-    assert "language" in data  # Check language field is present
-    assert data["language"] == "en"  # Verify Language enum is serialized correctly
-
-
-def test_json_schema_generation() -> None:
-    """Test JSON schema generation with proper types and formats."""
-    renderer = JSONRenderer()
-    schema = renderer.get_json_schema()
-
-    # Verify schema metadata
-    assert schema["$schema"] == "http://json-schema.org/draft-07/schema#"
-    assert schema["title"] == "CV"
-    assert "description" in schema
-
-    # Check language field is properly transformed
-    assert schema["properties"]["language"]["type"] == "string"
-    assert "en" in schema["properties"]["language"]["enum"]
-
-    # Check date fields have proper format
-    experience_schema = schema["properties"]["experiences"]["items"]["properties"]
-    assert experience_schema["start_date"]["format"] == "date"
-    assert experience_schema["start_date"]["pattern"] == r"^\d{4}-\d{2}-\d{2}$"
-
-
-def test_json_schema_validation(sample_cv: CVDTO) -> None:
-    """Test JSON validation with valid and invalid data."""
-    renderer = JSONRenderer()
-    json_str = renderer.render_to_string(sample_cv)
-    data = json.loads(json_str)
-
-    # Valid data should not raise any errors
-    renderer.validate_json(data)
-
-    # Invalid data should raise RendererError
-    invalid_data = data.copy()
-    invalid_data["language"] = "invalid"  # Invalid language code
-    with pytest.raises(RendererError) as exc_info:
-        renderer.validate_json(invalid_data)
-    assert "JSON validation error" in str(exc_info.value)
-
-    # Test invalid date format
-    invalid_data = data.copy()
-    invalid_data["experiences"][0]["start_date"] = "01/01/2020"  # Wrong format
-    with pytest.raises(RendererError) as exc_info:
-        renderer.validate_json(invalid_data)
-    assert "JSON validation error" in str(exc_info.value)
-
-
-def test_json_renderer_error_handling(sample_cv: CVDTO, tmp_path: Path) -> None:
-    renderer = JSONRenderer()
-    non_writable_path = tmp_path / "nonexistent" / "cv.json"
-
-    with pytest.raises(RendererError):
-        renderer.render_to_file(sample_cv, non_writable_path)
+    assert data["language"]["code"] == "en"
 
 
 def test_load_from_string(sample_cv: CVDTO) -> None:
     """Test loading CV from valid JSON string."""
     renderer = JSONRenderer()
-    # First render sample CV to JSON
     json_str = renderer.render_to_string(sample_cv)
 
-    # Then load it back
     loaded_cv = renderer.load_from_string(json_str)
 
-    # Verify loaded data matches original
     assert loaded_cv.personal_info.full_name == sample_cv.personal_info.full_name
     assert loaded_cv.title.text == sample_cv.title.text
     assert loaded_cv.language.code == sample_cv.language.code
@@ -176,13 +124,9 @@ def test_load_from_file(sample_cv: CVDTO, tmp_path: Path) -> None:
     renderer = JSONRenderer()
     file_path = tmp_path / "cv.json"
 
-    # First save sample CV to file
     renderer.render_to_file(sample_cv, file_path)
-
-    # Then load it back
     loaded_cv = renderer.load_from_file(file_path)
 
-    # Verify loaded data matches original
     assert loaded_cv.personal_info.full_name == sample_cv.personal_info.full_name
     assert loaded_cv.title.text == sample_cv.title.text
     assert loaded_cv.language.code == sample_cv.language.code
@@ -199,20 +143,30 @@ def test_load_invalid_json() -> None:
     assert "Error loading CV from JSON" in str(exc_info.value)
 
 
-def test_load_invalid_schema() -> None:
-    """Test loading JSON that doesn't match schema."""
+def test_load_invalid_data() -> None:
+    """Test loading JSON that doesn't match CV structure."""
     renderer = JSONRenderer()
     invalid_data = {
         "personal_info": {
             "full_name": "John Doe",
             "email": "invalid_email_format",  # Should be ContactDTO object
-        },
-        "language": "en",
+        }
     }
 
     with pytest.raises(RendererError) as exc_info:
         renderer.load_from_string(json.dumps(invalid_data))
-    assert "JSON validation error" in str(exc_info.value)
+    # Error message now comes from Pydantic validation
+    assert "Error loading CV from JSON" in str(exc_info.value)
+
+
+def test_render_to_file_error(sample_cv: CVDTO, tmp_path: Path) -> None:
+    """Test error handling when writing to invalid path."""
+    renderer = JSONRenderer()
+    invalid_path = tmp_path / "nonexistent" / "cv.json"
+
+    with pytest.raises(RendererError) as exc_info:
+        renderer.render_to_file(sample_cv, invalid_path)
+    assert "Error saving CV to JSON file" in str(exc_info.value)
 
 
 def test_load_from_nonexistent_file(tmp_path: Path) -> None:

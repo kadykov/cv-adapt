@@ -4,6 +4,8 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from cv_adapter.dto.language import LanguageConfig
+
 from .context import get_current_language
 from .language import detect_language
 
@@ -28,10 +30,12 @@ def validate_language(text: str) -> str:
     detected = detect_language(text)
 
     if detected is not None and detected != current_lang:
+        expected_config = LanguageConfig.get(current_lang.code)
+        detected_config = LanguageConfig.get(detected.code)
         raise ValueError(
             f"Text language mismatch. "
-            f"Expected {current_lang.name}, "
-            f"detected {detected.name}"
+            f"Expected {expected_config.name}, "
+            f"detected {detected_config.name}"
         )
     return text.strip()
 
