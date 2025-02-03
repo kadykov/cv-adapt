@@ -3,7 +3,7 @@ from typing import Optional
 from fast_langdetect import detect  # type: ignore[import-untyped]
 from pydantic import BaseModel, ValidationInfo, field_validator
 
-from cv_adapter.dto.language import Language, LanguageCode
+from cv_adapter.dto.language import Language, LanguageCode, LanguageConfig
 
 from .context import get_current_language
 
@@ -45,9 +45,12 @@ class LanguageValidationMixin(BaseModel):
                 detected_text_language is not None
                 and detected_text_language != language
             ):
+                expected_config = LanguageConfig.get(language.code)
+                detected_config = LanguageConfig.get(detected_text_language.code)
                 raise ValueError(
                     f"Text language mismatch. "
-                    f"Expected {language}, but detected {detected_text_language}. "
+                    f"Expected {expected_config.name}, "
+                    f"but detected {detected_config.name}. "
                     "Please ensure the text is in the correct language."
                 )
 
@@ -64,17 +67,32 @@ class LanguageValidationMixin(BaseModel):
             if len(detected_languages) > 1 or (
                 detected_languages and list(detected_languages)[0] != language
             ):
-                raise ValueError(
-                    f"Text language mismatch. "
-                    f"Expected {language}, but detected mixed or different languages. "
-                    "Please ensure the text is in the correct language."
-                )
+                expected_config = LanguageConfig.get(language.code)
+                if detected_languages:
+                    detected_config = LanguageConfig.get(
+                        list(detected_languages)[0].code
+                    )
+                    raise ValueError(
+                        f"Text language mismatch. "
+                        f"Expected {expected_config.name}. "
+                        "Mixed languages detected "
+                        f"including {detected_config.name}. "
+                        "Please ensure the text is in the correct language."
+                    )
+                else:
+                    raise ValueError(
+                        f"Text language mismatch. "
+                        f"Expected {expected_config.name}, "
+                        f"but detected mixed languages. "
+                        "Please ensure the text is in the correct language."
+                    )
 
         except Exception as e:
             # If detection fails or language mismatch is detected, raise an error
+            expected_config = LanguageConfig.get(language.code)
             raise ValueError(
                 f"Text language mismatch. "
-                f"Expected {language}. "
+                f"Expected {expected_config.name}. "
                 "Please ensure the text is in the correct language."
             ) from e
 

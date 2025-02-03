@@ -140,7 +140,8 @@ def test_prepare_context_non_english_language(
     CV Name: {{ cv }}
     Notes: {{ notes }}
     {% if language != ENGLISH %}
-    Language Requirements: Generate in {{ language.name.title() }}
+    Language Requirements: Generate in
+        {{ LanguageConfig.get(language.code).name.title() }}
     following professional conventions.
     {% endif %}
     """
@@ -165,7 +166,10 @@ def test_prepare_context_non_english_language(
 
     # Verify the rendered context
     assert "Language: fr" in result
-    assert "Generate in French" in result
+    # Check the language requirement parts separately since they span multiple lines
+    assert "Language Requirements: Generate in" in result
+    assert "French" in result
+    assert "following professional conventions." in result
     assert "Job Title: Senior Software Engineer position" in result
     assert "CV Name: # Jean Dupont" in result
     assert "Notes: Test context for French language" in result

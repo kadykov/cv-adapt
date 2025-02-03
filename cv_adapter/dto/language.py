@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import ClassVar, Dict, Final, Optional
+from typing import ClassVar, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -15,30 +15,18 @@ class LanguageCode(str, Enum):
 
 
 class Language(BaseModel):
-    """Representation of a language with detection and metadata capabilities."""
+    """Core language identity."""
 
     model_config = ConfigDict(frozen=True)
 
     code: LanguageCode
-    name: str
-    native_name: str
-
-    # Optional metadata for language-specific rendering
-    date_format: Optional[str] = None
-    decimal_separator: Optional[str] = None
-    thousands_separator: Optional[str] = None
 
     # Class-level language registry
     _registry: ClassVar[Dict[LanguageCode, "Language"]] = {}
 
     def __init__(self, **data: object) -> None:
-        """Register the language in the class registry.
-
-        Args:
-            **data: Keyword arguments for language initialization
-        """
+        """Register the language in the class registry."""
         super().__init__(**data)
-        # Use the class method to register the language
         self.__class__.register(self)
 
     @classmethod
@@ -60,7 +48,45 @@ class Language(BaseModel):
 
     def __repr__(self) -> str:
         """Return a detailed representation of the language."""
-        return f"Language(code={self.code}, name='{self.name}')"
+        return f"Language(code={self.code})"
+
+
+class LanguageConfig(BaseModel):
+    """Language-specific configuration and metadata."""
+
+    model_config = ConfigDict(frozen=True)
+
+    code: LanguageCode
+    name: str
+    native_name: str
+    date_format: Optional[str] = None
+    decimal_separator: Optional[str] = None
+    thousands_separator: Optional[str] = None
+
+    # Class-level config registry
+    _registry: ClassVar[Dict[LanguageCode, "LanguageConfig"]] = {}
+
+    def __init__(self, **data: object) -> None:
+        """Register the language config in the class registry."""
+        super().__init__(**data)
+        self.__class__.register(self)
+
+    @classmethod
+    def register(cls, config: "LanguageConfig") -> None:
+        """Register language config in the class registry."""
+        cls._registry[config.code] = config
+
+    @classmethod
+    def get(cls, code: LanguageCode) -> "LanguageConfig":
+        """Retrieve config for a language code."""
+        config = cls._registry.get(code)
+        if config is None:
+            raise KeyError(f"Config for language {code} not found")
+        return config
+
+    def __str__(self) -> str:
+        """Return a string representation of the language config."""
+        return f"{self.name} ({self.code})"
 
 
 class LanguageLabels(BaseModel):
@@ -104,43 +130,15 @@ class LanguageLabels(BaseModel):
         return language
 
 
-# Predefined language labels
-DEFAULT_LABELS: Final[Dict[LanguageCode, Dict[str, str]]] = {
-    LanguageCode.ENGLISH: {
-        "experience": "Professional Experience",
-        "education": "Education",
-        "skills": "Skills",
-        "core_competences": "Core Competences",
-    },
-    LanguageCode.FRENCH: {
-        "experience": "Expérience Professionnelle",
-        "education": "Formation",
-        "skills": "Compétences",
-        "core_competences": "Compétences Clés",
-    },
-    LanguageCode.GERMAN: {
-        "experience": "Berufserfahrung",
-        "education": "Ausbildung",
-        "skills": "Fähigkeiten",
-        "core_competences": "Kernkompetenzen",
-    },
-    LanguageCode.SPANISH: {
-        "experience": "Experiencia Profesional",
-        "education": "Educación",
-        "skills": "Habilidades",
-        "core_competences": "Competencias Principales",
-    },
-    LanguageCode.ITALIAN: {
-        "experience": "Esperienza Professionale",
-        "education": "Istruzione",
-        "skills": "Competenze",
-        "core_competences": "Competenze Chiave",
-    },
-}
+# Initialize predefined languages
+ENGLISH = Language(code=LanguageCode.ENGLISH)
+FRENCH = Language(code=LanguageCode.FRENCH)
+GERMAN = Language(code=LanguageCode.GERMAN)
+SPANISH = Language(code=LanguageCode.SPANISH)
+ITALIAN = Language(code=LanguageCode.ITALIAN)
 
-
-# Initialize predefined language instances
-ENGLISH = Language(
+# Initialize language configurations
+ENGLISH_CONFIG = LanguageConfig(
     code=LanguageCode.ENGLISH,
     name="English",
     native_name="English",
@@ -149,7 +147,7 @@ ENGLISH = Language(
     thousands_separator=",",
 )
 
-FRENCH = Language(
+FRENCH_CONFIG = LanguageConfig(
     code=LanguageCode.FRENCH,
     name="French",
     native_name="Français",
@@ -158,7 +156,7 @@ FRENCH = Language(
     thousands_separator=" ",
 )
 
-GERMAN = Language(
+GERMAN_CONFIG = LanguageConfig(
     code=LanguageCode.GERMAN,
     name="German",
     native_name="Deutsch",
@@ -167,7 +165,7 @@ GERMAN = Language(
     thousands_separator=".",
 )
 
-SPANISH = Language(
+SPANISH_CONFIG = LanguageConfig(
     code=LanguageCode.SPANISH,
     name="Spanish",
     native_name="Español",
@@ -176,7 +174,7 @@ SPANISH = Language(
     thousands_separator=".",
 )
 
-ITALIAN = Language(
+ITALIAN_CONFIG = LanguageConfig(
     code=LanguageCode.ITALIAN,
     name="Italian",
     native_name="Italiano",
@@ -185,6 +183,43 @@ ITALIAN = Language(
     thousands_separator=".",
 )
 
-# Initialize predefined language labels
-for lang_code, labels in DEFAULT_LABELS.items():
-    LanguageLabels(language=Language.get(lang_code), **labels)
+# Initialize language labels
+ENGLISH_LABELS = LanguageLabels(
+    language=ENGLISH,
+    experience="Professional Experience",
+    education="Education",
+    skills="Skills",
+    core_competences="Core Competences",
+)
+
+FRENCH_LABELS = LanguageLabels(
+    language=FRENCH,
+    experience="Expérience Professionnelle",
+    education="Formation",
+    skills="Compétences",
+    core_competences="Compétences Clés",
+)
+
+GERMAN_LABELS = LanguageLabels(
+    language=GERMAN,
+    experience="Berufserfahrung",
+    education="Ausbildung",
+    skills="Fähigkeiten",
+    core_competences="Kernkompetenzen",
+)
+
+SPANISH_LABELS = LanguageLabels(
+    language=SPANISH,
+    experience="Experiencia Profesional",
+    education="Educación",
+    skills="Habilidades",
+    core_competences="Competencias Principales",
+)
+
+ITALIAN_LABELS = LanguageLabels(
+    language=ITALIAN,
+    experience="Esperienza Professionale",
+    education="Istruzione",
+    skills="Competenze",
+    core_competences="Competenze Chiave",
+)

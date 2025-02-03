@@ -1,6 +1,6 @@
 # Working with Language Support
 
-This guide explains how to effectively use CV Adapt's multilingual features in your applications.
+CV Adapt provides comprehensive multilingual support through a clean separation of language concerns: core identity, configuration, and labels.
 
 ## Supported Languages
 
@@ -12,161 +12,174 @@ CV Adapt currently supports the following languages:
 - 🇪🇸 Spanish (`Language.SPANISH`)
 - 🇮🇹 Italian (`Language.ITALIAN`)
 
-## Setting the Language
+## Language Components
 
-### 1. Application-wide Default
+### 1. Core Language Identity
 
-Set a default language for all operations when initializing the application:
+The Language class represents just the essential identity of a language:
+
+```python
+from cv_adapter.dto.language import Language, LanguageCode
+
+# Create a language instance
+language = Language(code=LanguageCode.ENGLISH)
+
+# Or use predefined instances
+from cv_adapter.dto.language import ENGLISH, FRENCH, GERMAN
+
+# Languages serialize to their code in JSON
+print(language)  # "en"
+```
+
+### 2. Language Configuration
+
+LanguageConfig handles language-specific formatting and display:
+
+```python
+from cv_adapter.dto.language import LanguageConfig
+
+# Get configuration for a language
+config = LanguageConfig.get(language.code)
+
+# Access configuration properties
+print(config.name)         # "English"
+print(config.native_name)  # "English"
+print(config.date_format)  # "%m/%d/%Y"
+```
+
+### 3. Language Labels
+
+LanguageLabels provides localized text for CV sections:
+
+```python
+from cv_adapter.dto.language import LanguageLabels
+
+# Get labels for a language
+labels = LanguageLabels.get(language)
+
+# Access localized section names
+print(labels.experience)      # "Professional Experience"
+print(labels.education)       # "Education"
+print(labels.skills)         # "Skills"
+print(labels.core_competences)  # "Core Competences"
+```
+
+## Common Tasks
+
+### Setting the Default Language
+
+Set a default language when initializing the application:
 
 ```python
 from cv_adapter.core.application import CVAdapterApplication
-from cv_adapter.models.language import Language
+from cv_adapter.dto.language import FRENCH
 
 # Create application with French as default
-app = CVAdapterApplication(language=Language.FRENCH)
+app = CVAdapterApplication(language=FRENCH)
 ```
 
-### 2. Per-Operation Override
+### Language Context Usage
 
-Override the language for specific CV generation:
+Use the language context manager for localized operations:
 
 ```python
-# Generate a CV in German
-cv = app.generate_cv(
-    cv_text=cv_text,
-    job_description=job_desc,
-    personal_info=personal_info,
-    language=Language.GERMAN
-)
+from cv_adapter.models.context import LanguageContext
+from cv_adapter.dto.language import GERMAN
+
+with LanguageContext(GERMAN):
+    # All operations here use German formatting and labels
+    cv = generate_cv(data)
+    rendered = render_cv(cv)
 ```
 
-## Language Detection
+### Language Validation
 
-CV Adapt includes built-in language detection to validate input text:
+Validate that text matches the expected language:
 
 ```python
 from cv_adapter.models.language import validate_text_language
+from cv_adapter.dto.language import FRENCH
 
-# Validate text language
-is_valid = validate_text_language(text, Language.FRENCH)
-```
-
-## Language-Specific Formatting
-
-### Date Formatting
-
-Each language has its own date formatting conventions:
-
-```python
-from cv_adapter.models.language import Language
-from cv_adapter.models.context import LanguageContext
-
-with LanguageContext(Language.FRENCH):
-    # Dates will be formatted according to French conventions
-    cv = app.generate_cv(...)
-```
-
-### Number Formatting
-
-Numbers are automatically formatted according to the language's conventions:
-
-- English: 1,234.56
-- French: 1 234,56
-- German: 1.234,56
-
-## Working with Templates
-
-### Language-Specific Templates
-
-Create language-specific templates by using the language context:
-
-```python
-from cv_adapter.renderers.jinja import JinjaRenderer
-from cv_adapter.models.context import LanguageContext
-
-renderer = JinjaRenderer()
-
-with LanguageContext(Language.GERMAN):
-    # Templates will use German-specific formatting
-    result = renderer.render(cv_data)
-```
-
-### Custom Template Logic
-
-Add language-specific logic in templates:
-
-```jinja
-{% if language == Language.FRENCH %}
-    {{ format_date(date, 'fr') }}
-{% else %}
-    {{ format_date(date, 'en') }}
-{% endif %}
+text = "Bonjour, je suis un développeur"
+is_french = validate_text_language(text, FRENCH)
 ```
 
 ## Best Practices
 
-1. **Set Default Language Early**
+1. **Use Registry Methods**
    ```python
-   app = CVAdapterApplication(language=Language.ENGLISH)
+   # Good: Use registry methods
+   language = Language.get(LanguageCode.ENGLISH)
+   config = LanguageConfig.get(language.code)
+   labels = LanguageLabels.get(language)
+
+   # Avoid: Direct dictionary access
+   config = language_configs[language.code]  # Not recommended
    ```
 
-2. **Use Language Context Manager**
+2. **Proper Language Context**
    ```python
-   with LanguageContext(Language.FRENCH):
-       # All operations here use French
-       cv = app.generate_cv(...)
+   # Good: Use context manager
+   with LanguageContext(language):
+       process_cv()
+
+   # Avoid: Manual context management
+   set_language(language)  # Not recommended
+   try:
+       process_cv()
+   finally:
+       reset_language()
    ```
 
-3. **Validate Input Text**
+3. **Type Safety**
    ```python
-   if not validate_text_language(cv_text, language):
-       raise ValueError("CV text language doesn't match specified language")
+   # Good: Use LanguageCode enum
+   language = Language(code=LanguageCode.ENGLISH)
+
+   # Avoid: Raw strings
+   language = Language(code="en")  # Not recommended
    ```
 
-4. **Handle Language-Specific Content**
-   ```python
-   def get_greeting(language: Language) -> str:
-       greetings = {
-           Language.ENGLISH: "Dear",
-           Language.FRENCH: "Cher",
-           Language.GERMAN: "Sehr geehrte",
-           Language.SPANISH: "Estimado",
-           Language.ITALIAN: "Gentile"
-       }
-       return greetings.get(language, "Dear")
-   ```
+## Common Issues
 
-## Common Issues and Solutions
-
-### Issue: Mixed Language Content
+### Mixed Language Content
 
 **Problem**: CV content contains text in multiple languages.
 
-**Solution**:
+**Solution**: Validate each section independently:
+
 ```python
-def validate_cv_content(cv_text: str, language: Language) -> bool:
-    # Split text into sections and validate each
+def validate_cv_sections(cv_text: str, language: Language) -> bool:
     sections = cv_text.split('\n\n')
-    return all(validate_text_language(section, language)
-              for section in sections if section.strip())
+    return all(
+        validate_text_language(section.strip(), language)
+        for section in sections
+        if section.strip()
+    )
 ```
 
-### Issue: Missing Language-Specific Templates
+### Format Localization
 
-**Problem**: Template not found for specific language.
+**Problem**: Dates and numbers need language-specific formatting.
 
-**Solution**:
+**Solution**: Use LanguageConfig for formatting:
+
 ```python
-def get_template_path(language: Language) -> str:
-    base_path = "templates/cv"
-    lang_specific = f"{base_path}_{language.value}.j2"
-    default = f"{base_path}_default.j2"
+def format_date(date: date, language: Language) -> str:
+    config = LanguageConfig.get(language.code)
+    return date.strftime(config.date_format)
 
-    return lang_specific if os.path.exists(lang_specific) else default
+def format_number(number: float, language: Language) -> str:
+    config = LanguageConfig.get(language.code)
+    return format_decimal(
+        number,
+        decimal_sep=config.decimal_separator,
+        grouping_sep=config.thousands_separator
+    )
 ```
 
-## Next Steps
+## Related Documentation
 
-- Learn about [Custom Renderers](custom-renderers.md) to create language-aware output formats
-- Explore the [API Reference](../reference/api/models.md#language-models) for detailed language model documentation
-- Read about [Multilingual System Design](../explanation/multilingual-system.md) to understand the architecture
+- [Multilingual System Design](../explanation/multilingual-system.md) for architecture details
+- [API Reference](../reference/api/models.md#language-models) for detailed language model documentation
+- [Custom Renderers](custom-renderers.md) for creating language-aware output formats
