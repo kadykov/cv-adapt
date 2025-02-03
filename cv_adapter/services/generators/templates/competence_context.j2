@@ -1,6 +1,6 @@
 {% if language != ENGLISH %}
 Language Requirements:
-Generate all competences in {{ language.name.title() }}, following professional terminology conventions.
+Generate all competences in {{ LanguageConfig.get(language.code).name.title() }}, following professional terminology conventions.
 {% endif %}
 
 Objective: Identify 4-6 core competences that best match the job requirements.

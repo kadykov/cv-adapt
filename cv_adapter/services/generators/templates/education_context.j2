@@ -15,7 +15,7 @@ Guidelines for generating education section:
 {% if language != ENGLISH %}
 Language Requirements:
 
-Generate the education section in {{ language.name.title() }}, following academic terminology and conventions for that language.
+Generate the education section in {{ LanguageConfig.get(language.code).name.title() }}, following academic terminology and conventions for that language.
 {% endif %}
 
 CV:

@@ -141,8 +141,8 @@ async def test_multilanguage_generation(
     assert cv_response.status_code == 200
     cv_result = cv_response.json()
     assert (
-        cv_result["language"] == "fr"
-    )  # JSONRenderer converts Language object to code string
+        cv_result["language"]["code"] == "fr"
+    )  # Language objects serialize to {"code": "..."} format
 
     # Validate French CV response against JSON schema
     json_renderer.validate_json(cv_result)

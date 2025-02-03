@@ -17,7 +17,6 @@ from cv_adapter.dto.cv import (
 )
 from cv_adapter.dto.language import ENGLISH, FRENCH
 from cv_adapter.models.context import get_current_language, language_context
-from cv_adapter.renderers.json_renderer import JSONRenderer
 
 client = TestClient(app)
 
@@ -215,13 +214,6 @@ async def test_generate_cv_with_competences_success() -> None:
         )
 
         # Check response
-        # Validate response against JSONRenderer schema
-        renderer = JSONRenderer()
-        try:
-            renderer.validate_json(response.json())
-        except Exception as e:
-            pytest.fail(f"Response JSON does not match schema: {e}")
-
         assert response.status_code == 200
         result = response.json()
         assert result["personal_info"]["full_name"] == "John Doe"

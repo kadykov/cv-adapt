@@ -17,7 +17,7 @@ Guidelines for generating experiences:
 {% if language != ENGLISH %}
 Language Requirements:
 
-Generate all content in {{ language.name.title() }}, following standard
+Generate all content in {{ LanguageConfig.get(language.code).name.title() }}, following standard
 CV conventions for that language.
 {% endif %}
 

@@ -15,7 +15,7 @@ Guidelines for generating skills:
 {% if language != ENGLISH %}
 Language Requirements:
 
-Generate skills in {{ language.name.title() }}, following professional skill terminology and categorization conventions for that language.
+Generate skills in {{ LanguageConfig.get(language.code).name.title() }}, following professional skill terminology and categorization conventions for that language.
 {% endif %}
 
 CV:

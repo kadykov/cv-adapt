@@ -78,3 +78,17 @@ class JSONRenderer(BaseRenderer[CVDTO]):
             return self.load_from_string(file_path.read_text(encoding="utf-8"))
         except Exception as e:
             raise RendererError(f"Error loading CV from JSON file: {e}")
+
+    def validate_json(self, data: dict) -> None:
+        """Validate JSON data against CV DTO schema.
+
+        Args:
+            data: JSON data to validate
+
+        Raises:
+            RendererError: If validation fails
+        """
+        try:
+            CVDTO.model_validate(data)
+        except Exception as e:
+            raise RendererError(f"Error validating CV JSON: {e}")

@@ -2,7 +2,7 @@ Based on the CV and job description below, create a concise and impactful CV sum
 
 {% if language != ENGLISH %}
 Language Requirements:
-Generate the summary in {{ language.name.title() }}, following professional communication conventions for that language.
+Generate the summary in {{ LanguageConfig.get(language.code).name.title() }}, following professional communication conventions for that language.
 {% endif %}
 
 CV:

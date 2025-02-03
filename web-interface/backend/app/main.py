@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
-from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
+from cv_adapter.dto.language import ENGLISH, Language, LanguageCode, LanguageConfig
 from cv_adapter.models.context import language_context
 from cv_adapter.renderers.json_renderer import JSONRenderer
 
@@ -37,7 +37,8 @@ async def get_language(language_code: str = Query(default="en")) -> Language:
         # Validate language code before trying to get Language instance
         lang_code = LanguageCode(language_code)
         language = Language.get(lang_code)
-        logger.debug(f"Using language: {language.code} ({language.name})")
+        config = LanguageConfig.get(language.code)
+        logger.debug(f"Using language: {language.code} ({config.name})")
         return language
     except ValueError:
         raise HTTPException(
