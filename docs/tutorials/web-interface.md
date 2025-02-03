@@ -60,6 +60,76 @@ const competences = await generateCompetences({
    - Test TypeScript interface compliance
    - Verify type definitions match actual use
 
+3. Component Tests:
+   - Located in `web-interface/frontend/src/components/__tests__/`
+   - Test proper rendering of data with varying completeness
+   - Verify handling of optional fields
+   - Test component functionality (modals, downloads, etc.)
+   - Test accessibility and user interactions
+
+### Preventing Runtime Issues
+
+To avoid runtime errors and ensure robust component behavior:
+
+1. Type Safety:
+   - Use generated TypeScript types from backend models
+   - Add type guards for optional fields
+   - Use proper TypeScript interfaces for component props
+   - Avoid using `any` type
+
+2. Component Testing:
+   - Test with both minimal and complete data sets
+   - Verify rendering of optional fields
+   - Test edge cases like duplicate content
+   - Use proper DOM testing patterns with @testing-library/react
+   - Test error boundaries and error handling
+
+3. Testing Best Practices:
+   - Use semantic queries (getByRole, getByLabelText)
+   - Test user interactions with fireEvent
+   - Verify accessibility patterns
+   - Mock external dependencies (URLs, file downloads)
+   - Use proper cleanup in tests
+
+Example Component Test:
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import YourComponent from './YourComponent';
+import { GeneratedType } from '../types/api';
+
+describe('YourComponent', () => {
+  it('should handle optional fields correctly', () => {
+    const minimalData: GeneratedType = {
+      required_field: 'value',
+      // ... minimal required fields
+    };
+
+    render(<YourComponent data={minimalData} />);
+
+    // Test required fields
+    expect(screen.getByText('value')).toBeInTheDocument();
+
+    // Test optional fields aren't rendered
+    expect(screen.queryByText('optional')).not.toBeInTheDocument();
+  });
+
+  it('should render all fields when provided', () => {
+    const fullData: GeneratedType = {
+      required_field: 'value',
+      optional_field: 'optional',
+      // ... all possible fields
+    };
+
+    render(<YourComponent data={fullData} />);
+
+    // Test all fields are rendered
+    expect(screen.getByText('value')).toBeInTheDocument();
+    expect(screen.getByText('optional')).toBeInTheDocument();
+  });
+});
+```
+
 ### Backend Tests
 
 Integration tests for the API endpoints are located in `web-interface/backend/tests/integration/test_cv_generation.py`.
