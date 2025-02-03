@@ -135,7 +135,7 @@ export type Url6 = string | null;
 export type ApprovedCompetences = string[];
 export type Notes1 = string | null;
 
-export interface Tmpa6Ccg5Zm {
+export interface TmpcRv9Ore {
   ContactDTO: ContactDTO;
   PersonalInfoDTO: PersonalInfoDTO;
   CoreCompetenceDTO: CoreCompetenceDTO;

@@ -16,10 +16,10 @@ We use TypeScript in the frontend and maintain type safety between frontend and 
 
 ```bash
 # Generate TypeScript types from backend models
-python web-interface/backend/scripts/generate_typescript_types.py
+just generate-types
 ```
 
-This script generates TypeScript interfaces from our Pydantic models, ensuring type consistency between frontend and backend.
+This command generates TypeScript interfaces from our Pydantic models, ensuring type consistency between frontend and backend.
 
 ### Runtime Validation
 
@@ -66,23 +66,42 @@ Integration tests for the API endpoints are located in `web-interface/backend/te
 
 ## Development
 
+### Development Commands
+
+We use `just` for common development tasks. Here are the key commands:
+
+1. Type Generation and Testing:
+   ```bash
+   # Generate TypeScript types from Pydantic models
+   just generate-types
+
+   # Run backend tests
+   just test-backend
+
+   # Run frontend tests
+   just test-frontend
+   ```
+
+2. Development Servers:
+   ```bash
+   # Start both frontend and backend
+   just serve-web
+
+   # Or start them separately:
+   just serve-frontend  # Starts React dev server
+   just serve-backend   # Starts FastAPI server
+   ```
+
 ### Setting Up the Development Environment
 
-1. Install frontend dependencies:
+1. Install all dependencies:
    ```bash
-   cd web-interface/frontend
-   npm install
+   just install
    ```
 
-2. Start the frontend development server:
+2. Start the development servers:
    ```bash
-   npm start
-   ```
-
-3. Start the backend server:
-   ```bash
-   cd web-interface/backend
-   uvicorn app.main:app --reload
+   just serve-web
    ```
 
 ### Making Changes
@@ -90,10 +109,14 @@ Integration tests for the API endpoints are located in `web-interface/backend/te
 When making changes to the API:
 
 1. Update the Pydantic models in the backend
-2. Regenerate TypeScript types
+2. Regenerate TypeScript types with `just generate-types`
 3. Update validation schemas if needed
 4. Update tests to cover new functionality
-5. Run the test suite to ensure type safety
+5. Run the test suites to ensure type safety:
+   ```bash
+   just test-backend  # Run backend tests
+   just test-frontend # Run frontend tests
+   ```
 
 ### Best Practices
 
@@ -111,7 +134,7 @@ If you encounter type mismatch errors:
 
 1. Check that TypeScript types are up to date:
    ```bash
-   python web-interface/backend/scripts/generate_typescript_types.py
+   just generate-types
    ```
 
 2. Verify runtime validation with Zod schemas

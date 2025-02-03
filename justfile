@@ -83,3 +83,15 @@ serve-web-debug *ARGS='':
     just serve-backend-debug {{ARGS}} & \
     just serve-frontend & \
     wait
+
+# Generate TypeScript types from Pydantic models
+generate-types:
+    cd web-interface/backend && python scripts/generate_typescript_types.py
+
+# Run backend tests
+test-backend *ARGS='':
+    cd web-interface/backend && uv run pytest tests/ {{ARGS}}
+
+# Run frontend validation tests
+test-frontend:
+    cd web-interface/frontend && npm test
