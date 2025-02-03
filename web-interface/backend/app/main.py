@@ -94,7 +94,8 @@ async def generate_competences(
 ) -> dict[str, list[str]]:
     logger.debug(f"Generating competences with language: {language.code}")
     logger.debug(
-        f"Request data: CV length={len(data.cv_text)}, Job desc length={len(data.job_description)}"
+        f"Request data: CV length={len(data.cv_text)}, "
+        f"Job desc length={len(data.job_description)}"
     )
     try:
         with language_context(language):
@@ -119,7 +120,8 @@ async def generate_cv(
 ) -> Response:
     logger.debug(f"Generating CV with language: {language.code}")
     logger.debug(
-        f"Request data: CV length={len(request.cv_text)}, Job desc length={len(request.job_description)}"
+        f"Request data: CV length={len(request.cv_text)}, "
+        f"Job desc length={len(request.job_description)}"
     )
     logger.debug(f"Approved competences: {request.approved_competences}")
     try:
