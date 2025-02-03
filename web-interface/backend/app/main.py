@@ -1,4 +1,3 @@
-import json
 import sys
 from typing import List, Optional
 
@@ -9,9 +8,8 @@ from pydantic import BaseModel
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
-from cv_adapter.dto.language import ENGLISH, Language, LanguageCode, LanguageConfig
+from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
-from cv_adapter.renderers.json_renderer import JSONRenderer
 
 from . import logger
 
@@ -34,11 +32,10 @@ async def get_language(language_code: str = Query(default="en")) -> Language:
         if not language_code:
             logger.debug("No language code provided, defaulting to English")
             return ENGLISH
-        # Validate language code before trying to get Language instance
+        # Validate language code and get registered language instance
         lang_code = LanguageCode(language_code)
         language = Language.get(lang_code)
-        config = LanguageConfig.get(language.code)
-        logger.debug(f"Using language: {language.code} ({config.name})")
+        logger.debug(f"Using language: {language.code}")
         return language
     except ValueError:
         raise HTTPException(
@@ -187,10 +184,8 @@ async def generate_cv(
         logger.debug(f"Number of education entries: {len(cv.education)}")
         logger.debug(f"Number of skills: {len(cv.skills)}")
 
-        # Use JSONRenderer to serialize CV DTO
-        renderer = JSONRenderer()
-        json_str = renderer.render_to_string(cv)
-        return JSONResponse(content=json.loads(json_str))
+        # Use Pydantic's model_dump with datetime serialization
+        return JSONResponse(content=cv.model_dump(mode="json"))
     except Exception as e:
         logger.error(f"Error generating CV: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
