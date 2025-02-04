@@ -8,62 +8,68 @@ interface CVModalProps {
 }
 
 const renderExperience = (exp: ExperienceDTO) => (
-  <div className="experience-item">
-    <h4>{exp.position}</h4>
-    <p><strong>Company:</strong> {exp.company.name}</p>
-    <p>
-      <strong>Period:</strong> {exp.start_date}
-      {exp.end_date ? ` - ${exp.end_date}` : ' - Present'}
-    </p>
-    {exp.company.location && (
-      <p><strong>Location:</strong> {exp.company.location}</p>
-    )}
-    {exp.description && <p>{exp.description}</p>}
-    {exp.technologies && exp.technologies.length > 0 && (
-      <>
-        <strong>Technologies:</strong>
-        <ul>
-          {exp.technologies.map((tech: string, i: number) => (
-            <li key={i}>{tech}</li>
-          ))}
-        </ul>
-      </>
-    )}
+  <div className="card bg-base-100 shadow-sm">
+    <div className="card-body">
+      <h4 className="card-title text-lg">{exp.position}</h4>
+      <p className="font-medium">{exp.company.name}</p>
+      <p className="text-sm opacity-75">
+        {exp.start_date}
+        {exp.end_date ? ` - ${exp.end_date}` : ' - Present'}
+      </p>
+      {exp.company.location && (
+        <p className="text-sm">{exp.company.location}</p>
+      )}
+      {exp.description && <p className="mt-2">{exp.description}</p>}
+      {exp.technologies && exp.technologies.length > 0 && (
+        <div className="mt-2">
+          <p className="font-medium mb-1">Technologies:</p>
+          <div className="flex flex-wrap gap-2">
+            {exp.technologies.map((tech: string, i: number) => (
+              <span key={i} className="badge badge-outline">{tech}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   </div>
 );
 
 const renderEducation = (edu: EducationDTO) => (
-  <div className="education-item">
-    <h4>{edu.degree}</h4>
-    <p><strong>Institution:</strong> {edu.university.name}</p>
-    <p>
-      <strong>Period:</strong> {edu.start_date}
-      {edu.end_date ? ` - ${edu.end_date}` : ' - Present'}
-    </p>
-    {edu.university.location && (
-      <p><strong>Location:</strong> {edu.university.location}</p>
-    )}
-    {edu.description && <p>{edu.description}</p>}
+  <div className="card bg-base-100 shadow-sm">
+    <div className="card-body">
+      <h4 className="card-title text-lg">{edu.degree}</h4>
+      <p className="font-medium">{edu.university.name}</p>
+      <p className="text-sm opacity-75">
+        {edu.start_date}
+        {edu.end_date ? ` - ${edu.end_date}` : ' - Present'}
+      </p>
+      {edu.university.location && (
+        <p className="text-sm">{edu.university.location}</p>
+      )}
+      {edu.description && <p className="mt-2">{edu.description}</p>}
+    </div>
   </div>
 );
 
 const renderSkillGroup = (group: SkillGroupDTO) => (
-  <div className="skill-category">
-    <h4>{group.name}</h4>
-    <ul>
-      {group.skills.map((skill, i: number) => (
-        <li key={i}>{skill.text}</li>
-      ))}
-    </ul>
+  <div className="card bg-base-100 shadow-sm">
+    <div className="card-body">
+      <h4 className="card-title text-lg">{group.name}</h4>
+      <div className="flex flex-wrap gap-2">
+        {group.skills.map((skill, i: number) => (
+          <span key={i} className="badge badge-primary">{skill.text}</span>
+        ))}
+      </div>
+    </div>
   </div>
 );
 
 const renderCoreCompetences = (competences: CoreCompetenceDTO[]) => (
-  <ul>
+  <div className="flex flex-wrap gap-2">
     {competences.map((competence, index: number) => (
-      <li key={index}>{competence.text}</li>
+      <span key={index} className="badge badge-lg">{competence.text}</span>
     ))}
-  </ul>
+  </div>
 );
 
 function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
@@ -88,15 +94,15 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Generated CV</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+    <div className="modal modal-open">
+      <div className="modal-box w-11/12 max-w-5xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Generated CV</h2>
+          <button className="btn btn-sm btn-circle" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-body">
-          <div className="cv-preview">
-            <h3>Personal Information</h3>
+        <div className="overflow-y-auto max-h-[70vh]">
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
             <p><strong>Name:</strong> {cvData.personal_info.full_name}</p>
             {cvData.personal_info.email && (
               <p><strong>Email:</strong> {cvData.personal_info.email.value}</p>
@@ -114,21 +120,21 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
               <p><strong>GitHub:</strong> {cvData.personal_info.github.value}</p>
             )}
 
-            <h3>Title</h3>
+            <h3 className="text-xl font-semibold mt-6 mb-2">Title</h3>
             <p>{cvData.title.text}</p>
 
-            <h3>Core Competences</h3>
+            <h3 className="text-xl font-semibold mt-6 mb-2">Core Competences</h3>
             {renderCoreCompetences(cvData.core_competences)}
 
             {cvData.summary && (
               <>
-                <h3>Summary</h3>
+                <h3 className="text-xl font-semibold mt-6 mb-2">Summary</h3>
                 <p>{cvData.summary.text}</p>
               </>
             )}
 
-            <h3>Experience</h3>
-            <div className="experiences">
+            <h3 className="text-xl font-semibold mt-6 mb-2">Experience</h3>
+            <div className="space-y-4">
               {cvData.experiences.map((exp: ExperienceDTO, index: number) => (
                 <div key={index}>
                   {renderExperience(exp)}
@@ -136,8 +142,8 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
               ))}
             </div>
 
-            <h3>Education</h3>
-            <div className="education">
+            <h3 className="text-xl font-semibold mt-6 mb-2">Education</h3>
+            <div className="space-y-4">
               {cvData.education.map((edu: EducationDTO, index: number) => (
                 <div key={index}>
                   {renderEducation(edu)}
@@ -145,8 +151,8 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
               ))}
             </div>
 
-            <h3>Skills</h3>
-            <div className="skills">
+            <h3 className="text-xl font-semibold mt-6 mb-2">Skills</h3>
+            <div className="space-y-4">
               {cvData.skills.map((group: SkillGroupDTO, index: number) => (
                 <div key={index}>
                   {renderSkillGroup(group)}
@@ -155,11 +161,11 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
             </div>
           </div>
         </div>
-        <div className="modal-footer">
-          <button className="download-button" onClick={handleDownload}>
+        <div className="modal-action">
+          <button className="btn btn-primary" onClick={handleDownload}>
             Download CV
           </button>
-          <button className="close-button-secondary" onClick={onClose}>
+          <button className="btn" onClick={onClose}>
             Close
           </button>
         </div>

@@ -75,7 +75,7 @@ describe('CVModal Component', () => {
 
     render(<CVModal isOpen={true} onClose={onCloseMock} cvData={mockCVData} />);
 
-    const closeButton = screen.getByRole('button', { name: '×' });
+    const closeButton = screen.getByRole('button', { name: '✕' });
     await user.click(closeButton);
 
     expect(onCloseMock).toHaveBeenCalled();

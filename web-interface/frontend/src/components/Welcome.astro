@@ -3,17 +3,17 @@ import astroLogo from '../assets/astro.svg';
 import background from '../assets/background.svg';
 ---
 
-<div id="container">
-	<img id="background" src={background.src} alt="" fetchpriority="high" />
-	<main>
-		<section id="hero">
+<div class="h-full font-sans">
+<img class="fixed top-0 left-0 w-full h-full -z-10 blur-[100px]" src={background.src} alt="" fetchpriority="high" />
+<main class="h-full flex justify-center">
+<section class="flex flex-col items-start justify-center p-4">
 			<a href="https://astro.build"
 				><img src={astroLogo.src} width="115" height="48" alt="Astro Homepage" /></a
 			>
-			<h1>
-				To get started, open the <code><pre>src/pages</pre></code> directory in your project.
-			</h1>
-			<section id="links">
+<h1 class="text-[22px] mt-1">
+To get started, open the <code><pre>src/pages</pre></code> directory in your project.
+</h1>
+<section class="flex gap-4">
 				<a class="button" href="https://docs.astro.build">Read our docs</a>
 				<a href="https://astro.build/chat"
 					>Join our Discord <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36"

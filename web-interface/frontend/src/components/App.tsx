@@ -136,132 +136,161 @@ export default function App() {
 
   return (
     <div>
-      <form onSubmit={handleGenerateCompetences} className="form-container">
-        <div className="form-section">
-          <h3>Document Information</h3>
-          <div className="form-group">
-            <label htmlFor="language">Language</label>
-            <select
-              id="language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="language-select"
-            >
-              <option value="en">English</option>
-              <option value="de">German</option>
-              <option value="es">Spanish</option>
-            </select>
-          </div>
+      <form onSubmit={handleGenerateCompetences} className="max-w-3xl mx-auto p-4">
+        <div className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h3 className="card-title">Document Information</h3>
+            <div className="form-control w-full">
+              <label className="label" htmlFor="language">
+                <span className="label-text">Language</span>
+              </label>
+              <select
+                id="language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="select select-bordered w-full"
+              >
+                <option value="en">English</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+              </select>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="cvText">CV Text</label>
-            <textarea
-              id="cvText"
-              name="cvText"
-              placeholder="Paste your CV text here..."
-              required
-            />
-          </div>
+            <div className="form-control w-full">
+              <label className="label" htmlFor="cvText">
+                <span className="label-text">CV Text</span>
+              </label>
+              <textarea
+                id="cvText"
+                name="cvText"
+                placeholder="Paste your CV text here..."
+                required
+                className="textarea textarea-bordered min-h-[120px]"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="jobDescription">Job Description</label>
-            <textarea
-              id="jobDescription"
-              name="jobDescription"
-              placeholder="Paste the job description here..."
-              required
-            />
-          </div>
+            <div className="form-control w-full">
+              <label className="label" htmlFor="jobDescription">
+                <span className="label-text">Job Description</span>
+              </label>
+              <textarea
+                id="jobDescription"
+                name="jobDescription"
+                placeholder="Paste the job description here..."
+                required
+                className="textarea textarea-bordered min-h-[120px]"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="notes">Additional Notes (Optional)</label>
-            <textarea
-              id="notes"
-              name="notes"
-              placeholder="Any additional notes..."
-            />
-          </div>
+            <div className="form-control w-full">
+              <label className="label" htmlFor="notes">
+                <span className="label-text">Additional Notes (Optional)</span>
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                placeholder="Any additional notes..."
+                className="textarea textarea-bordered"
+              />
+            </div>
 
-          <div className="form-group">
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Generating...' : 'Generate Core Competences'}
-            </button>
+            <div className="form-control w-full mt-4">
+              <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
+                {isLoading ? 'Generating...' : 'Generate Core Competences'}
+              </button>
+            </div>
           </div>
         </div>
 
         {generatedCompetences.length > 0 && (
-          <div className="form-section">
-            <h3>Personal Information</h3>
-            <div className="form-group">
-              <label htmlFor="full_name">Full Name*</label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                value={personalInfo.full_name}
-                onChange={handlePersonalInfoChange}
-                required
-              />
-            </div>
+          <div className="card bg-base-100 shadow-xl mb-8">
+            <div className="card-body">
+              <h3 className="card-title">Personal Information</h3>
+              <div className="form-control w-full">
+                <label className="label" htmlFor="full_name">
+                  <span className="label-text">Full Name*</span>
+                </label>
+                <input
+                  type="text"
+                  id="full_name"
+                  name="full_name"
+                  value={personalInfo.full_name}
+                  onChange={handlePersonalInfoChange}
+                  required
+                  className="input input-bordered w-full"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Email*</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={personalInfo.email.value}
-                onChange={handlePersonalInfoChange}
-                required
-              />
-            </div>
+              <div className="form-control w-full">
+                <label className="label" htmlFor="email">
+                  <span className="label-text">Email*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={personalInfo.email.value}
+                  onChange={handlePersonalInfoChange}
+                  required
+                  className="input input-bordered w-full"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="phone">Phone</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={personalInfo.phone?.value || ''}
-                onChange={handlePersonalInfoChange}
-              />
-            </div>
+              <div className="form-control w-full">
+                <label className="label" htmlFor="phone">
+                  <span className="label-text">Phone</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={personalInfo.phone?.value || ''}
+                  onChange={handlePersonalInfoChange}
+                  className="input input-bordered w-full"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="location">Location</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={personalInfo.location?.value || ''}
-                onChange={handlePersonalInfoChange}
-              />
-            </div>
+              <div className="form-control w-full">
+                <label className="label" htmlFor="location">
+                  <span className="label-text">Location</span>
+                </label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={personalInfo.location?.value || ''}
+                  onChange={handlePersonalInfoChange}
+                  className="input input-bordered w-full"
+                />
+              </div>
 
-            <h3>Select Core Competences</h3>
-            <div className="competences-list">
-              {generatedCompetences.map((competence, index) => (
-                <div key={index} className="competence-item">
-                  <label>
+              <h3 className="card-title mt-6">Select Core Competences</h3>
+              <div className="border rounded-lg p-4 max-h-[300px] overflow-y-auto bg-base-200">
+                {generatedCompetences.map((competence, index) => (
+                <div key={index} className="form-control">
+                  <label className="label cursor-pointer justify-start gap-3">
                     <input
                       type="checkbox"
+                      className="checkbox"
                       checked={selectedCompetences.includes(competence)}
                       onChange={() => handleCompetenceToggle(competence)}
                     />
-                    {competence}
+                    <span className="label-text">{competence}</span>
                   </label>
                 </div>
               ))}
             </div>
 
-            <div className="form-group">
-              <button
-                type="button"
-                onClick={handleGenerateCV}
-                disabled={isLoading || selectedCompetences.length === 0}
-              >
-                {isLoading ? 'Generating...' : 'Generate CV'}
-              </button>
+              <div className="form-control w-full mt-4">
+                <button
+                  type="button"
+                  onClick={handleGenerateCV}
+                  className="btn btn-primary w-full"
+                  disabled={isLoading || selectedCompetences.length === 0}
+                >
+                  {isLoading ? 'Generating...' : 'Generate CV'}
+                </button>
+              </div>
             </div>
           </div>
         )}

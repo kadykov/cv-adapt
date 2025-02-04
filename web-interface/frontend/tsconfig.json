@@ -6,7 +6,8 @@
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [

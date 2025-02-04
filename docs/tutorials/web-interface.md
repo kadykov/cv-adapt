@@ -17,6 +17,22 @@ We use [Astro](https://astro.build) as our frontend framework with React integra
 3. Built-in performance optimizations
 4. Seamless React component integration
 
+### Styling
+
+We use [Tailwind CSS](https://tailwindcss.com) with [Daisy UI](https://daisyui.com) for styling:
+
+1. Tailwind CSS provides:
+   - Utility-first CSS framework
+   - Built-in responsive design utilities
+   - JIT (Just-In-Time) compilation for optimal CSS bundle size
+   - Easy customization through tailwind.config.mjs
+
+2. Daisy UI adds:
+   - Pre-built components based on Tailwind
+   - Consistent design system
+   - Theme support
+   - Semantic component classes
+
 ### React Components in Astro
 
 React components are used for interactive parts of the application and are marked with client directives:
@@ -212,6 +228,8 @@ frontend/
 │   ├── api/           # API client functions
 │   ├── types/         # TypeScript interfaces
 │   └── validation/    # Zod schemas
+├── tailwind.config.mjs # Tailwind & DaisyUI configuration
+└── postcss.config.mjs  # PostCSS configuration for Tailwind
 ```
 
 ### Making Changes
