@@ -26,20 +26,15 @@ export default function App() {
 
     if (name === 'full_name') {
       setPersonalInfo(prev => ({
-        full_name: value,
-        email: prev.email,
-        phone: prev.phone,
-        location: prev.location
+        ...prev,
+        full_name: value
       }));
     } else if (['email', 'phone', 'location'].includes(name)) {
       const field = name as 'email' | 'phone' | 'location';
       setPersonalInfo(prev => ({
-        full_name: prev.full_name,
-        email: prev.email,
-        phone: prev.phone,
-        location: prev.location,
+        ...prev,
         [field]: {
-          value: name === 'email' ? value : prev[field]?.value || '',
+          value: value,
           type: field
         }
       }));

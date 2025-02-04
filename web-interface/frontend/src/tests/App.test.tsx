@@ -109,6 +109,90 @@ describe('App Component', () => {
     alertMock.mockRestore();
   });
 
+  it('handles optional personal info fields correctly', async () => {
+    const user = userEvent.setup();
+    const mockGenerateCompetences = vi.mocked(generateCompetences);
+    const mockGenerateCV = vi.mocked(generateCV);
+
+    mockGenerateCompetences.mockResolvedValueOnce({ competences: mockCompetences });
+    mockGenerateCV.mockResolvedValueOnce(mockCVData);
+
+    render(<App />);
+
+    // Generate competences first to show the personal info form
+    await user.type(screen.getByRole('textbox', { name: /cv text/i }), 'My CV content');
+    await user.type(screen.getByRole('textbox', { name: /job description/i }), 'Job description content');
+    await user.click(screen.getByRole('button', { name: /generate core competences/i }));
+
+    // Wait for personal info form to appear
+    await waitFor(() => {
+      expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+    });
+
+    // Fill required fields
+    await user.type(screen.getByLabelText(/full name/i), 'John Doe');
+    await user.type(screen.getByLabelText(/email/i), 'john@example.com');
+
+    // Fill optional fields
+    await user.type(screen.getByLabelText(/phone/i), '+1234567890');
+    await user.type(screen.getByLabelText(/location/i), 'New York');
+
+    // Select a competence
+    const competenceCheckboxes = screen.getAllByRole('checkbox');
+    await user.click(competenceCheckboxes[0]);
+
+    // Generate CV
+    const generateCVButton = screen.getByRole('button', { name: /generate cv/i });
+    await user.click(generateCVButton);
+
+    // Verify that optional fields are included in the CV generation request
+    expect(mockGenerateCV).toHaveBeenCalledWith({
+      cv_text: 'My CV content',
+      job_description: 'Job description content',
+      personal_info: {
+        full_name: 'John Doe',
+        email: { value: 'john@example.com', type: 'email' },
+        phone: { value: '+1234567890', type: 'phone' },
+        location: { value: 'New York', type: 'location' }
+      },
+      approved_competences: [mockCompetences[0]]
+    }, 'en');
+  });
+
+  it('maintains optional field values after state updates', async () => {
+    const user = userEvent.setup();
+    const mockGenerateCompetences = vi.mocked(generateCompetences);
+    mockGenerateCompetences.mockResolvedValueOnce({ competences: mockCompetences });
+
+    render(<App />);
+
+    // Generate competences first to show the personal info form
+    await user.type(screen.getByRole('textbox', { name: /cv text/i }), 'My CV content');
+    await user.type(screen.getByRole('textbox', { name: /job description/i }), 'Job description content');
+    await user.click(screen.getByRole('button', { name: /generate core competences/i }));
+
+    // Wait for personal info form to appear
+    await waitFor(() => {
+      expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+    });
+
+    // Fill optional fields first
+    await user.type(screen.getByLabelText(/phone/i), '+1234567890');
+    await user.type(screen.getByLabelText(/location/i), 'New York');
+
+    // Verify optional fields have correct values
+    expect(screen.getByLabelText(/phone/i)).toHaveValue('+1234567890');
+    expect(screen.getByLabelText(/location/i)).toHaveValue('New York');
+
+    // Update required fields
+    await user.type(screen.getByLabelText(/full name/i), 'John Doe');
+    await user.type(screen.getByLabelText(/email/i), 'john@example.com');
+
+    // Verify optional fields maintained their values
+    expect(screen.getByLabelText(/phone/i)).toHaveValue('+1234567890');
+    expect(screen.getByLabelText(/location/i)).toHaveValue('New York');
+  });
+
   it('validates personal info before CV generation', async () => {
     const user = userEvent.setup();
     const mockGenerateCompetences = vi.mocked(generateCompetences);
