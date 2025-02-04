@@ -2,47 +2,39 @@
   "name": "frontend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.125",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
     "axios": "^1.7.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4",
-    "zod": "^3.24.1"
+    "typescript": "^5.3.3",
+    "web-vitals": "^3.5.2",
+    "zod": "^3.22.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
-    "json-schema-to-typescript": "^15.0.4"
+    "@testing-library/jest-dom": "^6.4.2",
+    "@types/jest": "^29.5.12",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^24.0.0",
+    "json-schema-to-typescript": "^13.1.1",
+    "vite": "^5.1.1",
+    "vitest": "^1.2.2"
   }
 }

@@ -25,6 +25,7 @@ test-cov:
 lint *ARGS='.':
     just ruff {{ARGS}}
     just mypy {{ARGS}}
+    just lint-frontend
 
 # Run ruff on a specific file or directory with auto-fixes
 ruff *ARGS='.':
@@ -52,7 +53,7 @@ all:
     just test
     just test-backend
     just generate-types
-    just test-frontend
+    just test-frontend-cov
 
 # Build documentation
 docs:
@@ -65,15 +66,15 @@ serve-docs:
 # Serve backend API on port 8000
 # ARGS can include uvicorn arguments
 serve-backend *ARGS='':
-    cd web-interface/backend && uvicorn app.main:app --reload --port 8000 {{ARGS}}
+    cd web-interface/backend && uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
 
 # Serve backend API with debug logging
 serve-backend-debug *ARGS='':
     cd web-interface/backend && LOG_LEVEL=debug uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
 
-# Serve frontend development server on port 3000
+# Serve frontend development server
 serve-frontend:
-    cd web-interface/frontend && npm start
+    cd web-interface/frontend && npm run dev
 
 # Serve complete web interface (both frontend and backend)
 serve-web *ARGS='':
@@ -95,6 +96,14 @@ generate-types:
 test-backend *ARGS='':
     cd web-interface/backend && uv run pytest tests/ {{ARGS}}
 
-# Run frontend validation tests
+# Run frontend tests
 test-frontend:
     cd web-interface/frontend && npm test
+
+# Run frontend tests with coverage
+test-frontend-cov:
+    cd web-interface/frontend && npm test -- --coverage
+
+# Run frontend linting
+lint-frontend:
+    cd web-interface/frontend && npm run lint

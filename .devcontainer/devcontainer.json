@@ -10,8 +10,7 @@
       "userUid": "1001",
       "userGid": "1001",
       "upgradePackages": "true"
-    },
-    "ghcr.io/lukewiwa/features/shellcheck:0": {}
+    }
   },
   "postCreateCommand": "just install",
   "remoteUser": "vscode",

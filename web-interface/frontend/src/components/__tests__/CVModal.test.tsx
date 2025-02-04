@@ -1,12 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { expect, describe, it, beforeEach, vi } from 'vitest';
 import CVModal from '../CVModal';
 import { CVDTO } from '../../types/api';
 
 // Mock URL.createObjectURL and URL.revokeObjectURL
-const mockCreateObjectURL = jest.fn();
-const mockRevokeObjectURL = jest.fn();
+const mockCreateObjectURL = vi.fn();
+const mockRevokeObjectURL = vi.fn();
 window.URL.createObjectURL = mockCreateObjectURL;
 window.URL.revokeObjectURL = mockRevokeObjectURL;
 
@@ -246,7 +247,7 @@ describe('CVModal', () => {
   });
 
   it('should call onClose when close button is clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <CVModal
         isOpen={true}
@@ -260,8 +261,8 @@ describe('CVModal', () => {
   });
 
   it('should handle download functionality', () => {
-    const mockAppendChild = jest.spyOn(document.body, 'appendChild');
-    const mockRemoveChild = jest.spyOn(document.body, 'removeChild');
+    const mockAppendChild = vi.spyOn(document.body, 'appendChild');
+    const mockRemoveChild = vi.spyOn(document.body, 'removeChild');
 
     render(
       <CVModal

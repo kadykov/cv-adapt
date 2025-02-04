@@ -6,7 +6,7 @@ This guide covers how to use and develop the web interface for the CV Adapter.
 
 The web interface consists of two parts:
 - A FastAPI backend that exposes the CV generation functionality
-- A React frontend that provides a user interface for the CV generation
+- A React frontend with Vite that provides a user interface for the CV generation
 
 ## Type Safety and API Integration
 
@@ -49,6 +49,8 @@ const competences = await generateCompetences({
 ## Testing
 
 ### Frontend Tests
+
+The frontend uses Vitest with jsdom for testing:
 
 1. Type Validation Tests:
    - Located in `web-interface/frontend/src/validation/api.validation.test.ts`
@@ -150,15 +152,51 @@ We use `just` for common development tasks. Here are the key commands:
 
    # Run frontend tests
    just test-frontend
+
+   # Run frontend tests with coverage
+   just test-frontend-cov
    ```
 
-2. Development Servers:
+2. Test Coverage:
+   ```bash
+   # The test-frontend-cov command generates a coverage report showing:
+   - Statement coverage
+   - Branch coverage
+   - Function coverage
+   - Line coverage
+   - List of uncovered lines
+   ```
+
+3. Frontend Development:
+   ```bash
+   cd web-interface/frontend
+
+   # Install dependencies
+   npm install
+
+   # Start development server
+   npm run dev
+
+   # Run tests
+   npm test
+
+   # Build for production
+   npm run build
+
+   # Preview production build
+   npm run preview
+
+   # Run linter
+   npm run lint
+   ```
+
+3. Development Servers:
    ```bash
    # Start both frontend and backend
    just serve-web
 
    # Or start them separately:
-   just serve-frontend  # Starts React dev server
+   just serve-frontend  # Starts Vite dev server
    just serve-backend   # Starts FastAPI server
    ```
 
