@@ -8,7 +8,52 @@ on:
     tags: ['v*.*.*']
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  security-events: write
+  pages: write
+  id-token: write
+
 jobs:
+  # Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Python for CodeQL
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --frozen --all-groups
+
+      # Setup Node.js for CodeQL
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # CodeQL Analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python, javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Dependency review
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
   pre_commit:
     name: Pre-commit checks
     runs-on: ubuntu-latest
@@ -22,11 +67,11 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --frozen --group dev
+      - run: uv sync --frozen --all-groups
       - run: uv run pre-commit run --all-files
 
-  lint:
-    name: Linting checks
+  backend:
+    name: Backend Checks
     runs-on: ubuntu-latest
     needs: pre_commit
     steps:
@@ -39,38 +84,31 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --frozen --group dev
+      - run: uv sync --frozen --all-groups
       - name: Run linting checks
         run: |
           uv run ruff check .
           uv run mypy .
 
-  backend-tests:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-      - run: uv sync --frozen --group dev
       - name: Run Python package tests
-        run: uv run pytest tests
+        run: uv run pytest tests --cov=cv_adapter --cov-report=xml
+
       - name: Run backend API tests
         run: |
           cd web-interface/backend
-          uv run pytest tests/
+          uv run pytest tests/ --cov=app --cov-report=xml
 
-  frontend-tests:
-    name: Frontend Tests
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml,./web-interface/backend/coverage.xml
+          flags: backend
+
+  frontend:
+    name: Frontend Checks
     runs-on: ubuntu-latest
-    needs: lint
+    needs: pre_commit
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -82,19 +120,52 @@ jobs:
         run: |
           cd web-interface/frontend
           npm ci
+      # Security check (advisory only)
+      - name: Run npm audit
+        continue-on-error: true
+        run: |
+          cd web-interface/frontend
+          npm audit
+
+      # Lint
+      - name: Run frontend linting checks
+        run: |
+          cd web-interface/frontend
+          npm run lint
+
+      # Test with coverage
       - name: Run frontend tests
         run: |
           cd web-interface/frontend
-          npm test
+          npm run test -- --coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./web-interface/frontend/coverage/coverage-final.json
+          flags: frontend
+
+      # Build
+      - name: Build frontend
+        run: |
+          cd web-interface/frontend
+          npm run build
 
   docs:
     name: Build and deploy documentation
-    needs: [backend-tests, frontend-tests]
+    needs: [backend, frontend]
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        contains(github.event.head_commit.modified, 'docs/') ||
+        contains(github.event.head_commit.modified, 'cv_adapter/') ||
+        contains(github.event.head_commit.modified, 'mkdocs.yml') ||
+        contains(github.event.head_commit.modified, '*.md')
+      )
     concurrency:
       group: "pages"
       cancel-in-progress: false
@@ -108,7 +179,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --frozen --group dev
+      - run: uv sync --frozen --all-groups
       - run: uv pip install -e .
       - name: Setup Pages
         uses: actions/configure-pages@v4
