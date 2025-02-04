@@ -23,7 +23,12 @@
         "ms-toolsai.jupyter",
         "charliermarsh.ruff",
         "ms-python.isort",
-        "saoudrizwan.claude-dev"
+        "saoudrizwan.claude-dev",
+        "jock.svg",
+        "astro-build.astro-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "rvest.vs-code-prettier-eslint"
       ]
     }
   }

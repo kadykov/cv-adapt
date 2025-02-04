@@ -51,6 +51,7 @@ build-frontend:
 
 # Preview built frontend
 preview-frontend:
+    just build-frontend
     cd web-interface/frontend && npm run preview
 
 # Run all checks
@@ -58,7 +59,7 @@ all:
     just lint
     just format
     just pre-commit
-    just docs
+    just docs && rm -rf ./site
     just build-frontend
     just test
     just test-backend
