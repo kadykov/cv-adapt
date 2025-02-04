@@ -45,11 +45,21 @@ format *ARGS='.':
 pre-commit:
     uv run pre-commit run --all-files
 
+# Build frontend for production
+build-frontend:
+    cd web-interface/frontend && npm run build
+
+# Preview built frontend
+preview-frontend:
+    cd web-interface/frontend && npm run preview
+
 # Run all checks
 all:
     just lint
     just format
     just pre-commit
+    just docs
+    just build-frontend
     just test
     just test-backend
     just generate-types
@@ -66,7 +76,7 @@ serve-docs:
 # Serve backend API on port 8000
 # ARGS can include uvicorn arguments
 serve-backend *ARGS='':
-    cd web-interface/backend && uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
+    cd web-interface/backend && uvicorn app.main:app --reload --port 8000 {{ARGS}}
 
 # Serve backend API with debug logging
 serve-backend-debug *ARGS='':

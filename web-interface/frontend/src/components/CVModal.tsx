@@ -1,5 +1,5 @@
 import React from 'react';
-import { CVDTO, ExperienceDTO, EducationDTO, SkillGroupDTO, CoreCompetenceDTO } from '../types/api';
+import type { CVDTO, ExperienceDTO, EducationDTO, SkillGroupDTO, CoreCompetenceDTO } from '../types/api';
 
 interface CVModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ const renderExperience = (exp: ExperienceDTO) => (
       <>
         <strong>Technologies:</strong>
         <ul>
-          {exp.technologies.map((tech, i) => (
+          {exp.technologies.map((tech: string, i: number) => (
             <li key={i}>{tech}</li>
           ))}
         </ul>
@@ -51,7 +51,7 @@ const renderSkillGroup = (group: SkillGroupDTO) => (
   <div className="skill-category">
     <h4>{group.name}</h4>
     <ul>
-      {group.skills.map((skill, i) => (
+      {group.skills.map((skill, i: number) => (
         <li key={i}>{skill.text}</li>
       ))}
     </ul>
@@ -60,7 +60,7 @@ const renderSkillGroup = (group: SkillGroupDTO) => (
 
 const renderCoreCompetences = (competences: CoreCompetenceDTO[]) => (
   <ul>
-    {competences.map((competence, index) => (
+    {competences.map((competence, index: number) => (
       <li key={index}>{competence.text}</li>
     ))}
   </ul>
@@ -129,7 +129,7 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
 
             <h3>Experience</h3>
             <div className="experiences">
-              {cvData.experiences.map((exp, index) => (
+              {cvData.experiences.map((exp: ExperienceDTO, index: number) => (
                 <div key={index}>
                   {renderExperience(exp)}
                 </div>
@@ -138,7 +138,7 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
 
             <h3>Education</h3>
             <div className="education">
-              {cvData.education.map((edu, index) => (
+              {cvData.education.map((edu: EducationDTO, index: number) => (
                 <div key={index}>
                   {renderEducation(edu)}
                 </div>
@@ -147,7 +147,7 @@ function CVModal({ isOpen, onClose, cvData }: CVModalProps) {
 
             <h3>Skills</h3>
             <div className="skills">
-              {cvData.skills.map((group, index) => (
+              {cvData.skills.map((group: SkillGroupDTO, index: number) => (
                 <div key={index}>
                   {renderSkillGroup(group)}
                 </div>

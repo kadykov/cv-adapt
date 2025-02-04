@@ -6,7 +6,30 @@ This guide covers how to use and develop the web interface for the CV Adapter.
 
 The web interface consists of two parts:
 - A FastAPI backend that exposes the CV generation functionality
-- A React frontend with Vite that provides a user interface for the CV generation
+- An Astro frontend with React components that provides a user interface for the CV generation
+
+## Frontend Framework
+
+We use [Astro](https://astro.build) as our frontend framework with React integration for interactive components. This provides several benefits:
+
+1. Partial Hydration: Only interactive components are sent as JavaScript
+2. Static Site Generation (SSG) capabilities
+3. Built-in performance optimizations
+4. Seamless React component integration
+
+### React Components in Astro
+
+React components are used for interactive parts of the application and are marked with client directives:
+
+```astro
+---
+import App from '../components/App';
+---
+
+<App client:load />
+```
+
+The `client:load` directive ensures the component is hydrated immediately when the page loads.
 
 ## Type Safety and API Integration
 
@@ -98,7 +121,7 @@ Example Component Test:
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import YourComponent from './YourComponent';
-import { GeneratedType } from '../types/api';
+import type { GeneratedType } from '../types/api';
 
 describe('YourComponent', () => {
   it('should handle optional fields correctly', () => {
@@ -114,20 +137,6 @@ describe('YourComponent', () => {
 
     // Test optional fields aren't rendered
     expect(screen.queryByText('optional')).not.toBeInTheDocument();
-  });
-
-  it('should render all fields when provided', () => {
-    const fullData: GeneratedType = {
-      required_field: 'value',
-      optional_field: 'optional',
-      // ... all possible fields
-    };
-
-    render(<YourComponent data={fullData} />);
-
-    // Test all fields are rendered
-    expect(screen.getByText('value')).toBeInTheDocument();
-    expect(screen.getByText('optional')).toBeInTheDocument();
   });
 });
 ```
@@ -157,17 +166,7 @@ We use `just` for common development tasks. Here are the key commands:
    just test-frontend-cov
    ```
 
-2. Test Coverage:
-   ```bash
-   # The test-frontend-cov command generates a coverage report showing:
-   - Statement coverage
-   - Branch coverage
-   - Function coverage
-   - Line coverage
-   - List of uncovered lines
-   ```
-
-3. Frontend Development:
+2. Frontend Development:
    ```bash
    cd web-interface/frontend
 
@@ -196,21 +195,24 @@ We use `just` for common development tasks. Here are the key commands:
    just serve-web
 
    # Or start them separately:
-   just serve-frontend  # Starts Vite dev server
+   just serve-frontend  # Starts Astro dev server
    just serve-backend   # Starts FastAPI server
    ```
 
-### Setting Up the Development Environment
+### Frontend Structure
 
-1. Install all dependencies:
-   ```bash
-   just install
-   ```
+The frontend codebase is organized as follows:
 
-2. Start the development servers:
-   ```bash
-   just serve-web
-   ```
+```
+frontend/
+├── src/
+│   ├── components/     # React components
+│   ├── pages/         # Astro pages
+│   ├── styles/        # Global CSS
+│   ├── api/           # API client functions
+│   ├── types/         # TypeScript interfaces
+│   └── validation/    # Zod schemas
+```
 
 ### Making Changes
 
@@ -233,6 +235,8 @@ When making changes to the API:
 3. Write tests for new API endpoints and data structures
 4. Keep backend models and frontend types in sync
 5. Use the provided API client functions instead of direct fetch calls
+6. Use Astro's client directives appropriately for React components
+7. Keep non-interactive content as static Astro components
 
 ## Common Issues
 
@@ -257,6 +261,17 @@ When facing API integration issues:
 3. Review the API client functions for correct typing
 4. Run the test suite to catch type mismatches
 
+### Astro-specific Issues
+
+1. Component Hydration:
+   - Ensure interactive components have proper client directives
+   - Check browser console for hydration warnings
+   - Verify client:load is used when needed
+
+2. Static Content:
+   - Use Astro components for static content where possible
+   - Minimize unnecessary client-side JavaScript
+
 ## Future Improvements
 
 Consider implementing:
@@ -265,3 +280,5 @@ Consider implementing:
 2. Continuous Integration checks for type safety
 3. API response type guards in React components
 4. OpenAPI/Swagger documentation generation
+5. Astro middleware for API request handling
+6. Server-side rendering (SSR) mode for dynamic content

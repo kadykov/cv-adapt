@@ -1,4 +1,4 @@
-import { CVDTO, GenerateCompetencesRequest, GenerateCVRequest, GenerateCompetencesResponse } from '../types/api';
+import type { CVDTO, GenerateCompetencesRequest, GenerateCVRequest, GenerateCompetencesResponse } from '../types/api';
 import {
   validateCV,
   validateGenerateCompetencesResponse,
@@ -8,12 +8,22 @@ import {
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
-export async function generateCompetences(request: GenerateCompetencesRequest): Promise<GenerateCompetencesResponse> {
+export async function generateCompetences(
+  request: GenerateCompetencesRequest,
+  languageCode: string = 'en'
+): Promise<GenerateCompetencesResponse> {
   try {
-    // Validate request before sending
-    validateGenerateCompetencesRequest(request);
+    try {
+      // Validate request before sending
+      validateGenerateCompetencesRequest(request);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new ValidationError(`Invalid request: ${error.message}`);
+      }
+      throw new ValidationError('Invalid request: Unknown validation error');
+    }
 
-    const response = await fetch(`${API_BASE_URL}/generate-competences`, {
+    const response = await fetch(`${API_BASE_URL}/generate-competences?language_code=${languageCode}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,18 +39,28 @@ export async function generateCompetences(request: GenerateCompetencesRequest): 
 
     // Validate response before returning
     return validateGenerateCompetencesResponse(data);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating competences:', error);
-    throw error;
+    throw handleApiError(error);
   }
 }
 
-export async function generateCV(request: GenerateCVRequest): Promise<CVDTO> {
+export async function generateCV(
+  request: GenerateCVRequest,
+  languageCode: string = 'en'
+): Promise<CVDTO> {
   try {
-    // Validate request before sending
-    validateGenerateCVRequest(request);
+    try {
+      // Validate request before sending
+      validateGenerateCVRequest(request);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new ValidationError(`Invalid request: ${error.message}`);
+      }
+      throw new ValidationError('Invalid request: Unknown validation error');
+    }
 
-    const response = await fetch(`${API_BASE_URL}/generate-cv`, {
+    const response = await fetch(`${API_BASE_URL}/generate-cv?language_code=${languageCode}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -56,9 +76,9 @@ export async function generateCV(request: GenerateCVRequest): Promise<CVDTO> {
 
     // Validate response before returning
     return validateCV(data);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating CV:', error);
-    throw error;
+    throw handleApiError(error);
   }
 }
 

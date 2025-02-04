@@ -5,15 +5,14 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": "true",
-      "username": "vscode",
-      "userUid": "1001",
-      "userGid": "1001",
-      "upgradePackages": "true"
+      "username": "vscode"
     }
   },
-  "postCreateCommand": "just install",
   "remoteUser": "vscode",
+  "forwardPorts": [
+    3000
+  ],
+  "postCreateCommand": "just install",
   "customizations": {
     "vscode": {
       "extensions": [

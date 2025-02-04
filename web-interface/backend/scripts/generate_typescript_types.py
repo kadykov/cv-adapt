@@ -121,9 +121,10 @@ def generate_typescript_file(
         print(f"Error generating TypeScript types: {e}")
         raise
 
-    # Write the output to our file along with additional types
+    # Clean up the output by removing eslint-disable comment and write to file
+    output = process.stdout.replace("/* eslint-disable */\n", "")
     with open(output_file, "w") as f:
-        f.write(process.stdout)
+        f.write(output)
         f.write(
             """
 export interface GenerateCompetencesResponse {

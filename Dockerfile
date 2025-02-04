@@ -1,4 +1,6 @@
-FROM nikolaik/python-nodejs:python3.12-nodejs22
+# FROM nikolaik/python-nodejs:python3.12-nodejs22-alpine
+FROM node:22-alpine3.21
 
-# Based on https://github.com/casey/just#pre-built-binaries
-RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+RUN apk add --no-cache just uv gcc python3-dev musl-dev linux-headers
+
+EXPOSE 3000:3000

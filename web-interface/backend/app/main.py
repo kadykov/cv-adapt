@@ -18,7 +18,7 @@ app = FastAPI(title="CV Adapter Web Interface")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Dev server
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -123,6 +123,7 @@ async def generate_cv(
     )
     logger.debug(f"Approved competences: {request.approved_competences}")
     try:
+        logger.debug(f"Raw request data: {request.model_dump()}")
         # Convert personal info to DTO
         logger.debug("Converting request data to DTOs")
         # Convert dict to ContactDTO objects

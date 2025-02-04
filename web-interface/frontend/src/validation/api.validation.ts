@@ -67,11 +67,6 @@ export const languageCodeSchema = z.enum(['en', 'fr', 'de', 'es', 'it']);
 
 export const languageSchema = z.object({
   code: languageCodeSchema,
-  name: z.string(),
-  native_name: z.string(),
-  date_format: z.string().nullable().optional(),
-  decimal_separator: z.string().nullable().optional(),
-  thousands_separator: z.string().nullable().optional(),
 });
 
 // Complete CV schema
@@ -88,20 +83,20 @@ export const cvSchema = z.object({
 
 // API request/response schemas
 export const generateCompetencesResponseSchema = z.object({
-  competences: z.array(z.string()),
+  competences: z.array(z.string().min(1)).min(1, "At least one competence is required"),
 });
 
 export const generateCompetencesRequestSchema = z.object({
-  cv_text: z.string(),
-  job_description: z.string(),
+  cv_text: z.string().min(1, "CV text cannot be empty"),
+  job_description: z.string().min(1, "Job description cannot be empty"),
   notes: z.string().nullable().optional(),
 });
 
 export const generateCVRequestSchema = z.object({
-  cv_text: z.string(),
-  job_description: z.string(),
+  cv_text: z.string().min(1, "CV text cannot be empty"),
+  job_description: z.string().min(1, "Job description cannot be empty"),
   personal_info: personalInfoSchema,
-  approved_competences: z.array(z.string()),
+  approved_competences: z.array(z.string().min(1)).min(1, "At least one approved competence is required"),
   notes: z.string().nullable().optional(),
 });
 
