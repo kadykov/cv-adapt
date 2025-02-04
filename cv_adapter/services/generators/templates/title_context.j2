@@ -10,7 +10,7 @@ Guidelines for generating the title:
 
 {% if language != ENGLISH %}
 Language Requirements:
-Generate the title in {{ language.name.title() }}, following standard CV conventions for that language.
+Generate the title in {{ LanguageConfig.get(language.code).name.title() }}, following standard CV conventions for that language.
 {% endif %}
 
 CV:

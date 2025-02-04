@@ -7,7 +7,7 @@ Job Description:
 {{ job_description }}
 
 {% if language != ENGLISH %}
-Language Requirements: Generate in {{ language.name.title() }}, following professional conventions.
+Language Requirements: Generate in {{ LanguageConfig.get(language.code).name.title() }}, following professional conventions.
 {% endif %}
 
 {% if notes is defined and notes %}

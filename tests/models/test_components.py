@@ -352,10 +352,9 @@ def test_core_competences_validation() -> None:
             )
         assert "core competences must be unique" in str(exc_info.value)
 
-        # Too few competences
-        with pytest.raises(ValidationError) as exc_info:
-            CoreCompetences(items=[CoreCompetence(text="Gestion de projet")])
-        assert "too_short" in str(exc_info.value)
+        # Single competence is now valid
+        competences = CoreCompetences(items=[CoreCompetence(text="Gestion de projet")])
+        assert len(competences) == 1
 
         # Too many competences
         with pytest.raises(ValidationError) as exc_info:

@@ -45,9 +45,17 @@ dev = [
     "ipywidgets>=8.1.5",
     "logfire>=3.2.0",
     "pydantic-ai[logfire]>=0.0.19",
+    "pydantic-to-typescript>=2.0.0",
+]
+docs = [
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.5.50",
     "mkdocstrings[python]>=0.27.0",
     "pytest-asyncio>=0.25.3",
     "types-jsonschema>=4.23.0.20241208",
+]
+backend = [
+    "fastapi>=0.115.8",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34.0",
 ]

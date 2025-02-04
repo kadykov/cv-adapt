@@ -30,14 +30,18 @@ def sample_cv_dto() -> CVDTO:
         language=ENGLISH,
         personal_info=PersonalInfoDTO(
             full_name="John Doe",
-            email=ContactDTO(value="john@example.com", type=None, icon=None, url=None),
-            phone=ContactDTO(value="+1234567890", type=None, icon=None, url=None),
-            location=ContactDTO(value="New York, USA", type=None, icon=None, url=None),
+            email=ContactDTO(
+                value="john@example.com", type="Email", icon=None, url=None
+            ),
+            phone=ContactDTO(value="+1234567890", type="Phone", icon=None, url=None),
+            location=ContactDTO(
+                value="New York, USA", type="Location", icon=None, url=None
+            ),
             linkedin=ContactDTO(
-                value="linkedin.com/in/johndoe", type=None, icon=None, url=None
+                value="linkedin.com/in/johndoe", type="LinkedIn", icon=None, url=None
             ),
             github=ContactDTO(
-                value="github.com/johndoe", type=None, icon=None, url=None
+                value="github.com/johndoe", type="GitHub", icon=None, url=None
             ),
         ),
         title=TitleDTO(text="Senior Software Engineer"),

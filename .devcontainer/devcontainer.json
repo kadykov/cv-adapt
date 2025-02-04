@@ -5,16 +5,14 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": "true",
-      "username": "vscode",
-      "userUid": "1000",
-      "userGid": "1000",
-      "upgradePackages": "true"
-    },
-    "ghcr.io/lukewiwa/features/shellcheck:0": {}
+      "username": "vscode"
+    }
   },
-  "postCreateCommand": "just install",
   "remoteUser": "vscode",
+  "forwardPorts": [
+    3000
+  ],
+  "postCreateCommand": "just install",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -25,7 +23,12 @@
         "ms-toolsai.jupyter",
         "charliermarsh.ruff",
         "ms-python.isort",
-        "saoudrizwan.claude-dev"
+        "saoudrizwan.claude-dev",
+        "jock.svg",
+        "astro-build.astro-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "rvest.vs-code-prettier-eslint"
       ]
     }
   }

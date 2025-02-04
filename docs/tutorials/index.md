@@ -11,6 +11,13 @@ Learn the basics of CV Adapt in this introductory tutorial. You'll learn how to:
 - Set up your first CV generation project
 - Generate a basic CV with multilingual support
 
+### [Web Interface](web-interface.md)
+Learn how to use the interactive web interface for CV generation. This tutorial covers:
+- Setting up the web interface
+- Generating and selecting core competences
+- Managing personal information
+- Generating and downloading your customized CV
+
 ## Coming Soon
 
 - Creating custom CV templates
