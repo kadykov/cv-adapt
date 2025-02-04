@@ -35,6 +35,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
       - run: uv sync --frozen --all-groups
+      - run: uv pip install -e .
 
       # Setup Node.js for CodeQL
       - uses: actions/setup-node@v4
@@ -68,6 +69,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
       - run: uv sync --frozen --all-groups
+      - run: uv pip install -e .
       - run: uv run pre-commit run --all-files
 
   backend:
@@ -85,6 +87,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
       - run: uv sync --frozen --all-groups
+      - run: uv pip install -e .
       - name: Run linting checks
         run: |
           uv run ruff check .
