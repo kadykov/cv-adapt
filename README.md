@@ -81,6 +81,14 @@ To view the full documentation locally:
 ### Prerequisites
 - Python 3.12+
 - `uv` package manager (recommended over pip)
+- `typst` command-line tool (for PDF generation)
+  ```bash
+  # Install Typst on macOS
+  brew install typst
+
+  # Install Typst on Linux (see https://github.com/typst/typst for other methods)
+  # Download and install from GitHub releases
+  ```
 
 ### Setup
 ```bash

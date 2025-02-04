@@ -319,6 +319,78 @@ class StreamingHTMLRenderer(HTMLRenderer):
         yield "</body></html>"
 ```
 
+## PDF Renderer with Typst
+
+CV Adapt includes a PDF renderer that uses Typst, a modern markup-based typesetting system, to generate professional-looking PDFs. The implementation consists of two parts:
+
+1. `TypstRenderer`: Extends `Jinja2Renderer` to generate Typst markup
+2. `PDFRenderer`: Uses the `typst` Python package to compile Typst markup into PDF
+
+### Using the PDF Renderer
+
+```python
+from cv_adapter.renderers import PDFRenderer
+from pathlib import Path
+
+# Create a renderer instance
+renderer = PDFRenderer()
+
+# Render CV to PDF file
+renderer.render_to_file(cv_dto, Path("output.pdf"))
+```
+
+### Custom Typst Templates
+
+The PDF renderer uses Jinja2 templates to generate Typst markup. You can customize the template:
+
+```python
+from cv_adapter.renderers import PDFRenderer, TypstRenderer
+from pathlib import Path
+
+# Create a custom Typst renderer with your template
+typst_renderer = TypstRenderer(
+    template_path=Path("custom/templates"),
+    template_name="my_cv.typ.j2"
+)
+
+# Use custom renderer with PDFRenderer
+pdf_renderer = PDFRenderer(typst_renderer=typst_renderer)
+```
+
+### Template Structure
+
+The Typst template combines Jinja2 templating with Typst markup:
+
+```typst
+#let cv(title, personal_info, ...) = {
+  // Page settings
+  set document(author: personal_info.full_name)
+  set page(margin: 1.5cm)
+
+  // Dynamic content with Jinja2
+  {% if personal_info.email %}
+  #text(size: 10pt)[{{ personal_info.email.value }}]
+  {% endif %}
+
+  // Other sections...
+}
+
+// Create the CV
+#cv(
+  title: title,
+  personal_info: personal_info,
+  ...
+)
+```
+
+### Benefits
+
+- Professional typesetting with Typst
+- Flexible templating with Jinja2
+- Direct PDF generation without external dependencies
+- Customizable styling and layout
+- Supports all CV data types and languages
+
 ## Next Steps
 
 - Explore the [API Reference](../reference/api/renderers.md) for detailed renderer documentation

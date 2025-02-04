@@ -71,6 +71,68 @@ cv_dto = renderer.load_from_file("cv.json")
         heading_level: 2
         members: true
 
+## PDF Renderer
+
+The PDF renderer uses the system-installed `typst` command-line tool to generate PDFs from CV data:
+
+### Features
+
+- **System Typst Integration**: Uses the system-installed `typst` command for PDF generation
+- **Binary Output Support**: Can output PDF either as bytes or to a file
+- **Stdin/Stdout Support**: Utilizes Typst's stdin/stdout capabilities for efficient processing
+
+### Usage
+
+```python
+from cv_adapter.renderers import PDFRenderer
+
+renderer = PDFRenderer()
+
+# Save CV to PDF file
+renderer.render_to_file(cv_dto, "cv.pdf")
+
+# Get PDF as bytes
+pdf_bytes = renderer.render_to_bytes(cv_dto)
+```
+
+::: cv_adapter.renderers.pdf
+    options:
+        show_root_heading: true
+        show_source: true
+        heading_level: 2
+        members: true
+
+## Typst Renderer
+
+The Typst renderer provides Typst markup generation for CVs:
+
+### Features
+
+- **Typst Markup Generation**: Creates Typst source files that can be compiled to PDFs
+- **Custom Template Support**: Uses a customizable Typst template
+- **UTF-8 Support**: Full Unicode support for international CVs
+
+### Usage
+
+```python
+from cv_adapter.renderers import TypstRenderer
+
+renderer = TypstRenderer()
+
+# Generate Typst markup
+typst_source = renderer.render(cv_dto)
+
+# Save Typst source to file
+renderer.render_to_file(cv_dto, "cv.typ")
+```
+
+::: cv_adapter.renderers.typst
+    options:
+        show_root_heading: true
+        show_source: true
+        heading_level: 2
+        members: true
+
 ## Templates
 
 CV Adapt includes built-in Jinja2 templates for rendering CVs. These templates are located in the `cv_adapter/renderers/templates/` directory:
