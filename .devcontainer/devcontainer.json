@@ -1,8 +1,8 @@
 {
-  "name": "Python",
-  "build": {
-    "dockerfile": "../Dockerfile"
-  },
+  "name": "CV Adapt",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "username": "vscode"

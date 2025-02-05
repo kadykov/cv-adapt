@@ -149,8 +149,8 @@ GET /generations/:id
 ## Implementation Plan
 
 ### Phase 1: Database Setup and Core Models
-- [ ] Set up PostgreSQL database
-- [ ] Add SQLAlchemy and dependencies
+- [X] Set up PostgreSQL database
+- [X] Add SQLAlchemy and dependencies
 - [ ] Implement User model
 - [ ] Implement DetailedCV model
 - [ ] Implement JobDescription model
