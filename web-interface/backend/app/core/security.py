@@ -8,7 +8,7 @@ from jose.exceptions import JWTError
 from pydantic import BaseModel
 
 # To be moved to settings/config
-SECRET_KEY = "your-secret-key-here"  # pragma: allowlist secret
+SECRET_KEY = "your-secret-key-here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7

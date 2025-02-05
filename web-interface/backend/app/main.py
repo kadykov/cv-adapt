@@ -1,6 +1,6 @@
 import sys
 from datetime import datetime
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,9 +16,22 @@ from cv_adapter.models.context import language_context
 
 from . import logger
 from .core.database import get_db
+from .core.deps import get_current_user
 from .core.security import create_access_token, create_refresh_token, verify_token
+from .models.models import User
 from .schemas.auth import AuthResponse
-from .schemas.user import UserCreate, UserResponse
+from .schemas.cv import (
+    DetailedCVCreate,
+    DetailedCVResponse,
+    DetailedCVUpdate,
+    GeneratedCVCreate,
+    GeneratedCVResponse,
+    JobDescriptionCreate,
+    JobDescriptionResponse,
+    JobDescriptionUpdate,
+)
+from .schemas.user import UserCreate, UserResponse, UserUpdate
+from .services.cv import DetailedCVService, GeneratedCVService, JobDescriptionService
 from .services.user import UserService
 
 app = FastAPI(title="CV Adapter Web Interface")
@@ -264,6 +277,14 @@ async def login(
     )
 
 
+@app.post("/auth/logout", status_code=status.HTTP_200_OK)
+async def logout() -> dict[str, str]:
+    """Logout user."""
+    # Since we're using JWT, we don't need to do anything server-side
+    # The client should clear the tokens from local storage
+    return {"status": "success"}
+
+
 @app.post("/auth/refresh", response_model=AuthResponse)
 async def refresh_token(
     token: str = Body(..., embed=True), db: Session = Depends(get_db)
@@ -298,6 +319,263 @@ async def refresh_token(
             ),  # created_at should never be None for a valid user
         ),
     )
+
+
+# User profile routes
+@app.get("/user/profile", response_model=UserResponse)
+async def get_user_profile(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserResponse:
+    """Get current user's profile."""
+    return UserResponse(
+        id=int(current_user.id),
+        email=str(current_user.email),
+        personal_info=dict(current_user.personal_info)
+        if current_user.personal_info
+        else None,
+        created_at=datetime.fromtimestamp(current_user.created_at.timestamp()),
+    )
+
+
+@app.put("/user/profile", response_model=UserResponse)
+async def update_user_profile(
+    user_data: UserUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    """Update current user's profile."""
+    user_service = UserService(db)
+    updated_user = user_service.update_personal_info(current_user, user_data)
+    return UserResponse(
+        id=int(updated_user.id),
+        email=str(updated_user.email),
+        personal_info=dict(updated_user.personal_info)
+        if updated_user.personal_info
+        else None,
+        created_at=datetime.fromtimestamp(updated_user.created_at.timestamp()),
+    )
+
+
+# Detailed CV routes
+@app.get("/user/detailed-cvs", response_model=list[DetailedCVResponse])
+async def get_user_detailed_cvs(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> list[DetailedCVResponse]:
+    """Get all user's detailed CVs."""
+    cv_service = DetailedCVService(db)
+    cvs = cv_service.get_user_cvs(int(current_user.id))
+    return [DetailedCVResponse.model_validate(cv) for cv in cvs]
+
+
+@app.get("/user/detailed-cvs/{language_code}", response_model=DetailedCVResponse)
+async def get_user_detailed_cv(
+    language_code: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> DetailedCVResponse:
+    """Get user's detailed CV by language."""
+    cv_service = DetailedCVService(db)
+    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    if not cv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No CV found for language: {language_code}",
+        )
+    return DetailedCVResponse.model_validate(cv)
+
+
+@app.put("/user/detailed-cvs/{language_code}", response_model=DetailedCVResponse)
+async def upsert_user_detailed_cv(
+    language_code: str,
+    cv_data: DetailedCVCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> DetailedCVResponse:
+    """Create or update user's detailed CV for a language."""
+    if cv_data.language_code != language_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language code in URL must match CV language",
+        )
+
+    cv_service = DetailedCVService(db)
+    existing_cv = cv_service.get_by_user_and_language(
+        int(current_user.id), language_code
+    )
+
+    if existing_cv:
+        # Update existing CV
+        update_data = DetailedCVUpdate(
+            content=cv_data.content, is_primary=cv_data.is_primary
+        )
+        cv = cv_service.update_cv(existing_cv, update_data)
+        return DetailedCVResponse.model_validate(cv)
+
+    # Create new CV
+    cv = cv_service.create_cv(int(current_user.id), cv_data)
+    return DetailedCVResponse.model_validate(cv)
+
+
+@app.delete(
+    "/user/detailed-cvs/{language_code}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_user_detailed_cv(
+    language_code: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete user's detailed CV by language."""
+    cv_service = DetailedCVService(db)
+    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    if not cv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No CV found for language: {language_code}",
+        )
+    cv_service.delete(int(cv.id))
+
+
+@app.put(
+    "/user/detailed-cvs/{language_code}/primary", response_model=DetailedCVResponse
+)
+async def set_primary_cv(
+    language_code: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> DetailedCVResponse:
+    """Set a CV as primary."""
+    cv_service = DetailedCVService(db)
+    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    if not cv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No CV found for language: {language_code}",
+        )
+
+    update_data = DetailedCVUpdate(is_primary=True)
+    cv = cv_service.update_cv(cv, update_data)
+    return DetailedCVResponse.model_validate(cv)
+
+
+# Job description routes
+@app.get("/jobs", response_model=list[JobDescriptionResponse])
+async def get_jobs(
+    language: Language = Depends(get_language),
+    db: Session = Depends(get_db),
+) -> list[JobDescriptionResponse]:
+    """Get all job descriptions for a language."""
+    job_service = JobDescriptionService(db)
+    jobs = job_service.get_by_language(language.code)
+    return [JobDescriptionResponse.model_validate(job) for job in jobs]
+
+
+@app.get("/jobs/{job_id}", response_model=JobDescriptionResponse)
+async def get_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> JobDescriptionResponse:
+    """Get job description by ID."""
+    job_service = JobDescriptionService(db)
+    job = job_service.get(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job description not found",
+        )
+    return JobDescriptionResponse.model_validate(job)
+
+
+@app.post("/jobs", response_model=JobDescriptionResponse)
+async def create_job(
+    job_data: JobDescriptionCreate,
+    db: Session = Depends(get_db),
+) -> JobDescriptionResponse:
+    """Create new job description."""
+    job_service = JobDescriptionService(db)
+    job = job_service.create_job_description(job_data)
+    return JobDescriptionResponse.model_validate(job)
+
+
+@app.put("/jobs/{job_id}", response_model=JobDescriptionResponse)
+async def update_job(
+    job_id: int,
+    job_data: JobDescriptionUpdate,
+    db: Session = Depends(get_db),
+) -> JobDescriptionResponse:
+    """Update job description."""
+    job_service = JobDescriptionService(db)
+    job = job_service.get(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job description not found",
+        )
+    job = job_service.update_job_description(job, job_data)
+    return JobDescriptionResponse.model_validate(job)
+
+
+@app.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete job description."""
+    job_service = JobDescriptionService(db)
+    job = job_service.get(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job description not found",
+        )
+    job_service.delete(int(job.id))
+
+
+# Generated CV routes
+@app.post("/generate", response_model=GeneratedCVResponse)
+async def generate_and_save_cv(
+    cv_data: GeneratedCVCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> GeneratedCVResponse:
+    """Generate and save a new CV for job application."""
+    generated_cv_service = GeneratedCVService(db)
+    cv = generated_cv_service.create_generated_cv(int(current_user.id), cv_data)
+    return GeneratedCVResponse.model_validate(cv)
+
+
+@app.get("/generations", response_model=list[GeneratedCVResponse])
+async def get_user_generations(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> list[GeneratedCVResponse]:
+    """Get all generated CVs for current user."""
+    generated_cv_service = GeneratedCVService(db)
+    cvs = generated_cv_service.get_by_user(int(current_user.id))
+    return [GeneratedCVResponse.model_validate(cv) for cv in cvs]
+
+
+@app.get("/generations/{cv_id}", response_model=GeneratedCVResponse)
+async def get_generated_cv(
+    cv_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> GeneratedCVResponse:
+    """Get a specific generated CV."""
+    generated_cv_service = GeneratedCVService(db)
+    cv = generated_cv_service.get(cv_id)
+    if not cv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Generated CV not found",
+        )
+    # Check if CV belongs to current user
+    if cv.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+    return GeneratedCVResponse.model_validate(cv)
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ def test_user_creation(session: Session) -> None:
     """Test creating a user."""
     user = User(
         email="test@example.com",
-        hashed_password="hashedpass",  # pragma: allowlist secret
+        hashed_password="hashedpass",
         personal_info={"name": "Test User"},
     )
     session.add(user)

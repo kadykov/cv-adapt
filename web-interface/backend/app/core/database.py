@@ -1,16 +1,21 @@
 """Database configuration and session management."""
 
+import os
 from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-# TODO: Move to environment variables/config
-SQLALCHEMY_DATABASE_URL = (
-    "postgresql://postgres:postgres@localhost:5432/cv_adapt"  # pragma: allowlist secret
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/cv_adapt",
 )
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+is_sqlite = DATABASE_URL.startswith("sqlite")
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if is_sqlite else {},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

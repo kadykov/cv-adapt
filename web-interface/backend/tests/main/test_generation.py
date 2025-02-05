@@ -1,3 +1,5 @@
+"""Tests for CV generation endpoints"""
+
 import datetime
 from unittest.mock import patch
 

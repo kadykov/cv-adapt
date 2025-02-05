@@ -1,46 +1,6 @@
 """Authentication system tests."""
 
-from typing import Any, Generator
-
-import pytest
-from app.core.database import get_db
-from app.main import app
-from app.models.models import Base
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
-# Setup in-memory test database
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db() -> Generator[Any, None, None]:
-    """Override database session for testing."""
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture
-def client() -> Generator[TestClient, None, None]:
-    """Test client fixture."""
-    Base.metadata.create_all(bind=engine)
-    with TestClient(app) as c:
-        yield c
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_register(client: TestClient) -> None:
@@ -49,7 +9,7 @@ def test_register(client: TestClient) -> None:
         "/auth/register",
         json={
             "email": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
     assert response.status_code == 200
@@ -66,7 +26,7 @@ def test_register_duplicate_email(client: TestClient) -> None:
         "/auth/register",
         json={
             "email": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
     assert response.status_code == 200
@@ -76,7 +36,7 @@ def test_register_duplicate_email(client: TestClient) -> None:
         "/auth/register",
         json={
             "email": "test@example.com",
-            "password": "testpassword2",  # pragma: allowlist secret
+            "password": "testpassword2",
         },
     )
     assert response.status_code == 400
@@ -90,7 +50,7 @@ def test_login(client: TestClient) -> None:
         "/auth/register",
         json={
             "email": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
 
@@ -99,7 +59,7 @@ def test_login(client: TestClient) -> None:
         "/auth/login",
         data={
             "username": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
     assert response.status_code == 200
@@ -115,7 +75,7 @@ def test_login_invalid_credentials(client: TestClient) -> None:
         "/auth/login",
         data={
             "username": "test@example.com",
-            "password": "wrongpassword",  # pragma: allowlist secret
+            "password": "wrongpassword",
         },
     )
     assert response.status_code == 401
@@ -129,7 +89,7 @@ def test_refresh_token(client: TestClient) -> None:
         "/auth/register",
         json={
             "email": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
 
@@ -138,7 +98,7 @@ def test_refresh_token(client: TestClient) -> None:
         "/auth/login",
         data={
             "username": "test@example.com",
-            "password": "testpassword",  # pragma: allowlist secret
+            "password": "testpassword",
         },
     )
     assert response.status_code == 200
