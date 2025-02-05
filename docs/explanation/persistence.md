@@ -175,10 +175,32 @@ GET /generations/:id
 
 ### Phase 4: Frontend Integration
 - [ ] Add authentication UI
+  - Login and registration forms
+  - JWT token management
+  - Protected route handling
+  - Session persistence
 - [ ] Implement CV management interface
+  - Language-based CV organization
+  - Primary CV designation
+  - Rich text editing capabilities
+  - Auto-save functionality
 - [ ] Add job description catalog view
+  - Language-filtered listing
+  - Search and filtering
+  - Ranking visualization
+  - Job detail views
 - [ ] Update CV generation flow
+  - Job and CV selection interface
+  - Progress tracking
+  - Result preview and export
+  - Format selection options
 - [ ] Implement local storage caching
+  - Offline data persistence
+  - Background synchronization
+  - Conflict resolution
+  - Cache invalidation
+
+For detailed frontend architecture and implementation specifics, see [Frontend Architecture](frontend-architecture.md).
 
 ### Phase 5: Testing and Documentation
 - [ ] Write unit tests for models

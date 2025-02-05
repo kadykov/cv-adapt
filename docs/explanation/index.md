@@ -31,6 +31,17 @@ Deep dive into CV Adapt's multilingual support:
 - Template customization
 - Internationalization approach
 
+### [Frontend Architecture](frontend-architecture.md)
+Detailed explanation of the web interface architecture:
+
+- Technology stack overview
+- Feature-based modular design
+- Component architecture
+- State management
+- Local storage and offline support
+- Performance optimization
+- Testing strategy
+
 ## Understanding the Documentation
 
 Our documentation follows the [Diátaxis framework](https://diataxis.fr/), which splits documentation into four modes:
