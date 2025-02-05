@@ -58,7 +58,7 @@ all:
     just lint
     just format
     just pre-commit
-    just docs && rm -rf ./site
+    just docs
     just build-frontend
     just test
     just test-backend

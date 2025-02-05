@@ -1,10 +1,13 @@
 import sys
+from datetime import datetime
 from typing import List, Optional
 
-from fastapi import Body, Depends, FastAPI, HTTPException, Query, Response
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
@@ -12,6 +15,11 @@ from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
 
 from . import logger
+from .core.database import get_db
+from .core.security import create_access_token, create_refresh_token, verify_token
+from .schemas.auth import AuthResponse
+from .schemas.user import UserCreate, UserResponse
+from .services.user import UserService
 
 app = FastAPI(title="CV Adapter Web Interface")
 
@@ -19,7 +27,7 @@ app = FastAPI(title="CV Adapter Web Interface")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Dev server
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -190,6 +198,106 @@ async def generate_cv(
     except Exception as e:
         logger.error(f"Error generating CV: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Authentication routes
+@app.post("/auth/register", response_model=AuthResponse)
+async def register(
+    user_data: UserCreate, db: Session = Depends(get_db)
+) -> AuthResponse:
+    """Register a new user."""
+    user_service = UserService(db)
+    if user_service.get_by_email(user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+        )
+
+    user = user_service.create_user(user_data)
+
+    # Create tokens
+    access_token = create_access_token(int(user.id))
+    refresh_token = create_refresh_token(int(user.id))
+
+    return AuthResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserResponse(
+            id=int(user.id),
+            email=str(user.email),
+            personal_info=dict(user.personal_info) if user.personal_info else None,
+            created_at=datetime.fromtimestamp(
+                user.created_at.timestamp()
+            ),  # created_at should never be None for a valid user
+        ),
+    )
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+) -> AuthResponse:
+    """Login user."""
+    user_service = UserService(db)
+    user = user_service.authenticate(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create tokens
+    access_token = create_access_token(int(user.id))
+    refresh_token = create_refresh_token(int(user.id))
+
+    return AuthResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserResponse(
+            id=int(user.id),
+            email=str(user.email),
+            personal_info=dict(user.personal_info) if user.personal_info else None,
+            created_at=datetime.fromtimestamp(
+                user.created_at.timestamp()
+            ),  # created_at should never be None for a valid user
+        ),
+    )
+
+
+@app.post("/auth/refresh", response_model=AuthResponse)
+async def refresh_token(
+    token: str = Body(..., embed=True), db: Session = Depends(get_db)
+) -> AuthResponse:
+    """Refresh access token using refresh token."""
+    payload = verify_token(token, expected_type="refresh")
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
+    user_service = UserService(db)
+    user = user_service.get(payload["sub"])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
+    # Create new tokens
+    access_token = create_access_token(int(user.id))
+    refresh_token = create_refresh_token(int(user.id))
+
+    return AuthResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserResponse(
+            id=int(user.id),
+            email=str(user.email),
+            personal_info=dict(user.personal_info) if user.personal_info else None,
+            created_at=datetime.fromtimestamp(
+                user.created_at.timestamp()
+            ),  # created_at should never be None for a valid user
+        ),
+    )
 
 
 if __name__ == "__main__":

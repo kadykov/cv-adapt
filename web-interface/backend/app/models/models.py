@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     JSON,
@@ -30,7 +30,7 @@ class User(Base):
     hashed_password = Column(String)
     # Store personal info as JSON to match PersonalInfoDTO structure
     personal_info = Column(JSON)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships
     detailed_cvs = relationship("DetailedCV", back_populates="user")
@@ -49,17 +49,17 @@ class DetailedCV(Base):
     # Including: title, experiences, education, skills, core_competences
     content = Column(JSON)
     is_primary = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
 
     # Relationships
     user = relationship("User", back_populates="detailed_cvs")
     generated_cvs = relationship("GeneratedCV", back_populates="detailed_cv")
 
-    __table_args__ = (
-        # Ensure one CV per language per user
-        {"sqlite_on_conflict": "ROLLBACK"}  # or 'REPLACE' if we want to auto-update
-    )
+    # Ensure one CV per language per user is handled by the unique index above
+    pass
 
 
 class JobDescription(Base):
@@ -71,8 +71,10 @@ class JobDescription(Base):
     title = Column(String)
     description = Column(Text)
     language_code = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
 
     # Relationships
     generated_cvs = relationship("GeneratedCV", back_populates="job_description")
@@ -90,7 +92,7 @@ class GeneratedCV(Base):
     language_code = Column(String)
     # Store the entire generated CV as JSON matching CVDTO structure
     content = Column(JSON)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships
     user = relationship("User", back_populates="generated_cvs")
@@ -100,9 +102,6 @@ class GeneratedCV(Base):
 
 # Create indexes
 
-
-# Index for user email lookups
-Index("ix_users_email", User.email)
 
 # Index for CV language lookup
 Index("ix_detailed_cvs_language", DetailedCV.language_code)
