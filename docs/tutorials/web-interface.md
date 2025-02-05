@@ -60,6 +60,33 @@ just generate-types
 
 This command generates TypeScript interfaces from our Pydantic models, ensuring type consistency between frontend and backend.
 
+#### Generated Types Overview
+
+The generated types include:
+
+1. Base Models:
+   - `BaseResponseModel` - Common fields for API responses (id, created_at)
+   - `TimestampedModel` - Base model with timestamps (created_at, updated_at)
+
+2. Detailed CV Types:
+   - `DetailedCVBase` - Base schema with language_code, content, and is_primary
+   - `DetailedCVCreate` - Schema for creating detailed CVs
+   - `DetailedCVUpdate` - Schema for updating detailed CVs
+   - `DetailedCVResponse` - Full response schema with user_id and timestamps
+
+3. Job Description Types:
+   - `JobDescriptionBase` - Base schema with title, description, and language_code
+   - `JobDescriptionCreate` - Schema for creating job descriptions
+   - `JobDescriptionUpdate` - Schema for updating job descriptions
+   - `JobDescriptionResponse` - Full response with timestamps
+
+4. Generated CV Types:
+   - `GeneratedCVBase` - Base schema with language_code and content
+   - `GeneratedCVCreate` - Schema for creating generated CVs
+   - `GeneratedCVResponse` - Full response with user_id, detailed_cv_id, and job_description_id
+
+These types enable type-safe interaction with the persistence layer APIs, ensuring proper typing for stored CV data, job descriptions, and generated CVs.
+
 ### Runtime Validation
 
 We use Zod for runtime validation of API requests and responses:

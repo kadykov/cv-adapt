@@ -23,6 +23,20 @@ from app.main import (  # type: ignore[import-not-found] # noqa: E402
     GenerateCVRequest,
     PersonalInfo,
 )
+from app.schemas.cv import (  # noqa: E402
+    DetailedCVBase,
+    DetailedCVCreate,
+    DetailedCVUpdate,
+    DetailedCVResponse,
+    JobDescriptionBase,
+    JobDescriptionCreate,
+    JobDescriptionUpdate,
+    JobDescriptionResponse,
+    GeneratedCVBase,
+    GeneratedCVCreate,
+    GeneratedCVResponse,
+)
+from app.schemas.base import BaseResponseModel, TimestampedModel  # noqa: E402
 
 from cv_adapter.dto.cv import (  # noqa: E402
     CVDTO,
@@ -69,7 +83,20 @@ def generate_typescript_types() -> None:
         (GenerateCompetencesRequest, "validation"),
         (GenerateCVRequest, "validation"),
         (PersonalInfoRequest, "validation"),
-        # Language model includes LanguageCode enum
+        # New models for persistence
+        (BaseResponseModel, "validation"),
+        (TimestampedModel, "validation"),
+        (DetailedCVBase, "validation"),
+        (DetailedCVCreate, "validation"),
+        (DetailedCVUpdate, "validation"),
+        (DetailedCVResponse, "validation"),
+        (JobDescriptionBase, "validation"),
+        (JobDescriptionCreate, "validation"),
+        (JobDescriptionUpdate, "validation"),
+        (JobDescriptionResponse, "validation"),
+        (GeneratedCVBase, "validation"),
+        (GeneratedCVCreate, "validation"),
+        (GeneratedCVResponse, "validation"),
     ]
 
     # Generate JSON schema using Pydantic

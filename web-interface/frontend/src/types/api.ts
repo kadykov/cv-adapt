@@ -4,6 +4,8 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export type Id = number;
+export type CreatedAt = string;
 export type FullName = string;
 export type Value = string;
 /**
@@ -48,6 +50,20 @@ export type Value1 = string;
 export type Type1 = string;
 export type Icon1 = string | null;
 export type Url1 = string | null;
+export type LanguageCode1 = string;
+export type IsPrimary = boolean;
+export type LanguageCode2 = string;
+export type IsPrimary1 = boolean;
+export type CreatedAt1 = string;
+export type UpdatedAt = string | null;
+export type LanguageCode3 = string;
+export type IsPrimary2 = boolean;
+export type Id1 = number;
+export type UserId = number;
+export type Content3 = {
+  [k: string]: unknown;
+} | null;
+export type IsPrimary3 = boolean | null;
 export type CvText = string;
 export type JobDescription = string;
 export type FullName1 = string;
@@ -56,21 +72,59 @@ export type Notes = string | null;
 export type CvText1 = string;
 export type JobDescription1 = string;
 export type Notes1 = string | null;
+export type LanguageCode4 = string;
+export type LanguageCode5 = string;
+export type DetailedCvId = number;
+export type JobDescriptionId = number;
+export type LanguageCode6 = string;
+export type Id2 = number;
+export type CreatedAt2 = string;
+export type UserId1 = number;
+export type DetailedCvId1 = number;
+export type JobDescriptionId1 = number;
+export type Title = string;
+export type Description3 = string;
+export type LanguageCode7 = string;
+export type Title1 = string;
+export type Description4 = string;
+export type LanguageCode8 = string;
+export type CreatedAt3 = string;
+export type UpdatedAt1 = string | null;
+export type Title2 = string;
+export type Description5 = string;
+export type LanguageCode9 = string;
+export type Id3 = number;
+export type Title3 = string | null;
+export type Description6 = string | null;
 export type CoreCompetences1 = CoreCompetenceDTO[];
 export type Experiences1 = ExperienceDTO[];
 export type Education1 = EducationDTO[];
 export type Skills2 = SkillGroupDTO[];
+export type CreatedAt4 = string;
+export type UpdatedAt2 = string | null;
 
 export interface Stdin {
+  BaseResponseModel: BaseResponseModel;
   CVDTO: CVDTO;
   ContactDTO: ContactDTO;
   ContactRequest: ContactRequest;
   CoreCompetenceDTO: CoreCompetenceDTO;
+  DetailedCVBase: DetailedCVBase;
+  DetailedCVCreate: DetailedCVCreate;
+  DetailedCVResponse: DetailedCVResponse;
+  DetailedCVUpdate: DetailedCVUpdate;
   EducationDTO: EducationDTO;
   ExperienceDTO: ExperienceDTO;
   GenerateCVRequest: GenerateCVRequest;
   GenerateCompetencesRequest: GenerateCompetencesRequest;
+  GeneratedCVBase: GeneratedCVBase;
+  GeneratedCVCreate: GeneratedCVCreate;
+  GeneratedCVResponse: GeneratedCVResponse;
   InstitutionDTO: InstitutionDTO;
+  JobDescriptionBase: JobDescriptionBase;
+  JobDescriptionCreate: JobDescriptionCreate;
+  JobDescriptionResponse: JobDescriptionResponse;
+  JobDescriptionUpdate: JobDescriptionUpdate;
   Language: Language;
   LanguageCode: LanguageCode;
   MinimalCVDTO: MinimalCVDTO;
@@ -79,7 +133,16 @@ export interface Stdin {
   SkillDTO: SkillDTO;
   SkillGroupDTO: SkillGroupDTO;
   SummaryDTO: SummaryDTO;
+  TimestampedModel: TimestampedModel;
   TitleDTO: TitleDTO;
+  [k: string]: unknown;
+}
+/**
+ * Base model for API responses.
+ */
+export interface BaseResponseModel {
+  id: Id;
+  created_at: CreatedAt;
   [k: string]: unknown;
 }
 export interface CVDTO {
@@ -173,6 +236,54 @@ export interface ContactRequest {
   url?: Url1;
   [k: string]: unknown;
 }
+/**
+ * Base detailed CV schema.
+ */
+export interface DetailedCVBase {
+  language_code: LanguageCode1;
+  content: Content;
+  is_primary?: IsPrimary;
+  [k: string]: unknown;
+}
+export interface Content {
+  [k: string]: unknown;
+}
+/**
+ * Schema for creating a detailed CV.
+ */
+export interface DetailedCVCreate {
+  language_code: LanguageCode2;
+  content: Content1;
+  is_primary?: IsPrimary1;
+  [k: string]: unknown;
+}
+export interface Content1 {
+  [k: string]: unknown;
+}
+/**
+ * Schema for detailed CV responses.
+ */
+export interface DetailedCVResponse {
+  created_at: CreatedAt1;
+  updated_at?: UpdatedAt;
+  language_code: LanguageCode3;
+  content: Content2;
+  is_primary?: IsPrimary2;
+  id: Id1;
+  user_id: UserId;
+  [k: string]: unknown;
+}
+export interface Content2 {
+  [k: string]: unknown;
+}
+/**
+ * Schema for updating a detailed CV.
+ */
+export interface DetailedCVUpdate {
+  content?: Content3;
+  is_primary?: IsPrimary3;
+  [k: string]: unknown;
+}
 export interface GenerateCVRequest {
   cv_text: CvText;
   job_description: JobDescription;
@@ -194,6 +305,84 @@ export interface GenerateCompetencesRequest {
   notes?: Notes1;
   [k: string]: unknown;
 }
+/**
+ * Base generated CV schema.
+ */
+export interface GeneratedCVBase {
+  language_code: LanguageCode4;
+  content: Content4;
+  [k: string]: unknown;
+}
+export interface Content4 {
+  [k: string]: unknown;
+}
+/**
+ * Schema for creating a generated CV.
+ */
+export interface GeneratedCVCreate {
+  language_code: LanguageCode5;
+  content: Content5;
+  detailed_cv_id: DetailedCvId;
+  job_description_id: JobDescriptionId;
+  [k: string]: unknown;
+}
+export interface Content5 {
+  [k: string]: unknown;
+}
+/**
+ * Schema for generated CV responses.
+ */
+export interface GeneratedCVResponse {
+  language_code: LanguageCode6;
+  content: Content6;
+  id: Id2;
+  created_at: CreatedAt2;
+  user_id: UserId1;
+  detailed_cv_id: DetailedCvId1;
+  job_description_id: JobDescriptionId1;
+  [k: string]: unknown;
+}
+export interface Content6 {
+  [k: string]: unknown;
+}
+/**
+ * Base job description schema.
+ */
+export interface JobDescriptionBase {
+  title: Title;
+  description: Description3;
+  language_code: LanguageCode7;
+  [k: string]: unknown;
+}
+/**
+ * Schema for creating a job description.
+ */
+export interface JobDescriptionCreate {
+  title: Title1;
+  description: Description4;
+  language_code: LanguageCode8;
+  [k: string]: unknown;
+}
+/**
+ * Schema for job description responses.
+ */
+export interface JobDescriptionResponse {
+  created_at: CreatedAt3;
+  updated_at?: UpdatedAt1;
+  title: Title2;
+  description: Description5;
+  language_code: LanguageCode9;
+  id: Id3;
+  [k: string]: unknown;
+}
+/**
+ * Schema for updating a job description.
+ */
+export interface JobDescriptionUpdate {
+  title?: Title3;
+  description?: Description6;
+  [k: string]: unknown;
+}
 export interface MinimalCVDTO {
   title: TitleDTO;
   core_competences: CoreCompetences1;
@@ -201,6 +390,14 @@ export interface MinimalCVDTO {
   education: Education1;
   skills: Skills2;
   language: Language;
+  [k: string]: unknown;
+}
+/**
+ * Base model that includes created/updated timestamps.
+ */
+export interface TimestampedModel {
+  created_at: CreatedAt4;
+  updated_at?: UpdatedAt2;
   [k: string]: unknown;
 }
 
