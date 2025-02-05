@@ -11,7 +11,6 @@ dependencies = [
     "pydantic>=2.5.2",
     "pydantic-ai>=0.0.18",
     "rich>=13.7.0",
-    "sqlalchemy[asyncio]>=2.0.37",
 ]
 
 [build-system]
@@ -54,6 +53,7 @@ dev = [
     "logfire>=3.2.0",
     "pydantic-ai[logfire]>=0.0.19",
     "pydantic-to-typescript>=2.0.0",
+    "types-passlib>=1.7.7.20241221",
 ]
 docs = [
     "mkdocs>=1.6.1",
@@ -63,7 +63,9 @@ docs = [
     "types-jsonschema>=4.23.0.20241208",
 ]
 backend = [
+    "alembic>=1.14.1",
     "fastapi>=0.115.8",
     "python-multipart>=0.0.20",
+    "sqlalchemy[asyncio]>=2.0.37",
     "uvicorn>=0.34.0",
 ]

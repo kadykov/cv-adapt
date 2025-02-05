@@ -148,15 +148,15 @@ GET /generations/:id
 
 ## Implementation Plan
 
-### Phase 1: Database Setup and Core Models
+### Phase 1: Database Setup and Core Models ✓
 - [X] Set up PostgreSQL database
 - [X] Add SQLAlchemy and dependencies
-- [ ] Implement User model
-- [ ] Implement DetailedCV model
-- [ ] Implement JobDescription model
-- [ ] Implement GeneratedCV model
-- [ ] Set up Alembic for migrations
-- [ ] Write initial migration
+- [X] Implement User model
+- [X] Implement DetailedCV model
+- [X] Implement JobDescription model
+- [X] Implement GeneratedCV model
+- [X] Set up Alembic for migrations
+- [X] Write initial migration
 
 ### Phase 2: Authentication System
 - [ ] Add JWT authentication dependencies
@@ -191,28 +191,106 @@ GET /generations/:id
 
 ### Database Access Layer
 
-The system will use SQLAlchemy as the ORM with Pydantic integration for data validation. Key components:
+The system uses SQLAlchemy as the ORM with Pydantic integration for data validation. Key components:
 
 1. SQLAlchemy models for database schema representation
 2. Pydantic models for request/response validation
 3. Database service layer for encapsulated data access
 4. Alembic for database migrations
 
-Example service layer:
+#### Schema Models & Validation
+
+The system uses Pydantic models for request/response validation:
+
+##### Base Models
 ```python
-class DBService:
-    def __init__(self, db: Session):
+class BaseResponseModel:
+    id: int
+    created_at: datetime
+
+class TimestampedModel:
+    created_at: datetime
+    updated_at: datetime | None
+```
+
+##### User Models
+```python
+class UserBase:
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+
+class UserUpdate:
+    personal_info: Dict
+
+class UserResponse(BaseResponseModel, UserBase):
+    personal_info: Dict | None
+```
+
+##### CV Models
+```python
+class DetailedCVBase:
+    language_code: str
+    content: Dict
+    is_primary: bool = False
+
+class DetailedCVCreate(DetailedCVBase):
+    pass
+
+class DetailedCVUpdate:
+    content: Dict | None
+    is_primary: bool | None
+
+class DetailedCVResponse(BaseResponseModel, DetailedCVBase, TimestampedModel):
+    user_id: int
+```
+
+#### Database Service Layer
+
+The system implements a generic base service that provides common CRUD operations:
+
+```python
+class BaseDBService(Generic[ModelType]):
+    def __init__(self, db: Session, model: Type[ModelType]):
         self.db = db
+        self.model = model
 
-    async def get_user_by_email(self, email: str) -> Optional[User]:
-        return self.db.query(User).filter(User.email == email).first()
+    def get(self, id: int) -> ModelType | None
+    def get_multi(self, *, skip: int = 0, limit: int = 100) -> list[ModelType]
+    def create(self, **data) -> ModelType
+    def update(self, db_obj: ModelType, **data) -> ModelType
+    def delete(self, id: int) -> bool
+```
 
-    async def create_user(self, user: UserCreate) -> User:
-        db_user = User(**user.dict(exclude={"password"}))
-        self.db.add(db_user)
-        self.db.commit()
-        self.db.refresh(db_user)
-        return db_user
+Specialized services extend this base:
+
+##### User Service
+```python
+class UserService(BaseDBService[User]):
+    def get_by_email(self, email: str) -> Optional[User]
+    def create_user(self, user_data: UserCreate) -> User
+    def update_personal_info(self, user: User, user_data: UserUpdate) -> User
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool
+    def authenticate(self, email: str, password: str) -> Optional[User]
+```
+
+##### CV Services
+```python
+class DetailedCVService(BaseDBService[DetailedCV]):
+    def get_by_user_and_language(self, user_id: int, language_code: str) -> Optional[DetailedCV]
+    def get_user_cvs(self, user_id: int) -> List[DetailedCV]
+    def create_cv(self, user_id: int, cv_data: DetailedCVCreate) -> DetailedCV
+    def update_cv(self, cv: DetailedCV, cv_data: DetailedCVUpdate) -> DetailedCV
+
+class JobDescriptionService(BaseDBService[JobDescription]):
+    def get_by_language(self, language_code: str) -> List[JobDescription]
+    def create_job_description(self, job_data: JobDescriptionCreate) -> JobDescription
+    def update_job_description(self, job: JobDescription, job_data: JobDescriptionUpdate) -> JobDescription
+
+class GeneratedCVService(BaseDBService[GeneratedCV]):
+    def get_by_user(self, user_id: int) -> List[GeneratedCV]
+    def create_generated_cv(self, user_id: int, cv_data: GeneratedCVCreate) -> GeneratedCV
 ```
 
 ### Authentication Flow
