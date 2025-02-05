@@ -279,7 +279,7 @@ wheels = [
 [[package]]
 name = "cv-adapt"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "fast-langdetect" },
     { name = "jinja2" },

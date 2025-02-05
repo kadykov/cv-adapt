@@ -8,7 +8,6 @@ install-frontend:
 # Install dependencies
 install:
     uv sync --frozen --all-groups --quiet
-    uv pip install -e .
     bash -c 'source ./.venv/bin/activate'
     uv run pre-commit install
     just install-frontend
