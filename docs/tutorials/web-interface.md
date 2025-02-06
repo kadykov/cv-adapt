@@ -188,6 +188,36 @@ describe('YourComponent', () => {
 
 Integration tests for the API endpoints are located in `web-interface/backend/tests/integration/test_cv_generation.py`.
 
+## Installation
+
+### Database Setup
+
+The application requires a PostgreSQL database. You can initialize it in two ways:
+
+1. **Using Docker (Recommended)**
+   - The application comes with Docker configuration that automatically:
+     * Starts a PostgreSQL database
+     * Waits for the database to be ready
+     * Creates the required database and tables
+     * Runs all necessary migrations
+   - Just run:
+     ```bash
+     docker compose up
+     ```
+
+2. **Manual Setup**
+   - If you prefer to manage the database yourself:
+     ```bash
+     # Initialize the database (creates database and runs migrations)
+     just init-db
+     ```
+   - The database configuration can be customized through environment variables:
+     * POSTGRES_USER (default: postgres)
+     * POSTGRES_PASSWORD (default: postgres)
+     * POSTGRES_DB (default: cv_adapt)
+     * POSTGRES_HOST (default: db)
+     * POSTGRES_PORT (default: 5432)
+
 ## Development
 
 ### Development Commands

@@ -5,12 +5,17 @@ default:
 install-frontend:
     cd web-interface/frontend && npm install
 
+# Initialize the database
+init-db:
+    cd web-interface/backend && python scripts/init_db.py
+
 # Install dependencies
 install:
     uv sync --frozen --all-groups --quiet
     bash -c 'source ./.venv/bin/activate'
     uv run pre-commit install
     just install-frontend
+    @echo "Run 'just init-db' to initialize the database"
 
 # Run tests
 test *ARGS='./tests':
