@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/cv_adapt",
+    "postgresql://postgres:postgres@db:5432/cv_adapt",
 )
 
 is_sqlite = DATABASE_URL.startswith("sqlite")

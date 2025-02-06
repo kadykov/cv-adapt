@@ -36,13 +36,15 @@ from .services.user import UserService
 
 app = FastAPI(title="CV Adapter Web Interface")
 
-# Add CORS middleware
+# Configure CORS with more permissive settings for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Dev server
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Allow both localhost variants
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all methods during development
+    allow_headers=["*"],  # Allow all headers during development
+    expose_headers=["*"],  # Expose all headers during development
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 
@@ -214,7 +216,7 @@ async def generate_cv(
 
 
 # Authentication routes
-@app.post("/auth/register", response_model=AuthResponse)
+@app.post("/v1/auth/register", response_model=AuthResponse)
 async def register(
     user_data: UserCreate, db: Session = Depends(get_db)
 ) -> AuthResponse:
@@ -222,7 +224,12 @@ async def register(
     user_service = UserService(db)
     if user_service.get_by_email(user_data.email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Email already registered",
+                "code": "EMAIL_EXISTS",
+                "field": "email"
+            }
         )
 
     user = user_service.create_user(user_data)
@@ -245,7 +252,7 @@ async def register(
     )
 
 
-@app.post("/auth/login", response_model=AuthResponse)
+@app.post("/v1/auth/login", response_model=AuthResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ) -> AuthResponse:
@@ -255,7 +262,11 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail={
+                "message": "Incorrect email or password",
+                "code": "INVALID_CREDENTIALS",
+                "field": "password"
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -277,7 +288,7 @@ async def login(
     )
 
 
-@app.post("/auth/logout", status_code=status.HTTP_200_OK)
+@app.post("/v1/auth/logout", status_code=status.HTTP_200_OK)
 async def logout() -> dict[str, str]:
     """Logout user."""
     # Since we're using JWT, we don't need to do anything server-side
@@ -285,7 +296,7 @@ async def logout() -> dict[str, str]:
     return {"status": "success"}
 
 
-@app.post("/auth/refresh", response_model=AuthResponse)
+@app.post("/v1/auth/refresh", response_model=AuthResponse)
 async def refresh_token(
     token: str = Body(..., embed=True), db: Session = Depends(get_db)
 ) -> AuthResponse:
@@ -293,14 +304,24 @@ async def refresh_token(
     payload = verify_token(token, expected_type="refresh")
     if not payload:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "message": "Invalid refresh token",
+                "code": "INVALID_REFRESH_TOKEN",
+                "field": "token"
+            }
         )
 
     user_service = UserService(db)
     user = user_service.get(payload["sub"])
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "message": "User not found",
+                "code": "USER_NOT_FOUND",
+                "field": "token"
+            }
         )
 
     # Create new tokens

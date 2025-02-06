@@ -1,0 +1,22 @@
+---
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { LoginFormWithProvider } from "../features/auth/components/LoginFormWithProvider";
+---
+
+<AuthLayout title="Login - CV Adapt">
+  <div class="min-h-screen flex flex-col justify-center">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold">Welcome Back</h1>
+      <p class="text-base-content/70">Sign in to your account to continue</p>
+    </div>
+
+    <LoginFormWithProvider client:load />
+
+    <div class="text-center mt-6">
+      <p class="text-base-content/70">
+        Don't have an account?{" "}
+        <a href="/register" class="text-primary hover:underline">Register</a>
+      </p>
+    </div>
+  </div>
+</AuthLayout>
