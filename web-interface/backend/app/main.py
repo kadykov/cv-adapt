@@ -14,7 +14,7 @@ from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
 
-from . import logger
+from . import auth_logger, logger
 from .core.database import get_db
 from .core.deps import get_current_user
 from .core.security import create_access_token, create_refresh_token, verify_token
@@ -221,8 +221,13 @@ async def register(
     user_data: UserCreate, db: Session = Depends(get_db)
 ) -> AuthResponse:
     """Register a new user."""
+    auth_logger.debug(f"Registration attempt for email: {user_data.email}")
+
     user_service = UserService(db)
-    if user_service.get_by_email(user_data.email):
+    existing_user = user_service.get_by_email(user_data.email)
+
+    if existing_user:
+        auth_logger.warning(f"Registration failed - email already exists: {user_data.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -232,7 +237,15 @@ async def register(
             }
         )
 
-    user = user_service.create_user(user_data)
+    try:
+        user = user_service.create_user(user_data)
+        auth_logger.info(f"User registered successfully: {user.email}")
+    except Exception as e:
+        auth_logger.error(f"Registration failed for {user_data.email}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"message": "Registration failed", "code": "REGISTRATION_ERROR"}
+        )
 
     # Create tokens
     access_token = create_access_token(int(user.id))
@@ -257,22 +270,36 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ) -> AuthResponse:
     """Login user."""
-    user_service = UserService(db)
-    user = user_service.authenticate(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "message": "Incorrect email or password",
-                "code": "INVALID_CREDENTIALS",
-                "field": "password"
-            },
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    auth_logger.debug(f"Login attempt for username: {form_data.username}")
 
-    # Create tokens
-    access_token = create_access_token(int(user.id))
-    refresh_token = create_refresh_token(int(user.id))
+    user_service = UserService(db)
+    try:
+        user = user_service.authenticate(form_data.username, form_data.password)
+        if not user:
+            auth_logger.warning(f"Login failed - invalid credentials for: {form_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "message": "Incorrect email or password",
+                    "code": "INVALID_CREDENTIALS",
+                    "field": "password"
+                },
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        auth_logger.debug(f"Creating tokens for user: {user.email}")
+        # Create tokens
+        access_token = create_access_token(int(user.id))
+        refresh_token = create_refresh_token(int(user.id))
+        auth_logger.info(f"User logged in successfully: {user.email}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        auth_logger.error(f"Login failed for {form_data.username}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"message": "Login failed", "code": "LOGIN_ERROR"}
+        )
 
     return AuthResponse(
         access_token=access_token,

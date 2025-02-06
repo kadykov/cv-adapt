@@ -133,3 +133,64 @@ Response 401 Unauthorized:
 - Environment variables control token secrets and expiration times
 - CORS is configured to handle credentials properly
 - Token verification checks both token validity and type
+
+## Logging and Debugging
+
+The authentication system includes detailed logging to help diagnose issues:
+
+### Log Configuration
+
+- Log level can be configured via the `LOG_LEVEL` environment variable (defaults to "INFO")
+- Authentication-specific logger is set to DEBUG level for maximum visibility
+- Log format includes timestamps, log levels, file locations, and detailed messages:
+  ```
+  2025-02-06 22:30:15 | DEBUG | auth/main.py:42 | Registration attempt for email: user@example.com
+  ```
+
+### Authentication Logs
+
+The following events are logged during authentication:
+
+#### Registration
+- DEBUG: Initial registration attempts with email address
+- WARNING: Failed registrations (e.g., email already exists)
+- ERROR: Unexpected registration errors with stack traces
+- INFO: Successful registrations
+
+Example registration logs:
+```
+DEBUG | Registration attempt for email: user@example.com
+WARNING | Registration failed - email already exists: user@example.com
+INFO | User registered successfully: user@example.com
+ERROR | Registration failed for user@example.com: [error details with stack trace]
+```
+
+#### Login
+- DEBUG: Login attempts with username
+- WARNING: Failed login attempts due to invalid credentials
+- ERROR: Unexpected login errors with stack traces
+- INFO: Successful logins
+- DEBUG: Token creation events
+
+Example login logs:
+```
+DEBUG | Login attempt for username: user@example.com
+WARNING | Login failed - invalid credentials for: user@example.com
+DEBUG | Creating tokens for user: user@example.com
+INFO | User logged in successfully: user@example.com
+```
+
+### Troubleshooting
+
+Common HTTP status codes and their corresponding log entries:
+
+- 400 Bad Request
+  - Check WARNING level logs for validation failures (e.g., email already exists)
+  - Review DEBUG logs for the full request context
+- 401 Unauthorized
+  - Check WARNING logs for invalid credential attempts
+  - Review DEBUG logs for token validation issues
+- 500 Internal Server Error
+  - Check ERROR logs for detailed stack traces and error messages
+
+To enable detailed debugging, set `LOG_LEVEL=DEBUG` in your environment.
