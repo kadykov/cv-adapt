@@ -1,16 +1,12 @@
 """User database service."""
 
 from typing import Optional
-
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from ..models.models import User
 from ..schemas.user import UserCreate, UserUpdate
 from .base import BaseDBService
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 class UserService(BaseDBService[User]):
     """Service for handling user database operations."""
@@ -25,9 +21,12 @@ class UserService(BaseDBService[User]):
 
     def create_user(self, user_data: UserCreate) -> User:
         """Create new user with hashed password."""
-        hashed_password = pwd_context.hash(user_data.password)
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(user_data.password.encode(), salt)
         db_user = User(
-            email=user_data.email, hashed_password=hashed_password, personal_info={}
+            email=user_data.email,
+            hashed_password=hashed_password.decode(),
+            personal_info={}
         )
         self.db.add(db_user)
         self.db.commit()
@@ -40,7 +39,10 @@ class UserService(BaseDBService[User]):
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify password against hashed password."""
-        return pwd_context.verify(plain_password, hashed_password)
+        return bcrypt.checkpw(
+            plain_password.encode(),
+            hashed_password.encode()
+        )
 
     def authenticate(self, email: str, password: str) -> Optional[User]:
         """Authenticate user by email and password."""

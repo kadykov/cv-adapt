@@ -1,3 +1,5 @@
+"""Database models."""
+
 from datetime import UTC, datetime
 
 from sqlalchemy import (
@@ -11,14 +13,9 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm import relationship
 
-
-class Base(DeclarativeBase):
-    """Base class for all models."""
-
-    pass
-
+from ..core.database import Base
 
 class User(Base):
     """User model for authentication and personal information."""
@@ -35,7 +32,6 @@ class User(Base):
     # Relationships
     detailed_cvs = relationship("DetailedCV", back_populates="user")
     generated_cvs = relationship("GeneratedCV", back_populates="user")
-
 
 class DetailedCV(Base):
     """Stores the detailed CV data that user enters, can have multiple per language."""
@@ -58,10 +54,6 @@ class DetailedCV(Base):
     user = relationship("User", back_populates="detailed_cvs")
     generated_cvs = relationship("GeneratedCV", back_populates="detailed_cv")
 
-    # Ensure one CV per language per user is handled by the unique index above
-    pass
-
-
 class JobDescription(Base):
     """Stores job descriptions that can be used for CV generation."""
 
@@ -78,7 +70,6 @@ class JobDescription(Base):
 
     # Relationships
     generated_cvs = relationship("GeneratedCV", back_populates="job_description")
-
 
 class GeneratedCV(Base):
     """Stores generated CVs (output CVs) that match DetailedCVs with JobDescriptions."""
@@ -99,9 +90,7 @@ class GeneratedCV(Base):
     detailed_cv = relationship("DetailedCV", back_populates="generated_cvs")
     job_description = relationship("JobDescription", back_populates="generated_cvs")
 
-
 # Create indexes
-
 
 # Index for CV language lookup
 Index("ix_detailed_cvs_language", DetailedCV.language_code)

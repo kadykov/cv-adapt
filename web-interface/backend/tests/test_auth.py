@@ -1,12 +1,15 @@
 """Authentication system tests."""
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from app.services.user import UserService
 
-def test_register(client: TestClient) -> None:
-    """Test user registration."""
+def test_register(client: TestClient, db: Session) -> None:
+    """Test user registration and ensure proper bcrypt hash format."""
+    # Register a new user
     response = client.post(
-        "/auth/register",
+        "/v1/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -18,12 +21,23 @@ def test_register(client: TestClient) -> None:
     assert "refresh_token" in data
     assert data["user"]["email"] == "test@example.com"
 
+    # Verify the user and hash format
+    user_service = UserService(db)
+    user = user_service.get_by_email("test@example.com")
+    assert user is not None
+
+    # Check bcrypt hash format ($2b$...)
+    assert user.hashed_password.startswith("$2")
+
+    # Verify password validation works
+    assert user_service.verify_password("testpassword", user.hashed_password)
+    assert not user_service.verify_password("wrongpassword", user.hashed_password)
 
 def test_register_duplicate_email(client: TestClient) -> None:
     """Test registration with duplicate email."""
     # Register first user
     response = client.post(
-        "/auth/register",
+        "/v1/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -33,21 +47,20 @@ def test_register_duplicate_email(client: TestClient) -> None:
 
     # Try to register with same email
     response = client.post(
-        "/auth/register",
+        "/v1/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword2",
         },
     )
     assert response.status_code == 400
-    assert "Email already registered" in response.json()["detail"]
-
+    assert "Email already registered" in response.json()["detail"]["message"]
 
 def test_login(client: TestClient) -> None:
     """Test user login."""
     # Register user first
     client.post(
-        "/auth/register",
+        "/v1/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -56,7 +69,7 @@ def test_login(client: TestClient) -> None:
 
     # Test login
     response = client.post(
-        "/auth/login",
+        "/v1/auth/login",
         data={
             "username": "test@example.com",
             "password": "testpassword",
@@ -68,25 +81,23 @@ def test_login(client: TestClient) -> None:
     assert "refresh_token" in data
     assert data["user"]["email"] == "test@example.com"
 
-
 def test_login_invalid_credentials(client: TestClient) -> None:
     """Test login with invalid credentials."""
     response = client.post(
-        "/auth/login",
+        "/v1/auth/login",
         data={
             "username": "test@example.com",
             "password": "wrongpassword",
         },
     )
     assert response.status_code == 401
-    assert "Incorrect email or password" in response.json()["detail"]
-
+    assert "Incorrect email or password" in response.json()["detail"]["message"]
 
 def test_refresh_token(client: TestClient) -> None:
     """Test token refresh."""
     # First register the user
     client.post(
-        "/auth/register",
+        "/v1/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -95,7 +106,7 @@ def test_refresh_token(client: TestClient) -> None:
 
     # Then login to get fresh tokens
     response = client.post(
-        "/auth/login",
+        "/v1/auth/login",
         data={
             "username": "test@example.com",
             "password": "testpassword",
@@ -105,16 +116,15 @@ def test_refresh_token(client: TestClient) -> None:
     refresh_token = response.json()["refresh_token"]
 
     # Test token refresh
-    response = client.post("/auth/refresh", json={"token": refresh_token})
+    response = client.post("/v1/auth/refresh", json={"token": refresh_token})
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
     assert "refresh_token" in data
     assert data["user"]["email"] == "test@example.com"
 
-
 def test_refresh_invalid_token(client: TestClient) -> None:
     """Test refresh with invalid token."""
-    response = client.post("/auth/refresh", json={"token": "invalid_token"})
+    response = client.post("/v1/auth/refresh", json={"token": "invalid_token"})
     assert response.status_code == 401
-    assert "Invalid refresh token" in response.json()["detail"]
+    assert "Invalid refresh token" in response.json()["detail"]["message"]
