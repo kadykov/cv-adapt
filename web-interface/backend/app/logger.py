@@ -2,52 +2,108 @@ import logging
 import os
 import sys
 from typing import Any
+from uuid import uuid4
+
+from fastapi import FastAPI, Request
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 # Configure log level from environment variable
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 
-# Custom formatter with more details
-class DetailedFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord) -> str:
-        record.pathname = record.pathname.split('app/')[-1] if 'app/' in record.pathname else record.pathname
-        return super().format(record)
+class JsonFormatter(logging.Formatter):
+    """Custom JSON formatter with pretty-printing."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_keys = ['timestamp', 'service', 'level', 'path', 'line', 'message']
+
+    def format(self, record):
+        """Format log record as JSON."""
+        log_data = {
+            'timestamp': self.formatTime(record, self.datefmt),
+            'service': record.name,
+            'level': record.levelname,
+            'path': record.pathname,
+            'line': record.lineno,
+            'message': record.getMessage()
+        }
+
+        # Add any extra fields from record
+        if hasattr(record, 'request_id'):
+            log_data['request_id'] = record.request_id
+
+        # Handle extra fields for structured logging
+        for key, value in record.__dict__.items():
+            if key not in logging.LogRecord.__dict__ and key not in self.default_keys:
+                log_data[key] = value
+
+        return json.dumps(log_data, indent=2)
 
 # Create formatters
-detailed_formatter = DetailedFormatter(
-    '%(asctime)s | %(levelname)-8s | %(pathname)s:%(lineno)d | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+json_formatter = JsonFormatter(datefmt='%Y-%m-%d %H:%M:%S')
 
 # Create handlers
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(detailed_formatter)
+console_handler.setFormatter(json_formatter)
 
 # Configure root logger
 logging.basicConfig(
     level=getattr(logging, log_level),
-    handlers=[console_handler]
+    handlers=[console_handler],
+    force=True  # Ensure our configuration takes precedence
 )
 
-def get_logger(name: str, level: str | None = None) -> logging.Logger:
-    """
-    Get a logger with the specified name and optional level.
-
-    Args:
-        name: The name of the logger
-        level: Optional log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-
-    Returns:
-        A configured logger instance
-    """
+def get_logger(name: str) -> logging.Logger:
+    """Get a configured logger instance."""
     logger = logging.getLogger(name)
-    if level:
-        logger.setLevel(getattr(logging, level.upper()))
+    logger.propagate = True
     return logger
 
-# Create main application logger
+# Create application loggers
 logger = get_logger("cv-adapter")
-
-# Create specialized loggers
-auth_logger = get_logger("cv-adapter.auth", "DEBUG")
+auth_logger = get_logger("cv-adapter.auth")
 api_logger = get_logger("cv-adapter.api")
 db_logger = get_logger("cv-adapter.db")
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Middleware to add a unique request ID to each request."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
+        request_id = str(uuid4())
+        request.state.request_id = request_id
+
+        # Log incoming request with minimal info
+        api_logger.debug(
+            f"Request {request_id}",
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "client_host": request.client.host if request.client else None
+            }
+        )
+
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+
+        # Log response status
+        api_logger.debug(
+            f"Response {request_id}",
+            extra={
+                "request_id": request_id,
+                "status_code": response.status_code
+            }
+        )
+
+        return response
+
+def setup_logging(app: FastAPI) -> None:
+    """Configure FastAPI application logging."""
+    # Add request ID middleware
+    app.add_middleware(RequestIDMiddleware)
+
+    # Log FastAPI startup
+    logger.info(
+        "FastAPI application startup",
+        extra={"log_level": log_level}
+    )

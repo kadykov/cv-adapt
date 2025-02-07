@@ -1,4 +1,5 @@
 import sys
+import logging
 from datetime import datetime
 from typing import Annotated, List, Optional
 
@@ -14,7 +15,7 @@ from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 from cv_adapter.models.context import language_context
 
-from . import auth_logger, logger
+from . import auth_logger, logger, setup_logging
 from .core.database import get_db
 from .core.deps import get_current_user
 from .core.security import create_access_token, create_refresh_token, verify_token
@@ -36,6 +37,9 @@ from .services.user import UserService
 
 app = FastAPI(title="CV Adapter Web Interface")
 
+# Setup logging first
+setup_logging(app)
+
 # Configure CORS with more permissive settings for development
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +47,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods during development
     allow_headers=["*"],  # Allow all headers during development
-    expose_headers=["*"],  # Expose all headers during development
+    expose_headers=["X-Request-ID", "*"],  # Expose request ID and other headers
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 

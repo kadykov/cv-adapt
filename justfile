@@ -85,7 +85,7 @@ serve-backend *ARGS='':
 
 # Serve backend API with debug logging
 serve-backend-debug *ARGS='':
-    cd web-interface/backend && LOG_LEVEL=debug uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
+    cd web-interface/backend && LOG_LEVEL=DEBUG uvicorn app.main:app --reload --port 8000 --log-level debug {{ARGS}} --use-colors
 
 # Serve frontend development server
 serve-frontend:

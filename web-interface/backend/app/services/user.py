@@ -46,7 +46,18 @@ class UserService(BaseDBService[User]):
 
     def authenticate(self, email: str, password: str) -> Optional[User]:
         """Authenticate user by email and password."""
+        from ..logger import auth_logger
+
+        auth_logger.debug(f"Authenticating user with email: {email}")
         user = self.get_by_email(email)
-        if not user or not self.verify_password(password, str(user.hashed_password)):
+
+        if not user:
+            auth_logger.warning(f"Authentication failed - user not found: {email}")
             return None
+
+        if not self.verify_password(password, str(user.hashed_password)):
+            auth_logger.warning(f"Authentication failed - invalid password for user: {email}")
+            return None
+
+        auth_logger.info(f"Authentication successful for user: {email}")
         return user
