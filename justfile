@@ -68,6 +68,7 @@ all:
     just test
     just test-backend
     just generate-types
+    just test-frontend-all
     just test-frontend-cov
 
 # Build documentation
@@ -111,9 +112,25 @@ generate-types:
 test-backend *ARGS='':
     cd web-interface/backend && uv run pytest tests/ {{ARGS}}
 
-# Run frontend tests
+# Run frontend unit tests
 test-frontend:
     cd web-interface/frontend && npm test
+
+# Run frontend integration tests (requires backend in test mode)
+test-frontend-integration:
+    cd web-interface/backend && TESTING=1 uvicorn app.main:app --port 8000 & \
+    sleep 5 && cd ../frontend && npm run test:integration; \
+    kill %1
+
+# Run frontend E2E tests
+test-frontend-e2e:
+    cd web-interface/frontend && npm run test:e2e
+
+# Run all frontend tests (unit, integration, and E2E)
+test-frontend-all:
+    just test-frontend
+    just test-frontend-integration
+    just test-frontend-e2e
 
 # Run frontend tests with coverage
 test-frontend-cov:

@@ -1,4 +1,5 @@
 import sys
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,6 +7,10 @@ from cv_adapter.core.async_application import AsyncCVAdapterApplication
 
 from .logger import setup_logging_middleware
 from .api import auth, users, cvs, jobs, generations
+
+# Only import test router if we're in a test environment
+if os.environ.get("TESTING") == "1":
+    from .api import test
 
 app = FastAPI(title="CV Adapter Web Interface")
 
@@ -29,6 +34,10 @@ app.include_router(users.router)
 app.include_router(cvs.router)
 app.include_router(jobs.router)
 app.include_router(generations.router)
+
+# Include test router only in test environment
+if os.environ.get("TESTING") == "1":
+    app.include_router(test.router)
 
 if __name__ == "__main__":
     import uvicorn
