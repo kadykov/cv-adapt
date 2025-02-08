@@ -20,7 +20,7 @@ export function ProtectedRoute({ children, fallback = "/login" }: ProtectedRoute
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <div data-testid="loading-spinner" className="loading loading-spinner loading-lg"></div>
       </div>
     );
   }

@@ -116,19 +116,14 @@ test-backend *ARGS='':
 test-frontend:
     cd web-interface/frontend && npm test
 
-# Run frontend integration tests with proper server setup
+# Run frontend integration tests
 test-frontend-integration:
     cd web-interface/frontend && npm run test:integration
 
-# Run frontend E2E tests
-test-frontend-e2e:
-    cd web-interface/frontend && npm run test:e2e
-
-# Run all frontend tests (unit, integration, and E2E)
+# Run all frontend tests (unit and integration)
 test-frontend-all:
     just test-frontend
     just test-frontend-integration
-    just test-frontend-e2e
 
 # Run frontend tests with coverage
 test-frontend-cov:

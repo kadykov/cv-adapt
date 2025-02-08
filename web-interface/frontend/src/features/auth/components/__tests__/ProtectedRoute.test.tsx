@@ -1,9 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { ProtectedRoute } from "../ProtectedRoute";
+import type { Mock } from "vitest";
+
+// Mock the entire auth context module
+vi.mock("../../context/AuthContext", () => ({
+  useAuth: vi.fn(),
+}));
 
 describe("ProtectedRoute", () => {
   const originalLocation = window.location;
+  let useAuth: Mock;
+
+  beforeAll(async () => {
+    const authContext = await import("../../context/AuthContext");
+    useAuth = authContext.useAuth as ReturnType<typeof vi.fn>;
+  });
 
   beforeEach(() => {
     Object.defineProperty(window, "location", {
@@ -11,6 +23,7 @@ describe("ProtectedRoute", () => {
       enumerable: true,
       value: { href: "" },
     });
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -22,12 +35,10 @@ describe("ProtectedRoute", () => {
   });
 
   it("shows loading state initially", () => {
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        isAuthenticated: false,
-        isLoading: true,
-      }),
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+    });
 
     render(
       <ProtectedRoute>
@@ -35,17 +46,15 @@ describe("ProtectedRoute", () => {
       </ProtectedRoute>
     );
 
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
 
   it("redirects to login when not authenticated", async () => {
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        isAuthenticated: false,
-        isLoading: false,
-      }),
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+    });
 
     render(
       <ProtectedRoute>
@@ -60,12 +69,10 @@ describe("ProtectedRoute", () => {
   });
 
   it("redirects to custom fallback URL when provided", async () => {
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        isAuthenticated: false,
-        isLoading: false,
-      }),
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+    });
 
     render(
       <ProtectedRoute fallback="/custom-login">
@@ -79,12 +86,10 @@ describe("ProtectedRoute", () => {
   });
 
   it("renders children when authenticated", () => {
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        isAuthenticated: true,
-        isLoading: false,
-      }),
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    });
 
     render(
       <ProtectedRoute>
@@ -96,12 +101,10 @@ describe("ProtectedRoute", () => {
   });
 
   it("does not redirect when authenticated", async () => {
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        isAuthenticated: true,
-        isLoading: false,
-      }),
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    });
 
     render(
       <ProtectedRoute>
@@ -115,15 +118,10 @@ describe("ProtectedRoute", () => {
   });
 
   it("handles transition from loading to authenticated", async () => {
-    const states = [
-      { isAuthenticated: false, isLoading: true },
-      { isAuthenticated: true, isLoading: false },
-    ];
-    let currentState = 0;
-
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => states[currentState],
-    }));
+    useAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+    });
 
     const { rerender } = render(
       <ProtectedRoute>
@@ -132,11 +130,14 @@ describe("ProtectedRoute", () => {
     );
 
     // Initially loading
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
 
     // Update to authenticated state
-    currentState = 1;
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    });
     rerender(
       <ProtectedRoute>
         <div>Protected Content</div>
@@ -144,7 +145,7 @@ describe("ProtectedRoute", () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("loading-spinner")).not.toBeInTheDocument();
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
     });
   });

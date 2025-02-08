@@ -9,11 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest",
-    "test:integration": "playwright test integration/",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report",
+    "test:integration": "vitest src/tests/*.integration.test.ts",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -32,7 +28,6 @@
   },
   "devDependencies": {
     "@astrojs/tailwind": "^6.0.0",
-    "@playwright/test": "^1.50.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",

@@ -65,10 +65,11 @@ export function RegisterForm() {
     <div className="w-full max-w-md mx-auto p-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="form-control w-full">
-          <label className="label">
+          <label htmlFor="email" className="label">
             <span className="label-text">Email</span>
           </label>
           <input
+            id="email"
             type="email"
             {...register("email")}
             className={`input input-bordered w-full ${
@@ -86,10 +87,11 @@ export function RegisterForm() {
         </div>
 
         <div className="form-control w-full">
-          <label className="label">
+          <label htmlFor="password" className="label">
             <span className="label-text">Password</span>
           </label>
           <input
+            id="password"
             type="password"
             {...register("password")}
             className={`input input-bordered w-full ${
@@ -112,11 +114,12 @@ export function RegisterForm() {
         </div>
 
         <div className="form-control">
-          <label className="label cursor-pointer">
+          <label htmlFor="acceptTerms" className="label cursor-pointer">
             <span className="label-text">I accept the terms and conditions</span>
             <input
               type="checkbox"
               {...register("acceptTerms")}
+              id="acceptTerms"
               className={`checkbox ${errors.acceptTerms ? "checkbox-error" : ""}`}
             />
           </label>

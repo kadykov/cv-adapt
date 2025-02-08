@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../AuthContext";
 import * as authApi from "../../api/auth.api";
 import type { User } from "../../types";
@@ -12,6 +12,16 @@ vi.mock("../../api/auth.api", () => ({
 }));
 
 describe("AuthContext", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    localStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const mockUser: User = {
     id: 1,
     email: "test@example.com",
@@ -158,26 +168,36 @@ describe("AuthContext", () => {
 
   it("handles token refresh", async () => {
     const newToken = "new-mock-token";
-    vi.mocked(authApi.refreshToken).mockResolvedValue({
+    const refreshPromise = Promise.resolve({
       access_token: newToken,
       user: mockUser,
     });
 
+    vi.mocked(authApi.refreshToken).mockReturnValue(refreshPromise);
+
     localStorage.setItem("auth_token", mockToken);
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
-    render(<AuthProvider>
-      <div>Test</div>
-    </AuthProvider>);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
 
-    // Fast-forward time to trigger token refresh
+    // Wait for initial auth state
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.token).toBe(mockToken);
+
+    // Trigger a token refresh by advancing time
     await act(async () => {
       vi.advanceTimersByTime(15 * 60 * 1000); // 15 minutes
+      // Wait for the refresh promise to resolve
+      await refreshPromise;
     });
 
-    await waitFor(() => {
-      expect(localStorage.getItem("auth_token")).toBe(newToken);
-    });
+    // Verify refresh was called
+    expect(vi.mocked(authApi.refreshToken)).toHaveBeenCalledWith(mockToken);
+
+    // Verify state was updated
+    expect(result.current.token).toBe(newToken);
   });
 
   it("handles invalid stored data", () => {
