@@ -12,9 +12,10 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;  // Backend expects username field for the email
   password: string;
-  remember?: boolean;
+  grant_type: string;  // Required by backend OAuth flow
+  remember?: boolean;  // Frontend-only state
 }
 
 export interface RegistrationData {

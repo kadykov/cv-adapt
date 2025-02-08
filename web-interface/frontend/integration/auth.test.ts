@@ -52,15 +52,18 @@ test.describe('Auth API Integration', () => {
       password: authTestUser.password,
     });
 
-    // Try logging in with form data
+    // Backend OAuth2 login requires x-www-form-urlencoded format with specific fields:
+    // - username: the user's email
+    // - password: the user's password
+    // - grant_type: must be 'password' for OAuth2 password flow
     const formData = new URLSearchParams();
-    formData.append('username', email);
+    formData.append('username', email);  // Note: Backend expects 'username' field for the email
     formData.append('password', authTestUser.password);
-    formData.append('grant_type', 'password');
+    formData.append('grant_type', 'password');  // Required for OAuth2 password flow
 
     const response = await api.post('/v1/auth/login', formData, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/x-www-form-urlencoded',  // Required format for OAuth2
       },
     });
 
