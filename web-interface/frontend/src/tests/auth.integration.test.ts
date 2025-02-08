@@ -1,14 +1,28 @@
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import axios, { AxiosInstance } from 'axios';
-import { authTestUser } from '../../e2e/utils';
+import { authTestUser } from './utils';
+import { server } from './mocks/server';
 
 let api: AxiosInstance;
 
 beforeAll(() => {
+  // Start the MSW server
+  server.listen();
+
   api = axios.create({
     baseURL: 'http://localhost:8000',
     validateStatus: () => true,
   });
+});
+
+afterAll(() => {
+  // Clean up after tests are done
+  server.close();
+});
+
+afterEach(() => {
+  // Reset handlers after each test
+  server.resetHandlers();
 });
 
 describe('Auth API Integration Tests', () => {
