@@ -3,13 +3,21 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LoginForm } from "../LoginForm";
 import { AuthenticationError } from "../../api/auth.api";
 
+const mockLogin = vi.fn();
+let mockIsLoading = false;
+
 // Mock the auth context hooks
 vi.mock("../../context/AuthContext", () => ({
   useAuth: () => ({
-    login: vi.fn(),
-    isLoading: false,
+    login: mockLogin,
+    isLoading: mockIsLoading,
   }),
 }));
+
+beforeEach(() => {
+  mockLogin.mockReset();
+  mockIsLoading = false;
+});
 
 describe("LoginForm", () => {
   it("renders login form elements", () => {
@@ -28,22 +36,17 @@ describe("LoginForm", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
       expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
     });
   });
 
   it("displays error message on authentication failure", async () => {
-    const mockLogin = vi.fn().mockRejectedValue(
-      new AuthenticationError("Invalid credentials")
-    );
-
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        login: mockLogin,
-        isLoading: false,
-      }),
-    }));
+    mockLogin.mockRejectedValue(new AuthenticationError(
+      "Invalid credentials",
+      401,
+      { message: "Invalid credentials", code: "AUTH_FAILED" }
+    ));
 
     render(<LoginForm />);
 
@@ -61,18 +64,9 @@ describe("LoginForm", () => {
   });
 
   it("shows loading state during form submission", async () => {
-    const mockLogin = vi.fn().mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
-    );
+    mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        login: mockLogin,
-        isLoading: true,
-      }),
-    }));
-
-    render(<LoginForm />);
+    const { rerender } = render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
@@ -82,20 +76,15 @@ describe("LoginForm", () => {
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);
 
-    expect(screen.getByText(/signing in/i)).toBeInTheDocument();
-    expect(submitButton).toBeDisabled();
+    // Update isLoading after click
+    mockIsLoading = true;
+    rerender(<LoginForm />);
+
+    expect(screen.getByRole("button")).toBeDisabled();
+    expect(screen.getByRole("button")).toHaveTextContent(/signing in/i);
   });
 
   it("calls login function with correct credentials", async () => {
-    const mockLogin = vi.fn();
-
-    vi.mock("../../context/AuthContext", () => ({
-      useAuth: () => ({
-        login: mockLogin,
-        isLoading: false,
-      }),
-    }));
-
     render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);

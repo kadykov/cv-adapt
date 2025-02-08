@@ -7,10 +7,9 @@ import { useAuth } from "../context/AuthContext";
 import { AuthenticationError } from "../api/auth.api";
 
 export function LoginForm() {
-  const { login } = useAuth();
+  const { login, isLoading } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = React.useState(false);
 
   const {
     register,
@@ -23,13 +22,12 @@ export function LoginForm() {
   const onSubmit = async (data: LoginSchema) => {
     setError(null);
     setFieldErrors({});
-    setIsLoading(true);
 
     try {
       await login(data.email, data.password, data.remember);
     } catch (e) {
       if (e instanceof AuthenticationError && e.details) {
-        const details = e.details as { message: string; code: string; field: string };
+        const details = e.details as { message: string; code: string; field?: string };
         if (details.field) {
           setFieldErrors({ [details.field]: details.message });
         } else {
@@ -38,7 +36,6 @@ export function LoginForm() {
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
-      setIsLoading(false);
     }
   };
 
@@ -46,10 +43,11 @@ export function LoginForm() {
     <div className="w-full max-w-md mx-auto p-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="form-control w-full">
-          <label className="label">
+          <label className="label" htmlFor="email">
             <span className="label-text">Email</span>
           </label>
           <input
+            id="email"
             type="email"
             {...register("email")}
             className={`input input-bordered w-full ${
@@ -67,10 +65,11 @@ export function LoginForm() {
         </div>
 
         <div className="form-control w-full">
-          <label className="label">
+          <label className="label" htmlFor="password">
             <span className="label-text">Password</span>
           </label>
           <input
+            id="password"
             type="password"
             {...register("password")}
             className={`input input-bordered w-full ${
@@ -88,9 +87,10 @@ export function LoginForm() {
         </div>
 
         <div className="form-control">
-          <label className="label cursor-pointer">
+          <label className="label cursor-pointer" htmlFor="remember">
             <span className="label-text">Remember me</span>
             <input
+              id="remember"
               type="checkbox"
               {...register("remember")}
               className="checkbox"
