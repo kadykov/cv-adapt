@@ -1,8 +1,11 @@
+import json
 import logging
 import os
 import sys
-from typing import Any
+from typing import Any, Dict
 from uuid import uuid4
+
+from fastapi import Response
 
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -13,11 +16,11 @@ log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 class JsonFormatter(logging.Formatter):
     """Custom JSON formatter with pretty-printing."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.default_keys = ['timestamp', 'service', 'level', 'path', 'line', 'message']
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON."""
         log_data = {
             'timestamp': self.formatTime(record, self.datefmt),
@@ -68,7 +71,7 @@ db_logger = get_logger("cv-adapter.db")
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """Middleware to add a unique request ID to each request."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = str(uuid4())
         request.state.request_id = request_id
 

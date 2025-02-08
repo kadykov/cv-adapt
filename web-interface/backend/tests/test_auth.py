@@ -30,8 +30,8 @@ def test_register(client: TestClient, db: Session) -> None:
     assert user.hashed_password.startswith("$2")
 
     # Verify password validation works
-    assert user_service.verify_password("testpassword", user.hashed_password)
-    assert not user_service.verify_password("wrongpassword", user.hashed_password)
+    assert user_service.verify_password("testpassword", str(user.hashed_password))
+    assert not user_service.verify_password("wrongpassword", str(user.hashed_password))
 
 def test_register_duplicate_email(client: TestClient) -> None:
     """Test registration with duplicate email."""

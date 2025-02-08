@@ -1,5 +1,7 @@
 """Test configuration."""
 
+from typing import Generator
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -18,7 +20,7 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def override_get_db():
+def override_get_db() -> Generator[Session, None, None]:
     """Test database session."""
     db = TestingSessionLocal()
     try:
@@ -27,14 +29,14 @@ def override_get_db():
         db.close()
 
 @pytest.fixture(autouse=True)
-def setup_db():
+def setup_db() -> Generator[None, None, None]:
     """Create tables in test database."""
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture
-def db() -> Session:
+def db() -> Generator[Session, None, None]:
     """Get test database session."""
     connection = engine.connect()
     transaction = connection.begin()
@@ -47,7 +49,7 @@ def db() -> Session:
     connection.close()
 
 @pytest.fixture
-def client(db: Session) -> TestClient:
+def client(db: Session) -> Generator[TestClient, None, None]:
     """Get test client with database session."""
     app.dependency_overrides[get_db] = lambda: db
     with TestClient(app) as test_client:

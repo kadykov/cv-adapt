@@ -18,11 +18,8 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 # Local imports
-from app.main import (  # type: ignore[import-not-found] # noqa: E402
-    GenerateCompetencesRequest,
-    GenerateCVRequest,
-    PersonalInfo,
-)
+from cv_adapter.dto.cv import PersonalInfoDTO as PersonalInfo  # noqa: E402
+from app.api.generations import GenerateCompetencesRequest, GenerateCVRequest  # noqa: E402
 from app.schemas.cv import (  # noqa: E402
     DetailedCVBase,
     DetailedCVCreate,
@@ -55,7 +52,7 @@ from cv_adapter.dto.cv import (  # noqa: E402
 from cv_adapter.dto.language import Language  # noqa: E402
 
 # Alias for clarity
-PersonalInfoRequest = PersonalInfo
+PersonalInfoRequest = PersonalInfo  # type: ignore
 
 
 def generate_typescript_types() -> None:

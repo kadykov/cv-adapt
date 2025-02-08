@@ -28,7 +28,7 @@ class BaseDBService(Generic[ModelType]):
 
     def create(self, **data: Any) -> ModelType:
         """Create new model instance."""
-        db_obj = self.model(**data)
+        db_obj: ModelType = self.model(**data)  # type: ignore[call-arg]
         self.db.add(db_obj)
         try:
             self.db.commit()

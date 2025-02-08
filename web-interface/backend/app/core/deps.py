@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Query, status
 from jose import JWTError
@@ -13,12 +13,13 @@ from ..models.models import User
 from ..services.user import UserService
 
 async def get_current_user(
-    token: str = Depends(decode_access_token), db=Depends(get_db)
+    db: Annotated[Any, Depends(get_db)],
+    token: dict = Depends(decode_access_token)
 ) -> User:
     """Get current user from JWT token."""
     try:
         user_service = UserService(db)
-        user = user_service.get(token["sub"])
+        user = user_service.get(int(token["sub"]))
         if not user:
             auth_logger.warning(f"User not found for sub: {token['sub']}")
             raise HTTPException(
@@ -33,7 +34,9 @@ async def get_current_user(
             detail={"message": "Invalid token", "code": "INVALID_TOKEN"},
         )
 
-async def get_language(language_code: str = Query(default="en")) -> Language:
+async def get_language(
+    language_code: str = Query(default="en")
+) -> Language:
     """Dependency to get language from request, defaulting to English."""
     try:
         if not language_code:
