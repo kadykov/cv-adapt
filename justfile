@@ -116,11 +116,9 @@ test-backend *ARGS='':
 test-frontend:
     cd web-interface/frontend && npm test
 
-# Run frontend integration tests (requires backend in test mode)
+# Run frontend integration tests with proper server setup
 test-frontend-integration:
-    cd web-interface/backend && TESTING=1 uvicorn app.main:app --port 8000 & \
-    sleep 5 && cd ../frontend && npm run test:integration; \
-    kill %1
+    cd web-interface/frontend && npm run test:integration
 
 # Run frontend E2E tests
 test-frontend-e2e:

@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './',
+  testMatch: ['e2e/**/*.ts', 'integration/**/*.ts'],
   timeout: 30000,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
