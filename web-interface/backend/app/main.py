@@ -4,13 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 
-from . import setup_logging
+from .logger import setup_logging_middleware
 from .api import auth, users, cvs, jobs, generations
 
 app = FastAPI(title="CV Adapter Web Interface")
 
-# Setup logging first
-setup_logging(app)
+# Setup logging middleware first
+setup_logging_middleware(app)
 
 # Configure CORS with more permissive settings for development
 app.add_middleware(
