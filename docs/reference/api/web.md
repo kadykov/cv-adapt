@@ -2,7 +2,15 @@
 
 This section documents the web interface API endpoints for CV Adapt.
 
-## Authentication
+The API is organized into several modules under `web-interface/backend/app/api/`:
+
+- `auth.py` - Authentication endpoints
+- `users.py` - User profile endpoints
+- `cvs.py` - Detailed CV management
+- `jobs.py` - Job description endpoints
+- `generations.py` - CV generation and competence-related endpoints
+
+## Authentication (`auth.py`)
 
 ### POST /auth/register
 Register a new user.
@@ -88,7 +96,7 @@ Refresh access token using refresh token.
 }
 ```
 
-## User Profile
+## User Profile (`users.py`)
 
 ### GET /user/profile
 Get current user's profile.
@@ -123,7 +131,7 @@ Update current user's profile.
 }
 ```
 
-## Detailed CV Management
+## Detailed CV Management (`cvs.py`)
 
 ### GET /user/detailed-cvs
 Get all detailed CVs for current user.
@@ -205,7 +213,7 @@ Set CV as primary for given language.
 }
 ```
 
-## Job Descriptions
+## Job Descriptions (`jobs.py`)
 
 ### GET /jobs
 Get job descriptions filtered by language.
@@ -294,7 +302,7 @@ Delete job description.
 
 **Response** (204): No content
 
-## CV Generation
+## CV Generation (`generations.py`)
 
 ### POST /generate
 Generate and save a new CV from detailed CV and job description.
@@ -355,31 +363,7 @@ Get specific generated CV.
 }
 ```
 
-## Common Responses
-
-### Error Response
-**Response** (4xx/5xx):
-```json
-{
-  "detail": "string"
-}
-```
-
-### Validation Error Response
-**Response** (422):
-```json
-{
-  "detail": [
-    {
-      "loc": ["string"],
-      "msg": "string",
-      "type": "string"
-    }
-  ]
-}
-```
-
-## AI-Based CV Generation
+## AI-Based CV Generation (`generations.py`)
 
 ### POST /api/generate-competences
 Generate core competences based on CV and job description.
@@ -471,3 +455,26 @@ Generate a complete CV using AI based on CV text, job description, and approved 
   ]
 }
 ```
+
+## Common Responses
+
+### Error Response
+**Response** (4xx/5xx):
+```json
+{
+  "detail": "string"
+}
+```
+
+### Validation Error Response
+**Response** (422):
+```json
+{
+  "detail": [
+    {
+      "loc": ["string"],
+      "msg": "string",
+      "type": "string"
+    }
+  ]
+}

@@ -1,11 +1,16 @@
 # Web Interface Tutorial
 
-This guide covers how to use and develop the web interface for the CV Adapter.
+[Previous content up to Architecture section remains the same...]
 
 ## Architecture
 
 The web interface consists of two parts:
-- A FastAPI backend that exposes the CV generation functionality
+- A FastAPI backend that exposes the CV generation functionality through modular API routes:
+  * `auth.py` - Authentication endpoints
+  * `users.py` - User profile endpoints
+  * `cvs.py` - Detailed CV management
+  * `jobs.py` - Job description endpoints
+  * `generations.py` - CV generation and competence-related endpoints
 - An Astro frontend with React components that provides a user interface for the CV generation
 
 ## Frontend Framework

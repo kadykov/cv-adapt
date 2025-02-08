@@ -1,45 +1,57 @@
-"""Dependencies for FastAPI routes."""
-
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Query, status
 from jose import JWTError
-from sqlalchemy.orm import Session
 
+from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
+from cv_adapter.models.context import language_context
+
+from ..core.database import get_db
+from ..core.security import decode_access_token
+from ..logger import auth_logger, logger
 from ..models.models import User
 from ..services.user import UserService
-from .database import get_db
-from .security import TokenPayload, verify_token
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
 
 async def get_current_user(
-    db: Annotated[Session, Depends(get_db)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: str = Depends(decode_access_token), db=Depends(get_db)
 ) -> User:
-    """Get current authenticated user."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    payload = verify_token(token)
-    if not payload:
-        raise credentials_exception
-
+    """Get current user from JWT token."""
     try:
-        token_data = TokenPayload(**payload)
-        if token_data.type != "access":
-            raise credentials_exception
-    except (JWTError, ValueError):
-        raise credentials_exception
+        user_service = UserService(db)
+        user = user_service.get(token["sub"])
+        if not user:
+            auth_logger.warning(f"User not found for sub: {token['sub']}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"message": "User not found", "code": "USER_NOT_FOUND"},
+            )
+        return user
+    except JWTError as e:
+        auth_logger.warning(f"Invalid token: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Invalid token", "code": "INVALID_TOKEN"},
+        )
 
-    user_service = UserService(db)
-    user = user_service.get(token_data.sub)
-    if user is None:
-        raise credentials_exception
-
-    return user
+async def get_language(language_code: str = Query(default="en")) -> Language:
+    """Dependency to get language from request, defaulting to English."""
+    try:
+        if not language_code:
+            logger.debug("No language code provided, defaulting to English")
+            return ENGLISH
+        # Validate language code and get registered language instance
+        lang_code = LanguageCode(language_code)
+        language = Language.get(lang_code)
+        logger.debug(f"Using language: {language.code}")
+        return language
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=[
+                {
+                    "loc": ["query", "language_code"],
+                    "msg": f"Invalid language code: {language_code}",
+                    "type": "value_error",
+                }
+            ],
+        )
