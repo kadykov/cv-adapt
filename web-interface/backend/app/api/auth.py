@@ -12,7 +12,26 @@ from .. import auth_logger
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
-@router.post("/register", response_model=AuthResponse)
+@router.post(
+    "/register",
+    response_model=AuthResponse,
+    responses={
+        400: {
+            "description": "Bad Request - Email already registered",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": {
+                            "message": "Email already registered",
+                            "code": "EMAIL_EXISTS",
+                            "field": "email"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def register(
     user_data: UserCreate, db: Session = Depends(get_db)
 ) -> AuthResponse:

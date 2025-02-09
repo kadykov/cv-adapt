@@ -34,6 +34,20 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request - Email already registered",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Email already registered",
+                    "code": "EMAIL_EXISTS",
+                    "field": "email"
+                  }
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {

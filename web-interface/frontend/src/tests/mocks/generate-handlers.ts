@@ -148,41 +148,65 @@ const generateHandler = (path: string, method: string, operation: Operation) => 
   // For MSW, we need the full URL pattern
   const fullPath = path.startsWith('http') ? path : `*${path}`
 
-  return http[httpMethod](fullPath, async () => {
-    // Get success response schema
-    const successResponse = operation.responses['200']
-    if (!successResponse) {
-      return new HttpResponse(null, { status: 204 })
+  return http[httpMethod](fullPath, async ({ request }) => {
+    // Handle auth error cases
+    if (path.startsWith('/v1/auth/')) {
+      if (path.includes('/register')) {
+        const body = await request.json() as { email?: string };
+        if (body?.email === 'test@example.com') {
+          return HttpResponse.json(
+            { detail: { message: 'Email already registered' } },
+            { status: 400 }
+          );
+        }
+      }
+
+      if (path.includes('/login')) {
+        const formData = await request.formData();
+        const password = formData.get('password');
+        if (password === 'wrongpassword') {
+          return HttpResponse.json(
+            { detail: { message: 'Incorrect email or password' } },
+            { status: 401 }
+          );
+        }
+      }
     }
 
-    const content = successResponse.content?.['application/json']
+    // Handle success cases
+    const successResponse = operation.responses['200'];
+    if (!successResponse) {
+      return new HttpResponse(null, { status: 204 });
+    }
+
+    const content = successResponse.content?.['application/json'];
     if (!content) {
-      return new HttpResponse(null, { status: 200 })
+      return new HttpResponse(null, { status: 200 });
     }
 
     // Generate mock data based on schema
     const mockData = path.startsWith('/v1/auth/') ?
       generateAuthResponse() :
-      generateMockData(content.schema)
+      generateMockData(content.schema);
 
     // Handle auth responses
-    let response: JsonObject = mockData as JsonObject
+    let response: JsonObject = mockData as JsonObject;
     if (path.startsWith('/v1/auth/')) {
       if (path.includes('/refresh')) {
         response = {
           ...response,
           refresh_token: 'mock_refresh_token'  // Ensure refresh token is always present
-        }
+        };
       }
     }
 
     // Debug logging
-    console.error('\n=== Handler Response ===')
-    console.error('Path:', path)
-    console.error('Response:', JSON.stringify(response, null, 2))
-    console.error('===========================\n')
+    console.error('\n=== Handler Response ===');
+    console.error('Path:', path);
+    console.error('Response:', JSON.stringify(response, null, 2));
+    console.error('===========================\n');
 
-    return HttpResponse.json(response, { status: 200 })
+    return HttpResponse.json(response, { status: 200 });
   })
 }
 
