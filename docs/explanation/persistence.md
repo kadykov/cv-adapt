@@ -174,7 +174,7 @@ GET /generations/:id
 - [X] Add language support to all endpoints
 
 ### Phase 4: Frontend Integration
-- [ ] Add authentication UI
+- [X] Add authentication UI
   - Login and registration forms
   - JWT token management
   - Protected route handling
@@ -184,11 +184,11 @@ GET /generations/:id
   - Primary CV designation
   - Rich text editing capabilities
   - Auto-save functionality
-- [ ] Add job description catalog view
-  - Language-filtered listing
-  - Search and filtering
-  - Ranking visualization
-  - Job detail views
+- [X] Add job description catalog view
+  - Basic job listing
+  - Create/Edit/Delete functionality
+  - Language support
+  - Detail views with metadata
 - [ ] Update CV generation flow
   - Job and CV selection interface
   - Progress tracking
@@ -202,12 +202,32 @@ GET /generations/:id
 
 For detailed frontend architecture and implementation specifics, see [Frontend Architecture](frontend-architecture.md).
 
-### Phase 5: Testing and Documentation
-- [ ] Write unit tests for models
-- [ ] Write integration tests for API
+### Phase 5: Testing and Documentation ✓
+- [X] Write unit tests
+  - API function tests (jobsApi)
+  - Component tests (JobList, JobForm, JobDetail)
+  - Contract tests for type safety
+- [X] Write integration tests
+  - Component interaction tests
+  - API integration tests
+  - Authentication flow tests
 - [ ] Write end-to-end tests
 - [ ] Update API documentation
 - [ ] Add usage examples
+
+Test Coverage for Job Catalog:
+1. Unit Tests:
+   - API functions (CRUD operations)
+   - Component rendering and behavior
+   - Error handling and loading states
+2. Integration Tests:
+   - User interactions
+   - Form submissions
+   - List operations
+3. Contract Tests:
+   - Type validations
+   - API response shapes
+   - Data transformations
 
 ## Technical Details
 

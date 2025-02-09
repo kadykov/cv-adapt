@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { JobList } from '../../features/job-catalog/components/JobList';
+---
+
+<BaseLayout title="Job Descriptions">
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Job Descriptions</h1>
+      <a href="/jobs/new" class="btn btn-primary">
+        Add New Job
+      </a>
+    </div>
+
+    <JobList client:load />
+  </div>
+</BaseLayout>

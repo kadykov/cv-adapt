@@ -1,0 +1,33 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { JobForm } from '../../../features/job-catalog/components/JobForm';
+import { jobsApi } from '../../../features/job-catalog/api/jobsApi';
+
+const { id } = Astro.params;
+const jobId = parseInt(id || '0', 10);
+const job = await jobsApi.getJob(jobId);
+---
+
+<BaseLayout title="Edit Job Description">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Edit Job Description</h1>
+        <div class="space-x-2">
+          <a href={`/jobs/${jobId}`} class="btn">Back to Details</a>
+          <a href="/jobs" class="btn">Back to List</a>
+        </div>
+      </div>
+
+      <JobForm
+        client:load
+        job={job}
+        onSuccess={(job) => {
+          window.location.href = `/jobs/${job.id}`;
+        }}
+      />
+    </div>
+  </div>
+</BaseLayout>
