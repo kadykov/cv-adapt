@@ -23,20 +23,31 @@ describe('jobsApi', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => [mockJob],
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       });
 
       const jobs = await jobsApi.getJobs();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs');
+      expect(mockFetch).toHaveBeenCalledWith('/api/jobs', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       expect(jobs).toEqual([mockJob]);
     });
 
     it('should throw error when fetch fails', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        }),
+        json: async () => ({ message: 'Request failed' })
       });
 
-      await expect(jobsApi.getJobs()).rejects.toThrow('Failed to fetch jobs');
+      await expect(jobsApi.getJobs()).rejects.toThrow('Request failed');
     });
   });
 
@@ -45,11 +56,18 @@ describe('jobsApi', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockJob,
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       });
 
       const job = await jobsApi.getJob(1);
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1');
+      expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       expect(job).toEqual(mockJob);
     });
   });
@@ -65,6 +83,9 @@ describe('jobsApi', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...mockJob, ...newJob }),
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       });
 
       const job = await jobsApi.createJob(newJob);
@@ -89,6 +110,9 @@ describe('jobsApi', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...mockJob, ...updateData }),
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       });
 
       const job = await jobsApi.updateJob(1, updateData);
@@ -108,12 +132,19 @@ describe('jobsApi', () => {
     it('should delete a job', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 204,
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       });
 
       await jobsApi.deleteJob(1);
 
       expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
     });
   });

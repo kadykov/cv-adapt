@@ -22,17 +22,55 @@ src/
 │   ├── job-catalog/   # Job Description feature
 │   └── cv-generation/ # CV Generation feature
 ├── shared/            # Shared utilities and components
-├── api/              # API client functions
+├── api/              # API client and shared API functions
+│   ├── client.ts    # Base API client with auth handling
+│   └── types.ts     # API type definitions
 ├── types/            # Generated TypeScript types
 └── validation/       # Zod schemas
 ```
+
+### API Client Architecture
+
+The frontend uses a centralized API client that handles authentication, request/response processing, and error management:
+
+```typescript
+class ApiClient {
+  // Singleton instance
+  private static instance: ApiClient;
+
+  // Base configuration
+  private baseUrl: string = '/api';
+
+  // Authentication methods
+  private getAuthToken(): string | null;
+  private getHeaders(requiresAuth: boolean): HeadersInit;
+
+  // HTTP methods with type safety
+  async get<T>(path: string, config?: RequestConfig): Promise<T>;
+  async post<T>(path: string, data?: Record<string, unknown>, config?: RequestConfig): Promise<T>;
+  async put<T>(path: string, data?: Record<string, unknown>, config?: RequestConfig): Promise<T>;
+  async delete(path: string, config?: RequestConfig): Promise<void>;
+
+  // Response handling
+  private async handleResponse(response: Response): Promise<any>;
+}
+```
+
+Key features of the API client:
+- Singleton pattern for consistent instance management
+- Type-safe request/response handling
+- Automatic auth token injection
+- Centralized error handling
+- Support for auth and non-auth requests
 
 ### Feature Module Structure
 Each feature module follows a consistent structure:
 ```
 feature-name/
 ├── components/   # React components
-├── api/         # Feature-specific API calls
+├── api/         # Feature-specific API calls using base client
+│   ├── types.ts # Feature-specific API types
+│   └── api.ts   # API function implementations
 ├── types/       # Feature-specific types
 ├── utils/       # Feature-specific utilities
 └── validation/  # Feature-specific validation
@@ -57,22 +95,73 @@ feature-name/
 - `AuthProvider`: Context for auth state
   - JWT token management
   - User session handling
+  - Integration with API client
 
-#### State Management
+#### Authentication Flow
 ```typescript
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
+// Authentication Context
 interface AuthContext extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegistrationData) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
 }
+
+// API Integration
+const authApi = {
+  login: async (credentials: LoginCredentials) => {
+    const response = await apiClient.post<AuthResponse>('/auth/login', credentials, {
+      requiresAuth: false
+    });
+    // Handle token storage and state updates
+  },
+  // Other auth methods...
+};
+```
+
+### 2. API Integration Pattern
+
+Each feature module follows a consistent pattern for API integration:
+
+```typescript
+// Feature-specific API functions
+export const featureApi = {
+  // GET requests
+  getItems: () => apiClient.get<Item[]>('/items'),
+
+  // POST requests with data
+  createItem: (data: CreateItemDto) =>
+    apiClient.post<Item>('/items', data),
+
+  // PUT requests for updates
+  updateItem: (id: number, data: UpdateItemDto) =>
+    apiClient.put<Item>(`/items/${id}`, data),
+
+  // DELETE requests
+  deleteItem: (id: number) =>
+    apiClient.delete(`/items/${id}`)
+};
+
+// Type definitions
+interface CreateItemDto {
+  // ...
+}
+
+interface UpdateItemDto {
+  // ...
+}
+
+// Usage in components
+const ItemList = () => {
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    featureApi.getItems()
+      .then(setItems)
+      .catch(handleError);
+  }, []);
+  // ...
+};
 ```
 
 ### 2. CV Management Interface
