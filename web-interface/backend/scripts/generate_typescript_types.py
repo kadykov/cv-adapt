@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Script to generate TypeScript interface definitions from Python models.
 
 This script generates TypeScript definitions for the API by converting Python models to

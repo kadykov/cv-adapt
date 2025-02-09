@@ -68,6 +68,7 @@ all:
     just test
     just test-backend
     just generate-types
+    just export-openapi
     just test-frontend-all
     just test-frontend-cov
 
@@ -106,7 +107,11 @@ serve-web-debug *ARGS='':
 
 # Generate TypeScript types from Pydantic models
 generate-types:
-    cd web-interface/backend && python scripts/generate_typescript_types.py
+    cd web-interface/backend && ./scripts/generate_typescript_types.py
+
+# Export OpenAPI schema for frontend contract tests
+export-openapi:
+    cd web-interface/backend && ./scripts/export_openapi_schema.py
 
 # Run backend tests
 test-backend *ARGS='':
@@ -120,10 +125,15 @@ test-frontend:
 test-frontend-integration:
     cd web-interface/frontend && npm run test:integration
 
-# Run all frontend tests (unit and integration)
+# Run frontend contract tests
+test-frontend-contract:
+    cd web-interface/frontend && npm run test:contract
+
+# Run all frontend tests (unit, integration, and contract)
 test-frontend-all:
     just test-frontend
     just test-frontend-integration
+    just test-frontend-contract
 
 # Run frontend tests with coverage
 test-frontend-cov:
