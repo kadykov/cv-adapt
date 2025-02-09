@@ -5,18 +5,18 @@ interface Config {
 }
 
 const development: Config = {
-  apiBaseUrl: "http://localhost:8000",
+  apiBaseUrl: "http://localhost:8000",  // Point directly to backend with /api path
   apiVersion: "v1",
   authTokenKey: "cv_adapt_auth_token",
 };
 
 const production: Config = {
-  apiBaseUrl: "/api",
+  apiBaseUrl: "http://localhost:8000",  // Point directly to backend with /api path
   apiVersion: "v1",
   authTokenKey: "cv_adapt_auth_token",
 };
 
-const config: Config =
-  import.meta.env.PROD ? production : development;
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const config: Config = isDevelopment ? development : production;
 
 export default config;

@@ -4,8 +4,8 @@ import { z } from 'zod';
 export const userSchema = z.object({
   id: z.number(),
   email: z.string().email(),
-  personal_info: z.record(z.unknown()).optional(),
-  created_at: z.string().datetime(),
+  personal_info: z.record(z.unknown()).nullable(),
+  created_at: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/),
 });
 
 // Auth schemas
