@@ -1,18 +1,19 @@
 ---
-import App from '../components/App';
-import '../styles/global.css';
+import Root from '../Root';
+import '../styles/globals.css';
 ---
 
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width" />
-<title>CV Adapter</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CV Adapter</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-<div class="app-container">
-<h1>CV Generator</h1>
-<App client:load />
-</div>
+    <div id="app">
+        <Root client:only="react" />
+    </div>
 </body>
 </html>

@@ -21,6 +21,8 @@ sys.path.insert(0, str(backend_dir))
 # Local imports
 from cv_adapter.dto.cv import PersonalInfoDTO as PersonalInfo  # noqa: E402
 from app.api.generations import GenerateCompetencesRequest, GenerateCVRequest  # noqa: E402
+from app.schemas.auth import AuthResponse, LoginForm  # noqa: E402
+from app.schemas.user import UserResponse, UserBase, UserCreate, UserUpdate  # noqa: E402
 from app.schemas.cv import (  # noqa: E402
     DetailedCVBase,
     DetailedCVCreate,
@@ -65,6 +67,13 @@ def generate_typescript_types() -> None:
 
     # List all models that need TypeScript interfaces
     models: List[tuple[Type[BaseModel], Literal["validation", "serialization"]]] = [
+        # Auth models
+        (AuthResponse, "validation"),
+        (LoginForm, "validation"),
+        (UserResponse, "validation"),
+        (UserBase, "validation"),
+        (UserCreate, "validation"),
+        (UserUpdate, "validation"),
         (CVDTO, "validation"),
         (MinimalCVDTO, "validation"),
         (ContactDTO, "validation"),

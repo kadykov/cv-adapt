@@ -25,6 +25,7 @@ export function LoginForm() {
 
     try {
       await login(data.email, data.password, data.remember);
+      window.location.href = "/jobs";
     } catch (e) {
       if (e instanceof AuthenticationError && e.details) {
         const details = e.details as { message: string; code: string; field?: string };
@@ -41,7 +42,7 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
         <div className="form-control w-full">
           <label className="label" htmlFor="email">
             <span className="label-text">Email</span>
@@ -54,13 +55,15 @@ export function LoginForm() {
               (errors.email || fieldErrors.email) ? "input-error" : ""
             }`}
             placeholder="Enter your email"
+            aria-invalid={errors.email || fieldErrors.email ? "true" : "false"}
+            aria-describedby={errors.email || fieldErrors.email ? "email-error" : undefined}
           />
           {(errors.email || fieldErrors.email) && (
-            <label className="label">
+            <div className="label" role="alert" id="email-error">
               <span className="label-text-alt text-error">
                 {fieldErrors.email || errors.email?.message}
               </span>
-            </label>
+            </div>
           )}
         </div>
 
@@ -76,13 +79,15 @@ export function LoginForm() {
               (errors.password || fieldErrors.password) ? "input-error" : ""
             }`}
             placeholder="Enter your password"
+            aria-invalid={errors.password || fieldErrors.password ? "true" : "false"}
+            aria-describedby={errors.password || fieldErrors.password ? "password-error" : undefined}
           />
           {(errors.password || fieldErrors.password) && (
-            <label className="label">
+            <div className="label" role="alert" id="password-error">
               <span className="label-text-alt text-error">
                 {fieldErrors.password || errors.password?.message}
               </span>
-            </label>
+            </div>
           )}
         </div>
 
@@ -99,7 +104,7 @@ export function LoginForm() {
         </div>
 
         {error && (
-          <div className="alert alert-error">
+          <div className="alert alert-error" role="alert">
             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>

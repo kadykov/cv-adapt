@@ -82,40 +82,91 @@ feature-name/
 
 #### Components
 - `LoginForm`: User login interface
-  - Email/password inputs with validation
-  - Error handling and feedback
+  - Email/password inputs with Zod validation
+  - Unified error handling and feedback
   - "Remember me" functionality
+  - Protected route redirection after login
+  - Integration with OpenAPI schemas
 - `RegisterForm`: User registration
-  - Email/password validation
-  - Terms acceptance
-  - Success/error feedback
-- `ProtectedRoute`: HOC for authenticated routes
-  - Redirect to login if not authenticated
+  - Extended password validation with regex patterns
+  - Terms acceptance with type-safe validation
+  - Success/error feedback with specific messages
+- `ProtectedRoute`: React component for authenticated routes
+  - Automatic redirect to login if not authenticated
   - Loading states during auth check
-- `AuthProvider`: Context for auth state
-  - JWT token management
-  - User session handling
-  - Integration with API client
+  - Integrated with router configuration
+- `Layout`: Application shell with auth-aware navigation
+  - Conditional rendering based on auth state
+  - Login/Logout navigation
+  - Responsive header and footer
+- `AuthProvider`: Context for auth state management
+  - JWT token management with refresh handling
+  - User session persistence
+  - Type-safe API integration with OpenAPI schemas
 
 #### Authentication Flow
 ```typescript
-// Authentication Context
-interface AuthContext extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegistrationData) => Promise<void>;
-  logout: () => void;
-  refreshToken: () => Promise<void>;
+// Generated from OpenAPI schemas
+interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: User;
 }
 
-// API Integration
-const authApi = {
-  login: async (credentials: LoginCredentials) => {
-    const response = await apiClient.post<AuthResponse>('/auth/login', credentials, {
-      requiresAuth: false
-    });
-    // Handle token storage and state updates
+// Zod validation schemas
+const loginFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  remember: z.boolean().optional(),
+});
+
+// Protected routing configuration
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        path: 'login',
+        element: <LoginForm />,
+      },
+      {
+        path: 'jobs',
+        element: (
+          <ProtectedRoute>
+            <App />
+          </ProtectedRoute>
+        ),
+      }
+    ],
   },
-  // Other auth methods...
+]);
+
+// API Integration with error handling
+const handleAuthResponse = async (response: Response): Promise<AuthResponse> => {
+  if (!response.ok) {
+    let errorMessage = "Authentication failed";
+    try {
+      const errorData = await response.json();
+      if (response.status === 401) {
+        errorMessage = "Invalid email or password";
+      } else if (errorData.detail) {
+        errorMessage = typeof errorData.detail === 'object'
+          ? errorData.detail.message || "Authentication failed"
+          : errorData.detail;
+      }
+      throw new AuthenticationError(errorMessage, response.status, errorData);
+    } catch (e) {
+      console.log('Failed to parse error response:', e);
+      throw new AuthenticationError(
+        response.statusText || "An unexpected error occurred",
+        response.status
+      );
+    }
+  }
+  const data = await response.json();
+  return authResponseSchema.parse(data);
 };
 ```
 

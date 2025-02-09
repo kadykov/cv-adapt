@@ -61,9 +61,12 @@ Handlers are automatically generated from the OpenAPI schema:
 3. Creates type-safe mock responses
 4. Ensures responses match API contract
 
-Example handler generation:
+Example handler generation using Zod schemas:
 ```typescript
-const generateAuthResponse = (): JsonObject => ({
+import { authResponseSchema } from '../validation/openapi';
+
+// Generate mock responses that match our Zod schemas
+const generateAuthResponse = (): AuthResponse => ({
   access_token: 'mock_access_token',
   refresh_token: 'mock_refresh_token',
   token_type: 'bearer',
@@ -73,7 +76,104 @@ const generateAuthResponse = (): JsonObject => ({
     created_at: new Date().toISOString(),
     personal_info: null
   }
-})
+});
+
+// Validate mock response matches schema
+const mockResponse = generateAuthResponse();
+authResponseSchema.parse(mockResponse); // Will throw if invalid
+```
+
+Example auth component test:
+```typescript
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { LoginForm } from '../features/auth/components/LoginForm';
+import { AuthProvider } from '../features/auth/context/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
+
+describe('LoginForm', () => {
+  it('handles successful login', async () => {
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    // Fill form
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'test@example.com' }
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' }
+    });
+
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // Verify redirect after successful login
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/jobs');
+    });
+  });
+
+  it('displays validation errors', async () => {
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    // Submit empty form
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // Check for validation errors
+    await waitFor(() => {
+      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+    });
+  });
+
+  it('handles server errors', async () => {
+    // Mock API to return error
+    server.use(
+      rest.post('/api/v1/auth/login', (req, res, ctx) => {
+        return res(
+          ctx.status(401),
+          ctx.json({
+            detail: {
+              message: "Invalid email or password"
+            }
+          })
+        );
+      })
+    );
+
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    // Fill and submit form
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'test@example.com' }
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'wrong_password' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // Verify error message
+    await waitFor(() => {
+      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+    });
+  });
+});
 ```
 
 ## Running Tests

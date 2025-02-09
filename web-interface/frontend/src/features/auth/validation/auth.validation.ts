@@ -1,40 +1,35 @@
 import { z } from "zod";
+import {
+  loginFormSchema as baseLoginFormSchema,
+  authResponseSchema,
+  type LoginForm,
+  type AuthResponse
+} from "../../../validation/openapi";
 
+// Export the auth response schema for use in API client
+export { authResponseSchema };
+
+// Re-export the schemas with our specific validation rules
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .email("Please enter a valid email address")
-    .min(1, "Email is required"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password is too long"),
-  remember: z.boolean().optional(),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  remember: z.boolean().default(false),
 });
 
 export const registrationSchema = loginSchema.extend({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password is too long")
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
       "Password must contain at least one uppercase letter, one lowercase letter, and one number"
     ),
-  acceptTerms: z
-    .boolean()
-    .refine((val) => val === true, "You must accept the terms and conditions"),
+  acceptTerms: z.boolean().refine(
+    (val: boolean): val is true => val === true,
+    "You must accept the terms and conditions"
+  ),
 });
 
-export const authResponseSchema = z.object({
-  access_token: z.string(),
-  user: z.object({
-    id: z.number(),
-    email: z.string().email(),
-    personal_info: z.record(z.string(), z.unknown()).optional(),
-  }),
-});
-
-export type LoginSchema = z.infer<typeof loginSchema>;
-export type RegistrationSchema = z.infer<typeof registrationSchema>;
-export type AuthResponseSchema = z.infer<typeof authResponseSchema>;
+// Export types
+export type LoginSchema = LoginForm;
+export type RegistrationSchema = LoginForm & { acceptTerms: boolean };
+export type AuthResponseSchema = AuthResponse;

@@ -1,5 +1,5 @@
-import type { AuthResponse, LoginCredentials, RegistrationData } from "../types";
-import { authResponseSchema } from "../validation/auth.validation";
+import type { LoginCredentials, RegistrationData } from "../types";
+import { authResponseSchema, type AuthResponse } from "../../../validation/openapi";
 import config from "../../../config/env";
 
 const API_BASE_URL = `${config.apiBaseUrl}/${config.apiVersion}`;
@@ -22,29 +22,28 @@ async function handleAuthResponse(response: Response): Promise<AuthResponse> {
       const errorData = await response.json();
       console.log('Error response body:', errorData);
 
-      // Handle different error response formats
+      let errorDetails;
       if (errorData.detail && typeof errorData.detail === 'object') {
-        // Structured error from backend
-        throw new AuthenticationError(
-          errorData.detail.message || "Authentication failed",
-          response.status,
-          errorData.detail
-        );
-      } else if (errorData.detail) {
-        // Simple error message
-        throw new AuthenticationError(
-          errorData.detail,
-          response.status
-        );
+        errorDetails = errorData.detail;
+      } else if (typeof errorData.detail === 'string') {
+        errorDetails = { message: errorData.detail };
+      } else if (response.status === 401) {
+        errorDetails = { message: "Invalid email or password" };
+      } else {
+        errorDetails = { message: "Authentication failed" };
       }
+
+      throw new AuthenticationError(errorDetails.message, response.status, errorDetails);
     } catch (e) {
-      console.log('Failed to parse error response:', e);
+      if (e instanceof AuthenticationError) {
+        throw e;
+      }
+      // If we can't parse the error response, throw a generic error
+      throw new AuthenticationError(
+        response.statusText || "An unexpected error occurred",
+        response.status
+      );
     }
-    // Fallback error
-    throw new AuthenticationError(
-      response.statusText || "An unexpected error occurred",
-      response.status
-    );
   }
 
   const data = await response.json();

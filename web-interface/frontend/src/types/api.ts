@@ -4,8 +4,17 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export type AccessToken = string;
+export type RefreshToken = string;
+export type TokenType = string;
+export type Email = string;
 export type Id = number;
 export type CreatedAt = string;
+export type PersonalInfo = {
+  [k: string]: unknown;
+} | null;
+export type Id1 = number;
+export type CreatedAt1 = string;
 export type FullName = string;
 export type Value = string;
 /**
@@ -54,11 +63,11 @@ export type LanguageCode1 = string;
 export type IsPrimary = boolean;
 export type LanguageCode2 = string;
 export type IsPrimary1 = boolean;
-export type CreatedAt1 = string;
+export type CreatedAt2 = string;
 export type UpdatedAt = string | null;
 export type LanguageCode3 = string;
 export type IsPrimary2 = boolean;
-export type Id1 = number;
+export type Id2 = number;
 export type UserId = number;
 export type Content3 = {
   [k: string]: unknown;
@@ -77,8 +86,8 @@ export type LanguageCode5 = string;
 export type DetailedCvId = number;
 export type JobDescriptionId = number;
 export type LanguageCode6 = string;
-export type Id2 = number;
-export type CreatedAt2 = string;
+export type Id3 = number;
+export type CreatedAt3 = string;
 export type UserId1 = number;
 export type DetailedCvId1 = number;
 export type JobDescriptionId1 = number;
@@ -88,22 +97,28 @@ export type LanguageCode7 = string;
 export type Title1 = string;
 export type Description4 = string;
 export type LanguageCode8 = string;
-export type CreatedAt3 = string;
+export type CreatedAt4 = string;
 export type UpdatedAt1 = string | null;
 export type Title2 = string;
 export type Description5 = string;
 export type LanguageCode9 = string;
-export type Id3 = number;
+export type Id4 = number;
 export type Title3 = string | null;
 export type Description6 = string | null;
+export type Email1 = string;
+export type Password = string;
 export type CoreCompetences1 = CoreCompetenceDTO[];
 export type Experiences1 = ExperienceDTO[];
 export type Education1 = EducationDTO[];
 export type Skills2 = SkillGroupDTO[];
-export type CreatedAt4 = string;
+export type CreatedAt5 = string;
 export type UpdatedAt2 = string | null;
+export type Email2 = string;
+export type Email3 = string;
+export type Password1 = string;
 
 export interface Stdin {
+  AuthResponse: AuthResponse;
   BaseResponseModel: BaseResponseModel;
   CVDTO: CVDTO;
   ContactDTO: ContactDTO;
@@ -127,22 +142,47 @@ export interface Stdin {
   JobDescriptionUpdate: JobDescriptionUpdate;
   Language: Language;
   LanguageCode: LanguageCode;
+  LoginForm: LoginForm;
   MinimalCVDTO: MinimalCVDTO;
-  PersonalInfo: PersonalInfo;
+  PersonalInfo: PersonalInfo1;
   PersonalInfoDTO: PersonalInfoDTO;
   SkillDTO: SkillDTO;
   SkillGroupDTO: SkillGroupDTO;
   SummaryDTO: SummaryDTO;
   TimestampedModel: TimestampedModel;
   TitleDTO: TitleDTO;
+  UserBase: UserBase;
+  UserCreate: UserCreate;
+  UserResponse: UserResponse;
+  UserUpdate: UserUpdate;
+  [k: string]: unknown;
+}
+/**
+ * Schema for authentication response.
+ */
+export interface AuthResponse {
+  access_token: AccessToken;
+  refresh_token: RefreshToken;
+  token_type?: TokenType;
+  user: UserResponse;
+  [k: string]: unknown;
+}
+/**
+ * Schema for user responses.
+ */
+export interface UserResponse {
+  email: Email;
+  id: Id;
+  created_at: CreatedAt;
+  personal_info?: PersonalInfo;
   [k: string]: unknown;
 }
 /**
  * Base model for API responses.
  */
 export interface BaseResponseModel {
-  id: Id;
-  created_at: CreatedAt;
+  id: Id1;
+  created_at: CreatedAt1;
   [k: string]: unknown;
 }
 export interface CVDTO {
@@ -264,12 +304,12 @@ export interface Content1 {
  * Schema for detailed CV responses.
  */
 export interface DetailedCVResponse {
-  created_at: CreatedAt1;
+  created_at: CreatedAt2;
   updated_at?: UpdatedAt;
   language_code: LanguageCode3;
   content: Content2;
   is_primary?: IsPrimary2;
-  id: Id1;
+  id: Id2;
   user_id: UserId;
   [k: string]: unknown;
 }
@@ -287,12 +327,12 @@ export interface DetailedCVUpdate {
 export interface GenerateCVRequest {
   cv_text: CvText;
   job_description: JobDescription;
-  personal_info: PersonalInfo;
+  personal_info: PersonalInfo1;
   approved_competences: ApprovedCompetences;
   notes?: Notes;
   [k: string]: unknown;
 }
-export interface PersonalInfo {
+export interface PersonalInfo1 {
   full_name: FullName1;
   email: ContactRequest;
   phone?: ContactRequest | null;
@@ -335,8 +375,8 @@ export interface Content5 {
 export interface GeneratedCVResponse {
   language_code: LanguageCode6;
   content: Content6;
-  id: Id2;
-  created_at: CreatedAt2;
+  id: Id3;
+  created_at: CreatedAt3;
   user_id: UserId1;
   detailed_cv_id: DetailedCvId1;
   job_description_id: JobDescriptionId1;
@@ -367,12 +407,12 @@ export interface JobDescriptionCreate {
  * Schema for job description responses.
  */
 export interface JobDescriptionResponse {
-  created_at: CreatedAt3;
+  created_at: CreatedAt4;
   updated_at?: UpdatedAt1;
   title: Title2;
   description: Description5;
   language_code: LanguageCode9;
-  id: Id3;
+  id: Id4;
   [k: string]: unknown;
 }
 /**
@@ -381,6 +421,14 @@ export interface JobDescriptionResponse {
 export interface JobDescriptionUpdate {
   title?: Title3;
   description?: Description6;
+  [k: string]: unknown;
+}
+/**
+ * Schema for login form data.
+ */
+export interface LoginForm {
+  email: Email1;
+  password: Password;
   [k: string]: unknown;
 }
 export interface MinimalCVDTO {
@@ -396,8 +444,33 @@ export interface MinimalCVDTO {
  * Base model that includes created/updated timestamps.
  */
 export interface TimestampedModel {
-  created_at: CreatedAt4;
+  created_at: CreatedAt5;
   updated_at?: UpdatedAt2;
+  [k: string]: unknown;
+}
+/**
+ * Base user schema.
+ */
+export interface UserBase {
+  email: Email2;
+  [k: string]: unknown;
+}
+/**
+ * Schema for creating a new user.
+ */
+export interface UserCreate {
+  email: Email3;
+  password: Password1;
+  [k: string]: unknown;
+}
+/**
+ * Schema for updating a user's personal info.
+ */
+export interface UserUpdate {
+  personal_info: PersonalInfo2;
+  [k: string]: unknown;
+}
+export interface PersonalInfo2 {
   [k: string]: unknown;
 }
 
