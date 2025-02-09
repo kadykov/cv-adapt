@@ -52,8 +52,9 @@ async function handleAuthResponse(response: Response): Promise<AuthResponse> {
 }
 
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
+  // Map email to username as required by OAuth2 password flow
   const formData = new URLSearchParams();
-  formData.append('username', credentials.username);
+  formData.append('username', credentials.email); // Backend's OAuth2 form expects 'username' field
   formData.append('password', credentials.password);
   formData.append('grant_type', 'password');  // Required by backend OAuth flow
 

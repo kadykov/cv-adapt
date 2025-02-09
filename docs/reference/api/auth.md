@@ -12,7 +12,7 @@ Content-Type: application/json
 
 {
     "email": "user@example.com",
-    "password": "userpassword" // pragma: allowlist secret
+    "password": "userpassword"
 }
 
 Response 200 OK:
@@ -36,11 +36,13 @@ Response 400 Bad Request:
 
 ### Login
 
+The login endpoint follows the OAuth2 password flow specification, which requires the email to be sent as the `username` field.
+
 ```http
 POST /auth/login
 Content-Type: application/x-www-form-urlencoded
 
-username=user@example.com&password=userpassword
+username=user@example.com&password=userpassword&grant_type=password
 
 Response 200 OK:
 {
@@ -129,6 +131,8 @@ Response 401 Unauthorized:
 ## Implementation Details
 
 - Authentication uses FastAPI's security utilities and OAuth2 password flow
+  - The frontend automatically maps the email field to username as required by OAuth2
+  - The grant_type=password parameter is required by the OAuth2 specification
 - Passwords are hashed using bcrypt
 - Environment variables control token secrets and expiration times
 - CORS is configured to handle credentials properly
