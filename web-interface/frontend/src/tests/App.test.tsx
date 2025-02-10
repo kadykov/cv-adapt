@@ -11,6 +11,34 @@ vi.mock('../api/cv', () => ({
   generateCompetences: vi.fn()
 }));
 
+// Mock auth context to simulate authenticated state
+vi.mock('../features/auth/context/AuthContext', async () => {
+  const actual = await vi.importActual('../features/auth/context/AuthContext');
+  return {
+    ...actual,
+    AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+    useAuth: () => ({
+      user: { id: 1, email: 'test@example.com', personal_info: null, created_at: new Date().toISOString() },
+      token: 'mock-token',
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      refreshToken: vi.fn()
+    })
+  };
+});
+
+// Mock React Router DOM location hook for Layout component
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useLocation: () => ({ pathname: '/jobs' })
+  };
+});
+
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();

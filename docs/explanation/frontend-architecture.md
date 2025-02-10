@@ -29,39 +29,92 @@ src/
 └── validation/       # Zod schemas
 ```
 
-### API Client Architecture
+### API Layer Architecture
 
-The frontend uses a centralized API client that handles authentication, request/response processing, and error management:
+The frontend API layer is organized into three main components that provide a standardized interface for backend API interactions:
+
+#### 1. API Configuration (api-config.ts)
+
+Centralizes API configuration and type definitions:
+
+```typescript
+interface ApiConfig {
+  baseUrl: string;
+  version: string;
+  authTokenKey: string;
+  getFullUrl: () => string;
+}
+
+type RequestOptions = {
+  requiresAuth?: boolean;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+} & Omit<RequestInit, "headers">;
+```
+
+Key features:
+- Environment-based configuration
+- Type definitions for request options
+- Centralized API endpoint management
+- Version control for API endpoints
+
+#### 2. API Client (api-client.ts)
+
+Implements a singleton client for handling API requests:
 
 ```typescript
 class ApiClient {
-  // Singleton instance
   private static instance: ApiClient;
 
-  // Base configuration
-  private baseUrl: string = '/api';
-
-  // Authentication methods
-  private getAuthToken(): string | null;
-  private getHeaders(requiresAuth: boolean): HeadersInit;
-
   // HTTP methods with type safety
-  async get<T>(path: string, config?: RequestConfig): Promise<T>;
-  async post<T>(path: string, data?: Record<string, unknown>, config?: RequestConfig): Promise<T>;
-  async put<T>(path: string, data?: Record<string, unknown>, config?: RequestConfig): Promise<T>;
-  async delete(path: string, config?: RequestConfig): Promise<void>;
+  async get<T>(path: string, options?: RequestOptions): Promise<T>;
+  async post<T>(path: string, data?: unknown, options?: RequestOptions): Promise<T>;
+  async put<T>(path: string, data?: unknown, options?: RequestOptions): Promise<T>;
+  async delete(path: string, options?: RequestOptions): Promise<void>;
 
-  // Response handling
-  private async handleResponse(response: Response): Promise<any>;
+  // Private helper methods
+  private getAuthToken(): string | null;
+  private getHeaders(options: RequestOptions): HeadersInit;
+  private handleResponse<T>(response: Response): Promise<T>;
+  private getFullUrl(path: string): string;
 }
 ```
 
-Key features of the API client:
+Key features:
 - Singleton pattern for consistent instance management
 - Type-safe request/response handling
 - Automatic auth token injection
-- Centralized error handling
+- URL path normalization
+- Flexible request options
 - Support for auth and non-auth requests
+
+#### 3. API Error Handling (api-error.ts)
+
+Provides standardized error handling:
+
+```typescript
+class ApiError extends Error {
+  constructor(message: string, public status?: number, public data?: unknown);
+
+  static fromResponse(response: Response, data?: unknown): ApiError;
+  static fromError(error: unknown): ApiError;
+}
+```
+
+Key features:
+- Standardized error format
+- HTTP status code support
+- Error response data preservation
+- Conversion utilities for different error types
+- Consistent error handling across the application
+
+The API layer provides several benefits:
+- Centralized configuration management
+- Consistent error handling
+- Type-safe request/response handling
+- Standardized request formatting
+- Authentication token management
+- Request option flexibility
 
 ### Feature Module Structure
 Each feature module follows a consistent structure:

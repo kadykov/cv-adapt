@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { JobDescriptionResponse, JobDescriptionCreate, JobDescriptionUpdate } from '../../../types/api';
-import { jobsApi } from '../api/jobsApi';
+import { api } from '../../../api';
+import { Link } from 'react-router-dom';
 
 interface JobFormProps {
   job?: JobDescriptionResponse;
@@ -29,7 +30,7 @@ export function JobForm({ job, onSuccess, onError }: JobFormProps) {
           title: formData.title || undefined,
           description: formData.description || undefined,
         };
-        result = await jobsApi.updateJob(job.id, updateData);
+        result = await api.jobs.updateJob(job.id, updateData);
       } else {
         // Create new job
         const createData: JobDescriptionCreate = {
@@ -37,7 +38,7 @@ export function JobForm({ job, onSuccess, onError }: JobFormProps) {
           description: formData.description,
           language_code: formData.language_code,
         };
-        result = await jobsApi.createJob(createData);
+        result = await api.jobs.createJob(createData);
       }
 
       onSuccess?.(result);
@@ -98,10 +99,13 @@ export function JobForm({ job, onSuccess, onError }: JobFormProps) {
         </div>
       )}
 
-      <div className="pt-4">
+      <div className="flex justify-between pt-4">
+        <Link to="/jobs" className="btn">
+          Cancel
+        </Link>
         <button
           type="submit"
-          className="btn btn-primary w-full"
+          className="btn btn-primary"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Saving...' : job ? 'Update Job' : 'Create Job'}

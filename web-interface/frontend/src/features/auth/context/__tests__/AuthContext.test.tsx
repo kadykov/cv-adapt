@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../AuthContext";
-import * as authApi from "../../api/auth.api";
+import { authService } from "../../../../api/services/auth.service";
 import type { User } from "../../types";
 
-vi.mock("../../api/auth.api", () => ({
-  login: vi.fn(),
-  register: vi.fn(),
-  logout: vi.fn(),
-  refreshToken: vi.fn(),
+vi.mock("../../../../api/services/auth.service", () => ({
+  authService: {
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    refreshToken: vi.fn(),
+  },
 }));
 
 describe("AuthContext", () => {
@@ -25,6 +27,8 @@ describe("AuthContext", () => {
   const mockUser: User = {
     id: 1,
     email: "test@example.com",
+    personal_info: null,
+    created_at: "2024-01-01T00:00:00.000",
   };
 
   const mockToken = "mock-jwt-token";
@@ -60,8 +64,10 @@ describe("AuthContext", () => {
   });
 
   it("handles login success", async () => {
-    vi.mocked(authApi.login).mockResolvedValue({
+    vi.mocked(authService.login).mockResolvedValue({
       access_token: mockToken,
+      refresh_token: "refresh-token",
+      token_type: "bearer",
       user: mockUser,
     });
 
@@ -81,8 +87,10 @@ describe("AuthContext", () => {
   });
 
   it("handles login without remember me", async () => {
-    vi.mocked(authApi.login).mockResolvedValue({
+    vi.mocked(authService.login).mockResolvedValue({
       access_token: mockToken,
+      refresh_token: "refresh-token",
+      token_type: "bearer",
       user: mockUser,
     });
 
@@ -102,7 +110,7 @@ describe("AuthContext", () => {
   });
 
   it("handles login failure", async () => {
-    vi.mocked(authApi.login).mockRejectedValue(
+    vi.mocked(authService.login).mockRejectedValue(
       new Error("Invalid credentials")
     );
 
@@ -126,7 +134,7 @@ describe("AuthContext", () => {
   });
 
   it("handles logout", async () => {
-    vi.mocked(authApi.logout).mockResolvedValue();
+    vi.mocked(authService.logout).mockResolvedValue();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -148,8 +156,10 @@ describe("AuthContext", () => {
   });
 
   it("handles registration", async () => {
-    vi.mocked(authApi.register).mockResolvedValue({
+    vi.mocked(authService.register).mockResolvedValue({
       access_token: mockToken,
+      refresh_token: "refresh-token",
+      token_type: "bearer",
       user: mockUser,
     });
 
@@ -170,10 +180,12 @@ describe("AuthContext", () => {
     const newToken = "new-mock-token";
     const refreshPromise = Promise.resolve({
       access_token: newToken,
+      refresh_token: "refresh-token",
+      token_type: "bearer",
       user: mockUser,
     });
 
-    vi.mocked(authApi.refreshToken).mockReturnValue(refreshPromise);
+    vi.mocked(authService.refreshToken).mockReturnValue(refreshPromise);
 
     localStorage.setItem("auth_token", mockToken);
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
@@ -194,7 +206,7 @@ describe("AuthContext", () => {
     });
 
     // Verify refresh was called
-    expect(vi.mocked(authApi.refreshToken)).toHaveBeenCalledWith(mockToken);
+    expect(vi.mocked(authService.refreshToken)).toHaveBeenCalledWith(mockToken);
 
     // Verify state was updated
     expect(result.current.token).toBe(newToken);

@@ -1,152 +1,130 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { RegistrationSchema } from "../validation/auth.validation";
-import { registrationSchema } from "../validation/auth.validation";
-import { useAuth } from "../context/AuthContext";
-import { AuthenticationError } from "../api/auth.api";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../../../api/core/api-error';
 
 export function RegisterForm() {
-  const { register: registerUser } = useAuth();
-  const [error, setError] = React.useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegistrationSchema>({
-    resolver: zodResolver(registrationSchema),
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+    acceptTerms: '',
+    general: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: RegistrationSchema) => {
-    setError(null);
-    setFieldErrors({});
+  const validateForm = () => {
+    const newErrors = {
+      email: '',
+      password: '',
+      acceptTerms: '',
+      general: ''
+    };
+
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!password || password.length < 8) {
+      newErrors.password = 'Password must contain at least 8 characters';
+    }
+
+    if (!acceptTerms) {
+      newErrors.acceptTerms = 'Please accept the terms and conditions';
+    }
+
+    setErrors(newErrors);
+    return !newErrors.email && !newErrors.password && !newErrors.acceptTerms;
+  };
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
+    setErrors({ email: '', password: '', acceptTerms: '', general: '' });
     setIsLoading(true);
 
     try {
-      await registerUser(data.email, data.password);
-    } catch (e) {
-      let fieldErrors = {};
-
-      if (e instanceof AuthenticationError) {
-        // Handle structured error details
-        if (e.details && typeof e.details === 'object') {
-          const details = e.details as { message: string; code: string; field: string };
-          if (details.field) {
-            fieldErrors = { [details.field]: details.message };
-            setError(null);
-          } else {
-            setError(details.message || e.message);
-          }
-        } else {
-          setError(e.message);
-        }
-
-        // Log error details for debugging
-        console.error('Registration error:', {
-          message: e.message,
-          status: e.statusCode,
-          details: e.details
-        });
+      await register(email, password);
+      navigate('/');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setErrors(prev => ({ ...prev, general: err.message }));
       } else {
-        // Log unexpected errors
-        console.error('Unexpected registration error:', e);
-        setError("An unexpected error occurred. Please try again.");
+        setErrors(prev => ({ ...prev, general: 'Registration failed. Please try again.' }));
       }
-
-      setFieldErrors(fieldErrors);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" role="form">
+        {errors.email && <div className="alert alert-error" role="alert">{errors.email}</div>}
+        {errors.password && <div className="alert alert-error" role="alert">{errors.password}</div>}
+        {errors.acceptTerms && <div className="alert alert-error" role="alert">{errors.acceptTerms}</div>}
+        {errors.general && <div className="alert alert-error" role="alert">{errors.general}</div>}
         <div className="form-control w-full">
-          <label htmlFor="email" className="label">
+          <label className="label" htmlFor="email">
             <span className="label-text">Email</span>
           </label>
           <input
-            id="email"
             type="email"
-            {...register("email")}
-            className={`input input-bordered w-full ${
-              (errors.email || fieldErrors.email) ? "input-error" : ""
-            }`}
+            id="email"
+            name="email"
+            className="input input-bordered w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
+            required
           />
-          {(errors.email || fieldErrors.email) && (
-            <label className="label">
-              <span className="label-text-alt text-error">
-                {fieldErrors.email || errors.email?.message}
-              </span>
-            </label>
-          )}
         </div>
-
         <div className="form-control w-full">
-          <label htmlFor="password" className="label">
+          <label className="label" htmlFor="password">
             <span className="label-text">Password</span>
           </label>
           <input
-            id="password"
             type="password"
-            {...register("password")}
-            className={`input input-bordered w-full ${
-              (errors.password || fieldErrors.password) ? "input-error" : ""
-            }`}
+            id="password"
+            name="password"
+            className="input input-bordered w-full"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
+            required
           />
-          {(errors.password || fieldErrors.password) && (
-            <label className="label">
-              <span className="label-text-alt text-error">
-                {fieldErrors.password || errors.password?.message}
-              </span>
-            </label>
-          )}
           <label className="label">
             <span className="label-text-alt">
-              Password must contain at least 8 characters, including uppercase, lowercase, and numbers
+              Password must contain at least 8 characters including uppercase lowercase and numbers
             </span>
           </label>
         </div>
-
         <div className="form-control">
-          <label htmlFor="acceptTerms" className="label cursor-pointer">
+          <label className="label cursor-pointer" htmlFor="acceptTerms">
             <span className="label-text">I accept the terms and conditions</span>
             <input
               type="checkbox"
-              {...register("acceptTerms")}
               id="acceptTerms"
-              className={`checkbox ${errors.acceptTerms ? "checkbox-error" : ""}`}
+              name="acceptTerms"
+              className="checkbox"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
             />
           </label>
-          {errors.acceptTerms && (
-            <label className="label">
-              <span className="label-text-alt text-error">
-                {errors.acceptTerms.message}
-              </span>
-            </label>
-          )}
         </div>
-
-        {error && (
-          <div className="alert alert-error">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-
         <button
           type="submit"
-          className={`btn btn-primary w-full ${isLoading ? "loading" : ""}`}
+          className={`btn btn-primary w-full ${isLoading ? 'loading' : ''}`}
           disabled={isLoading}
         >
-          {isLoading ? "Creating account..." : "Create account"}
+          {isLoading ? 'Creating account...' : 'Create account'}
         </button>
       </form>
     </div>

@@ -1,21 +1,14 @@
 export interface User {
   id: number;
   email: string;
-  personal_info?: Record<string, unknown>;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  personal_info: Record<string, unknown> | null;
+  created_at: string;
 }
 
 export interface LoginCredentials {
-  email: string;  // Used as username in OAuth2 password flow
+  email: string;
   password: string;
-  grant_type?: string;  // Required by backend OAuth flow, but set in auth.api.ts
-  remember?: boolean;  // Frontend-only state
+  remember?: boolean;
 }
 
 export interface RegistrationData {
@@ -26,5 +19,14 @@ export interface RegistrationData {
 
 export interface AuthResponse {
   access_token: string;
+  refresh_token: string;
+  token_type: string;
   user: User;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }

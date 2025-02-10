@@ -1,159 +1,122 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { RegisterForm } from "../RegisterForm";
-import { AuthenticationError } from "../../api/auth.api";
+import { render, fireEvent, waitFor, screen, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { RegisterForm } from '../RegisterForm';
+import { useAuth } from '../../context/AuthContext';
+import { ApiError } from '../../../../api/core/api-error';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const mockRegister = vi.fn();
-let mockIsLoading = false;
+vi.mock('../../context/AuthContext');
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn()
+  };
+});
 
-vi.mock("../../context/AuthContext", () => ({
-  useAuth: () => ({
-    register: mockRegister,
-    isLoading: mockIsLoading,
-  }),
-}));
+describe('RegisterForm', () => {
+  const mockRegister = vi.fn();
 
-describe("RegisterForm", () => {
   beforeEach(() => {
-    mockRegister.mockReset();
-    mockIsLoading = false;
+    vi.clearAllMocks();
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ register: mockRegister });
   });
 
-  it("renders registration form elements", () => {
-    render(<RegisterForm />);
+  const renderForm = () => {
+    render(
+      <MemoryRouter>
+        <RegisterForm />
+      </MemoryRouter>
+    );
+  };
+
+  const fillForm = (email = 'test@example.com', password = 'Password123!', acceptTerms = true) => {
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: email } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: password } });
+    if (acceptTerms) {
+      fireEvent.click(screen.getByLabelText(/terms and conditions/i));
+    }
+  };
+
+  it('renders registration form elements', () => {
+    renderForm();
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/terms and conditions/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
   });
 
-  it("displays validation errors for invalid input", async () => {
-    render(<RegisterForm />);
-
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText("Please enter a valid email address")).toBeInTheDocument();
-      expect(screen.getByText("Password must be at least 8 characters")).toBeInTheDocument();
-      expect(screen.getByText("You must accept the terms and conditions")).toBeInTheDocument();
-    });
-  });
-
-  it("validates password requirements", async () => {
-    render(<RegisterForm />);
-
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-
-    // Test short password
-    fireEvent.change(passwordInput, { target: { value: "short" } });
-    fireEvent.click(submitButton);
-    await waitFor(() => {
-      expect(screen.getByText("Password must be at least 8 characters")).toBeInTheDocument();
+  it('displays validation errors for invalid input', async () => {
+    renderForm();
+    fillForm('', '', false);
+    const form = screen.getByRole('form');
+    await act(async () => {
+      fireEvent.submit(form);
     });
 
-    // Test password without uppercase
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.click(submitButton);
     await waitFor(() => {
-      expect(screen.getByText("Password must contain at least one uppercase letter, one lowercase letter, and one number")).toBeInTheDocument();
-    });
-
-    // Test password without number
-    fireEvent.change(passwordInput, { target: { value: "PasswordTest" } });
-    fireEvent.click(submitButton);
-    await waitFor(() => {
-      expect(screen.getByText("Password must contain at least one uppercase letter, one lowercase letter, and one number")).toBeInTheDocument();
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts).toHaveLength(3);
+      expect(alerts[0]).toHaveTextContent('Please enter a valid email address');
+      expect(alerts[1]).toHaveTextContent('Password must contain at least 8 characters');
+      expect(alerts[2]).toHaveTextContent('Please accept the terms and conditions');
     });
   });
 
-  it("requires terms acceptance", async () => {
-    render(<RegisterForm />);
-
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "Password123" } });
-    fireEvent.click(submitButton);
+  it('validates password requirements', async () => {
+    renderForm();
+    fillForm('test@example.com', 'short');
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText("You must accept the terms and conditions")).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('Password must contain at least 8 characters');
     });
   });
 
-  it("displays error message on registration failure", async () => {
-    mockRegister.mockRejectedValue(
-      new AuthenticationError("Email already exists")
+  it('requires terms acceptance', async () => {
+    renderForm();
+    fillForm('test@example.com', 'Password123!', false);
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/please accept the terms and conditions/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays error message on registration failure', async () => {
+    mockRegister.mockRejectedValueOnce(
+      new ApiError('Email already exists', 409)
     );
-
-    render(<RegisterForm />);
-
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const termsCheckbox = screen.getByLabelText(/terms and conditions/i);
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "Password123" } });
-    fireEvent.click(termsCheckbox);
-    fireEvent.click(submitButton);
+    renderForm();
+    fillForm();
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
     });
   });
 
-  it("shows loading state during form submission", async () => {
-    const onSubmitPromise = new Promise(resolve => setTimeout(resolve, 100));
-    mockRegister.mockReturnValue(onSubmitPromise);
+  it('shows loading state during form submission', async () => {
+    mockRegister.mockImplementationOnce(() => new Promise((resolve) => setTimeout(resolve, 100)));
+    renderForm();
+    fillForm();
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
-    render(<RegisterForm />);
-
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const termsCheckbox = screen.getByLabelText(/terms and conditions/i);
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-
-    // Fill form with valid data
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "Password123" } });
-    fireEvent.click(termsCheckbox);
-
-    // Submit form
-    fireEvent.click(submitButton);
-
-    // Wait for loading state
-    await waitFor(() => {
-      expect(screen.getByText("Creating account...")).toBeInTheDocument();
-      expect(submitButton).toBeDisabled();
-    });
-
-    // Wait for submission to complete
-    await onSubmitPromise;
+    expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled();
   });
 
-  it("calls register function with correct data", async () => {
-    render(<RegisterForm />);
+  it('calls register function with correct data', async () => {
+    renderForm();
+    const testEmail = 'test@example.com';
+    const testPassword = 'Password123!';
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const termsCheckbox = screen.getByLabelText(/terms and conditions/i);
-    const submitButton = screen.getByRole("button", { name: /create account/i });
-
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "Password123" } });
-    fireEvent.click(termsCheckbox);
-    fireEvent.click(submitButton);
+    fillForm(testEmail, testPassword);
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith(
-        "test@example.com",
-        "Password123"
-      );
+      expect(mockRegister).toHaveBeenCalledWith(testEmail, testPassword);
     });
   });
 });

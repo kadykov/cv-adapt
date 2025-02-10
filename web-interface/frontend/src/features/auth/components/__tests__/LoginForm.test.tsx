@@ -3,15 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { LoginForm } from '../LoginForm';
-import { AuthProvider } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import { AuthResponse } from '../../../../validation/openapi';
-
-// Mock window.location
-const mockAssign = vi.fn();
-Object.defineProperty(window, 'location', {
-  value: { href: mockAssign },
-  writable: true
-});
+import { ApiError } from '../../../../api/core/api-error';
 
 // Mock successful auth response
 const mockAuthResponse: AuthResponse = {
@@ -21,8 +15,8 @@ const mockAuthResponse: AuthResponse = {
   user: {
     id: 1,
     email: 'test@example.com',
-    personal_info: {},
-    created_at: new Date().toISOString()
+    personal_info: null,
+    created_at: new Date().toISOString().split('.')[0]
   }
 };
 
@@ -31,14 +25,35 @@ describe('LoginForm', () => {
     vi.clearAllMocks();
   });
 
-  it('renders login form correctly', () => {
-    render(
+  const renderWithAuth = (mockLogin = vi.fn().mockResolvedValue(mockAuthResponse)) => {
+    const AuthProviderWrapper = ({ children }: { children: React.ReactNode }) => (
+      <AuthContext.Provider
+        value={{
+          login: mockLogin,
+          logout: vi.fn(),
+          register: vi.fn(),
+          refreshToken: vi.fn(),
+          token: null,
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+
+    return render(
       <BrowserRouter>
-        <AuthProvider>
+        <AuthProviderWrapper>
           <LoginForm />
-        </AuthProvider>
+        </AuthProviderWrapper>
       </BrowserRouter>
     );
+  };
+
+  it('renders login form correctly', () => {
+    renderWithAuth();
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -46,32 +61,21 @@ describe('LoginForm', () => {
   });
 
   it('displays validation errors for empty form submission', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithAuth();
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      const emailError = screen.getByText('Please enter a valid email address');
-      const passwordError = screen.getByText('Password must be at least 8 characters');
-      expect(emailError).toBeInTheDocument();
-      expect(passwordError).toBeInTheDocument();
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts).toHaveLength(2);
+      expect(alerts[0]).toHaveTextContent('Please enter a valid email address');
+      expect(alerts[1]).toHaveTextContent('Password must be at least 8 characters');
     });
   });
 
   it('displays validation error for invalid email', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithAuth();
 
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'invalidemail' }
@@ -80,27 +84,18 @@ describe('LoginForm', () => {
       target: { value: 'password123' }
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent('Please enter a valid email address');
     });
   });
 
   it('handles successful login and redirects to /jobs', async () => {
-    // Mock successful fetch response
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockAuthResponse)
-    });
-
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    const mockLogin = vi.fn().mockResolvedValue(mockAuthResponse);
+    renderWithAuth(mockLogin);
 
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'test@example.com' }
@@ -109,36 +104,23 @@ describe('LoginForm', () => {
       target: { value: 'password123' }
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
 
+    // Wait for the login to complete
     await waitFor(() => {
-      expect(window.location.href).toBe('/jobs');
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false);
     });
+
+    // Check that the form is no longer visible after successful login
+    expect(screen.queryByRole('form')).not.toBeInTheDocument();
   });
 
   it('handles server error response', async () => {
-    // Create a Response object that matches the server's error format
-    const errorResponse = new Response(
-      JSON.stringify({
-        detail: {
-          message: 'Invalid email or password',
-          code: 'invalid_credentials'
-        }
-      }),
-      {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-    global.fetch = vi.fn().mockResolvedValueOnce(errorResponse);
+    const mockError = new ApiError('Invalid email or password', 401);
+    const mockLogin = vi.fn().mockRejectedValue(mockError);
 
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithAuth(mockLogin);
 
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'test@example.com' }
@@ -147,7 +129,8 @@ describe('LoginForm', () => {
       target: { value: 'wrongpassword' }
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    const form = screen.getByRole('form');
+    fireEvent.submit(form);
 
     const errorAlert = await screen.findByRole('alert');
     expect(errorAlert).toBeInTheDocument();

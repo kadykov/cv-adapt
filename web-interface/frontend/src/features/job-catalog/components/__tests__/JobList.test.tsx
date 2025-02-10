@@ -1,14 +1,17 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { JobList } from '../JobList';
-import { jobsApi } from '../../api/jobsApi';
+import { api } from '../../../../api';
 import type { JobDescriptionResponse } from '../../../../types/api';
+import { MemoryRouter } from 'react-router-dom';
 
-// Mock the jobsApi
-vi.mock('../../api/jobsApi', () => ({
-  jobsApi: {
-    getJobs: vi.fn(),
-    deleteJob: vi.fn(),
+// Mock the API
+vi.mock('../../../../api', () => ({
+  api: {
+    jobs: {
+      getJobs: vi.fn(),
+      deleteJob: vi.fn(),
+    },
   },
 }));
 
@@ -31,20 +34,28 @@ const mockJobs: JobDescriptionResponse[] = [
   },
 ];
 
+const renderWithRouter = (component: React.ReactNode) => {
+  return render(
+    <MemoryRouter>
+      {component}
+    </MemoryRouter>
+  );
+};
+
 describe('JobList', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
   it('should render loading state initially', () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce([]);
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce([]);
+    renderWithRouter(<JobList />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('should render jobs when loaded successfully', async () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
@@ -53,8 +64,8 @@ describe('JobList', () => {
   });
 
   it('should show error message when loading fails', async () => {
-    (jobsApi.getJobs as jest.Mock).mockRejectedValueOnce(new Error('Failed to load'));
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockRejectedValueOnce(new Error('Failed to load'));
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load')).toBeInTheDocument();
@@ -62,8 +73,8 @@ describe('JobList', () => {
   });
 
   it('should show empty state when no jobs exist', async () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce([]);
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce([]);
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       expect(screen.getByText('No job descriptions found')).toBeInTheDocument();
@@ -72,10 +83,10 @@ describe('JobList', () => {
   });
 
   it('should delete a job when delete button is clicked', async () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
-    (jobsApi.deleteJob as jest.Mock).mockResolvedValueOnce(undefined);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
+    (api.jobs.deleteJob as jest.Mock).mockResolvedValueOnce(undefined);
 
-    render(<JobList />);
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
@@ -84,7 +95,7 @@ describe('JobList', () => {
     const deleteButtons = await screen.findAllByText('Delete');
     fireEvent.click(deleteButtons[0]);
 
-    expect(jobsApi.deleteJob).toHaveBeenCalledWith(1);
+    expect(api.jobs.deleteJob).toHaveBeenCalledWith(1);
 
     await waitFor(() => {
       expect(screen.queryByText('Software Engineer')).not.toBeInTheDocument();
@@ -92,8 +103,8 @@ describe('JobList', () => {
   });
 
   it('should render job links correctly', async () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       const jobLink = screen.getByText('Software Engineer');
@@ -102,8 +113,8 @@ describe('JobList', () => {
   });
 
   it('should render edit links correctly', async () => {
-    (jobsApi.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
-    render(<JobList />);
+    (api.jobs.getJobs as jest.Mock).mockResolvedValueOnce(mockJobs);
+    renderWithRouter(<JobList />);
 
     await waitFor(() => {
       const editLinks = screen.getAllByText('Edit');
