@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../../../api/core/api-error';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -44,7 +46,7 @@ export function LoginForm() {
 
     try {
       await login(email, password, remember);
-      window.location.href = '/jobs';
+      navigate('/jobs');
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors({ general: 'Invalid email or password' });
@@ -57,74 +59,79 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6">
-      <form onSubmit={handleSubmit} className="space-y-6" aria-label="Login form">
-        {errors.email && (
-          <div className="alert alert-error" role="alert">
-            {errors.email}
-          </div>
-        )}
-        {errors.password && (
-          <div className="alert alert-error" role="alert">
-            {errors.password}
-          </div>
-        )}
-        {errors.general && (
-          <div className="alert alert-error" role="alert">
-            {errors.general}
-          </div>
-        )}
-        <div className="form-control w-full">
-          <label className="label" htmlFor="email">
-            <span className="label-text">Email</span>
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            className="input input-bordered w-full"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            required
-          />
+    <div className="container mx-auto px-4">
+      <div className="max-w-md mx-auto mt-16">
+        <h1 className="text-2xl font-bold mb-6 text-center">Sign in to CV Adapter</h1>
+        <div className="w-full max-w-md mx-auto p-6">
+          <form onSubmit={handleSubmit} className="space-y-6" aria-label="Login form">
+            {errors.email && (
+              <div className="alert alert-error" role="alert">
+                {errors.email}
+              </div>
+            )}
+            {errors.password && (
+              <div className="alert alert-error" role="alert">
+                {errors.password}
+              </div>
+            )}
+            {errors.general && (
+              <div className="alert alert-error" role="alert">
+                {errors.general}
+              </div>
+            )}
+            <div className="form-control w-full">
+              <label className="label" htmlFor="email">
+                <span className="label-text">Email</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="input input-bordered w-full"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <div className="form-control w-full">
+              <label className="label" htmlFor="password">
+                <span className="label-text">Password</span>
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                className="input input-bordered w-full"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer" htmlFor="remember">
+                <span className="label-text">Remember me</span>
+                <input
+                  type="checkbox"
+                  id="remember"
+                  name="remember"
+                  className="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+              </label>
+            </div>
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
         </div>
-        <div className="form-control w-full">
-          <label className="label" htmlFor="password">
-            <span className="label-text">Password</span>
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            className="input input-bordered w-full"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-          />
-        </div>
-        <div className="form-control">
-          <label className="label cursor-pointer" htmlFor="remember">
-            <span className="label-text">Remember me</span>
-            <input
-              type="checkbox"
-              id="remember"
-              name="remember"
-              className="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-            />
-          </label>
-        </div>
-        <button
-          type="submit"
-          className={`btn btn-primary w-full ${isLoading ? 'loading' : ''}`}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Signing in...' : 'Sign in'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

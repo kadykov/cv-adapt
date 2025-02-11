@@ -1,56 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AuthResponse } from '../../../validation/openapi';
 import { ApiError } from '../../../api/core/api-error';
 import { authService } from '../../../api/services/auth.service';
-import type { LoginCredentials, RegistrationData } from '../types';
-
-interface CookieOptions {
-  path?: string;
-  secure?: boolean;
-  sameSite?: 'strict' | 'lax' | 'none';
-  expires?: number | Date;
-}
+import type { AuthResponse, User, LoginCredentials, RegistrationData } from '../types';
+import Cookies from 'js-cookie';
 
 const COOKIE_OPTIONS = {
-  secure: process.env.NODE_ENV === 'production',
+  secure: import.meta.env.PROD,
   sameSite: 'lax' as const,
   path: '/'
 } as const;
 
-// Cookie operations that only run on the client side
-const cookieOps = {
-  get: async (key: string): Promise<string | null> => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const Cookies = (await import('js-cookie')).default;
-      return Cookies.get(key) || null;
-    } catch (e) {
-      console.error('Cookie get operation failed:', e);
-      return null;
-    }
-  },
-  set: async (key: string, value: string, options: CookieOptions = COOKIE_OPTIONS): Promise<void> => {
-    if (typeof window === 'undefined') return;
-    try {
-      const Cookies = (await import('js-cookie')).default;
-      await Promise.resolve(Cookies.set(key, value, options));
-    } catch (e) {
-      console.error('Cookie set operation failed:', e);
-    }
-  },
-  remove: async (key: string): Promise<void> => {
-    if (typeof window === 'undefined') return;
-    try {
-      const Cookies = (await import('js-cookie')).default;
-      await Promise.resolve(Cookies.remove(key, COOKIE_OPTIONS));
-    } catch (e) {
-      console.error('Cookie remove operation failed:', e);
-    }
-  }
-};
-
 interface AuthContextType {
-  user: AuthResponse['user'] | null;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -63,35 +24,26 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthResponse['user'] | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load auth state from cookies on mount (client-side only)
+  // Load auth state from cookies on mount
   useEffect(() => {
     const loadAuthState = async () => {
-      if (typeof window === 'undefined') {
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        const [storedUser, storedAccessToken] = await Promise.all([
-          cookieOps.get('auth_user'),
-          cookieOps.get('auth_token')
-        ]);
+        const storedUser = Cookies.get('auth_user');
+        const storedAccessToken = Cookies.get('auth_token');
 
         if (storedUser && storedAccessToken) {
           try {
             const parsedUser = JSON.parse(storedUser);
             setUser(parsedUser);
             setToken(storedAccessToken);
-          } catch (error) {
-            await Promise.all([
-              cookieOps.remove('auth_token'),
-              cookieOps.remove('auth_user'),
-              cookieOps.remove('refresh_token')
-            ]);
+          } catch {
+            Cookies.remove('auth_token', COOKIE_OPTIONS);
+            Cookies.remove('auth_user', COOKIE_OPTIONS);
+            Cookies.remove('refresh_token', COOKIE_OPTIONS);
           }
         }
       } finally {
@@ -105,16 +57,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, remember = false): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
-      const credentials: LoginCredentials = { email, password, remember };
+      const credentials: LoginCredentials = { email, password };
       const response = await authService.login(credentials);
 
-      await Promise.all([
-        cookieOps.set('auth_token', response.access_token),
-        cookieOps.set('auth_user', JSON.stringify(response.user))
-      ]);
+      Cookies.set('auth_token', response.access_token, COOKIE_OPTIONS);
+      Cookies.set('auth_user', JSON.stringify(response.user), COOKIE_OPTIONS);
 
       if (remember) {
-        await cookieOps.set('refresh_token', response.refresh_token);
+        Cookies.set('refresh_token', response.refresh_token, COOKIE_OPTIONS);
       }
 
       setUser(response.user);
@@ -133,14 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
-      const registrationData: RegistrationData = { email, password, acceptTerms: true };
+      const registrationData: RegistrationData = { email, password, confirmPassword: password };
       const response = await authService.register(registrationData);
 
-      await Promise.all([
-        cookieOps.set('auth_token', response.access_token),
-        cookieOps.set('auth_user', JSON.stringify(response.user)),
-        cookieOps.set('refresh_token', response.refresh_token)
-      ]);
+      Cookies.set('auth_token', response.access_token, COOKIE_OPTIONS);
+      Cookies.set('auth_user', JSON.stringify(response.user), COOKIE_OPTIONS);
+      Cookies.set('refresh_token', response.refresh_token, COOKIE_OPTIONS);
 
       setUser(response.user);
       setToken(response.access_token);
@@ -161,30 +109,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setToken(null);
-      await Promise.all([
-        cookieOps.remove('auth_token'),
-        cookieOps.remove('auth_user'),
-        cookieOps.remove('refresh_token')
-      ]);
+      Cookies.remove('auth_token', COOKIE_OPTIONS);
+      Cookies.remove('auth_user', COOKIE_OPTIONS);
+      Cookies.remove('refresh_token', COOKIE_OPTIONS);
     }
   };
 
   const refreshToken = async (): Promise<void> => {
-    const storedRefreshToken = await cookieOps.get('refresh_token');
+    const storedRefreshToken = Cookies.get('refresh_token');
     if (!storedRefreshToken) return;
 
     try {
       const response = await authService.refreshToken(storedRefreshToken);
 
-      await Promise.all([
-        cookieOps.set('auth_token', response.access_token),
-        cookieOps.set('auth_user', JSON.stringify(response.user)),
-        cookieOps.set('refresh_token', response.refresh_token)
-      ]);
+      Cookies.set('auth_token', response.access_token, COOKIE_OPTIONS);
+      Cookies.set('auth_user', JSON.stringify(response.user), COOKIE_OPTIONS);
+      Cookies.set('refresh_token', response.refresh_token, COOKIE_OPTIONS);
 
       setUser(response.user);
       setToken(response.access_token);
-    } catch (error) {
+    } catch {
       await logout();
     }
   };

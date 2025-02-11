@@ -1,151 +1,92 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import type { JobDescriptionResponse, JobDescriptionCreate, JobDescriptionUpdate } from '../../../../types/api';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { jobsApi } from '../jobsApi';
+import { apiClient } from '../../../../api/core/api-client';
+import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../../../types/api';
 
-const mockJob: JobDescriptionResponse = {
-  id: 1,
-  title: 'Software Engineer',
-  description: 'Full stack developer position',
-  language_code: 'en',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: null,
-};
+vi.mock('../../../../api/core/api-client', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
 describe('jobsApi', () => {
-  const mockFetch = global.fetch as jest.Mock;
+  const mockJob: JobDescriptionResponse = {
+    id: 1,
+    title: 'Software Engineer',
+    description: 'Test description',
+    requirements: ['React', 'TypeScript'],
+    language_code: 'en',
+    created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
+  };
 
   beforeEach(() => {
-    mockFetch.mockReset();
+    vi.clearAllMocks();
   });
 
   describe('getJobs', () => {
-    it('should fetch all jobs', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => [mockJob],
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      });
+    it('fetches all jobs', async () => {
+      const jobs = [mockJob];
+      vi.mocked(apiClient.get).mockResolvedValue(jobs);
 
-      const jobs = await jobsApi.getJobs();
+      const result = await jobsApi.getJobs();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs', {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      expect(jobs).toEqual([mockJob]);
-    });
-
-    it('should throw error when fetch fails', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        }),
-        json: async () => ({ message: 'Request failed' })
-      });
-
-      await expect(jobsApi.getJobs()).rejects.toThrow('Request failed');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/jobs');
+      expect(result).toEqual(jobs);
     });
   });
 
-  describe('getJob', () => {
-    it('should fetch a single job', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockJob,
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      });
+  describe('getJobById', () => {
+    it('fetches a job by id', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue(mockJob);
 
-      const job = await jobsApi.getJob(1);
+      const result = await jobsApi.getJobById(1);
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1', {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      expect(job).toEqual(mockJob);
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/jobs/1');
+      expect(result).toEqual(mockJob);
     });
   });
 
   describe('createJob', () => {
-    it('should create a new job', async () => {
+    it('creates a new job', async () => {
       const newJob: JobDescriptionCreate = {
         title: 'New Job',
-        description: 'Description',
+        description: 'New description',
         language_code: 'en',
       };
+      vi.mocked(apiClient.post).mockResolvedValue(mockJob);
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ...mockJob, ...newJob }),
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      });
+      const result = await jobsApi.createJob(newJob);
 
-      const job = await jobsApi.createJob(newJob);
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newJob),
-      });
-      expect(job.title).toBe(newJob.title);
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/jobs', newJob);
+      expect(result).toEqual(mockJob);
     });
   });
 
   describe('updateJob', () => {
-    it('should update an existing job', async () => {
-      const updateData: JobDescriptionUpdate = {
-        title: 'Updated Title',
+    it('updates an existing job', async () => {
+      const update: JobDescriptionUpdate = {
+        title: 'Updated Job',
       };
+      vi.mocked(apiClient.put).mockResolvedValue({ ...mockJob, ...update });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ...mockJob, ...updateData }),
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      });
+      const result = await jobsApi.updateJob(1, update);
 
-      const job = await jobsApi.updateJob(1, updateData);
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      expect(job.title).toBe(updateData.title);
+      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/jobs/1', update);
+      expect(result).toEqual({ ...mockJob, ...update });
     });
   });
 
   describe('deleteJob', () => {
-    it('should delete a job', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 204,
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      });
+    it('deletes a job', async () => {
+      vi.mocked(apiClient.delete).mockResolvedValue(undefined);
 
       await jobsApi.deleteJob(1);
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/jobs/1', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      expect(apiClient.delete).toHaveBeenCalledWith('/api/v1/jobs/1');
     });
   });
 });

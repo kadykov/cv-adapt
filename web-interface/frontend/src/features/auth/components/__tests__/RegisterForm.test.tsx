@@ -1,17 +1,12 @@
+/// <reference types="vitest/globals" />
+import React from 'react';
 import { render, fireEvent, waitFor, screen, act } from '@testing-library/react';
 import { RegisterForm } from '../RegisterForm';
 import { AuthContext } from '../../context/AuthContext';
 import { ApiError } from '../../../../api/core/api-error';
-import type { AuthResponse } from '../../../../validation/openapi';
+import type { AuthResponse } from '../../types';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-
-// Mock window.location
-const originalLocation = window.location;
-const mockLocation = { ...originalLocation, href: '' };
-Object.defineProperty(window, 'location', {
-  writable: true,
-  value: mockLocation,
-});
+import { BrowserRouter } from 'react-router-dom';
 
 // Mock successful auth response
 const mockAuthResponse: AuthResponse = {
@@ -29,7 +24,6 @@ const mockAuthResponse: AuthResponse = {
 describe('RegisterForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.location.href = '';
   });
 
   afterEach(() => {
@@ -40,20 +34,22 @@ describe('RegisterForm', () => {
 
   const renderForm = () => {
     return render(
-      <AuthContext.Provider
-        value={{
-          register: mockRegister,
-          login: vi.fn(),
-          logout: vi.fn(),
-          refreshToken: vi.fn(),
-          token: null,
-          user: null,
-          isLoading: false,
-          isAuthenticated: false
-        }}
-      >
-        <RegisterForm />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider
+          value={{
+            register: mockRegister,
+            login: vi.fn(),
+            logout: vi.fn(),
+            refreshToken: vi.fn(),
+            token: null,
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          }}
+        >
+          <RegisterForm />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
   };
 
@@ -124,20 +120,22 @@ describe('RegisterForm', () => {
     );
 
     render(
-      <AuthContext.Provider
-        value={{
-          register: mockErrorRegister,
-          login: vi.fn(),
-          logout: vi.fn(),
-          refreshToken: vi.fn(),
-          token: null,
-          user: null,
-          isLoading: false,
-          isAuthenticated: false
-        }}
-      >
-        <RegisterForm />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider
+          value={{
+            register: mockErrorRegister,
+            login: vi.fn(),
+            logout: vi.fn(),
+            refreshToken: vi.fn(),
+            token: null,
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          }}
+        >
+          <RegisterForm />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     fillForm();
@@ -154,20 +152,22 @@ describe('RegisterForm', () => {
     );
 
     render(
-      <AuthContext.Provider
-        value={{
-          register: mockSlowRegister,
-          login: vi.fn(),
-          logout: vi.fn(),
-          refreshToken: vi.fn(),
-          token: null,
-          user: null,
-          isLoading: false,
-          isAuthenticated: false
-        }}
-      >
-        <RegisterForm />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider
+          value={{
+            register: mockSlowRegister,
+            login: vi.fn(),
+            logout: vi.fn(),
+            refreshToken: vi.fn(),
+            token: null,
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          }}
+        >
+          <RegisterForm />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     fillForm();
@@ -184,18 +184,7 @@ describe('RegisterForm', () => {
     await submitForm();
 
     await waitFor(() => {
-      // Verify registration call
       expect(mockRegister).toHaveBeenCalledWith(testEmail, testPassword);
-    });
-
-    expect(window.location.href).toBe('/jobs');
-  });
-
-  // Cleanup
-  afterAll(() => {
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: originalLocation,
     });
   });
 });

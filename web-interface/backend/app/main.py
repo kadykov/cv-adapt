@@ -20,7 +20,7 @@ setup_logging_middleware(app)
 # Configure CORS with more permissive settings for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Allow both localhost variants
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],  # Allow both localhost variants and Vite dev server
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods during development
     allow_headers=["*"],  # Allow all headers during development

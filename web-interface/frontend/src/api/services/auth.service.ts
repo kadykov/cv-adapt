@@ -1,11 +1,9 @@
 import { apiClient } from "../core/api-client";
 import type { AuthResponse, LoginCredentials, RegistrationData } from "../../features/auth/types";
 import { ApiError } from "../core/api-error";
-import { authResponseSchema } from "../../validation/openapi";
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    // Map email to username as required by OAuth2 password flow
     const formData = new URLSearchParams();
     formData.append("username", credentials.email);
     formData.append("password", credentials.password);
@@ -19,7 +17,7 @@ class AuthService {
         },
       });
 
-      return authResponseSchema.parse(response);
+      return response;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -34,7 +32,7 @@ class AuthService {
         requiresAuth: false,
       });
 
-      return authResponseSchema.parse(response);
+      return response;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -66,7 +64,7 @@ class AuthService {
         }
       );
 
-      return authResponseSchema.parse(response);
+      return response;
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         throw new ApiError("Invalid token", 401);

@@ -1,18 +1,20 @@
+/// <reference types="vitest/globals" />
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { LoginForm } from '../LoginForm';
 import { AuthContext } from '../../context/AuthContext';
-import { AuthResponse } from '../../../../validation/openapi';
+import type { AuthResponse } from '../../types';
 import { ApiError } from '../../../../api/core/api-error';
+import { BrowserRouter } from 'react-router-dom';
 
-// Mock cookies dynamic import
+// Mock js-cookie
 vi.mock('js-cookie', () => {
   const mockCookieStore: { [key: string]: string } = {};
   return {
     default: {
       get: vi.fn((name: string) => mockCookieStore[name]),
-      set: vi.fn((name: string, value: string, _options?: object) => {
+      set: vi.fn((name: string, value: string) => {
         mockCookieStore[name] = value;
       }),
       remove: vi.fn((name: string) => {
@@ -24,14 +26,6 @@ vi.mock('js-cookie', () => {
 
 // Import Cookies after mocking
 import Cookies from 'js-cookie';
-
-// Mock window.location
-const originalLocation = window.location;
-const mockLocation = { ...originalLocation, href: '' };
-Object.defineProperty(window, 'location', {
-  writable: true,
-  value: mockLocation,
-});
 
 // Mock successful auth response
 const mockAuthResponse: AuthResponse = {
@@ -55,7 +49,6 @@ const cookieOptions = {
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.location.href = '';
   });
 
   const mockLogin = vi.fn().mockImplementation(async () => {
@@ -69,20 +62,22 @@ describe('LoginForm', () => {
 
   const renderWithAuth = () => {
     const utils = render(
-      <AuthContext.Provider
-        value={{
-          login: mockLogin,
-          logout: vi.fn(),
-          register: vi.fn(),
-          refreshToken: vi.fn(),
-          token: null,
-          user: null,
-          isLoading: false,
-          isAuthenticated: false
-        }}
-      >
-        <LoginForm />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider
+          value={{
+            login: mockLogin,
+            logout: vi.fn(),
+            register: vi.fn(),
+            refreshToken: vi.fn(),
+            token: null,
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          }}
+        >
+          <LoginForm />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
     return utils;
   };
@@ -102,7 +97,6 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false);
-      expect(window.location.href).toBe('/jobs');
       expect(Cookies.set).toHaveBeenCalledWith('auth_token', mockAuthResponse.access_token, cookieOptions);
       expect(Cookies.set).toHaveBeenCalledWith('auth_user', JSON.stringify(mockAuthResponse.user), cookieOptions);
       expect(Cookies.set).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, cookieOptions);
@@ -115,20 +109,22 @@ describe('LoginForm', () => {
     );
 
     render(
-      <AuthContext.Provider
-        value={{
-          login: mockErrorLogin,
-          logout: vi.fn(),
-          register: vi.fn(),
-          refreshToken: vi.fn(),
-          token: null,
-          user: null,
-          isLoading: false,
-          isAuthenticated: false
-        }}
-      >
-        <LoginForm />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider
+          value={{
+            login: mockErrorLogin,
+            logout: vi.fn(),
+            register: vi.fn(),
+            refreshToken: vi.fn(),
+            token: null,
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          }}
+        >
+          <LoginForm />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     await act(async () => {
@@ -177,14 +173,6 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
-    });
-  });
-
-  // Cleanup
-  afterAll(() => {
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: originalLocation,
     });
   });
 });

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import type { JobDescriptionResponse } from "../../../types/api";
-import { api } from "../../../api";
-import { ApiError } from "../../../api/core/api-error";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { JobDescriptionResponse } from "../../../types/api";
+import { jobsApi } from "../api/jobsApi";
+import { ApiError } from "../../../api/core/api-error";
 
 export function JobList() {
   const [jobs, setJobs] = useState<JobDescriptionResponse[]>([]);
@@ -12,7 +12,7 @@ export function JobList() {
   const fetchJobs = async () => {
     try {
       setError(null);
-      const data = await api.jobs.getJobs();
+      const data = await jobsApi.getJobs();
       setJobs(data);
     } catch (e) {
       console.error("Failed to fetch jobs:", e);
@@ -24,7 +24,7 @@ export function JobList() {
 
   const handleDelete = async (id: number) => {
     try {
-      await api.jobs.deleteJob(id);
+      await jobsApi.deleteJob(id);
       setJobs(jobs.filter(job => job.id !== id));
     } catch (e) {
       console.error("Failed to delete job:", e);
@@ -40,7 +40,11 @@ export function JobList() {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
   }
 
   if (error) {
@@ -56,9 +60,9 @@ export function JobList() {
 
   if (jobs.length === 0) {
     return (
-      <div>
-        <p>No job descriptions found</p>
-        <Link to="/jobs/new" className="btn btn-primary mt-4">
+      <div className="text-center">
+        <p className="mb-4">No job descriptions found</p>
+        <Link to="/jobs/new" className="btn btn-primary">
           Add Job Description
         </Link>
       </div>
@@ -67,6 +71,11 @@ export function JobList() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Link to="/jobs/new" className="btn btn-primary">
+          Add Job Description
+        </Link>
+      </div>
       {jobs.map((job) => (
         <div key={job.id} className="card bg-base-100 shadow-xl">
           <div className="card-body">
