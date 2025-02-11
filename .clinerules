@@ -1,0 +1,8 @@
+# Project Intelligence
+- Focus: CV adaptation and generation with multilingual support
+- Stack: Python 3.12+, Pydantic, Jinja2, TypeScript/React frontend
+- Key files: cv_adapter/core/application.py, web-interface/frontend/src/features/
+- Tools: UV for Python packages, Just for task running
+- Testing: PyTest for backend, Vitest/MSW for frontend
+- Structure: Feature-based organization, protocol-driven design
+- Active: Job catalog and auth system implementation in frontend
