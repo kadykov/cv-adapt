@@ -1,11 +1,37 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { LoginForm } from '../LoginForm';
 import { AuthContext } from '../../context/AuthContext';
 import { AuthResponse } from '../../../../validation/openapi';
 import { ApiError } from '../../../../api/core/api-error';
+
+// Mock cookies dynamic import
+vi.mock('js-cookie', () => {
+  const mockCookieStore: { [key: string]: string } = {};
+  return {
+    default: {
+      get: vi.fn((name: string) => mockCookieStore[name]),
+      set: vi.fn((name: string, value: string, _options?: object) => {
+        mockCookieStore[name] = value;
+      }),
+      remove: vi.fn((name: string) => {
+        delete mockCookieStore[name];
+      }),
+    },
+  };
+});
+
+// Import Cookies after mocking
+import Cookies from 'js-cookie';
+
+// Mock window.location
+const originalLocation = window.location;
+const mockLocation = { ...originalLocation, href: '' };
+Object.defineProperty(window, 'location', {
+  writable: true,
+  value: mockLocation,
+});
 
 // Mock successful auth response
 const mockAuthResponse: AuthResponse = {
@@ -20,13 +46,29 @@ const mockAuthResponse: AuthResponse = {
   }
 };
 
+const cookieOptions = {
+  secure: false,
+  sameSite: 'lax' as const,
+  path: '/'
+};
+
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.location.href = '';
   });
 
-  const renderWithAuth = (mockLogin = vi.fn().mockResolvedValue(mockAuthResponse)) => {
-    const AuthProviderWrapper = ({ children }: { children: React.ReactNode }) => (
+  const mockLogin = vi.fn().mockImplementation(async () => {
+    await act(async () => {
+      Cookies.set('auth_token', mockAuthResponse.access_token, cookieOptions);
+      Cookies.set('auth_user', JSON.stringify(mockAuthResponse.user), cookieOptions);
+      Cookies.set('refresh_token', mockAuthResponse.refresh_token, cookieOptions);
+    });
+    return mockAuthResponse;
+  });
+
+  const renderWithAuth = () => {
+    const utils = render(
       <AuthContext.Provider
         value={{
           login: mockLogin,
@@ -39,32 +81,78 @@ describe('LoginForm', () => {
           isAuthenticated: false
         }}
       >
-        {children}
+        <LoginForm />
+      </AuthContext.Provider>
+    );
+    return utils;
+  };
+
+  it('handles successful login and redirects to /jobs', async () => {
+    renderWithAuth();
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: 'test@example.com' }
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'password123' }
+      });
+      fireEvent.submit(screen.getByRole('form'));
+    });
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false);
+      expect(window.location.href).toBe('/jobs');
+      expect(Cookies.set).toHaveBeenCalledWith('auth_token', mockAuthResponse.access_token, cookieOptions);
+      expect(Cookies.set).toHaveBeenCalledWith('auth_user', JSON.stringify(mockAuthResponse.user), cookieOptions);
+      expect(Cookies.set).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, cookieOptions);
+    });
+  });
+
+  it('handles server error response', async () => {
+    const mockErrorLogin = vi.fn().mockRejectedValue(
+      new ApiError('Invalid email or password', 401)
+    );
+
+    render(
+      <AuthContext.Provider
+        value={{
+          login: mockErrorLogin,
+          logout: vi.fn(),
+          register: vi.fn(),
+          refreshToken: vi.fn(),
+          token: null,
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        }}
+      >
+        <LoginForm />
       </AuthContext.Provider>
     );
 
-    return render(
-      <BrowserRouter>
-        <AuthProviderWrapper>
-          <LoginForm />
-        </AuthProviderWrapper>
-      </BrowserRouter>
-    );
-  };
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: 'test@example.com' }
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'wrongpassword' }
+      });
+      fireEvent.submit(screen.getByRole('form'));
+    });
 
-  it('renders login form correctly', () => {
-    renderWithAuth();
-
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
+      expect(Cookies.set).not.toHaveBeenCalled();
+    });
   });
 
   it('displays validation errors for empty form submission', async () => {
     renderWithAuth();
 
-    const form = screen.getByRole('form');
-    fireEvent.submit(form);
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('form'));
+    });
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert');
@@ -77,63 +165,26 @@ describe('LoginForm', () => {
   it('displays validation error for invalid email', async () => {
     renderWithAuth();
 
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'invalidemail' }
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: 'invalidemail' }
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'password123' }
+      });
+      fireEvent.submit(screen.getByRole('form'));
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    });
-
-    const form = screen.getByRole('form');
-    fireEvent.submit(form);
 
     await waitFor(() => {
-      const alert = screen.getByRole('alert');
-      expect(alert).toHaveTextContent('Please enter a valid email address');
+      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
     });
   });
 
-  it('handles successful login and redirects to /jobs', async () => {
-    const mockLogin = vi.fn().mockResolvedValue(mockAuthResponse);
-    renderWithAuth(mockLogin);
-
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
+  // Cleanup
+  afterAll(() => {
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: originalLocation,
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    });
-
-    const form = screen.getByRole('form');
-    fireEvent.submit(form);
-
-    // Wait for the login to complete
-    await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false);
-    });
-
-    // Check that the form is no longer visible after successful login
-    expect(screen.queryByRole('form')).not.toBeInTheDocument();
-  });
-
-  it('handles server error response', async () => {
-    const mockError = new ApiError('Invalid email or password', 401);
-    const mockLogin = vi.fn().mockRejectedValue(mockError);
-
-    renderWithAuth(mockLogin);
-
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'wrongpassword' }
-    });
-
-    const form = screen.getByRole('form');
-    fireEvent.submit(form);
-
-    const errorAlert = await screen.findByRole('alert');
-    expect(errorAlert).toBeInTheDocument();
-    expect(errorAlert).toHaveTextContent('Invalid email or password');
   });
 });

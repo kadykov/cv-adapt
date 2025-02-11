@@ -1,6 +1,5 @@
 ---
 import MainLayout from "./MainLayout.astro";
-import { AuthProvider } from "../features/auth";
 
 interface Props {
   title?: string;
@@ -10,7 +9,5 @@ const { title } = Astro.props;
 ---
 
 <MainLayout title={title}>
-  <AuthProvider client:load>
-    <slot />
-  </AuthProvider>
+  <slot />
 </MainLayout>

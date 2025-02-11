@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../../../api/core/api-error';
 
@@ -39,7 +38,6 @@ export function RegisterForm() {
     return !newErrors.email && !newErrors.password && !newErrors.acceptTerms;
   };
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +50,7 @@ export function RegisterForm() {
 
     try {
       await register(email, password);
-      navigate('/');
+      window.location.href = '/jobs';
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(prev => ({ ...prev, general: err.message }));

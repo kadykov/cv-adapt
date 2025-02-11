@@ -1,41 +1,78 @@
 import { render, fireEvent, waitFor, screen, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { RegisterForm } from '../RegisterForm';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import { ApiError } from '../../../../api/core/api-error';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { AuthResponse } from '../../../../validation/openapi';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
-vi.mock('../../context/AuthContext');
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => vi.fn()
-  };
+// Mock window.location
+const originalLocation = window.location;
+const mockLocation = { ...originalLocation, href: '' };
+Object.defineProperty(window, 'location', {
+  writable: true,
+  value: mockLocation,
 });
 
-describe('RegisterForm', () => {
-  const mockRegister = vi.fn();
+// Mock successful auth response
+const mockAuthResponse: AuthResponse = {
+  access_token: 'mock_token',
+  refresh_token: 'mock_refresh',
+  token_type: 'bearer',
+  user: {
+    id: 1,
+    email: 'test@example.com',
+    personal_info: null,
+    created_at: new Date().toISOString().split('.')[0]
+  }
+};
 
+describe('RegisterForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ register: mockRegister });
+    window.location.href = '';
   });
 
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  const mockRegister = vi.fn().mockResolvedValue(mockAuthResponse);
+
   const renderForm = () => {
-    render(
-      <MemoryRouter>
+    return render(
+      <AuthContext.Provider
+        value={{
+          register: mockRegister,
+          login: vi.fn(),
+          logout: vi.fn(),
+          refreshToken: vi.fn(),
+          token: null,
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        }}
+      >
         <RegisterForm />
-      </MemoryRouter>
+      </AuthContext.Provider>
     );
   };
 
   const fillForm = (email = 'test@example.com', password = 'Password123!', acceptTerms = true) => {
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: email } });
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: password } });
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const termsCheckbox = screen.getByLabelText(/terms and conditions/i);
+
+    fireEvent.change(emailInput, { target: { value: email } });
+    fireEvent.change(passwordInput, { target: { value: password } });
     if (acceptTerms) {
-      fireEvent.click(screen.getByLabelText(/terms and conditions/i));
+      fireEvent.click(termsCheckbox);
     }
+  };
+
+  const submitForm = async () => {
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('form'));
+    });
   };
 
   it('renders registration form elements', () => {
@@ -50,10 +87,7 @@ describe('RegisterForm', () => {
   it('displays validation errors for invalid input', async () => {
     renderForm();
     fillForm('', '', false);
-    const form = screen.getByRole('form');
-    await act(async () => {
-      fireEvent.submit(form);
-    });
+    await submitForm();
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert');
@@ -66,9 +100,8 @@ describe('RegisterForm', () => {
 
   it('validates password requirements', async () => {
     renderForm();
-    fillForm('test@example.com', 'short');
-    const form = screen.getByRole('form');
-    fireEvent.submit(form);
+    fillForm('test@example.com', 'short', true);
+    await submitForm();
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Password must contain at least 8 characters');
@@ -78,7 +111,7 @@ describe('RegisterForm', () => {
   it('requires terms acceptance', async () => {
     renderForm();
     fillForm('test@example.com', 'Password123!', false);
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await submitForm();
 
     await waitFor(() => {
       expect(screen.getByText(/please accept the terms and conditions/i)).toBeInTheDocument();
@@ -86,12 +119,29 @@ describe('RegisterForm', () => {
   });
 
   it('displays error message on registration failure', async () => {
-    mockRegister.mockRejectedValueOnce(
+    const mockErrorRegister = vi.fn().mockRejectedValue(
       new ApiError('Email already exists', 409)
     );
-    renderForm();
+
+    render(
+      <AuthContext.Provider
+        value={{
+          register: mockErrorRegister,
+          login: vi.fn(),
+          logout: vi.fn(),
+          refreshToken: vi.fn(),
+          token: null,
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        }}
+      >
+        <RegisterForm />
+      </AuthContext.Provider>
+    );
+
     fillForm();
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await submitForm();
 
     await waitFor(() => {
       expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
@@ -99,24 +149,53 @@ describe('RegisterForm', () => {
   });
 
   it('shows loading state during form submission', async () => {
-    mockRegister.mockImplementationOnce(() => new Promise((resolve) => setTimeout(resolve, 100)));
-    renderForm();
-    fillForm();
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    const mockSlowRegister = vi.fn().mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve(mockAuthResponse), 100))
+    );
 
+    render(
+      <AuthContext.Provider
+        value={{
+          register: mockSlowRegister,
+          login: vi.fn(),
+          logout: vi.fn(),
+          refreshToken: vi.fn(),
+          token: null,
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        }}
+      >
+        <RegisterForm />
+      </AuthContext.Provider>
+    );
+
+    fillForm();
+    await submitForm();
     expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled();
   });
 
-  it('calls register function with correct data', async () => {
+  it('handles successful registration', async () => {
     renderForm();
     const testEmail = 'test@example.com';
     const testPassword = 'Password123!';
 
-    fillForm(testEmail, testPassword);
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    fillForm(testEmail, testPassword, true);
+    await submitForm();
 
     await waitFor(() => {
+      // Verify registration call
       expect(mockRegister).toHaveBeenCalledWith(testEmail, testPassword);
+    });
+
+    expect(window.location.href).toBe('/jobs');
+  });
+
+  // Cleanup
+  afterAll(() => {
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: originalLocation,
     });
   });
 });

@@ -1,17 +1,17 @@
 ---
-import '../styles/globals.css';
-import App from '../components/App';
----
+// Check if user is already authenticated
+const authToken = Astro.cookies.get('auth_token')?.value;
+const userJson = Astro.cookies.get('auth_user')?.value;
+let initialUser = null;
+try {
+    initialUser = userJson ? JSON.parse(userJson) : null;
+} catch (e) {
+    // Invalid user JSON, clear cookies
+    Astro.cookies.delete('auth_token');
+    Astro.cookies.delete('auth_user');
+}
 
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CV Adapter</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
-</head>
-<body>
-    <App client:only="react" />
-</body>
-</html>
+// Redirect based on auth status
+const redirectTo = authToken && initialUser ? '/jobs' : '/login';
+return Astro.redirect(redirectTo);
+---

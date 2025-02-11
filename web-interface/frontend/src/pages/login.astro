@@ -1,22 +1,25 @@
 ---
-import AuthLayout from "../layouts/AuthLayout.astro";
-import { LoginFormWithProvider } from "../features/auth/components/LoginFormWithProvider";
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { AuthenticatedLoginForm } from '../features/auth/components/AuthenticatedContent';
+
+// Check if user is already authenticated
+const authToken = Astro.cookies.get('auth_token')?.value;
+const userJson = Astro.cookies.get('auth_user')?.value;
+let initialUser = null;
+try {
+    initialUser = userJson ? JSON.parse(userJson) : null;
+} catch (e) {
+    // Invalid user JSON, clear cookies
+    Astro.cookies.delete('auth_token');
+    Astro.cookies.delete('auth_user');
+}
+
+// Redirect to jobs if already authenticated
+if (authToken && initialUser) {
+    return Astro.redirect('/jobs');
+}
 ---
 
-<AuthLayout title="Login - CV Adapt">
-  <div class="min-h-screen flex flex-col justify-center">
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold">Welcome Back</h1>
-      <p class="text-base-content/70">Sign in to your account to continue</p>
-    </div>
-
-    <LoginFormWithProvider client:load />
-
-    <div class="text-center mt-6">
-      <p class="text-base-content/70">
-        Don't have an account?{" "}
-        <a href="/register" class="text-primary hover:underline">Register</a>
-      </p>
-    </div>
-  </div>
-</AuthLayout>
+<BaseLayout title="Login">
+    <AuthenticatedLoginForm client:load />
+</BaseLayout>

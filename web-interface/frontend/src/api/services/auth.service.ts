@@ -60,11 +60,9 @@ class AuthService {
     try {
       const response = await apiClient.post<AuthResponse>(
         "auth/refresh",
-        undefined,
+        { token },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          requiresAuth: false
         }
       );
 

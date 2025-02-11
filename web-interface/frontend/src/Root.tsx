@@ -1,16 +1,10 @@
 import React from 'react';
 import { AuthProvider } from './features/auth/context/AuthContext';
 
-interface ClientEntryProps {
-  children: React.ReactNode;
-}
-
-export function ClientEntry({ children }: ClientEntryProps) {
+export default function Root({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       {children}
     </AuthProvider>
   );
 }
-
-export default ClientEntry;

@@ -1,0 +1,25 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { AuthenticatedJobsContent } from '../features/jobs/components/AuthenticatedJobsContent';
+
+// Check authentication server-side
+const authToken = Astro.cookies.get('auth_token')?.value;
+const userJson = Astro.cookies.get('auth_user')?.value;
+let initialUser = null;
+try {
+    initialUser = userJson ? JSON.parse(userJson) : null;
+} catch (e) {
+    // Invalid user JSON, clear cookies
+    Astro.cookies.delete('auth_token');
+    Astro.cookies.delete('auth_user');
+}
+
+// Redirect to login if not authenticated
+if (!authToken || !initialUser) {
+    return Astro.redirect('/login');
+}
+---
+
+<MainLayout title="Jobs">
+    <AuthenticatedJobsContent client:load />
+</MainLayout>

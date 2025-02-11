@@ -1,22 +1,17 @@
 ---
-import AuthLayout from "../layouts/AuthLayout.astro";
-import { RegisterFormWithProvider } from "../features/auth/components/RegisterFormWithProvider";
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { RegisterFormWithAuth } from '../features/auth/components/RegisterFormWithAuth';
 ---
 
-<AuthLayout title="Register - CV Adapt">
+<BaseLayout title="Register">
   <div class="min-h-screen flex flex-col justify-center">
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold">Create Account</h1>
-      <p class="text-base-content/70">Join CV Adapt to create professional CVs</p>
+      <h1 class="text-4xl font-bold">Create an Account</h1>
+      <p class="mt-2 text-gray-600">Join us to get started</p>
     </div>
-
-    <RegisterFormWithProvider client:load />
-
-    <div class="text-center mt-6">
-      <p class="text-base-content/70">
-        Already have an account?{" "}
-        <a href="/login" class="text-primary hover:underline">Sign in</a>
-      </p>
+    <RegisterFormWithAuth client:load />
+    <div class="text-center mt-4">
+      <p>Already have an account? <a href="/login" class="text-primary hover:underline">Sign in</a></p>
     </div>
   </div>
-</AuthLayout>
+</BaseLayout>

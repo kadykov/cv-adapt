@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../../../api/core/api-error';
 
@@ -9,30 +8,29 @@ export function LoginForm() {
   const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [redirectToJobs, setRedirectToJobs] = useState(false);
   const { login } = useAuth();
 
-    const validateForm = () => {
-      const newErrors: { email?: string; password?: string } = {};
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
 
-      if (!email) {
-        newErrors.email = 'Please enter a valid email address';
-      } else if (!/\S+@\S+\.\S+/.test(email)) {
-        newErrors.email = 'Please enter a valid email address';
-      }
+    if (!email) {
+      newErrors.email = 'Please enter a valid email address';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
 
-      if (!password) {
-        newErrors.password = 'Password must be at least 8 characters';
-      } else if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
-      }
+    if (!password) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return false;
-      }
-      return true;
-    };
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +44,7 @@ export function LoginForm() {
 
     try {
       await login(email, password, remember);
-      setRedirectToJobs(true);
+      window.location.href = '/jobs';
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors({ general: 'Invalid email or password' });
@@ -57,11 +55,6 @@ export function LoginForm() {
       setIsLoading(false);
     }
   };
-
-
-  if (redirectToJobs) {
-    return <Navigate to="/jobs" replace />;
-  }
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
