@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { LoginForm } from '../LoginForm';
 import { AuthContext } from '../../context/AuthContext';
@@ -52,11 +52,9 @@ describe('LoginForm', () => {
   });
 
   const mockLogin = vi.fn().mockImplementation(async () => {
-    await act(async () => {
-      Cookies.set('auth_token', mockAuthResponse.access_token, cookieOptions);
-      Cookies.set('auth_user', JSON.stringify(mockAuthResponse.user), cookieOptions);
-      Cookies.set('refresh_token', mockAuthResponse.refresh_token, cookieOptions);
-    });
+    Cookies.set('auth_token', mockAuthResponse.access_token, cookieOptions);
+    Cookies.set('auth_user', JSON.stringify(mockAuthResponse.user), cookieOptions);
+    Cookies.set('refresh_token', mockAuthResponse.refresh_token, cookieOptions);
     return mockAuthResponse;
   });
 
@@ -85,15 +83,13 @@ describe('LoginForm', () => {
   it('handles successful login and redirects to /jobs', async () => {
     renderWithAuth();
 
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: 'test@example.com' }
-      });
-      fireEvent.change(screen.getByLabelText(/password/i), {
-        target: { value: 'password123' }
-      });
-      fireEvent.submit(screen.getByRole('form'));
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'test@example.com' }
     });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' }
+    });
+    fireEvent.submit(screen.getByRole('form'));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', false);
@@ -127,15 +123,13 @@ describe('LoginForm', () => {
       </BrowserRouter>
     );
 
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: 'test@example.com' }
-      });
-      fireEvent.change(screen.getByLabelText(/password/i), {
-        target: { value: 'wrongpassword' }
-      });
-      fireEvent.submit(screen.getByRole('form'));
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'test@example.com' }
     });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'wrongpassword' }
+    });
+    fireEvent.submit(screen.getByRole('form'));
 
     await waitFor(() => {
       expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
@@ -146,9 +140,7 @@ describe('LoginForm', () => {
   it('displays validation errors for empty form submission', async () => {
     renderWithAuth();
 
-    await act(async () => {
-      fireEvent.submit(screen.getByRole('form'));
-    });
+    fireEvent.submit(screen.getByRole('form'));
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert');
@@ -161,15 +153,13 @@ describe('LoginForm', () => {
   it('displays validation error for invalid email', async () => {
     renderWithAuth();
 
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: 'invalidemail' }
-      });
-      fireEvent.change(screen.getByLabelText(/password/i), {
-        target: { value: 'password123' }
-      });
-      fireEvent.submit(screen.getByRole('form'));
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'invalidemail' }
     });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' }
+    });
+    fireEvent.submit(screen.getByRole('form'));
 
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();

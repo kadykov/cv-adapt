@@ -56,18 +56,9 @@ export const JobDetail = () => {
         <h2 className="text-lg font-semibold mb-2">Description</h2>
         <p className="whitespace-pre-wrap">{job.description}</p>
       </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold mb-2">Requirements</h2>
-        <ul className="list-disc list-inside">
-          {job.requirements.map((req, index) => (
-            <li key={index}>{req}</li>
-          ))}
-        </ul>
-      </div>
       <div className="text-sm text-gray-500">
         <p>Language: {job.language_code}</p>
         <p>Created: {new Date(job.created_at).toLocaleDateString()}</p>
-        <p>Updated: {new Date(job.updated_at).toLocaleDateString()}</p>
       </div>
     </div>
   );

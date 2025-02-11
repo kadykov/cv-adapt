@@ -21,6 +21,10 @@ describe('JobList', () => {
   });
 
   test('displays jobs when loaded successfully', async () => {
+    server.use(
+      http.get('*/jobs', () => HttpResponse.json([mockJob]))
+    );
+
     renderJobList();
 
     await waitFor(() => {
@@ -33,36 +37,29 @@ describe('JobList', () => {
   });
 
   test('displays empty state when no jobs', async () => {
-    // Override handler to return empty array
-    // Override handler to return empty array
     server.use(
-      http.get('*/jobs', ({ request }) => {
-        const url = new URL(request.url);
-        url.searchParams.set('empty', 'true');
-        return HttpResponse.json([]);
-      })
+      http.get('*/jobs', () => HttpResponse.json([]))
     );
 
     renderJobList();
 
+    // First wait for loading to finish
     await waitFor(() => {
-      expect(screen.getByTestId('empty-message')).toHaveTextContent('No job descriptions found');
+      expect(screen.queryByRole('status', { name: /loading jobs/i })).not.toBeInTheDocument();
     });
+
+    // Then check for empty state
+    const emptyMessage = screen.getByTestId('empty-message');
+    expect(emptyMessage).toHaveTextContent('No job descriptions found');
     expect(screen.getByText('Add Job Description')).toBeInTheDocument();
   });
 
   test('displays error message on fetch failure', async () => {
-    // Override handler to return error
-    // Override handler to return error
     server.use(
-      http.get('*/jobs', ({ request }) => {
-        const url = new URL(request.url);
-        url.searchParams.set('error', 'true');
-        return HttpResponse.json(
-          { message: 'Failed to load' },
-          { status: 500 }
-        );
-      })
+      http.get('*/jobs', () => HttpResponse.json(
+        { message: 'Failed to load' },
+        { status: 500 }
+      ))
     );
 
     renderJobList();
@@ -74,6 +71,11 @@ describe('JobList', () => {
   });
 
   test('handles job deletion', async () => {
+    server.use(
+      http.get('*/jobs', () => HttpResponse.json([mockJob])),
+      http.delete('*/jobs/:id', () => new HttpResponse(null, { status: 204 }))
+    );
+
     renderJobList();
 
     await waitFor(() => {
@@ -88,20 +90,16 @@ describe('JobList', () => {
   });
 
   test('shows error on deletion failure', async () => {
+    server.use(
+      http.get('*/jobs', () => HttpResponse.json([mockJob])),
+      http.delete('*/jobs/:id', () => new HttpResponse(null, { status: 500 }))
+    );
+
     renderJobList();
 
     await waitFor(() => {
       expect(screen.getByText(mockJob.title)).toBeInTheDocument();
     });
-
-    // Override delete handler to return error
-    server.use(
-      http.delete('*/jobs/:id', ({ request }) => {
-        const url = new URL(request.url);
-        url.searchParams.set('error', 'true');
-        return new HttpResponse(null, { status: 500 });
-      })
-    );
 
     fireEvent.click(screen.getByText('Delete'));
 

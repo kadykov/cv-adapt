@@ -25,14 +25,29 @@ vi.mock('js-cookie', () => ({
 // Test component that uses auth context
 function TestComponent() {
   const { login, logout, isAuthenticated, user, isLoading } = useAuth();
+  const [error, setError] = React.useState<string | null>(null);
 
   if (isLoading) {
     return <div data-testid="loading">Loading...</div>;
   }
 
+  const handleLogin = async () => {
+    try {
+      await login('test@example.com', 'password', true);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to login');
+      }
+    }
+  };
+
   return (
     <div>
       <div data-testid="auth-state">{isAuthenticated ? 'authenticated' : 'unauthenticated'}</div>
+      {error && <div role="alert" data-testid="error-message">{error}</div>}
       {isAuthenticated && user ? (
         <>
           <span data-testid="user-email">{user.email}</span>
@@ -40,7 +55,7 @@ function TestComponent() {
         </>
       ) : (
         <button
-          onClick={() => login('test@example.com', 'password', true)}
+          onClick={handleLogin}
           data-testid="login-button"
         >
           Login
@@ -130,9 +145,11 @@ describe('AuthContext', () => {
     await user.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
-      expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Invalid credentials');
     });
+
+    expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
+    expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
 
     expect(cookieStore).not.toHaveProperty('auth_token');
     expect(cookieStore).not.toHaveProperty('auth_user');

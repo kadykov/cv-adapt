@@ -12,10 +12,8 @@ describe('jobsApi integration', () => {
           id: expect.any(Number),
           title: expect.any(String),
           description: expect.any(String),
-          requirements: expect.any(Array),
           language_code: expect.any(String),
-          created_at: expect.any(String),
-          updated_at: expect.any(String)
+          created_at: expect.any(String)
         })
       ]);
     });
@@ -30,10 +28,8 @@ describe('jobsApi integration', () => {
           id: 1,
           title: expect.any(String),
           description: expect.any(String),
-          requirements: expect.any(Array),
           language_code: expect.any(String),
-          created_at: expect.any(String),
-          updated_at: expect.any(String)
+          created_at: expect.any(String)
         })
       );
     });

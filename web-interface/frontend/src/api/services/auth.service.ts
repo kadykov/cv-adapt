@@ -10,7 +10,7 @@ class AuthService {
     formData.append("grant_type", "password");
 
     try {
-      const response = await apiClient.post<AuthResponse>("auth/login", formData, {
+      const response = await apiClient.post<AuthResponse>("v1/auth/login", formData, {
         requiresAuth: false,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -28,7 +28,7 @@ class AuthService {
 
   async register(data: RegistrationData): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>("auth/register", data, {
+      const response = await apiClient.post<AuthResponse>("v1/auth/register", data, {
         requiresAuth: false,
       });
 
@@ -43,7 +43,7 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await apiClient.post("auth/logout", undefined, {
+      await apiClient.post("v1/auth/logout", undefined, {
         credentials: "include",
       });
     } catch (error) {
@@ -57,7 +57,7 @@ class AuthService {
   async refreshToken(token: string): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>(
-        "auth/refresh",
+        "v1/auth/refresh",
         { token },
         {
           requiresAuth: false
