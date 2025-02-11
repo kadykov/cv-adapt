@@ -3,22 +3,22 @@ import { JobDescriptionResponse, JobDescriptionCreate, JobDescriptionUpdate } fr
 
 export const jobsApi = {
   getJobs: async (): Promise<JobDescriptionResponse[]> => {
-    return apiClient.get<JobDescriptionResponse[]>('/jobs');
+    return apiClient.get<JobDescriptionResponse[]>('/api/v1/jobs');
   },
 
   getJobById: async (id: number): Promise<JobDescriptionResponse> => {
-    return apiClient.get<JobDescriptionResponse>(`/jobs/${id}`);
+    return apiClient.get<JobDescriptionResponse>(`/api/v1/jobs/${id}`);
   },
 
   createJob: async (job: JobDescriptionCreate): Promise<JobDescriptionResponse> => {
-    return apiClient.post<JobDescriptionResponse>('/jobs', job);
+    return apiClient.post<JobDescriptionResponse>('/api/v1/jobs', job);
   },
 
   updateJob: async (id: number, job: JobDescriptionUpdate): Promise<JobDescriptionResponse> => {
-    return apiClient.put<JobDescriptionResponse>(`/jobs/${id}`, job);
+    return apiClient.put<JobDescriptionResponse>(`/api/v1/jobs/${id}`, job);
   },
 
   deleteJob: async (id: number): Promise<void> => {
-    return apiClient.delete(`/jobs/${id}`);
+    return apiClient.delete(`/api/v1/jobs/${id}`);
   }
 };

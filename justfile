@@ -127,6 +127,8 @@ test-frontend-integration:
 
 # Run frontend contract tests
 test-frontend-contract:
+    just export-openapi
+    just generate-types
     cd web-interface/frontend && npm run test:contract
 
 # Run all frontend tests (unit, integration, and contract)

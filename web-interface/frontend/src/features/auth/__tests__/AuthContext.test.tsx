@@ -1,12 +1,11 @@
-/// <reference types="vitest/globals" />
 import React from 'react';
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-import { ApiError } from '../../../api/core/api-error';
-import type { AuthResponse } from '../types';
-import { authService } from '../../../api/services/auth.service';
+import { http, HttpResponse } from 'msw';
+import { server } from '@/mocks/server';
+import { mockAuthResponse } from '@/mocks/auth-mock-data';
 
 // Mock js-cookie module
 const cookieStore: Record<string, string> = {};
@@ -23,28 +22,6 @@ vi.mock('js-cookie', () => ({
   },
 }));
 
-vi.mock('../../../api/services/auth.service', () => ({
-  authService: {
-    login: vi.fn(),
-    logout: vi.fn(),
-    refreshToken: vi.fn(),
-  },
-}));
-
-const mockUser = {
-  id: 1,
-  email: 'test@example.com',
-  personal_info: null,
-  created_at: new Date().toISOString(),
-};
-
-const mockAuthResponse: AuthResponse = {
-  access_token: 'mock-access-token',
-  refresh_token: 'mock-refresh-token',
-  token_type: 'bearer',
-  user: mockUser,
-};
-
 // Test component that uses auth context
 function TestComponent() {
   const { login, logout, isAuthenticated, user, isLoading } = useAuth();
@@ -56,10 +33,10 @@ function TestComponent() {
   return (
     <div>
       <div data-testid="auth-state">{isAuthenticated ? 'authenticated' : 'unauthenticated'}</div>
-      {isAuthenticated ? (
+      {isAuthenticated && user ? (
         <>
-          <span data-testid="user-email">{user?.email}</span>
-          <button onClick={logout}>Logout</button>
+          <span data-testid="user-email">{user.email}</span>
+          <button onClick={() => logout()}>Logout</button>
         </>
       ) : (
         <button
@@ -75,15 +52,11 @@ function TestComponent() {
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Clear cookie store
+    // Clear cookie store and mocks
     Object.keys(cookieStore).forEach(key => {
       delete cookieStore[key];
     });
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   test('provides authentication state', async () => {
@@ -103,7 +76,7 @@ describe('AuthContext', () => {
   });
 
   test('handles login success', async () => {
-    vi.mocked(authService.login).mockResolvedValue(mockAuthResponse);
+    const user = userEvent.setup();
 
     render(
       <AuthProvider>
@@ -115,17 +88,13 @@ describe('AuthContext', () => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
     });
 
-    await act(async () => {
-      await userEvent.click(screen.getByTestId('login-button'));
-    });
-
-    expect(authService.login).toHaveBeenCalledWith({
-      email: 'test@example.com',
-      password: 'password'
-    });
+    await user.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated');
+    });
+
+    await waitFor(() => {
       expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
     });
 
@@ -136,8 +105,17 @@ describe('AuthContext', () => {
   });
 
   test('handles login failure', async () => {
-    const error = new ApiError('Invalid credentials', 401);
-    vi.mocked(authService.login).mockRejectedValue(error);
+    const user = userEvent.setup();
+
+    // Override the default success handler with an error for this test
+    server.use(
+      http.post('*/v1/auth/login', () => {
+        return HttpResponse.json(
+          { message: 'Invalid credentials' },
+          { status: 401 }
+        );
+      })
+    );
 
     render(
       <AuthProvider>
@@ -149,26 +127,20 @@ describe('AuthContext', () => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
     });
 
-    const loginButton = screen.getByTestId('login-button');
-    await act(async () => {
-      try {
-        await userEvent.click(loginButton);
-      } catch (err) {
-        expect(err).toEqual(error);
-      }
+    await user.click(screen.getByTestId('login-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
+      expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
     });
 
-    expect(authService.login).toHaveBeenCalled();
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
-    expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
     expect(cookieStore).not.toHaveProperty('auth_token');
     expect(cookieStore).not.toHaveProperty('auth_user');
     expect(cookieStore).not.toHaveProperty('refresh_token');
   });
 
   test('handles logout', async () => {
-    vi.mocked(authService.login).mockResolvedValue(mockAuthResponse);
-    vi.mocked(authService.logout).mockResolvedValue(undefined);
+    const user = userEvent.setup();
 
     render(
       <AuthProvider>
@@ -181,9 +153,7 @@ describe('AuthContext', () => {
     });
 
     // First login
-    await act(async () => {
-      await userEvent.click(screen.getByTestId('login-button'));
-    });
+    await user.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated');
@@ -191,17 +161,16 @@ describe('AuthContext', () => {
     });
 
     // Then logout
-    await act(async () => {
-      await userEvent.click(screen.getByText('Logout'));
-    });
+    await user.click(screen.getByText('Logout'));
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
       expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
-      expect(cookieStore).not.toHaveProperty('auth_token');
-      expect(cookieStore).not.toHaveProperty('auth_user');
-      expect(cookieStore).not.toHaveProperty('refresh_token');
     });
+
+    expect(cookieStore).not.toHaveProperty('auth_token');
+    expect(cookieStore).not.toHaveProperty('auth_user');
+    expect(cookieStore).not.toHaveProperty('refresh_token');
   });
 
   test('loads initial state from cookies', async () => {

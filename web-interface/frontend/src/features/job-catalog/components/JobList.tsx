@@ -16,7 +16,11 @@ export function JobList() {
       setJobs(data);
     } catch (e) {
       console.error("Failed to fetch jobs:", e);
-      setError("Failed to load");
+      if (e instanceof ApiError && e.data && typeof e.data === 'object' && 'message' in e.data) {
+        setError(e.data.message as string);
+      } else {
+        setError("Failed to load");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -28,10 +32,7 @@ export function JobList() {
       setJobs(jobs.filter(job => job.id !== id));
     } catch (e) {
       console.error("Failed to delete job:", e);
-      const errorMessage = e instanceof ApiError
-        ? e.message
-        : "Failed to delete job. Please try again later.";
-      setError(errorMessage);
+      setError("Failed to delete job. Please try again later.");
     }
   };
 
@@ -42,26 +43,32 @@ export function JobList() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center">
-        <div className="loading loading-spinner loading-lg"></div>
+        <div
+          className="loading loading-spinner loading-lg"
+          role="status"
+          aria-label="Loading jobs"
+        >
+          <span className="sr-only">Loading jobs...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="alert alert-error">
+      <div className="alert alert-error" role="alert" aria-live="polite">
         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>{error}</span>
+        <span aria-label="error message">{error}</span>
       </div>
     );
   }
 
   if (jobs.length === 0) {
     return (
-      <div className="text-center">
-        <p className="mb-4">No job descriptions found</p>
+      <div className="text-center" role="status" aria-live="polite">
+        <p className="mb-4" data-testid="empty-message">No job descriptions found</p>
         <Link to="/jobs/new" className="btn btn-primary">
           Add Job Description
         </Link>
