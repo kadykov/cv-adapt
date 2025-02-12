@@ -473,6 +473,11 @@
         "summary": "Get Jobs",
         "description": "Get all job descriptions for a language.",
         "operationId": "get_jobs_jobs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "language_code",
@@ -500,6 +505,18 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Could not validate credentials"
+                  }
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -519,6 +536,11 @@
         "summary": "Create Job",
         "description": "Create new job description.",
         "operationId": "create_job_jobs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -536,6 +558,18 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JobDescriptionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Could not validate credentials"
+                  }
                 }
               }
             }
@@ -561,6 +595,11 @@
         "summary": "Get Job",
         "description": "Get job description by ID.",
         "operationId": "get_job_jobs__job_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -579,6 +618,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JobDescriptionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Could not validate credentials"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Job description not found"
                 }
               }
             }
@@ -602,6 +663,11 @@
         "summary": "Update Job",
         "description": "Update job description.",
         "operationId": "update_job_jobs__job_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -634,6 +700,28 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Could not validate credentials"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Job description not found"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -653,6 +741,11 @@
         "summary": "Delete Job",
         "description": "Delete job description.",
         "operationId": "delete_job_jobs__job_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "job_id",
@@ -667,6 +760,28 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "message": "Could not validate credentials"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Job description not found"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
