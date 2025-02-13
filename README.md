@@ -91,6 +91,26 @@ just install
 source .venv/bin/activate
 ```
 
+### Frontend Type Generation
+
+The frontend uses OpenAPI as the single source of truth for type generation, ensuring perfect alignment between the backend API, frontend types, and mock server responses. To generate types:
+
+1. Generate OpenAPI schema from the backend:
+   ```bash
+   just export-openapi
+   ```
+
+2. Generate TypeScript types from the schema:
+   ```bash
+   just generate-types
+   ```
+
+This approach ensures:
+- Type safety between backend and frontend
+- Automatic API contract validation
+- Consistent mock data in tests
+- Up-to-date API documentation
+
 ### Quality Checks
 ```bash
 # Run all checks (formatting, linting, type checking, tests)

@@ -105,13 +105,13 @@ serve-web-debug *ARGS='':
     just serve-frontend & \
     wait
 
-# Generate TypeScript types from Pydantic models
-generate-types:
-    cd web-interface/backend && ./scripts/generate_typescript_types.py
-
-# Export OpenAPI schema for frontend contract tests
+# Export OpenAPI schema from backend
 export-openapi:
     cd web-interface/backend && ./scripts/export_openapi_schema.py
+
+# Generate TypeScript types from OpenAPI schema
+generate-types: export-openapi
+    cd web-interface/frontend && npm run generate:types
 
 # Run backend tests
 test-backend *ARGS='':
@@ -139,6 +139,7 @@ test-frontend-all:
 
 # Run frontend tests with coverage
 test-frontend-cov:
+    mkdir -p web-interface/frontend/coverage/.tmp
     cd web-interface/frontend && npm test -- --coverage
 
 # Run frontend linting
