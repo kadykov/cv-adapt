@@ -10,7 +10,7 @@ from ..schemas.user import UserCreate, UserResponse
 from ..services.user import UserService
 from .. import auth_logger
 
-router = APIRouter(prefix="/v1/auth", tags=["auth"])
+router = APIRouter(prefix="/v1/api/auth", tags=["auth"])
 
 @router.post(
     "/register",

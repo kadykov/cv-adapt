@@ -24,7 +24,7 @@ cv_adapter = AsyncCVAdapterApplication(
     ai_model="test" if "pytest" in sys.modules else "openai:gpt-4"
 )
 
-router = APIRouter(tags=["generations"])
+router = APIRouter(prefix="/v1/api/generations", tags=["generations"])
 
 # Request models
 class GenerateCompetencesRequest(BaseModel):
@@ -51,7 +51,7 @@ class GenerateCVRequest(BaseModel):
     approved_competences: List[str]
     notes: str | None = None
 
-@router.post("/api/generate-competences")
+@router.post("/competences")
 async def generate_competences(
     data: GenerateCompetencesRequest = Body(...),
     language: Language = Depends(get_language),
@@ -76,7 +76,7 @@ async def generate_competences(
         logger.error(f"Error generating competences: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/api/generate-cv")
+@router.post("/cv")
 async def generate_cv(
     request: GenerateCVRequest,
     language: Language = Depends(get_language),
@@ -158,7 +158,7 @@ async def generate_cv(
         logger.error(f"Error generating CV: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/generate", response_model=GeneratedCVResponse)
+@router.post("", response_model=GeneratedCVResponse)
 async def generate_and_save_cv(
     cv_data: GeneratedCVCreate,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -169,7 +169,7 @@ async def generate_and_save_cv(
     cv = generated_cv_service.create_generated_cv(int(current_user.id), cv_data)
     return GeneratedCVResponse.model_validate(cv)
 
-@router.get("/generations", response_model=list[GeneratedCVResponse])
+@router.get("", response_model=list[GeneratedCVResponse])
 async def get_user_generations(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
@@ -179,7 +179,7 @@ async def get_user_generations(
     cvs = generated_cv_service.get_by_user(int(current_user.id))
     return [GeneratedCVResponse.model_validate(cv) for cv in cvs]
 
-@router.get("/generations/{cv_id}", response_model=GeneratedCVResponse)
+@router.get("/{cv_id}", response_model=GeneratedCVResponse)
 async def get_generated_cv(
     cv_id: int,
     current_user: Annotated[User, Depends(get_current_user)],

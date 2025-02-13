@@ -49,7 +49,7 @@ async def test_language_context_verification() -> None:
         mock_generate.side_effect = verify_language_context
 
         response = client.post(
-            "/api/generate-competences",
+            "/v1/api/generations/competences",
             json=test_request,
             params={"language_code": "fr"},
         )
@@ -76,7 +76,7 @@ async def test_language_dependency() -> None:
     ):
         mock_generate.return_value = [test_competence]
         response = client.post(
-            "/api/generate-competences",
+            "/v1/api/generations/competences",
             json=test_request,
         )
         assert response.status_code == 200
@@ -92,7 +92,7 @@ async def test_language_dependency() -> None:
     ):
         mock_generate.return_value = [test_competence]
         response = client.post(
-            "/api/generate-competences",
+            "/v1/api/generations/competences",
             json=test_request,
             params={"language_code": "fr"},
         )
@@ -102,7 +102,7 @@ async def test_language_dependency() -> None:
 
     # Test validation error for invalid language code
     response = client.post(
-        "/api/generate-competences",
+        "/v1/api/generations/competences",
         json=test_request,
         params={"language_code": "xx"},
     )
@@ -131,7 +131,7 @@ async def test_generate_competences_success() -> None:
 
         # Make request to our endpoint
         response = client.post(
-            "/api/generate-competences",
+            "/v1/api/generations/competences",
             json=test_request,
         )
 
@@ -211,7 +211,7 @@ async def test_generate_cv_with_competences_success() -> None:
 
         # Make request to endpoint
         response = client.post(
-            "/api/generate-cv",
+            "/v1/api/generations/cv",
             json=test_request,
         )
 
@@ -277,7 +277,7 @@ async def test_generate_cv_minimal_info() -> None:
         mock_generate.return_value = mock_cv
 
         response = client.post(
-            "/api/generate-cv",
+            "/v1/api/generations/cv",
             json=test_request,
         )
 
@@ -335,7 +335,7 @@ async def test_generate_cv_language_context() -> None:
         mock_generate.side_effect = verify_language_context
 
         response = client.post(
-            "/api/generate-cv",
+            "/v1/api/generations/cv",
             json=test_request,
             params={"language_code": "fr"},
         )
@@ -363,7 +363,7 @@ async def test_generate_cv_error_handling() -> None:
         mock_generate.side_effect = Exception("Test error")
 
         response = client.post(
-            "/api/generate-cv",
+            "/v1/api/generations/cv",
             json=test_request,
         )
 

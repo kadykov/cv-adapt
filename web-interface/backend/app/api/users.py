@@ -9,9 +9,9 @@ from ..models.models import User
 from ..schemas.user import UserResponse, UserUpdate
 from ..services.user import UserService
 
-router = APIRouter(prefix="/user", tags=["users"])
+router = APIRouter(prefix="/v1/api/users", tags=["users"])
 
-@router.get("/profile", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse)
 async def get_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserResponse:
@@ -25,7 +25,7 @@ async def get_user_profile(
         created_at=datetime.fromtimestamp(current_user.created_at.timestamp()),
     )
 
-@router.put("/profile", response_model=UserResponse)
+@router.put("/me", response_model=UserResponse)
 async def update_user_profile(
     user_data: UserUpdate,
     current_user: Annotated[User, Depends(get_current_user)],

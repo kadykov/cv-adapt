@@ -44,7 +44,7 @@ def test_get_jobs(
     client: TestClient, db: Session, test_job: JobDescription, auth_headers: dict[str, str]
 ) -> None:
     """Test getting all job descriptions."""
-    response = client.get("/jobs", headers=auth_headers)
+    response = client.get("/v1/api/jobs", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -57,14 +57,14 @@ def test_get_jobs_by_language(
 ) -> None:
     """Test getting jobs filtered by language."""
     # Test existing language
-    response = client.get("/jobs", params={"language_code": "en"}, headers=auth_headers)
+    response = client.get("/v1/api/jobs", params={"language_code": "en"}, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
     assert data[0]["language_code"] == "en"
 
     # Test non-existing language
-    response = client.get("/jobs", params={"language_code": "fr"}, headers=auth_headers)
+    response = client.get("/v1/api/jobs", params={"language_code": "fr"}, headers=auth_headers)
     assert response.status_code == 200
     assert len(response.json()) == 0
 
@@ -72,7 +72,7 @@ def test_get_job_by_id(
     client: TestClient, db: Session, test_job: JobDescription, auth_headers: dict[str, str]
 ) -> None:
     """Test getting job description by ID."""
-    response = client.get(f"/jobs/{test_job.id}", headers=auth_headers)
+    response = client.get(f"/v1/api/jobs/{test_job.id}", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == test_job.title
@@ -81,33 +81,33 @@ def test_get_job_by_id(
 
 def test_get_nonexistent_job(client: TestClient, auth_headers: dict[str, str]) -> None:
     """Test getting non-existent job description."""
-    response = client.get("/jobs/999", headers=auth_headers)
+    response = client.get("/v1/api/jobs/999", headers=auth_headers)
     assert response.status_code == 404
 
 def test_missing_auth(client: TestClient, test_job: JobDescription) -> None:
     """Test accessing endpoints without any authentication."""
     # Test GET /jobs
-    response = client.get("/jobs")
+    response = client.get("/v1/api/jobs")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
     # Test GET /jobs/{id}
-    response = client.get(f"/jobs/{test_job.id}")
+    response = client.get(f"/v1/api/jobs/{test_job.id}")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
     # Test POST /jobs
-    response = client.post("/jobs", json={})
+    response = client.post("/v1/api/jobs", json={})
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
     # Test PUT /jobs/{id}
-    response = client.put(f"/jobs/{test_job.id}", json={})
+    response = client.put(f"/v1/api/jobs/{test_job.id}", json={})
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
     # Test DELETE /jobs/{id}
-    response = client.delete(f"/jobs/{test_job.id}")
+    response = client.delete(f"/v1/api/jobs/{test_job.id}")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
@@ -116,19 +116,19 @@ def test_invalid_token(client: TestClient, test_job: JobDescription) -> None:
     invalid_headers = {"Authorization": "Bearer invalid_token"}
 
     # Test GET /jobs
-    response = client.get("/jobs", headers=invalid_headers)
+    response = client.get("/v1/api/jobs", headers=invalid_headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
     # Test GET /jobs/{id}
-    response = client.get(f"/jobs/{test_job.id}", headers=invalid_headers)
+    response = client.get(f"/v1/api/jobs/{test_job.id}", headers=invalid_headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "detail" in response.json()
 
 def test_type_validation(client: TestClient, auth_headers: dict[str, str]) -> None:
     """Test basic type validation."""
     # Missing required fields
-    response = client.post("/jobs", json={}, headers=auth_headers)
+    response = client.post("/v1/api/jobs", json={}, headers=auth_headers)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 def test_create_job(client: TestClient, db: Session, auth_headers: dict[str, str]) -> None:
@@ -138,7 +138,7 @@ def test_create_job(client: TestClient, db: Session, auth_headers: dict[str, str
         "description": "New description",
         "language_code": "fr",
     }
-    response = client.post("/jobs", json=job_data, headers=auth_headers)
+    response = client.post("/v1/api/jobs", json=job_data, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == job_data["title"]
@@ -150,7 +150,7 @@ def test_update_job(
 ) -> None:
     """Test updating job description."""
     update_data = {"title": "Updated Job", "description": "Updated description"}
-    response = client.put(f"/jobs/{test_job.id}", json=update_data, headers=auth_headers)
+    response = client.put(f"/v1/api/jobs/{test_job.id}", json=update_data, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == update_data["title"]
@@ -160,23 +160,23 @@ def test_update_job(
 def test_update_nonexistent_job(client: TestClient, auth_headers: dict[str, str]) -> None:
     """Test updating non-existent job description."""
     update_data = {"title": "Updated Job", "description": "Updated description"}
-    response = client.put("/jobs/999", json=update_data, headers=auth_headers)
+    response = client.put("/v1/api/jobs/999", json=update_data, headers=auth_headers)
     assert response.status_code == 404
 
 def test_delete_job(
     client: TestClient, db: Session, test_job: JobDescription, auth_headers: dict[str, str]
 ) -> None:
     """Test deleting job description."""
-    response = client.delete(f"/jobs/{test_job.id}", headers=auth_headers)
+    response = client.delete(f"/v1/api/jobs/{test_job.id}", headers=auth_headers)
     assert response.status_code == 204
 
     # Verify job was deleted
-    response = client.get(f"/jobs/{test_job.id}", headers=auth_headers)
+    response = client.get(f"/v1/api/jobs/{test_job.id}", headers=auth_headers)
     assert response.status_code == 404
 
 def test_delete_nonexistent_job(client: TestClient, auth_headers: dict[str, str]) -> None:
     """Test deleting non-existent job description."""
-    response = client.delete("/jobs/999", headers=auth_headers)
+    response = client.delete("/v1/api/jobs/999", headers=auth_headers)
     assert response.status_code == 404
 
 def test_partial_update_job(
@@ -184,7 +184,7 @@ def test_partial_update_job(
 ) -> None:
     """Test partially updating job description."""
     # Update only title
-    response = client.put(f"/jobs/{test_job.id}", json={"title": "New Title"}, headers=auth_headers)
+    response = client.put(f"/v1/api/jobs/{test_job.id}", json={"title": "New Title"}, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "New Title"
@@ -192,7 +192,7 @@ def test_partial_update_job(
 
     # Update only description
     response = client.put(
-        f"/jobs/{test_job.id}", json={"description": "New Description"}, headers=auth_headers
+        f"/v1/api/jobs/{test_job.id}", json={"description": "New Description"}, headers=auth_headers
     )
     assert response.status_code == 200
     data = response.json()

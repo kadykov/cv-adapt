@@ -78,7 +78,7 @@ def test_generate_and_save_cv(
         language_code="en",
         content={"test": "content"},
     )
-    response = client.post("/generate", headers=auth_headers, json=cv_data.model_dump())
+    response = client.post("/v1/api/generations", headers=auth_headers, json=cv_data.model_dump())
     assert response.status_code == 200
     data = response.json()
     assert data["detailed_cv_id"] == test_detailed_cv.id
@@ -91,7 +91,7 @@ def test_get_user_generations(
     test_generated_cv: GeneratedCV, auth_headers: dict[str, str], client: TestClient
 ) -> None:
     """Test getting all user's generated CVs."""
-    response = client.get("/generations", headers=auth_headers)
+    response = client.get("/v1/api/generations", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -104,7 +104,7 @@ def test_get_generated_cv(
     test_generated_cv: GeneratedCV, auth_headers: dict[str, str], client: TestClient
 ) -> None:
     """Test getting specific generated CV."""
-    response = client.get(f"/generations/{test_generated_cv.id}", headers=auth_headers)
+    response = client.get(f"/v1/api/generations/{test_generated_cv.id}", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == test_generated_cv.id
@@ -117,7 +117,7 @@ def test_get_nonexistent_generated_cv(
     auth_headers: dict[str, str], client: TestClient
 ) -> None:
     """Test getting non-existent generated CV."""
-    response = client.get("/generations/999", headers=auth_headers)
+    response = client.get("/v1/api/generations/999", headers=auth_headers)
     assert response.status_code == 404
 
 
@@ -134,7 +134,7 @@ def test_get_other_user_generated_cv(
     headers = {"Authorization": f"Bearer {other_user_token}"}
 
     # Try to access first user's CV
-    response = client.get(f"/generations/{test_generated_cv.id}", headers=headers)
+    response = client.get(f"/v1/api/generations/{test_generated_cv.id}", headers=headers)
     assert response.status_code == 403
 
 
@@ -148,6 +148,6 @@ def test_generated_cv_operations_unauthorized(client: TestClient) -> None:
     ).model_dump()  # Convert to dict since we're sending as JSON
 
     # Test all endpoints
-    assert client.get("/generations").status_code == 401
-    assert client.get("/generations/1").status_code == 401
-    assert client.post("/generate", json=cv_data).status_code == 401
+    assert client.get("/v1/api/generations").status_code == 401
+    assert client.get("/v1/api/generations/1").status_code == 401
+    assert client.post("/v1/api/generations", json=cv_data).status_code == 401

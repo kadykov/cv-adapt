@@ -14,7 +14,7 @@ from ..schemas.cv import (
 )
 from ..services.cv import JobDescriptionService
 
-router = APIRouter(prefix="/jobs", tags=["jobs"])
+router = APIRouter(prefix="/v1/api/jobs", tags=["jobs"])
 
 @router.get(
     "",

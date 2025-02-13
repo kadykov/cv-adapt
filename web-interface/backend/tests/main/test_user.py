@@ -28,7 +28,7 @@ def test_get_user_profile(
     client: TestClient, test_user: User, auth_headers: dict[str, str]
 ) -> None:
     """Test successfully getting user profile."""
-    response = client.get("/user/profile", headers=auth_headers)
+    response = client.get("/v1/api/users/me", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == test_user.email
@@ -39,7 +39,7 @@ def test_get_user_profile(
 
 def test_get_user_profile_unauthorized(client: TestClient) -> None:
     """Test getting user profile without authentication."""
-    response = client.get("/user/profile")
+    response = client.get("/v1/api/users/me")
     assert response.status_code == 401
 
 
@@ -53,7 +53,7 @@ def test_update_user_profile(
         "bio": "Test bio",
     }
     response = client.put(
-        "/user/profile", headers=auth_headers, json={"personal_info": new_personal_info}
+        "/v1/api/users/me", headers=auth_headers, json={"personal_info": new_personal_info}
     )
     assert response.status_code == 200
     data = response.json()
@@ -63,6 +63,6 @@ def test_update_user_profile(
 def test_update_user_profile_unauthorized(client: TestClient) -> None:
     """Test updating user profile without authentication."""
     response = client.put(
-        "/user/profile", json={"personal_info": {"full_name": "Test User"}}
+        "/v1/api/users/me", json={"personal_info": {"full_name": "Test User"}}
     )
     assert response.status_code == 401

@@ -9,7 +9,7 @@ def test_register(client: TestClient, db: Session) -> None:
     """Test user registration and ensure proper bcrypt hash format."""
     # Register a new user
     response = client.post(
-        "/v1/auth/register",
+        "/v1/api/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -37,7 +37,7 @@ def test_register_duplicate_email(client: TestClient) -> None:
     """Test registration with duplicate email."""
     # Register first user
     response = client.post(
-        "/v1/auth/register",
+        "/v1/api/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -47,7 +47,7 @@ def test_register_duplicate_email(client: TestClient) -> None:
 
     # Try to register with same email
     response = client.post(
-        "/v1/auth/register",
+        "/v1/api/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword2",
@@ -60,8 +60,8 @@ def test_login(client: TestClient) -> None:
     """Test user login."""
     # Register user first
     client.post(
-        "/v1/auth/register",
-        json={
+            "/v1/api/auth/register",
+            json={
             "email": "test@example.com",
             "password": "testpassword",
         },
@@ -69,7 +69,7 @@ def test_login(client: TestClient) -> None:
 
     # Test login
     response = client.post(
-        "/v1/auth/login",
+        "/v1/api/auth/login",
         data={
             "username": "test@example.com",
             "password": "testpassword",
@@ -84,7 +84,7 @@ def test_login(client: TestClient) -> None:
 def test_login_invalid_credentials(client: TestClient) -> None:
     """Test login with invalid credentials."""
     response = client.post(
-        "/v1/auth/login",
+        "/v1/api/auth/login",
         data={
             "username": "test@example.com",
             "password": "wrongpassword",
@@ -97,7 +97,7 @@ def test_refresh_token(client: TestClient) -> None:
     """Test token refresh."""
     # First register the user
     client.post(
-        "/v1/auth/register",
+        "/v1/api/auth/register",
         json={
             "email": "test@example.com",
             "password": "testpassword",
@@ -106,7 +106,7 @@ def test_refresh_token(client: TestClient) -> None:
 
     # Then login to get fresh tokens
     response = client.post(
-        "/v1/auth/login",
+        "/v1/api/auth/login",
         data={
             "username": "test@example.com",
             "password": "testpassword",
@@ -116,7 +116,7 @@ def test_refresh_token(client: TestClient) -> None:
     refresh_token = response.json()["refresh_token"]
 
     # Test token refresh
-    response = client.post("/v1/auth/refresh", json={"token": refresh_token})
+    response = client.post("/v1/api/auth/refresh", json={"token": refresh_token})
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
@@ -125,6 +125,6 @@ def test_refresh_token(client: TestClient) -> None:
 
 def test_refresh_invalid_token(client: TestClient) -> None:
     """Test refresh with invalid token."""
-    response = client.post("/v1/auth/refresh", json={"token": "invalid_token"})
+    response = client.post("/v1/api/auth/refresh", json={"token": "invalid_token"})
     assert response.status_code == 401
     assert "Invalid refresh token" in response.json()["detail"]["message"]
