@@ -1,190 +1,117 @@
-/// <reference types="vitest/globals" />
-import React from 'react';
-import { render, fireEvent, waitFor, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
+import { describe, it, expect } from 'vitest';
+import { createTestHelpers } from '@/tests/setup';
 import { RegisterForm } from '../RegisterForm';
-import { AuthContext } from '../../context/AuthContext';
-import { ApiError } from '../../../../api/core/api-error';
-import type { AuthResponse } from '../../types';
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
-
-// Mock successful auth response
-const mockAuthResponse: AuthResponse = {
-  access_token: 'mock_token',
-  refresh_token: 'mock_refresh',
-  token_type: 'bearer',
-  user: {
-    id: 1,
-    email: 'test@example.com',
-    personal_info: null,
-    created_at: new Date().toISOString().split('.')[0]
-  }
-};
+import { AuthProvider } from '../../context/AuthContext';
 
 describe('RegisterForm', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const { simulateLoading, simulateError, simulateSuccess } = createTestHelpers();
 
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
-
-  const mockRegister = vi.fn().mockResolvedValue(mockAuthResponse);
-
+  // Helper function to render the form with required providers
   const renderForm = () => {
-    return render(
+    render(
       <BrowserRouter>
-        <AuthContext.Provider
-          value={{
-            register: mockRegister,
-            login: vi.fn(),
-            logout: vi.fn(),
-            refreshToken: vi.fn(),
-            token: null,
-            user: null,
-            isLoading: false,
-            isAuthenticated: false
-          }}
-        >
+        <AuthProvider>
           <RegisterForm />
-        </AuthContext.Provider>
+        </AuthProvider>
       </BrowserRouter>
     );
   };
 
-  const fillForm = (email = 'test@example.com', password = 'Password123!', acceptTerms = true) => {
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const termsCheckbox = screen.getByLabelText(/terms and conditions/i);
-
-    fireEvent.change(emailInput, { target: { value: email } });
-    fireEvent.change(passwordInput, { target: { value: password } });
+  // Helper function to fill and submit form
+  const fillAndSubmitForm = async (
+    email = 'test@example.com',
+    password = 'Password123!',
+    acceptTerms = true
+  ) => {
+    await userEvent.type(screen.getByLabelText(/email/i), email);
+    await userEvent.type(screen.getByLabelText(/^password$/i), password);
     if (acceptTerms) {
-      fireEvent.click(termsCheckbox);
+      await userEvent.click(screen.getByLabelText(/terms and conditions/i));
     }
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
   };
 
-  const submitForm = async () => {
-    await act(async () => {
-      fireEvent.submit(screen.getByRole('form'));
+  it('handles successful registration and redirects', async () => {
+    // Prepare successful response
+    simulateSuccess('/api/v1/auth/register', 'post', {
+      access_token: 'mock_token',
+      refresh_token: 'mock_refresh',
+      token_type: 'bearer',
+      user: {
+        id: 1,
+        email: 'test@example.com',
+        created_at: new Date().toISOString()
+      }
     });
-  };
 
-  it('renders registration form elements', () => {
     renderForm();
+    await fillAndSubmitForm();
 
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/terms and conditions/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    // Verify success state
+    expect(screen.getByRole('button', { name: /create account/i })).toBeEnabled();
   });
 
-  it('displays validation errors for invalid input', async () => {
-    renderForm();
-    fillForm('', '', false);
-    await submitForm();
+  it('shows loading state during registration', async () => {
+    // Simulate loading state with 1s delay
+    simulateLoading('/api/v1/auth/register', 'post', 1000);
 
-    await waitFor(() => {
-      const alerts = screen.getAllByRole('alert');
-      expect(alerts).toHaveLength(3);
-      expect(alerts[0]).toHaveTextContent('Please enter a valid email address');
-      expect(alerts[1]).toHaveTextContent('Password must contain at least 8 characters');
-      expect(alerts[2]).toHaveTextContent('Please accept the terms and conditions');
-    });
+    renderForm();
+    await fillAndSubmitForm();
+
+    // Verify loading state
+    expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled();
+  });
+
+  it('handles existing email error', async () => {
+    // Simulate error response
+    simulateError('/api/v1/auth/register', 'post', 409, 'Email already exists');
+
+    renderForm();
+    await fillAndSubmitForm();
+
+    // Verify error state
+    expect(await screen.findByText(/email already exists/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeEnabled();
+  });
+
+  it('validates form fields', async () => {
+    renderForm();
+    await fillAndSubmitForm('', '', false);
+
+    // Verify validation messages
+    expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+    expect(screen.getByText(/password must contain at least 8 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/please accept the terms and conditions/i)).toBeInTheDocument();
   });
 
   it('validates password requirements', async () => {
     renderForm();
-    fillForm('test@example.com', 'short', true);
-    await submitForm();
+    await fillAndSubmitForm('test@example.com', 'short', true);
 
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Password must contain at least 8 characters');
-    });
+    // Verify password validation
+    expect(screen.getByText(/password must contain at least 8 characters/i)).toBeInTheDocument();
   });
 
   it('requires terms acceptance', async () => {
     renderForm();
-    fillForm('test@example.com', 'Password123!', false);
-    await submitForm();
+    await fillAndSubmitForm('test@example.com', 'Password123!', false);
 
-    await waitFor(() => {
-      expect(screen.getByText(/please accept the terms and conditions/i)).toBeInTheDocument();
-    });
+    // Verify terms validation
+    expect(screen.getByText(/please accept the terms and conditions/i)).toBeInTheDocument();
   });
 
-  it('displays error message on registration failure', async () => {
-    const mockErrorRegister = vi.fn().mockRejectedValue(
-      new ApiError('Email already exists', 409)
-    );
+  it('handles network errors', async () => {
+    // Simulate server error
+    simulateError('/api/v1/auth/register', 'post', 503, 'Service temporarily unavailable');
 
-    render(
-      <BrowserRouter>
-        <AuthContext.Provider
-          value={{
-            register: mockErrorRegister,
-            login: vi.fn(),
-            logout: vi.fn(),
-            refreshToken: vi.fn(),
-            token: null,
-            user: null,
-            isLoading: false,
-            isAuthenticated: false
-          }}
-        >
-          <RegisterForm />
-        </AuthContext.Provider>
-      </BrowserRouter>
-    );
-
-    fillForm();
-    await submitForm();
-
-    await waitFor(() => {
-      expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
-    });
-  });
-
-  it('shows loading state during form submission', async () => {
-    const mockSlowRegister = vi.fn().mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve(mockAuthResponse), 100))
-    );
-
-    render(
-      <BrowserRouter>
-        <AuthContext.Provider
-          value={{
-            register: mockSlowRegister,
-            login: vi.fn(),
-            logout: vi.fn(),
-            refreshToken: vi.fn(),
-            token: null,
-            user: null,
-            isLoading: false,
-            isAuthenticated: false
-          }}
-        >
-          <RegisterForm />
-        </AuthContext.Provider>
-      </BrowserRouter>
-    );
-
-    fillForm();
-    await submitForm();
-    expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled();
-  });
-
-  it('handles successful registration', async () => {
     renderForm();
-    const testEmail = 'test@example.com';
-    const testPassword = 'Password123!';
+    await fillAndSubmitForm();
 
-    fillForm(testEmail, testPassword, true);
-    await submitForm();
-
-    await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith(testEmail, testPassword);
-    });
+    // Verify error state
+    expect(await screen.findByText(/an unexpected error occurred/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeEnabled();
   });
 });

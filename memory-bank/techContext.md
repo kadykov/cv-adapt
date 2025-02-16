@@ -53,15 +53,55 @@
 
 ## Testing & Quality
 
-1. **Testing Framework**
+1. **Backend Testing**
    - PyTest for unit/integration tests
    - Comprehensive test coverage
    - Test fixtures and utilities
 
-2. **Quality Tools**
+2. **Frontend Testing**
+   - Vitest test runner with MSW integration
+   - Generated handlers from OpenAPI schema
+   - Type-safe request/response handling
+   - Standardized test helpers:
+     - simulateSuccess for happy paths
+     - simulateError for error states
+     - simulateLoading for loading states
+   - Consistent test patterns:
+     - Component rendering tests
+     - User interaction tests
+     - API integration tests
+     - Error handling tests
+     - Loading state tests
+   - Contract validation through types
+   - Watch mode for development
+
+3. **Quality Tools**
    - Pre-commit hooks
    - Linting and formatting
    - Type checking
+   - Contract validation
+
+## Frontend Stack
+
+1. **Core**
+   - TypeScript
+   - React
+   - Vite build tool
+   - MSW for API mocking
+
+2. **Testing Tools**
+   - Vitest for test execution
+   - MSW with generated handlers
+   - React Testing Library for DOM testing
+   - OpenAPI for contract validation
+   - Custom test helpers for common scenarios
+   - Type-safe mock data generation
+
+3. **Type Generation**
+   - OpenAPI schema as single source of truth
+   - TypeScript types generated directly from OpenAPI
+   - Contract validation through generated types
+   - MSW handlers aligned with schema
 
 ## Documentation
 

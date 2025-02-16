@@ -1,18 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { jobsApi } from '../jobsApi';
-import { apiClient } from '../../../../api/core/api-client';
-import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../../../types/api';
-
-vi.mock('../../../../api/core/api-client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
+import { createTestHelpers } from '@/tests/setup';
+import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '@/types/api';
 
 describe('jobsApi', () => {
+  const { simulateSuccess, simulateError } = createTestHelpers();
+
   const mockJob: JobDescriptionResponse = {
     id: 1,
     title: 'Software Engineer',
@@ -24,29 +17,38 @@ describe('jobsApi', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset any handlers from previous tests
+    simulateSuccess('/api/v1/jobs', 'get', []);
   });
 
   describe('getJobs', () => {
     it('fetches all jobs', async () => {
       const jobs = [mockJob];
-      vi.mocked(apiClient.get).mockResolvedValue(jobs);
+      simulateSuccess('/api/v1/jobs', 'get', jobs);
 
       const result = await jobsApi.getJobs();
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/jobs');
       expect(result).toEqual(jobs);
+    });
+
+    it('handles error response', async () => {
+      simulateError('/api/v1/jobs', 'get', 500, 'Server error');
+
+      await expect(jobsApi.getJobs()).rejects.toThrow('Server error');
     });
   });
 
   describe('getJobById', () => {
     it('fetches a job by id', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue(mockJob);
+      simulateSuccess(`/api/v1/jobs/${mockJob.id}`, 'get', mockJob);
 
-      const result = await jobsApi.getJobById(1);
-
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/jobs/1');
+      const result = await jobsApi.getJobById(mockJob.id);
       expect(result).toEqual(mockJob);
+    });
+
+    it('handles not found error', async () => {
+      simulateError(`/api/v1/jobs/999`, 'get', 404, 'Job not found');
+
+      await expect(jobsApi.getJobById(999)).rejects.toThrow('Job not found');
     });
   });
 
@@ -57,12 +59,21 @@ describe('jobsApi', () => {
         description: 'New description',
         language_code: 'en',
       };
-      vi.mocked(apiClient.post).mockResolvedValue(mockJob);
+      simulateSuccess('/api/v1/jobs', 'post', { ...mockJob, ...newJob });
 
       const result = await jobsApi.createJob(newJob);
+      expect(result).toMatchObject(newJob);
+    });
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/jobs', newJob);
-      expect(result).toEqual(mockJob);
+    it('handles validation error', async () => {
+      const invalidJob: JobDescriptionCreate = {
+        title: '', // Empty title should fail validation
+        description: 'New description',
+        language_code: 'en',
+      };
+      simulateError('/api/v1/jobs', 'post', 422, 'Title is required');
+
+      await expect(jobsApi.createJob(invalidJob)).rejects.toThrow('Title is required');
     });
   });
 
@@ -71,22 +82,31 @@ describe('jobsApi', () => {
       const update: JobDescriptionUpdate = {
         title: 'Updated Job',
       };
-      vi.mocked(apiClient.put).mockResolvedValue({ ...mockJob, ...update });
+      simulateSuccess(`/api/v1/jobs/${mockJob.id}`, 'put', { ...mockJob, ...update });
 
-      const result = await jobsApi.updateJob(1, update);
+      const result = await jobsApi.updateJob(mockJob.id, update);
+      expect(result.title).toBe(update.title);
+    });
 
-      expect(apiClient.put).toHaveBeenCalledWith('/api/v1/jobs/1', update);
-      expect(result).toEqual({ ...mockJob, ...update });
+    it('handles not found error on update', async () => {
+      const update: JobDescriptionUpdate = { title: 'Updated Job' };
+      simulateError('/api/v1/jobs/999', 'put', 404, 'Job not found');
+
+      await expect(jobsApi.updateJob(999, update)).rejects.toThrow('Job not found');
     });
   });
 
   describe('deleteJob', () => {
     it('deletes a job', async () => {
-      vi.mocked(apiClient.delete).mockResolvedValue(undefined);
+      simulateSuccess(`/api/v1/jobs/${mockJob.id}`, 'delete', null);
 
-      await jobsApi.deleteJob(1);
+      await expect(jobsApi.deleteJob(mockJob.id)).resolves.not.toThrow();
+    });
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/api/v1/jobs/1');
+    it('handles not found error on delete', async () => {
+      simulateError('/api/v1/jobs/999', 'delete', 404, 'Job not found');
+
+      await expect(jobsApi.deleteJob(999)).rejects.toThrow('Job not found');
     });
   });
 });

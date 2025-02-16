@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ApiError } from '../../../api/core/api-error';
 import { authService } from '../../../api/services/auth.service';
-import type { AuthResponse, User, LoginCredentials, RegistrationData } from '../types';
+import type { AuthResponse, User } from '@/types/api';
 import Cookies from 'js-cookie';
 
 const COOKIE_OPTIONS = {
@@ -10,7 +10,7 @@ const COOKIE_OPTIONS = {
   path: '/'
 } as const;
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
@@ -21,7 +21,24 @@ interface AuthContextType {
   refreshToken: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isLoading: false,
+  login: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+  register: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+  logout: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+  refreshToken: async () => {
+    throw new Error('AuthContext not initialized');
+  },
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -57,8 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, remember = false): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
-      const credentials: LoginCredentials = { email, password };
-      const response = await authService.login(credentials);
+      const response = await authService.login({ email, password });
 
       Cookies.set('auth_token', response.access_token, COOKIE_OPTIONS);
       Cookies.set('auth_user', JSON.stringify(response.user), COOKIE_OPTIONS);
@@ -83,8 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
-      const registrationData: RegistrationData = { email, password, confirmPassword: password };
-      const response = await authService.register(registrationData);
+      const response = await authService.register({ email, password });
 
       Cookies.set('auth_token', response.access_token, COOKIE_OPTIONS);
       Cookies.set('auth_user', JSON.stringify(response.user), COOKIE_OPTIONS);
@@ -133,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = React.useMemo(() => ({
+  const value = React.useMemo<AuthContextType>(() => ({
     user,
     token,
     isAuthenticated: !!user && !!token,

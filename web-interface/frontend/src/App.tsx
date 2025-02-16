@@ -1,44 +1,82 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './features/auth/context/AuthContext';
-import { LoginForm } from './features/auth/components/LoginForm';
-import { useAuth } from './features/auth/context/AuthContext';
-import { JobsPage } from './pages/jobs';
+import { AuthProvider, useAuth } from './features/auth/AuthContext';
+import Jobs from './pages/jobs';
+import Login from './pages/login';
+import Register from './pages/register';
+import NotFound from './pages/notFound';
+import Layout from './components/Layout';
 
-// Protect routes that require authentication
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+// Protected Route wrapper
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
-}
+};
 
-function App() {
+// Public Route wrapper (redirects to /jobs if already authenticated)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/jobs" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Main App component
+const AppContent: React.FC = () => {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Navigate to="/jobs" replace />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected routes */}
+      <Route
+        path="/jobs/*"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Jobs />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Not found route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+// App wrapper with providers
+const App: React.FC = () => {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/login" element={<LoginForm />} />
-          <Route
-            path="/jobs"
-            element={
-              <ProtectedRoute>
-                <JobsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/jobs" replace />} />
-        </Routes>
-      </div>
+      <AppContent />
     </AuthProvider>
   );
-}
+};
 
 export default App;

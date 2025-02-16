@@ -83,20 +83,20 @@ PUT /user/profile
 
 #### Detailed CV Management
 ```
-GET /user/detailed-cvs
+GET /v1/api/user/detailed-cvs
   Response: DetailedCV[]
 
-GET /user/detailed-cvs/:language
+GET /v1/api/user/detailed-cvs/:language
   Response: DetailedCV
 
-PUT /user/detailed-cvs/:language
+PUT /v1/api/user/detailed-cvs/:language
   Request: { content: object, is_primary: boolean }
   Response: DetailedCV
 
-DELETE /user/detailed-cvs/:language
+DELETE /v1/api/user/detailed-cvs/:language
   Response: { status: "success" }
 
-PUT /user/detailed-cvs/:language/primary
+PUT /v1/api/user/detailed-cvs/:language/primary
   Response: { status: "success" }
 ```
 

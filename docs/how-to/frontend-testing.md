@@ -1,254 +1,120 @@
-# Frontend Testing
+# Frontend Testing Guide (Legacy Document)
 
-This guide explains the different types of tests in the frontend and how to run them.
+> **⚠️ IMPORTANT: This document is partially deprecated**
+>
+> Please refer to the new, comprehensive Frontend Testing Guide located at:
+> `web-interface/frontend/docs/frontend-testing-guide.md`
+>
+> The information below may not reflect the most current testing infrastructure.
 
-## Types of Tests
+## Current Testing Strategy Overview
 
-### 1. Unit Tests
+This document provides historical context for our frontend testing approach. While some principles remain valid, please consult the new guide for the most up-to-date practices.
 
-Unit tests verify individual components and functions in isolation. These tests use Vitest and React Testing Library.
+### Key Changes
+- ✅ Moved to more flexible MSW handler generation
+- ✅ Enhanced type generation workflow
+- ✅ Updated testing tool configurations
 
-```bash
-just test-frontend
-```
+## Testing Philosophy (Historical Context)
 
-### 2. Integration Tests
+Our frontend testing strategy has evolved to balance thorough testing with improved type safety and API contract compliance.
 
-Integration tests verify how multiple components work together. These tests use MSW (Mock Service Worker) to mock API calls.
+### Current Principles (as of latest update)
 
-```bash
-just test-frontend-integration
-```
+1. **Flexible Mocking**
+   - Custom MSW handlers allowed for unit tests
+   - Generated handlers for integration tests
+   - Enhanced type safety through Zod schemas
 
-### 3. Contract Tests
+2. **Type-Driven Testing**
+   - Generated types from OpenAPI schema
+   - Service classes for consistent API interactions
+   - Zod-based validation
 
-Contract tests ensure that our frontend's API expectations match the backend's OpenAPI specification. These tests:
-- Validate that mock responses match the OpenAPI schema
-- Catch breaking changes in API contracts early
-- Ensure consistency between frontend and backend
+## Retained Best Practices
 
-```bash
-just test-frontend-contract
-```
+The following sections contain valuable testing principles that remain largely unchanged:
 
-## Test Files Organization
+### Test Organization
+- Group tests by feature
+- Use clear naming conventions
+- Maintain comprehensive test coverage
 
-```
-web-interface/frontend/src/tests/
-├── unit/               # Unit tests for components
-├── integration/        # Integration tests
-├── contract.test.ts   # Contract tests
-└── mocks/             # Mock handlers and server setup
-    ├── server.ts
-    ├── handlers.ts
-    └── generate-handlers.ts
-```
+### Error Handling
+- Test error scenarios thoroughly
+- Verify error messages and recovery flows
+- Check boundary cases
 
-## Mock Service Worker (MSW)
+### Performance Considerations
+- Keep tests fast and focused
+- Use efficient setup and teardown
+- Leverage watch mode for development
 
-We use MSW to intercept and mock API requests in tests. MSW handlers are generated from the OpenAPI specification to ensure consistency.
+## Migration Guidance
 
-### Handler Generation
+If you're working with existing tests:
 
-Handlers are automatically generated from the OpenAPI schema:
+1. **Review Generated Artifacts**
+   - Check `src/types/` directory for new type definitions
+   - Use generated service classes
+   - Leverage Zod schemas for validation
 
-1. Export the latest OpenAPI schema:
+2. **Update Test Approaches**
+   - Prefer generated handlers for integration tests
+   - Create custom handlers only when necessary for unit tests
+   - Ensure type safety using generated schemas
+
+## Maintenance Recommendations
+
+1. **Keep Types Updated**
    ```bash
-   just export-openapi  # Exports schema from backend to frontend
+   npm run generate:types
    ```
 
-2. `generate-handlers.ts` reads the OpenAPI schema
-3. Creates type-safe mock responses
-4. Ensures responses match API contract
+2. **Sync with OpenAPI**
+   - Regularly update OpenAPI schema
+   - Regenerate types and handlers
+   - Test affected components
 
-Example handler generation using Zod schemas:
+## Legacy Test Examples (For Reference)
+
+> ⚠️ These examples may need updates to align with current practices.
+
+### Unit Test Example (Historical)
+
 ```typescript
-import { authResponseSchema } from '../validation/openapi';
-
-// Generate mock responses that match our Zod schemas
-const generateAuthResponse = (): AuthResponse => ({
-  access_token: 'mock_access_token',
-  refresh_token: 'mock_refresh_token',
-  token_type: 'bearer',
-  user: {
-    id: 1,
-    email: 'user@example.com',
-    created_at: new Date().toISOString(),
-    personal_info: null
-  }
-});
-
-// Validate mock response matches schema
-const mockResponse = generateAuthResponse();
-authResponseSchema.parse(mockResponse); // Will throw if invalid
-```
-
-Example auth component test:
-```typescript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { LoginForm } from '../features/auth/components/LoginForm';
-import { AuthProvider } from '../features/auth/context/AuthContext';
-import { BrowserRouter } from 'react-router-dom';
-
-describe('LoginForm', () => {
-  it('handles successful login', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    // Fill form
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    });
-
-    // Submit form
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Verify redirect after successful login
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/jobs');
-    });
-  });
-
-  it('displays validation errors', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    // Submit empty form
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Check for validation errors
-    await waitFor(() => {
-      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
-      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
-    });
-  });
-
-  it('handles server errors', async () => {
-    // Mock API to return error
+describe('LoginForm Component', () => {
+  // Example remains similar, but consider using new service classes and Zod schemas
+  it('handles loading state', async () => {
+    // Potential updates needed
     server.use(
-      rest.post('/api/v1/auth/login', (req, res, ctx) => {
-        return res(
-          ctx.status(401),
-          ctx.json({
-            detail: {
-              message: "Invalid email or password"
-            }
-          })
-        );
-      })
+      rest.post('/api/login', (req, res, ctx) =>
+        res(ctx.delay(100))
+      )
     );
 
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    // Fill and submit form
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'wrong_password' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Verify error message
-    await waitFor(() => {
-      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
-    });
+    render(<LoginForm />);
+    // Test logic remains similar
   });
 });
 ```
 
-## Running Tests
+### Integration Test Example (Historical)
 
-### All Frontend Tests
-
-To run all frontend tests (unit, integration, and contract):
-
-```bash
-just test-frontend-all
+```typescript
+describe('Login Flow', () => {
+  // Example remains conceptually similar
+  it('completes successful login flow', async () => {
+    // Consider using new generated handlers and service classes
+    render(<LoginForm />);
+    // Test logic remains similar
+  });
+});
 ```
 
-### With Coverage
+## Final Recommendation
 
-To run tests with coverage reporting:
-
-```bash
-just test-frontend-cov
-```
-
-### Watch Mode
-
-During development, you can run tests in watch mode:
-
-```bash
-cd web-interface/frontend
-npm run test:watch        # Unit tests
-npm run test:integration  # Integration tests
-npm run test:contract    # Contract tests
-```
-
-## Best Practices
-
-1. **Contract Testing**
-   - Always update contract tests when making API-related changes
-   - Use generated handlers from OpenAPI spec
-   - Keep mock responses in sync with schema
-
-2. **Integration Testing**
-   - Use MSW for API mocking
-   - Test complete user workflows
-   - Verify error handling
-
-3. **Unit Testing**
-   - Test component rendering
-   - Verify user interactions
-   - Mock dependencies appropriately
-
-## Debugging Tests
-
-- Use `console.error()` for debugging (automatically shown in test output)
-- Run individual test files for focused debugging:
-  ```bash
-  cd web-interface/frontend
-  npm run test src/tests/contract.test.ts
-  ```
-- Use watch mode for faster development cycles
-- Enable verbose logging in vitest with the `--debug` flag:
-  ```bash
-  npm run test:contract -- --debug
-  ```
-
-## Adding New Tests
-
-1. **Contract Tests**
-   - Add test cases in `contract.test.ts`
-   - Update mock handlers if needed
-   - Verify against OpenAPI schema
-
-2. **Integration Tests**
-   - Create new test file in integration/
-   - Use MSW for API mocking
-   - Test complete features
-
-3. **Unit Tests**
-   - Create test file next to component
-   - Focus on component behavior
-   - Mock external dependencies
+🔍 **Always Refer to the New Guide**
+For the most current testing practices, workflow, and infrastructure details, please consult:
+`web-interface/frontend/docs/frontend-testing-guide.md`

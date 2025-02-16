@@ -1,0 +1,50 @@
+.container {
+  @apply max-w-4xl mx-auto p-6;
+}
+
+.header {
+  @apply flex justify-between items-center mb-6;
+}
+
+.header h2 {
+  @apply text-2xl font-bold text-gray-800;
+}
+
+.languageSelect {
+  @apply p-2 border border-gray-300 rounded-md
+         focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+.jobList {
+  @apply grid gap-6;
+}
+
+.jobItem {
+  @apply p-6 bg-white rounded-lg border border-gray-200
+         shadow-sm hover:shadow-md transition-shadow;
+}
+
+.jobTitle {
+  @apply text-xl font-semibold text-gray-800 mb-2;
+}
+
+.jobDescription {
+  @apply text-gray-600 mb-4;
+}
+
+.meta {
+  @apply flex gap-4 text-sm text-gray-500;
+}
+
+.meta span {
+  @apply flex items-center gap-1;
+}
+
+.loadingState {
+  @apply text-center py-12 text-gray-600;
+}
+
+.errorState {
+  @apply p-4 bg-red-50 border border-red-200 rounded-md text-red-600
+         flex items-center justify-center my-4;
+}

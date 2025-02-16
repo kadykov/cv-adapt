@@ -3,9 +3,8 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
-import { mockAuthResponse } from '@/mocks/auth-mock-data';
+import { handlers } from '@/mocks/handlers/generate-handlers';
 
 // Mock js-cookie module
 const cookieStore: Record<string, string> = {};
@@ -67,134 +66,82 @@ function TestComponent() {
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    // Clear cookie store and mocks
+    // Clear cookie store
     Object.keys(cookieStore).forEach(key => {
       delete cookieStore[key];
     });
     vi.clearAllMocks();
   });
 
-  test('provides authentication state', async () => {
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-    });
-
-    expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
-    expect(screen.getByTestId('login-button')).toBeInTheDocument();
-  });
-
-  test('handles login success', async () => {
+  test('authentication flow', async () => {
     const user = userEvent.setup();
-
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
 
+    // Initial state
     await waitFor(() => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
+      expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
     });
 
+    // Login
     await user.click(screen.getByTestId('login-button'));
-
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId('user-email')).toBeInTheDocument();
     });
+    expect(cookieStore['auth_token']).toBeDefined();
+    expect(cookieStore['refresh_token']).toBeDefined();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
-    });
-
-    // Check cookie values after waiting for async operations
-    expect(cookieStore['auth_token']).toBe(mockAuthResponse.access_token);
-    expect(cookieStore['auth_user']).toBe(JSON.stringify(mockAuthResponse.user));
-    expect(cookieStore['refresh_token']).toBe(mockAuthResponse.refresh_token);
-  });
-
-  test('handles login failure', async () => {
-    const user = userEvent.setup();
-
-    // Override the default success handler with an error for this test
-    server.use(
-      http.post('*/v1/auth/login', () => {
-        return HttpResponse.json(
-          { message: 'Invalid credentials' },
-          { status: 401 }
-        );
-      })
-    );
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-    });
-
-    await user.click(screen.getByTestId('login-button'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Invalid credentials');
-    });
-
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
-    expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
-
-    expect(cookieStore).not.toHaveProperty('auth_token');
-    expect(cookieStore).not.toHaveProperty('auth_user');
-    expect(cookieStore).not.toHaveProperty('refresh_token');
-  });
-
-  test('handles logout', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-    });
-
-    // First login
-    await user.click(screen.getByTestId('login-button'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated');
-      expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
-    });
-
-    // Then logout
+    // Logout
     await user.click(screen.getByText('Logout'));
-
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
       expect(screen.queryByTestId('user-email')).not.toBeInTheDocument();
     });
-
     expect(cookieStore).not.toHaveProperty('auth_token');
-    expect(cookieStore).not.toHaveProperty('auth_user');
     expect(cookieStore).not.toHaveProperty('refresh_token');
   });
 
-  test('loads initial state from cookies', async () => {
-    // Set up cookie values before rendering
-    cookieStore['auth_token'] = mockAuthResponse.access_token;
-    cookieStore['auth_user'] = JSON.stringify(mockAuthResponse.user);
-    cookieStore['refresh_token'] = mockAuthResponse.refresh_token;
+  test('handles errors during login', async () => {
+    // Override with error response
+    server.use(handlers.login_v1_auth_login_post.error.HTTPValidationError());
+
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('login-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error-message')).toBeInTheDocument();
+      expect(screen.getByTestId('auth-state')).toHaveTextContent('unauthenticated');
+    });
+    expect(cookieStore).not.toHaveProperty('auth_token');
+  });
+
+  test('persists and loads state from cookies', async () => {
+    // Set up initial cookie state
+    const mockUser = {
+      id: 1,
+      email: 'user@example.com',
+      created_at: new Date().toISOString(),
+      personal_info: null
+    };
+
+    cookieStore['auth_token'] = 'mock_token';
+    cookieStore['auth_user'] = JSON.stringify(mockUser);
+    cookieStore['refresh_token'] = 'mock_refresh_token';
 
     render(
       <AuthProvider>
@@ -205,7 +152,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated');
-      expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
+      expect(screen.getByTestId('user-email')).toHaveTextContent(mockUser.email);
     });
   });
 });

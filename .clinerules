@@ -4,5 +4,6 @@
 - Key files: cv_adapter/core/application.py, web-interface/frontend/src/features/
 - Tools: UV for Python packages, Just for task running
 - Testing: PyTest for backend, Vitest/MSW for frontend
+- Frontend Testing: Auto-generated MSW handlers. Use `handlers.[feature].[operation].success/error/loading` for API mocks.
 - Structure: Feature-based organization, protocol-driven design
 - Active: Job catalog and auth system implementation in frontend

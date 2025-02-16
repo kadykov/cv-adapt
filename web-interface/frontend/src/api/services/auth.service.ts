@@ -1,80 +1,70 @@
-import { apiClient } from "../core/api-client";
-import type { AuthResponse, LoginCredentials, RegistrationData } from "../../features/auth/types";
-import { ApiError } from "../core/api-error";
+import { ApiError } from '../core/api-error';
+import { API_CONFIG } from '../core/config';
+import type { AuthResponse, LoginCredentials, RegistrationData } from '@/features/auth/types';
 
-class AuthService {
+export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const formData = new URLSearchParams();
-    formData.append("username", credentials.email);
-    formData.append("password", credentials.password);
-    formData.append("grant_type", "password");
+    formData.append('username', credentials.email);
+    formData.append('password', credentials.password);
+    formData.append('grant_type', 'password');
 
-    try {
-      const response = await apiClient.post<AuthResponse>("v1/auth/login", formData, {
-        requiresAuth: false,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
+    const response = await fetch(API_CONFIG.getUrl(API_CONFIG.endpoints.auth.login), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
 
-      return response;
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw new ApiError("Failed to authenticate", undefined);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(errorData.detail?.message || 'Login failed', errorData.detail);
     }
-  }
+
+    return response.json();
+  },
 
   async register(data: RegistrationData): Promise<AuthResponse> {
-    try {
-      const response = await apiClient.post<AuthResponse>("v1/auth/register", data, {
-        requiresAuth: false,
-      });
+    const response = await fetch(API_CONFIG.getUrl(API_CONFIG.endpoints.auth.register), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-      return response;
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw new ApiError("Registration failed", undefined);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(errorData.detail?.message || 'Registration failed', errorData.detail);
     }
-  }
 
-  async logout(): Promise<void> {
-    try {
-      await apiClient.post("v1/auth/logout", undefined, {
-        credentials: "include",
-      });
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw new ApiError("Logout failed", undefined);
-    }
-  }
+    return response.json();
+  },
 
   async refreshToken(token: string): Promise<AuthResponse> {
-    try {
-      const response = await apiClient.post<AuthResponse>(
-        "v1/auth/refresh",
-        { token },
-        {
-          requiresAuth: false
-        }
-      );
+    const response = await fetch(API_CONFIG.getUrl(API_CONFIG.endpoints.auth.refresh), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+    });
 
-      return response;
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        throw new ApiError("Invalid token", 401);
-      }
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw new ApiError("Token refresh failed", undefined);
+    if (!response.ok) {
+      throw new ApiError('Failed to refresh token');
     }
-  }
-}
 
-export const authService = new AuthService();
+    return response.json();
+  },
+
+  async logout(): Promise<void> {
+    const response = await fetch(API_CONFIG.getUrl(API_CONFIG.endpoints.auth.logout), {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      throw new ApiError('Logout failed');
+    }
+  },
+};

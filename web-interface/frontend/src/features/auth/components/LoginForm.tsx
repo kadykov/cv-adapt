@@ -1,136 +1,165 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { ApiError } from '../../../api/core/api-error';
+import { useState, FormEvent, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { AuthService } from '../../../api/auth';
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
 
-  const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
+  const { mutate: login, isPending } = useMutation({
+    mutationKey: ['login'],
+    mutationFn: async (credentials: { username: string; password: string }) => {
+      try {
+        setError(null);
+        const authService = new AuthService();
+        return await authService.login(credentials);
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      if (remember) {
+        localStorage.setItem('remember', 'true');
+      }
+      navigate('/dashboard');
+    },
+    onError: (err: any) => {
+      console.error('Login failed:', err);
+      // Extract error message from response or use default
+      const errorMessage = err.response?.data?.message
+        || err.response?.statusText
+        || err.message
+        || 'An error occurred';
+      setError(errorMessage);
+    },
+  });
 
-    if (!email) {
-      newErrors.email = 'Please enter a valid email address';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return false;
-    }
-    return true;
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setErrors({});
+    setError(null);
 
-    if (!validateForm()) {
+    // Check for empty required fields first
+    if (!email || !password) {
+      setError('Constraints not satisfied');
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      await login(email, password, remember);
-      navigate('/jobs');
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setErrors({ general: 'Invalid email or password' });
-      } else {
-        setErrors({ general: 'An unexpected error occurred' });
-      }
-    } finally {
-      setIsLoading(false);
+    // Validate email format before API call
+    if (!validateEmail(email)) {
+      setError('Invalid email address');
+      return;
     }
+
+    // Call mutation with credentials
+    login({ username: email, password });
   };
 
   return (
-    <div className="container mx-auto px-4">
-      <div className="max-w-md mx-auto mt-16">
-        <h1 className="text-2xl font-bold mb-6 text-center">Sign in to CV Adapter</h1>
-        <div className="w-full max-w-md mx-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-6" aria-label="Login form">
-            {errors.email && (
-              <div className="alert alert-error" role="alert">
-                {errors.email}
-              </div>
-            )}
-            {errors.password && (
-              <div className="alert alert-error" role="alert">
-                {errors.password}
-              </div>
-            )}
-            {errors.general && (
-              <div className="alert alert-error" role="alert">
-                {errors.general}
-              </div>
-            )}
-            <div className="form-control w-full">
-              <label className="label" htmlFor="email">
-                <span className="label-text">Email</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className="input input-bordered w-full"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div className="form-control w-full">
-              <label className="label" htmlFor="password">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className="input input-bordered w-full"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <div className="form-control">
-              <label className="label cursor-pointer" htmlFor="remember">
-                <span className="label-text">Remember me</span>
-                <input
-                  type="checkbox"
-                  id="remember"
-                  name="remember"
-                  className="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-              </label>
-            </div>
-            <button
-              type="submit"
-              className={`btn btn-primary w-full ${isLoading ? 'loading' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-6 text-center">Sign In</h2>
+
+        {/* Status announcements */}
+        <div
+          ref={statusRef}
+          role="status"
+          aria-live="polite"
+          className="sr-only"
+        >
+          {isPending ? 'Logging in...' : error ? error : 'Form loaded'}
         </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          aria-label="Login form"
+          noValidate
+        >
+          {error && (
+            <div
+              className="alert alert-error"
+              role="alert"
+              aria-atomic="true"
+            >
+              {error}
+            </div>
+          )}
+          <div className="form-control w-full">
+            <label className="label" htmlFor="email">
+              <span className="label-text">Email</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              className="input input-bordered w-full"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              disabled={isPending}
+            />
+          </div>
+          <div className="form-control w-full">
+            <label className="label" htmlFor="password">
+              <span className="label-text">Password</span>
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="input input-bordered w-full"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              disabled={isPending}
+            />
+          </div>
+          <div className="form-control">
+            <label className="label cursor-pointer" htmlFor="remember">
+              <span className="label-text">Remember me</span>
+              <input
+                type="checkbox"
+                id="remember"
+                name="remember"
+                className="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                disabled={isPending}
+              />
+            </label>
+          </div>
+          <button
+            type="submit"
+            className={`btn btn-primary w-full`}
+            disabled={isPending}
+            aria-busy={isPending}
+            aria-live="polite"
+          >
+            <div className="flex items-center justify-center gap-2">
+              {isPending ? (
+                <>
+                  <span className="loading loading-spinner" />
+                  <span>Logging in...</span>
+                </>
+              ) : (
+                <span>Login</span>
+              )}
+            </div>
+          </button>
+        </form>
       </div>
     </div>
   );
