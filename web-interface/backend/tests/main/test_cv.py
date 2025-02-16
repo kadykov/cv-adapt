@@ -40,7 +40,7 @@ def test_get_user_cvs(
     test_cv: DetailedCV, auth_headers: dict[str, str], client: TestClient
 ) -> None:
     """Test getting all user's CVs."""
-    response = client.get("/user/detailed-cvs", headers=auth_headers)
+    response = client.get("/v1/api/user/detailed-cvs", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -54,7 +54,7 @@ def test_get_user_cv_by_language(
 ) -> None:
     """Test getting user's CV by language."""
     response = client.get(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -65,7 +65,7 @@ def test_get_user_cv_by_language(
 
 def test_get_nonexistent_cv(auth_headers: dict[str, str], client: TestClient) -> None:
     """Test getting CV with non-existent language code."""
-    response = client.get("/user/detailed-cvs/xx", headers=auth_headers)
+    response = client.get("/v1/api/user/detailed-cvs/xx", headers=auth_headers)
     assert response.status_code == 404
 
 
@@ -74,7 +74,7 @@ def test_create_cv(auth_headers: dict[str, str], client: TestClient) -> None:
     cv_data = DetailedCVCreate(
         language_code="fr", content={"test": "content"}, is_primary=False
     ).model_dump()
-    response = client.put("/user/detailed-cvs/fr", headers=auth_headers, json=cv_data)
+    response = client.put("/v1/api/user/detailed-cvs/fr", headers=auth_headers, json=cv_data)
     assert response.status_code == 200
     data = response.json()
     assert data["language_code"] == "fr"
@@ -92,7 +92,7 @@ def test_update_cv(
         is_primary=True,
     ).model_dump()
     response = client.put(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}",
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}",
         headers=auth_headers,
         json=update_data,
     )
@@ -107,13 +107,13 @@ def test_delete_cv(
 ) -> None:
     """Test deleting CV."""
     response = client.delete(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
     )
     assert response.status_code == 204
 
     # Verify CV was deleted
     response = client.get(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}", headers=auth_headers
     )
     assert response.status_code == 404
 
@@ -129,14 +129,14 @@ def test_set_primary_cv(
         is_primary=False,
     ).model_dump()
     client.put(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}",
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}",
         headers=auth_headers,
         json=update_data,
     )
 
     # Now set it as primary
     response = client.put(
-        f"/user/detailed-cvs/{str(test_cv.language_code)}/primary", headers=auth_headers
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}/primary", headers=auth_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -150,11 +150,11 @@ def test_cv_operations_unauthorized(client: TestClient) -> None:
     ).model_dump()
 
     # Test all endpoints
-    assert client.get("/user/detailed-cvs").status_code == 401
-    assert client.get("/user/detailed-cvs/en").status_code == 401
-    assert client.put("/user/detailed-cvs/en", json=cv_data).status_code == 401
-    assert client.delete("/user/detailed-cvs/en").status_code == 401
-    assert client.put("/user/detailed-cvs/en/primary").status_code == 401
+    assert client.get("/v1/api/user/detailed-cvs").status_code == 401
+    assert client.get("/v1/api/user/detailed-cvs/en").status_code == 401
+    assert client.put("/v1/api/user/detailed-cvs/en", json=cv_data).status_code == 401
+    assert client.delete("/v1/api/user/detailed-cvs/en").status_code == 401
+    assert client.put("/v1/api/user/detailed-cvs/en/primary").status_code == 401
 
 
 def test_mismatched_language_code(
@@ -166,5 +166,5 @@ def test_mismatched_language_code(
         content={"test": "content"},
         is_primary=True,
     ).model_dump()
-    response = client.put("/user/detailed-cvs/en", headers=auth_headers, json=cv_data)
+    response = client.put("/v1/api/user/detailed-cvs/en", headers=auth_headers, json=cv_data)
     assert response.status_code == 400

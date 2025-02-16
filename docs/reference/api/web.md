@@ -133,7 +133,7 @@ Update current user's profile.
 
 ## Detailed CV Management (`cvs.py`)
 
-### GET /user/detailed-cvs
+### GET /v1/api/user/detailed-cvs
 Get all detailed CVs for current user.
 
 **Response** (200):
@@ -151,7 +151,7 @@ Get all detailed CVs for current user.
 ]
 ```
 
-### GET /user/detailed-cvs/:language_code
+### GET /v1/api/user/detailed-cvs/:language_code
 Get detailed CV for specific language.
 
 **Response** (200):
@@ -167,7 +167,7 @@ Get detailed CV for specific language.
 }
 ```
 
-### PUT /user/detailed-cvs/:language_code
+### PUT /v1/api/user/detailed-cvs/:language_code
 Create or update CV for specific language.
 
 **Request Body**:
@@ -192,12 +192,12 @@ Create or update CV for specific language.
 }
 ```
 
-### DELETE /user/detailed-cvs/:language_code
+### DELETE /v1/api/user/detailed-cvs/:language_code
 Delete CV for specific language.
 
 **Response** (204): No content
 
-### PUT /user/detailed-cvs/:language_code/primary
+### PUT /v1/api/user/detailed-cvs/:language_code/primary
 Set CV as primary for given language.
 
 **Response** (200):

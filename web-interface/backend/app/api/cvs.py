@@ -12,7 +12,7 @@ from ..schemas.cv import (
 )
 from ..services.cv import DetailedCVService
 
-router = APIRouter(prefix="/user/detailed-cvs", tags=["detailed-cvs"])
+router = APIRouter(prefix="/v1/api/user/detailed-cvs", tags=["detailed-cvs"])
 
 @router.get("", response_model=list[DetailedCVResponse])
 async def get_user_detailed_cvs(
