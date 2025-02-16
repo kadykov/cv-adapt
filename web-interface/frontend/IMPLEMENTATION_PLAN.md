@@ -7,7 +7,7 @@
 - [x] Initialize new Vite + React + TypeScript project
 - [x] Configure ESLint with TypeScript
 - [x] Set up Prettier
-- [ ] Configure Tailwind CSS and DaisyUI
+- [x] Configure Tailwind CSS and DaisyUI
 - [x] Set up path aliases
 
 ### Core Dependencies
@@ -53,7 +53,7 @@
 - [x] Create test utilities and fixtures
 - [x] Configure contract testing
 
-## Phase 2: Project Structure and Base Components
+## Phase 2: Authentication Implementation
 
 ### Directory Structure
 ```
@@ -64,27 +64,10 @@ src/
     utils/       # Helper functions
     test/        # Test utilities
   features/      # Feature-based modules
-  components/    # Shared UI components
   config/        # App configuration
 ```
 
-### Base Components
-- [ ] Create component library structure
-- [ ] Implement form components
-  - [ ] Input
-  - [ ] Select
-  - [ ] TextArea
-  - [x] Button
-  - [ ] Form
-- [ ] Add layout components
-  - [ ] Container
-  - [ ] Card
-  - [ ] Modal
-  - [ ] Navigation
-- [ ] Set up error boundaries
-- [ ] Create loading states
-
-### Authentication
+### Authentication Features
 - [x] Implement auth context with token management
 - [x] Create auth hooks
   - [x] useRegisterMutation - handles user registration with error handling
@@ -97,10 +80,23 @@ src/
   - [x] Test success and error cases
   - [x] Test authenticated requests
 - [ ] Set up protected routes
-- [ ] Add auth forms
-  - [ ] Login
-  - [ ] Registration
-  - [ ] Password Reset
+  - [ ] Route protection HOC
+  - [ ] Authentication state management
+  - [ ] Loading states
+  - [ ] Redirect handling
+- [ ] Implement auth forms
+  - [ ] Login form
+    - [ ] Form validation
+    - [ ] Error handling
+    - [ ] Success redirection
+  - [ ] Registration form
+    - [ ] User input validation
+    - [ ] API integration
+    - [ ] Email verification handling
+  - [ ] Password reset flow
+    - [ ] Request reset form
+    - [ ] Reset token handling
+    - [ ] New password form
 
 ## Phase 3: Feature Implementation
 
@@ -139,7 +135,6 @@ features/cv-management/
 ## Testing Strategy
 
 ### Unit Tests
-- Component tests with React Testing Library
 - Hook tests with test-utils
   - Mock providers (Auth, Query)
   - Mock localStorage
@@ -161,7 +156,6 @@ features/cv-management/
 
 ## Documentation Requirements
 
-- [ ] Component documentation
 - [ ] API integration guides
 - [x] Testing guidelines
   - [x] MSW setup and handlers
@@ -170,7 +164,26 @@ features/cv-management/
 - [ ] Setup instructions
 - [ ] Contribution guidelines
 
-## Quality Standards
+## Development Guidelines
+
+### UI Component Strategy
+- Use Headless UI components as primary building blocks
+  - Provides built-in accessibility
+  - Handles keyboard navigation
+  - Manages ARIA attributes
+  - Reduces maintenance burden
+- Apply DaisyUI classes for styling
+  - Consistent theming
+  - Predefined style variants
+  - Responsive design patterns
+- Create custom components only when:
+  - Implementing complex business logic
+  - Building feature-specific interfaces
+  - Composing multiple Headless UI components
+- Follow composition over inheritance
+  - Compose Headless UI components
+  - Add feature-specific behavior
+  - Maintain clean separation of concerns
 
 ### Type Safety
 - Strict TypeScript configuration
@@ -178,7 +191,6 @@ features/cv-management/
 - Proper type imports from OpenAPI schema
 
 ### Testing Requirements
-- Unit tests for all components
 - Integration tests for features
 - Contract tests for API integrations
 - Minimum 80% coverage
@@ -190,7 +202,8 @@ features/cv-management/
 - Lazy loading for routes
 
 ### Accessibility
-- ARIA labels
-- Keyboard navigation
-- Screen reader support
-- Color contrast compliance
+- Leverage Headless UI's built-in accessibility
+- Ensure proper heading hierarchy
+- Maintain keyboard navigation
+- Verify screen reader support
+- Meet color contrast requirements
