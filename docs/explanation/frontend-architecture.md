@@ -13,21 +13,24 @@ The frontend is built with:
 - Zod for runtime type validation
 - Vitest for testing
 
-## Migrating from Astro to Vite+React
+## API Integration
 
-### Background
+### OpenAPI Schema
 
-The initial frontend implementation used Astro, anticipating benefits from its partial hydration and reduced JavaScript approach. However, several challenges emerged:
+The OpenAPI schema for the backend API is maintained in `/web-interface/backend/docs/api/openapi.json`. This schema serves as:
+- The source of truth for API contracts
+- Documentation for API endpoints
+- Base for generating TypeScript types
+- Reference for contract testing
 
-1. Limited SSR Benefits:
-   - Most components require full client-side hydration
-   - Simple pages (like login) still load 250KB+ of JavaScript
-   - No effective use of partial hydration or islands architecture
+For new frontend implementations:
+1. Use the schema from backend/docs/api during build
+2. Generate TypeScript types from the schema
+3. Implement contract testing against the schema
 
-2. Development Complexities:
-   - Hydration testing challenges
-   - Complex debugging due to SSR/CSR boundaries
-   - Limited benefits from Astro's core features
+## Frontend Implementation
+
+The frontend is being reimplemented to address several challenges with the initial version:
 
 ### Migration Plan
 

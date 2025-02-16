@@ -1,44 +1,35 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './features/auth/context/AuthContext';
-import { LoginForm } from './features/auth/components/LoginForm';
-import { useAuth } from './features/auth/context/AuthContext';
-import { JobsPage } from './pages/jobs';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter as Router } from 'react-router-dom'
 
-// Protect routes that require authentication
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  return <>{children}</>;
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+})
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/login" element={<LoginForm />} />
-          <Route
-            path="/jobs"
-            element={
-              <ProtectedRoute>
-                <JobsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/jobs" replace />} />
-        </Routes>
-      </div>
-    </AuthProvider>
-  );
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <div className="min-h-screen bg-base-200">
+          <div className="hero min-h-screen">
+            <div className="hero-content text-center">
+              <div className="max-w-md">
+                <h1 className="text-5xl font-bold">CV Adapt</h1>
+                <p className="py-6">
+                  Intelligent CV customization and generation with multilingual support
+                </p>
+                <button className="btn btn-primary">Get Started</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Router>
+    </QueryClientProvider>
+  )
 }
 
-export default App;
+export default App

@@ -2,20 +2,37 @@
 
 ## Core Technologies
 
-1. **Python 3.12+**
-   - Primary development language
-   - Leverages modern Python features
-   - Strong type hints support
+1. **Backend**
+   - Python 3.12+
+     - Primary development language
+     - Modern Python features
+     - Strong type hints
 
-2. **Pydantic**
-   - Data validation
-   - Serialization/deserialization
-   - Type safety enforcement
+   - Pydantic
+     - Data validation
+     - Serialization/deserialization
+     - Type safety enforcement
 
-3. **Template Engine**
-   - Jinja2 for template rendering
-   - Supports custom templates
-   - Language-aware processing
+   - Template Engine
+     - Jinja2 for template rendering
+     - Custom templates support
+     - Language-aware processing
+
+2. **Frontend**
+   - React 19+ with TypeScript
+     - Modern React features
+     - Strict type safety
+     - Component architecture
+
+   - State Management
+     - React Query for server state
+     - Local state with hooks
+     - Context for global state
+
+   - UI Components
+     - Tailwind CSS
+     - DaisyUI components
+     - Headless UI
 
 ## Development Tools
 
@@ -53,15 +70,36 @@
 
 ## Testing & Quality
 
-1. **Testing Framework**
+1. **Backend Testing**
    - PyTest for unit/integration tests
    - Comprehensive test coverage
    - Test fixtures and utilities
 
-2. **Quality Tools**
+2. **Frontend Testing**
+   - Vitest test runner
+   - React Testing Library
+   - MSW for API mocking
+   - Contract testing with OpenAPI
+
+3. **Quality Tools**
    - Pre-commit hooks
-   - Linting and formatting
+   - ESLint + TypeScript
+   - Prettier formatting
    - Type checking
+
+## Package Management
+
+1. **Backend**
+   - UV Package Manager
+     - Fast dependency resolution
+     - Better reproducibility
+     - Lock file support
+
+2. **Frontend**
+   - NPM with package-lock.json
+     - Strict versioning
+     - Dependency auditing
+     - Script management
 
 ## Documentation
 
@@ -75,3 +113,9 @@
    - How-to guides
    - Technical reference
    - Explanation articles
+
+3. **API Documentation**
+   - OpenAPI schema
+   - Generated types
+   - Integration guides
+   - Testing documentation

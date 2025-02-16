@@ -30,6 +30,73 @@
    Input → Validation → Template Selection → Context Prep → Generation → Post-processing
    ```
 
+3. **API Contract Management**
+   ```
+   Backend Definition → OpenAPI Export → Schema Documentation → Frontend Integration → Contract Testing
+   ```
+
+## Frontend Architecture Patterns
+
+1. **Feature-Based Organization**
+   ```
+   features/
+     feature-name/
+       components/     # Feature-specific components
+       hooks/         # Custom hooks
+       utils/         # Helper functions
+       types.ts      # Feature-specific types
+       __tests__/    # Tests organized by type
+   ```
+
+2. **Data Flow Pattern**
+   ```
+   API Schema → Generated Types → Service Layer → React Query → Components
+   ```
+
+3. **Testing Pyramid**
+   ```
+   Contract Tests (API Schema)
+         ↓
+   Integration Tests (Features)
+         ↓
+   Unit Tests (Components)
+   ```
+
+## API Integration Patterns
+
+1. **Schema Management**
+   - OpenAPI schema in backend/docs/api
+   - Single source of truth for API contracts
+   - Automated schema export process
+   - Type generation for frontend
+
+2. **Contract Testing**
+   - Schema-based contract validation
+   - Type-safe API integration
+   - MSW for API mocking
+   - React Query integration
+
+## Component Patterns
+
+1. **Smart/Dumb Component Split**
+   ```
+   Smart Component
+     ↓
+   Data Fetching/State
+     ↓
+   Presentational Components
+   ```
+
+2. **Composition Pattern**
+   - Higher-order components for shared logic
+   - Component composition over inheritance
+   - Context providers for shared state
+
+3. **Hook Patterns**
+   - Custom hooks for reusable logic
+   - Query hooks for data fetching
+   - Form hooks for validation
+
 ## Extension Points
 
 1. **Custom Generators**
@@ -47,17 +114,29 @@
    - Language-specific variations
    - Custom component templates
 
+4. **Frontend Extension Points**
+   - Custom form validators
+   - Component overrides
+   - API interceptors
+   - Test helpers
+
 ## Performance Patterns
 
-1. **Caching Strategies**
+1. **Frontend Optimization**
+   - React Query caching
+   - Code splitting by feature
+   - Lazy loading components
+   - Bundle size optimization
+
+2. **Backend Caching**
    - Template caching
    - Language context caching
    - Resource pooling
 
-2. **Lazy Loading**
+3. **Lazy Loading**
    - Deferred template loading
    - On-demand resource initialization
-   - Memory optimization
+   - Route-based code splitting
 
 ## Error Handling
 

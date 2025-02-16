@@ -1,36 +1,24 @@
-/// <reference types="vitest" />
-/// <reference types="vite/client" />
+import { defineConfig, mergeConfig } from 'vitest/config';
+import viteConfig from './vite.config';
 
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { fileURLToPath } from 'url';
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('/api'),
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/setupTests.ts'],
-    css: true,
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/setupTests.ts',
-      ],
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/setup.ts'],
+      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.{js,jsx,ts,tsx}'],
+        exclude: [
+          'src/**/*.d.ts',
+          'src/**/*.test.{js,jsx,ts,tsx}',
+          'src/lib/test/**',
+        ],
+      },
     },
-  },
-  json: {
-    stringify: true
-  }
-});
+  })
+);

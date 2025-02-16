@@ -9,30 +9,48 @@
    - Template system
    - Multiple renderer support
 
-2. **Frontend**
-   - Project setup with TypeScript
-   - Initial job catalog components
-   - Authentication system foundation
-   - Testing infrastructure
-
-## In Progress
-
-1. **Frontend Development**
-   - Job catalog implementation
-   - Contract testing setup
-   - Authentication system refinement
-
-2. **Backend Integration**
+2. **Backend**
    - API endpoint implementation
    - Database integration
    - Service layer development
+   - OpenAPI schema generation
+
+3. **New Frontend**
+   - Phase 1: Project Setup ✓
+     - Clean slate initialization completed
+     - Core dependencies installed
+     - Testing infrastructure configured
+     - Tailwind + DaisyUI setup
+     - Basic app structure verified
+
+## In Progress
+
+1. **New Frontend Implementation**
+   - Phase 2: Base Structure
+     - Component architecture defined
+     - Testing strategy implemented
+     - Base components pending
+     - Authentication implementation pending
+
+2. **Core System**
+   - Performance optimization
+   - Template caching
+   - Error handling improvements
+
+## Archived
+
+1. **Previous Frontend**
+   - Initial TypeScript setup
+   - Basic job catalog components
+   - Authentication foundation
+   - Testing infrastructure (archived in frontend-old)
 
 ## Known Issues
 
-1. **Frontend**
-   - Contract tests need completion
-   - Authentication edge cases
-   - Job catalog refinements needed
+1. **Frontend (To Address in New Implementation)**
+   - OpenAPI integration pending
+   - Component library development needed
+   - Authentication system implementation required
 
 2. **Core System**
    - Performance optimization needed
@@ -41,17 +59,27 @@
 
 ## Next Milestones
 
-1. **Short Term**
-   - Complete job catalog feature
-   - Finish contract testing
-   - Enhance authentication system
+1. **Immediate (1-2 weeks)**
+   - Complete Phase 2
+     - Base components
+     - OpenAPI integration
+     - Authentication system
 
-2. **Medium Term**
-   - Optimize core performance
-   - Expand language support
-   - Enhance error handling
+2. **Short Term (2-4 weeks)**
+   - Begin Phase 3
+     - Job catalog feature
+     - CV management
+     - Integration testing
+   - Component library development
 
-3. **Long Term**
+3. **Medium Term (1-2 months)**
+   - Complete Phase 3
+     - Feature completion
+     - Full test coverage
+     - Performance optimization
+
+4. **Long Term**
    - Additional output formats
    - Advanced AI features
    - Integration capabilities
+   - Performance optimization

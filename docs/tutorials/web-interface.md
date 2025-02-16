@@ -36,14 +36,25 @@ The backend uses FastAPI and follows a layered architecture:
 - Database models in `app/models/` - Define data structure
 - Service layer in `app/services/` - Implement business logic
 
-### Frontend Architecture
-The frontend is built with Astro and React:
-- Components in `src/components/` - Reusable UI elements
-- Pages in `src/pages/` - Route-specific views
-- API integration in `src/api/` - Backend communication
-- Features in `src/features/` - Feature-based modules
+### Backend API Documentation
 
-For detailed frontend architecture, see [Frontend Architecture](../explanation/frontend-architecture.md).
+The backend exposes its API contract through an OpenAPI schema located at:
+```
+web-interface/backend/docs/api/openapi.json
+```
+
+To update the API schema:
+```bash
+cd web-interface/backend
+python3 scripts/export_openapi_schema.py
+```
+
+When developing against the API:
+1. Reference the OpenAPI schema in backend/docs/api
+2. Use TypeScript type generation from the schema
+3. Implement contract tests against the schema
+
+For detailed frontend architecture and API integration, see [Frontend Architecture](../explanation/frontend-architecture.md).
 
 ## Authentication
 
@@ -59,7 +70,7 @@ For implementation details of the auth UI components, refer to the frontend arch
 
 ### Unit and Integration Tests
 
-The web interface uses Vitest for both unit and integration testing. Integration tests verify the interaction between frontend and backend components, focusing on critical flows like authentication to ensure everything works together properly.
+The web interface uses Vitest for testing, with a focus on contract testing against the OpenAPI schema. Integration tests verify the interaction between frontend and backend components, focusing on critical flows like authentication to ensure everything works together properly.
 
 To run the tests:
 

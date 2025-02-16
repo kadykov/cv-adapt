@@ -16,8 +16,8 @@ def export_schema() -> None:
     # Get schema from FastAPI app
     schema = app.openapi()
 
-    # Create target directory if it doesn't exist
-    target_dir = Path(__file__).parent.parent.parent / "frontend" / "src" / "api"
+    # Create target directory in backend/docs/api if it doesn't exist
+    target_dir = Path(__file__).parent.parent / "docs" / "api"
     target_dir.mkdir(exist_ok=True)
 
     # Write schema to file
@@ -26,6 +26,10 @@ def export_schema() -> None:
         json.dump(schema, f, indent=2)
 
     print(f"OpenAPI schema exported to {schema_path}")
+
+    # Print reminder about schema location change
+    print("\nNote: OpenAPI schema is now exported to backend/docs/api/")
+    print("Frontend applications should fetch the schema from this location during build.")
 
 if __name__ == "__main__":
     # Ensure we're in test mode to get all endpoints

@@ -243,14 +243,14 @@
         ]
       }
     },
-    "/user/detailed-cvs": {
+    "/v1/api/user/detailed-cvs": {
       "get": {
         "tags": [
           "detailed-cvs"
         ],
         "summary": "Get User Detailed Cvs",
         "description": "Get all user's detailed CVs.",
-        "operationId": "get_user_detailed_cvs_user_detailed_cvs_get",
+        "operationId": "get_user_detailed_cvs_v1_api_user_detailed_cvs_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -261,7 +261,7 @@
                     "$ref": "#/components/schemas/DetailedCVResponse"
                   },
                   "type": "array",
-                  "title": "Response Get User Detailed Cvs User Detailed Cvs Get"
+                  "title": "Response Get User Detailed Cvs V1 Api User Detailed Cvs Get"
                 }
               }
             }
@@ -274,14 +274,14 @@
         ]
       }
     },
-    "/user/detailed-cvs/{language_code}": {
+    "/v1/api/user/detailed-cvs/{language_code}": {
       "get": {
         "tags": [
           "detailed-cvs"
         ],
         "summary": "Get User Detailed Cv",
         "description": "Get user's detailed CV by language.",
-        "operationId": "get_user_detailed_cv_user_detailed_cvs__language_code__get",
+        "operationId": "get_user_detailed_cv_v1_api_user_detailed_cvs__language_code__get",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -327,7 +327,7 @@
         ],
         "summary": "Upsert User Detailed Cv",
         "description": "Create or update user's detailed CV for a language.",
-        "operationId": "upsert_user_detailed_cv_user_detailed_cvs__language_code__put",
+        "operationId": "upsert_user_detailed_cv_v1_api_user_detailed_cvs__language_code__put",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -383,7 +383,7 @@
         ],
         "summary": "Delete User Detailed Cv",
         "description": "Delete user's detailed CV by language.",
-        "operationId": "delete_user_detailed_cv_user_detailed_cvs__language_code__delete",
+        "operationId": "delete_user_detailed_cv_v1_api_user_detailed_cvs__language_code__delete",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -417,14 +417,14 @@
         }
       }
     },
-    "/user/detailed-cvs/{language_code}/primary": {
+    "/v1/api/user/detailed-cvs/{language_code}/primary": {
       "put": {
         "tags": [
           "detailed-cvs"
         ],
         "summary": "Set Primary Cv",
         "description": "Set a CV as primary.",
-        "operationId": "set_primary_cv_user_detailed_cvs__language_code__primary_put",
+        "operationId": "set_primary_cv_v1_api_user_detailed_cvs__language_code__primary_put",
         "security": [
           {
             "OAuth2PasswordBearer": []
