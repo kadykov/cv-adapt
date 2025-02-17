@@ -79,11 +79,12 @@ src/
   - [x] Mock localStorage for token management
   - [x] Test success and error cases
   - [x] Test authenticated requests
-- [ ] Set up protected routes
-  - [ ] Route protection HOC
-  - [ ] Authentication state management
-  - [ ] Loading states
-  - [ ] Redirect handling
+- [x] Set up protected routes
+  - [x] Route protection component
+  - [x] Authentication state management with React Query
+  - [x] Loading states and error handling
+  - [x] Redirect handling with path preservation
+  - [x] Comprehensive test coverage
 - [ ] Implement auth forms
   - [ ] Login form
     - [ ] Form validation
