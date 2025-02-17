@@ -85,15 +85,23 @@ src/
   - [x] Loading states and error handling
   - [x] Redirect handling with path preservation
   - [x] Comprehensive test coverage
-- [ ] Implement auth forms
-  - [ ] Login form
-    - [ ] Form validation
-    - [ ] Error handling
-    - [ ] Success redirection
-  - [ ] Registration form
-    - [ ] User input validation
-    - [ ] API integration
-    - [ ] Email verification handling
+- [x] Implement auth forms
+  - [x] Login form
+    - [x] Form validation with Zod
+    - [x] Error handling and display
+    - [x] Loading states
+    - [x] Success redirection
+    - [x] Test coverage
+  - [x] Registration form
+    - [x] Password complexity validation
+    - [x] API integration with mutations
+    - [x] Loading and error states
+    - [x] Test coverage
+  - [x] Auth dialog
+    - [x] Form switching
+    - [x] Modal handling
+    - [x] Accessibility features
+    - [x] Test coverage
   - [ ] Password reset flow
     - [ ] Request reset form
     - [ ] Reset token handling

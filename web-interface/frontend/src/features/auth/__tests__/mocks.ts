@@ -1,16 +1,15 @@
 import { http, HttpResponse } from 'msw';
-import { mockAuthResponse, mockUser } from '../test-utils.tsx';
+import { mockAuthResponse, mockUser } from '../testing';
+
+const API_PREFIX = '/api';
 
 export const authHandlers = [
-  http.post('/v1/api/auth/register', async ({ request }) => {
-    const data = (await request.json()) as { email: string; password: string };
+  http.post(`${API_PREFIX}/auth/register`, async ({ request }) => {
+    const data = await request.json() as { email: string; password: string };
     if (data?.email === 'exists@example.com') {
       return new HttpResponse(
         JSON.stringify({
-          detail: {
-            message: 'Email already registered',
-            code: 'EMAIL_EXISTS',
-          },
+          message: 'Email already registered',
         }),
         {
           status: 400,
@@ -23,16 +22,16 @@ export const authHandlers = [
     return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.post('/v1/api/auth/login', async () => {
+  http.post(`${API_PREFIX}/auth/login`, () => {
     return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.post('/v1/api/auth/refresh', async ({ request }) => {
+  http.post(`${API_PREFIX}/auth/refresh`, async ({ request }) => {
     const data = await request.json() as { token: string };
     if (data.token === 'invalid-refresh-token') {
       return new HttpResponse(
         JSON.stringify({
-          detail: { message: 'Invalid refresh token' },
+          message: 'Invalid refresh token',
         }),
         {
           status: 401,
@@ -45,12 +44,13 @@ export const authHandlers = [
     return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.get('/v1/api/users/me', async ({ request }) => {
+  http.get(`${API_PREFIX}/users/me`, ({ request }) => {
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
+    const expectedAuthHeader = `Bearer ${localStorage.getItem('accessToken')}`;
+    if (!authHeader || authHeader !== expectedAuthHeader) {
       return new HttpResponse(
         JSON.stringify({
-          detail: { message: 'Unauthorized' },
+          message: 'Unauthorized',
         }),
         {
           status: 401,

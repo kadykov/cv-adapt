@@ -5,11 +5,57 @@ The authentication system provides secure route protection and token management 
 
 ## Components
 
+### Authentication Forms
+
+#### `LoginForm` Component
+A form component that handles user login with email and password.
+
+```typescript
+<LoginForm onSuccess={() => navigate('/dashboard')} />
+```
+
+Features:
+- Email format validation
+- Required field validation
+- Loading state handling
+- Error message display
+- Type-safe form handling with Zod
+
+#### `RegisterForm` Component
+A form component that handles new user registration.
+
+```typescript
+<RegisterForm onSuccess={() => navigate('/dashboard')} />
+```
+
+Features:
+- Email format validation
+- Password complexity requirements:
+  - Minimum 8 characters
+  - At least one uppercase letter
+  - At least one number
+- Password confirmation matching
+- Real-time validation feedback
+- Loading state handling
+
+#### `AuthDialog` Component
+A modal dialog that switches between login and registration forms.
+
+```typescript
+<AuthDialog isOpen={showAuth} onClose={() => setShowAuth(false)} />
+```
+
+Features:
+- Smooth transitions between forms
+- Modal dialog with backdrop
+- Keyboard navigation support
+- Accessible design
+
 ### `useAuth` Hook
 The main authentication hook that manages token state and provides authentication utilities.
 
 ```typescript
-const { isAuthenticated, isLoading, token, clearAuth } = useAuth();
+const { isAuthenticated, isLoading, token, clearAuth, loginWithCredentials } = useAuth();
 ```
 
 #### Features
@@ -17,6 +63,7 @@ const { isAuthenticated, isLoading, token, clearAuth } = useAuth();
 - Reactive state updates with React Query
 - Type-safe authentication state
 - Async logout functionality
+- Credentials-based login
 
 #### Usage Example
 ```typescript
@@ -86,21 +133,24 @@ The authentication state is managed using React Query, which provides:
 - Token persistence
 - Type-safe state management
 
-### Route Protection
-Protected routes are implemented using React Router v6 and handle:
-- Authentication checks
-- Loading states
-- Redirect management
-- URL preservation
+### Form Validation
+Form validation is implemented using:
+- Zod schema validation
+- React Hook Form
+- Real-time error feedback
+- Customizable validation rules
 
 ### Testing
 The authentication system includes comprehensive tests:
-- Unit tests for the useAuth hook
-- Integration tests for ProtectedRoute
-- Coverage for edge cases and async operations
+- Unit tests for all components
+- Integration tests for forms and dialogs
+- Mocked API responses
+- Loading and error state coverage
+- Validation behavior tests
+- Accessibility testing
 
 ## Next Steps
-- Implement authentication forms (login, registration)
-- Add password reset functionality
-- Integrate with backend auth endpoints
 - Add refresh token handling
+- Implement password reset functionality
+- Add social authentication providers
+- Enhance security with 2FA

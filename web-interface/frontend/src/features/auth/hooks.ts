@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { RegisterRequest, authApi } from '../../lib/api/auth';
+import type { RegisterRequest } from '../../lib/api/types';
+import { authApi } from '../../lib/api/auth';
 import { ApiError } from '../../lib/api/client';
 import { useAuth } from './context';
 
@@ -51,7 +52,6 @@ export function useTokenRefresh() {
 
     // Set up token refresh interval
     const refreshInterval = setInterval(() => {
-      // You would need to implement getting the refresh token from storage
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         refreshMutation.mutate(refreshToken);
