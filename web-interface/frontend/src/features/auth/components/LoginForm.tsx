@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Field, Input, Label, Description, Button } from '@headlessui/react';
 import { useAuth } from '../context';
 
 const loginSchema = z.object({
@@ -38,50 +39,44 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email
-        </label>
-        <div className="mt-1">
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            {...register('email')}
-            className={`input input-bordered w-full ${errors.email ? 'border-red-500' : ''}`}
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600" role="alert">{errors.email.message}</p>
-          )}
-        </div>
-      </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <Field>
+        <Label className="text-sm font-medium text-gray-700">Email</Label>
+        <Input
+          type="email"
+          autoComplete="email"
+          {...register('email')}
+          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
+        />
+        {errors.email && (
+          <Description className="mt-1 text-sm text-error" role="alert">
+            {errors.email.message}
+          </Description>
+        )}
+      </Field>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
-        </label>
-        <div className="mt-1">
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            {...register('password')}
-            className={`input input-bordered w-full ${errors.password ? 'border-red-500' : ''}`}
-          />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600" role="alert">{errors.password.message}</p>
-          )}
-        </div>
-      </div>
+      <Field>
+        <Label className="text-sm font-medium text-gray-700">Password</Label>
+        <Input
+          type="password"
+          autoComplete="current-password"
+          {...register('password')}
+          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
+        />
+        {errors.password && (
+          <Description className="mt-1 text-sm text-error" role="alert">
+            {errors.password.message}
+          </Description>
+        )}
+      </Field>
 
-      <button
+      <Button
         type="submit"
         disabled={isSubmitting}
-        className={`btn btn-primary w-full ${isSubmitting ? 'loading' : ''}`}
+        className="btn btn-primary w-full data-[hover]:btn-primary-focus data-[disabled]:btn-disabled"
       >
         {isSubmitting ? 'Signing in...' : 'Sign in'}
-      </button>
+      </Button>
     </form>
   );
 }

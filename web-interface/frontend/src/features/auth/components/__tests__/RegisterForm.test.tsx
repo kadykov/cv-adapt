@@ -7,6 +7,7 @@ import { useAuth } from '../../context';
 import { useRegisterMutation } from '../../hooks';
 import { createTestQueryClient, mockAuthResponse } from '../../testing';
 import { ApiError } from '../../../../lib/api/client';
+import '@testing-library/jest-dom';
 
 // Mock hooks
 vi.mock('../../hooks', () => ({
@@ -49,17 +50,34 @@ describe('RegisterForm', () => {
     password?: string;
     confirmPassword?: string;
   }) => {
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+
     if (data.email) {
-      await user.type(screen.getByLabelText(/email/i), data.email);
+      await user.type(emailInput, data.email);
     }
     if (data.password) {
-      await user.type(screen.getByLabelText(/^password$/i), data.password);
+      await user.type(passwordInput, data.password);
     }
     if (data.confirmPassword) {
-      await user.type(screen.getByLabelText(/confirm password/i), data.confirmPassword);
+      await user.type(confirmPasswordInput, data.confirmPassword);
     }
 
+    // Test hover states
+    await user.hover(emailInput);
+    expect(emailInput).toHaveAttribute('data-hover');
+
+    await user.hover(passwordInput);
+    expect(passwordInput).toHaveAttribute('data-hover');
+
+    await user.hover(confirmPasswordInput);
+    expect(confirmPasswordInput).toHaveAttribute('data-hover');
+
     const submitButton = screen.getByRole('button', { name: /^create account$/i });
+    await user.hover(submitButton);
+    expect(submitButton).toHaveAttribute('data-hover');
+
     await user.click(submitButton);
     return submitButton;
   };
@@ -89,14 +107,9 @@ describe('RegisterForm', () => {
 
     // Wait for all error messages to appear
     await waitFor(async () => {
-      const errorMessages = await screen.findAllByText((content) => {
-        return [
-          'Password must be at least 8 characters',
-          'Password must contain at least one uppercase letter',
-          'Password must contain at least one number',
-        ].some((msg) => content.includes(msg));
-      });
+      const errorMessages = await screen.findAllByRole('alert');
       expect(errorMessages).toHaveLength(3);
+      expect(errorMessages[0]).toHaveClass('text-error');
     });
 
     expect(mockMutateAsync).not.toHaveBeenCalled();
@@ -113,7 +126,9 @@ describe('RegisterForm', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/passwords don't match/i)).toBeInTheDocument();
+      const errorMessage = screen.getByText(/passwords don't match/i);
+      expect(errorMessage).toBeInTheDocument();
+      expect(errorMessage).toHaveClass('text-error');
     });
 
     expect(mockMutateAsync).not.toHaveBeenCalled();
@@ -150,7 +165,13 @@ describe('RegisterForm', () => {
     await waitFor(() => {
       expect(submitButton).toHaveTextContent(/creating account/i);
       expect(submitButton).toBeDisabled();
+      expect(submitButton).toHaveAttribute('data-disabled');
     });
+
+    // Verify form fields are disabled during submission
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/^password$/i)).toBeDisabled();
+    expect(screen.getByLabelText(/confirm password/i)).toBeDisabled();
   });
 
   it('handles successful registration', async () => {
@@ -189,7 +210,27 @@ describe('RegisterForm', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
+      const errorMessage = screen.getByText(/email already exists/i);
+      expect(errorMessage).toBeInTheDocument();
+      expect(errorMessage).toHaveClass('text-error');
     });
+  });
+
+  it('shows focus state on inputs when focused', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+
+    await user.click(emailInput);
+    expect(emailInput).toHaveAttribute('data-focus');
+
+    await user.click(passwordInput);
+    expect(passwordInput).toHaveAttribute('data-focus');
+
+    await user.click(confirmPasswordInput);
+    expect(confirmPasswordInput).toHaveAttribute('data-focus');
   });
 });

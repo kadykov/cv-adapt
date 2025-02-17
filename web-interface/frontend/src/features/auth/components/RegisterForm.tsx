@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Field, Input, Label, Description, Button } from '@headlessui/react';
 import { useRegisterMutation } from '../hooks';
 import { useAuth } from '../context';
 import type { RegisterRequest } from '../../../lib/api/types';
@@ -84,69 +85,70 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     .map(rule => rule.message);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email
-        </label>
-        <input
-          {...register('email')}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <Field>
+        <Label className="text-sm font-medium text-gray-700">Email</Label>
+        <Input
           type="email"
-          id="email"
           autoComplete="email"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           disabled={isPending}
+          {...register('email')}
+          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600" role="alert">{errors.email.message}</p>
+          <Description className="mt-1 text-sm text-error" role="alert">
+            {errors.email.message}
+          </Description>
         )}
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
-        </label>
-        <input
-          {...register('password')}
+      <Field>
+        <Label className="text-sm font-medium text-gray-700">Password</Label>
+        <Input
           type="password"
-          id="password"
           autoComplete="new-password"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           disabled={isPending}
+          {...register('password')}
+          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
         {passwordErrors.map((error, index) => (
-          <p key={index} className="mt-1 text-sm text-red-600" role="alert">{error}</p>
+          <Description key={index} className="mt-1 text-sm text-error" role="alert">
+            {error}
+          </Description>
         ))}
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-          Confirm Password
-        </label>
-        <input
-          {...register('confirmPassword')}
+      <Field>
+        <Label className="text-sm font-medium text-gray-700">Confirm Password</Label>
+        <Input
           type="password"
-          id="confirmPassword"
           autoComplete="new-password"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           disabled={isPending}
+          {...register('confirmPassword')}
+          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-600" role="alert">{errors.confirmPassword.message}</p>
+          <Description className="mt-1 text-sm text-error" role="alert">
+            {errors.confirmPassword.message}
+          </Description>
         )}
-      </div>
+      </Field>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">{error.message}</p>
+        <Field>
+          <Description className="text-sm text-error" role="alert">
+            {error.message}
+          </Description>
+        </Field>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+        className="btn btn-primary w-full data-[hover]:btn-primary-focus data-[disabled]:btn-disabled"
       >
         {isPending ? 'Creating Account...' : 'Create Account'}
-      </button>
+      </Button>
     </form>
   );
 }

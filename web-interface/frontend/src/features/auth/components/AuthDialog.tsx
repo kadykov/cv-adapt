@@ -1,4 +1,11 @@
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  Transition,
+  TransitionChild,
+  DialogPanel,
+  DialogTitle,
+  Button,
+} from '@headlessui/react';
 import { Fragment, useState } from 'react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
@@ -16,7 +23,7 @@ export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialo
     <Transition show={isOpen} as={Fragment}>
       <Dialog onClose={onClose} className="relative z-50">
         {/* Backdrop */}
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -25,12 +32,12 @@ export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialo
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/30" />
-        </Transition.Child>
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        </TransitionChild>
 
         {/* Dialog */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
             enterFrom="opacity-0 scale-95"
@@ -39,10 +46,10 @@ export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialo
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-              <Dialog.Title className="text-xl font-semibold mb-4">
+            <DialogPanel className="modal-box w-full max-w-md bg-base-100">
+              <DialogTitle as="h3" className="text-2xl font-bold mb-6 text-primary">
                 {view === 'login' ? 'Sign In' : 'Create Account'}
-              </Dialog.Title>
+              </DialogTitle>
 
               {view === 'login' ? (
                 <LoginForm onSuccess={onClose} />
@@ -52,31 +59,33 @@ export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialo
                 }} />
               )}
 
-              <div className="mt-4 text-sm text-center">
+              <div className="divider my-6">OR</div>
+
+              <div className="text-sm text-center text-base-content">
                 {view === 'login' ? (
                   <p>
                     Don't have an account?{' '}
-                    <button
+                    <Button
                       onClick={() => setView('register')}
-                      className="text-primary hover:underline"
+                      className="btn btn-link btn-sm px-2 min-h-0 h-auto data-[hover]:underline"
                     >
                       Sign up
-                    </button>
+                    </Button>
                   </p>
                 ) : (
                   <p>
                     Already have an account?{' '}
-                    <button
+                    <Button
                       onClick={() => setView('login')}
-                      className="text-primary hover:underline"
+                      className="btn btn-link btn-sm px-2 min-h-0 h-auto data-[hover]:underline"
                     >
                       Sign in
-                    </button>
+                    </Button>
                   </p>
                 )}
               </div>
-            </Dialog.Panel>
-          </Transition.Child>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </Dialog>
     </Transition>

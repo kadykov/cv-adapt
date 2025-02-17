@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from '../../context';
 import { LoginForm } from '../LoginForm';
 import { createTestQueryClient } from '../../testing';
+import '@testing-library/jest-dom';
 
 // Mock useAuth hook
 vi.mock('../../context', () => ({
@@ -135,6 +136,25 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(mockOnSuccess).not.toHaveBeenCalled();
       expect(submitButton).not.toBeDisabled();
+      expect(submitButton).not.toHaveAttribute('data-disabled');
     });
+  });
+
+  it('shows hover styles on form elements', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+    await user.hover(emailInput);
+    expect(emailInput).toHaveAttribute('data-hover');
+
+    await user.hover(passwordInput);
+    expect(passwordInput).toHaveAttribute('data-hover');
+
+    await user.hover(submitButton);
+    expect(submitButton).toHaveAttribute('data-hover');
   });
 });
