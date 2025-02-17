@@ -110,20 +110,51 @@ src/
 ## Phase 3: Feature Implementation
 
 ### Job Catalog Feature
+
+#### Completed Data Layer
+- [x] API Types and Functions
+  ```typescript
+  // types.ts
+  JobDescriptionCreate
+  JobDescriptionUpdate
+  JobDescriptionResponse
+  ```
+
+- [x] API Implementation
+  ```typescript
+  // jobsApi.ts
+  getJobs(languageCode?: string)
+  getJob(id: number)
+  createJob(data: JobDescriptionCreate)
+  updateJob(id: number, data: JobDescriptionUpdate)
+  deleteJob(id: number)
+  ```
+
+- [x] React Query Hooks
+  ```typescript
+  // hooks/
+  useJobs.ts         - List jobs with language filtering
+  useJob.ts          - Single job fetching
+  useJobMutations.ts - CRUD operations with cache management
+  ```
+
+- [x] Comprehensive Tests
+  ```typescript
+  // __tests__/
+  jobsApi.test.ts    - API function tests with MSW
+  jobHooks.test.tsx  - Hook tests with React Query
+  ```
+
+#### UI Components (Next Steps)
 ```
 features/job-catalog/
   components/
-    JobList.tsx
-    JobDetail.tsx
-    JobForm.tsx
-  hooks/
-    useJobs.ts
-    useJobMutations.ts
-  types.ts
-  utils.ts
+    JobList.tsx      # Grid layout with job cards
+    JobDetail.tsx    # Full job information display
+    JobForm.tsx      # Create/Edit form with validation
   __tests__/
     unit/
-    integration/
+    integration/     # User flow testing
 ```
 
 ### CV Management Feature

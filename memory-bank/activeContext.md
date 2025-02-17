@@ -2,13 +2,21 @@
 
 ## Current Focus
 
-1. **New Frontend Implementation**
-   - Phase 1 completed: Modern React + TypeScript foundation established
-   - Testing infrastructure with Vitest + RTL + MSW ready
-   - Project structure and code organization defined
-   - Moving into Phase 2: Base implementation
+1. **Job Catalog Implementation**
+   - ✓ API integration with OpenAPI types completed
+   - ✓ React Query hooks implemented with tests
+   - Next: UI Components Development
+     - Grid layout with job cards (JobList)
+     - Create/Edit forms with validation
+     - Detailed job view with actions
 
-2. **Core Functionality**
+2. **Feature Progress**
+   - Phase 2 Authentication completed (Password Reset deferred)
+   - Phase 3: Job Catalog feature in progress
+     - Data layer completed
+     - UI layer planning
+
+3. **Core Functionality**
    - CV generation pipeline
    - Component generation services
    - Language context management
@@ -36,21 +44,30 @@
 
 ## Next Steps
 
-1. **Phase 2: Base Implementation**
-   - Create base component library
-   - Implement authentication system
-   - Set up OpenAPI type generation
-   - Develop core layouts and navigation
+1. **Job Catalog UI Implementation**
+   - Implement JobList component
+     - Responsive grid using DaisyUI
+     - Language filtering
+     - Job card design
+   - Create JobForm component
+     - Zod validation schema
+     - Form handling with react-hook-form
+     - Create/Edit modes
+   - Build JobDetail component
+     - Full job information display
+     - Edit/Delete actions
+     - Loading states
 
 2. **Testing Enhancement**
-   - Add component testing utilities
-   - Implement common test fixtures
-   - Set up contract testing with OpenAPI
+   - API function tests with MSW
+   - Hook testing utilities
+   - Integration test scenarios
+   - Contract testing with OpenAPI
 
-3. **Phase 3 Preparation**
-   - Plan job catalog implementation
-   - Design CV management interface
-   - Define integration test strategy
+3. **Phase 3 Next Features**
+   - Plan CV management interface
+   - Design integration test strategy
+   - Expand component library
 
 ## Active Decisions
 

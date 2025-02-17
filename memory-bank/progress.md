@@ -33,15 +33,27 @@
 ## In Progress
 
 1. **New Frontend Implementation**
-   - Phase 2: Authentication (Remaining)
-     - Login form implementation
-     - Registration form
-     - Password reset flow
-     - Backend integration
-   - Phase 3: Base Structure
-     - Component architecture defined
-     - Testing strategy implemented
-     - Base components pending
+   - Phase 2: Authentication
+     - ✓ Login form implementation
+     - ✓ Registration form
+     - ⏳ Password reset flow (deferred)
+   - Phase 3: Job Catalog Feature
+     - ✓ API Types & Functions
+       - API client implementation
+       - Error handling
+       - Response types
+     - ✓ Data Management
+       - React Query hooks
+       - Cache invalidation
+       - Language support
+     - ✓ Testing
+       - MSW handlers
+       - Hook tests
+       - Error scenarios
+     - ⏳ UI Components (Next)
+       - JobList component
+       - JobForm component
+       - JobDetail component
 
 2. **Core System**
    - Performance optimization
@@ -71,23 +83,26 @@
 ## Next Milestones
 
 1. **Immediate (1-2 weeks)**
-   - Complete Authentication System
-     - Implement auth forms
-     - OpenAPI integration
-     - Backend connectivity
+   - Job Catalog UI Components
+     - Grid layout with filtering
+     - Form validation
+     - Detail view with actions
+     - Integration tests
+     - Accessibility features
 
 2. **Short Term (2-4 weeks)**
-   - Begin Phase 3
-     - Job catalog feature
-     - CV management
-     - Integration testing
-   - Component library development
+   - Begin CV Management Feature
+     - API integration
+     - Data management hooks
+     - Core UI components
+     - Tests and documentation
 
 3. **Medium Term (1-2 months)**
    - Complete Phase 3
      - Feature completion
      - Full test coverage
      - Performance optimization
+     - Documentation refinement
 
 4. **Long Term**
    - Additional output formats
