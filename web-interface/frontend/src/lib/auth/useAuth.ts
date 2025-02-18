@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export const AUTH_KEYS = {
   token: ['auth', 'token'] as const,
@@ -21,21 +21,22 @@ export const useAuth = (): AuthState => {
   const queryClient = useQueryClient();
   const initialToken = localStorage.getItem('auth_token');
   const [isCleared, setIsCleared] = useState(false);
-  const initialTokenRef = useRef<string | null>(initialToken);
 
-  useEffect(() => {
-    // Set initial query data
-    queryClient.setQueryData(AUTH_KEYS.token, initialTokenRef.current);
-  }, [queryClient]);
+  // Initialize query data without effect
+  const initialized = useRef(false);
+  if (!initialized.current) {
+    queryClient.setQueryData(AUTH_KEYS.token, initialToken);
+    initialized.current = true;
+  }
 
-  const { data: token, isLoading } = useQuery<string | null>({
+  const { data: token, isLoading } = useQuery({
     queryKey: AUTH_KEYS.token,
-    queryFn: () => {
-      const storedToken = localStorage.getItem('auth_token');
-      return storedToken;
-    },
+    queryFn: (): string | null => localStorage.getItem('auth_token'),
+    enabled: initialized.current,
+    // Ensure we always have initial data
+    placeholderData: initialToken,
+    initialData: initialToken,
     // Keep token cached indefinitely until explicitly invalidated
-    initialData: initialTokenRef.current,
     staleTime: Infinity,
     gcTime: Infinity,
     refetchOnWindowFocus: false,

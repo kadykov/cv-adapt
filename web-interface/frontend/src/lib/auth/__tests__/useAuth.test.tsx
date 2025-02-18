@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAuth, AUTH_KEYS } from '../useAuth';
 
@@ -51,12 +51,19 @@ describe('useAuth', () => {
   it('should return initial state with no token', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.token).toBeNull();
-    expect(result.current.isLoading).toBe(false);
-    // clearAuth should be an async function
     expect(result.current.clearAuth).toBeInstanceOf(Function);
-    expect(result.current.clearAuth()).toBeInstanceOf(Promise);
+
+    await waitFor(async () => {
+      const clearResult = result.current.clearAuth();
+      expect(clearResult).toBeInstanceOf(Promise);
+      await expect(clearResult).resolves.toBeUndefined();
+    });
   });
 
   it('should detect token in localStorage', async () => {
@@ -65,6 +72,10 @@ describe('useAuth', () => {
     mockStorage['auth_token'] = token;
 
     const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.token).toBe(token);
@@ -77,17 +88,20 @@ describe('useAuth', () => {
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.token).toBe(token);
 
-    await act(async () => {
+    // Clear auth and wait for state to update
+    await waitFor(async () => {
       await result.current.clearAuth();
-      // Wait for query to settle
-      await queryClient.invalidateQueries({ queryKey: AUTH_KEYS.token });
+      expect(result.current.token).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
     });
 
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.token).toBeNull();
     expect(mockStorage['auth_token']).toBeUndefined();
     expect(queryClient.getQueryData(AUTH_KEYS.token)).toBeNull();
   });
