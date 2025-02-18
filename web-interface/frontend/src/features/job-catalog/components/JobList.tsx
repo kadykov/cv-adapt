@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Listbox } from '@headlessui/react';
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
 import { JobCard } from './JobCard';
 import { useJobs } from '../hooks/useJobs';
 
@@ -40,7 +40,7 @@ export function JobList({ onJobSelect }: JobListProps) {
       <div className="flex justify-end">
         <Listbox value={selectedLang} onChange={setSelectedLang}>
           <div className="relative w-48">
-            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-base-200 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-75 focus-visible:ring-offset-2">
+            <ListboxButton className="relative w-full cursor-default rounded-lg bg-base-200 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-75 focus-visible:ring-offset-2">
               <span className="block truncate">{selectedLang.name}</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <svg
@@ -57,15 +57,15 @@ export function JobList({ onJobSelect }: JobListProps) {
                   />
                 </svg>
               </span>
-            </Listbox.Button>
-            <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            </ListboxButton>
+            <ListboxOptions className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
               {LANGUAGE_OPTIONS.map((lang) => (
-                <Listbox.Option
+                <ListboxOption
                   key={lang.id}
                   value={lang}
-                  className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                      active ? 'bg-primary/10 text-base-content' : 'text-base-content/70'
+                  className={({ selected }) =>
+                    `relative cursor-default select-none py-2 pl-10 pr-4 hover:bg-primary/10 ${
+                      selected ? 'text-base-content' : 'text-base-content/70'
                     }`
                   }
                 >
@@ -92,9 +92,9 @@ export function JobList({ onJobSelect }: JobListProps) {
                       )}
                     </>
                   )}
-                </Listbox.Option>
+                </ListboxOption>
               ))}
-            </Listbox.Options>
+            </ListboxOptions>
           </div>
         </Listbox>
       </div>
