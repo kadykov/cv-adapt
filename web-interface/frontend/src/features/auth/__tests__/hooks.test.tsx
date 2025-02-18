@@ -1,6 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { setupServer } from 'msw/node';
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   mockUser,
   mockAuthResponse,
@@ -9,9 +8,6 @@ import {
 } from '../testing';
 import { useRegisterMutation, useProfile, useRefreshToken } from '../hooks';
 import { ApiError } from '../../../lib/api/client';
-import { authHandlers } from './mocks';
-
-const server = setupServer(...authHandlers);
 
 // Mock auth context
 vi.mock('../context', () => ({
@@ -25,13 +21,10 @@ vi.mock('../context', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
-  server.resetHandlers();
   localStorage.clear();
   vi.clearAllMocks();
 });
-afterAll(() => server.close());
 
 describe('Auth Hooks', () => {
   describe('useRegisterMutation', () => {

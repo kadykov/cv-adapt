@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
+import { server } from '../../../../lib/test/server';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useJobs } from '../useJobs';
 import { useJob } from '../useJob';
@@ -10,42 +10,13 @@ import type { JobDescriptionResponse } from '../../api/types';
 
 const mockJob: JobDescriptionResponse = {
   id: 1,
-  title: 'Software Engineer',
-  description: 'Full-stack developer role',
+  title: 'Frontend Developer',
+  description: 'Frontend development role',
   language_code: 'en',
   created_at: '2024-02-17T22:00:00Z',
   updated_at: null,
 };
 
-const server = setupServer(
-  http.get('/v1/api/jobs', ({ request }) => {
-    const url = new URL(request.url);
-    const languageCode = url.searchParams.get('language_code') || 'en';
-    return HttpResponse.json([{ ...mockJob, language_code: languageCode }]);
-  }),
-
-  http.get('/v1/api/jobs/:id', () => {
-    return HttpResponse.json(mockJob);
-  }),
-
-  http.post('/v1/api/jobs', async ({ request }) => {
-    const body = await request.json() as JobDescriptionResponse;
-    return HttpResponse.json({ ...mockJob, ...body });
-  }),
-
-  http.put('/v1/api/jobs/:id', async ({ request }) => {
-    const body = await request.json() as JobDescriptionResponse;
-    return HttpResponse.json({ ...mockJob, ...body });
-  }),
-
-  http.delete('/v1/api/jobs/:id', () => {
-    return new HttpResponse(null, { status: 204 });
-  })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 // Wrapper component with React Query provider
 function createWrapper() {

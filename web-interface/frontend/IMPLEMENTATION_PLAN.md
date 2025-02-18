@@ -52,6 +52,56 @@
 - [x] Set up MSW for API mocking
 - [x] Create test utilities and fixtures
 - [x] Configure contract testing
+- [x] Centralize test server and handlers
+  - [x] Create unified MSW server setup
+  - [x] Standardize API paths (/v1/api)
+  - [x] Centralize mock data
+  - [x] Implement request debugging
+
+### Testing Strategy
+
+### Unit Tests
+- Hook tests with test-utils
+  - Mock providers (Auth, Query)
+  - Mock localStorage
+  - Mock API responses
+  - Mock data consistency
+- Component tests
+  - Role-based queries
+  - Accessibility checks
+  - Loading states verification
+  - Error state handling
+- Utility function tests
+
+### Integration Tests
+- Feature-level tests with MSW
+  - Standardized API paths (/v1/api)
+  - Centralized handlers
+  - Language-aware testing
+  - Mock data consistency
+- User flow tests
+  - Language switching
+  - Error handling
+  - Loading states
+- API interaction tests
+  - Success cases
+  - Error handling
+  - Token management
+
+### Contract Tests
+- OpenAPI schema validation
+- Response type checking
+- Error handling tests
+- API path consistency
+
+### Best Practices
+- [x] Use centralized MSW handlers
+- [x] Maintain consistent API paths
+- [x] Share mock data between tests
+- [x] Test component accessibility
+- [x] Verify loading states
+- [x] Test error scenarios
+- [x] Implement request debugging
 
 ## Phase 2: Authentication Implementation
 
@@ -149,13 +199,51 @@ src/
 ```
 features/job-catalog/
   components/
-    JobList.tsx      # Grid layout with job cards
+    JobList.tsx      # ✓ Grid layout with job cards and language filtering
+    JobCard.tsx      # ✓ Individual job display component
     JobDetail.tsx    # Full job information display
     JobForm.tsx      # Create/Edit form with validation
   __tests__/
-    unit/
-    integration/     # User flow testing
+    JobCard.test.tsx # ✓ Component unit tests
+    JobList.test.tsx # ✓ Integration tests with MSW
 ```
+
+Components Implemented:
+- [x] JobCard
+  - [x] Responsive card design with DaisyUI
+  - [x] Accessibility features (keyboard navigation, ARIA roles)
+  - [x] Language badge display
+  - [x] Timestamp formatting
+  - [x] Unit tests
+
+- [x] JobList
+  - [x] Grid layout with responsiveness
+  - [x] Language filtering with Headless UI
+  - [x] Loading states
+  - [x] Error handling
+  - [x] Empty state
+  - [x] Integration tests with MSW
+  - [x] React Query integration
+
+- [ ] JobDetail (Next)
+  - [ ] Full information display
+  - [ ] Edit/Delete actions
+  - [ ] Loading states
+  - [ ] Error handling
+
+- [ ] JobForm (Upcoming)
+  - [ ] Create/Edit modes
+  - [ ] Form validation
+  - [ ] API integration
+  - [ ] Error handling
+
+Supporting Infrastructure Added:
+- [x] Base UI components
+  - [x] Badge component for labels
+- [x] Test utilities
+  - [x] Custom render with providers
+  - [x] MSW server setup
+  - [x] API handlers
 
 ### CV Management Feature
 ```

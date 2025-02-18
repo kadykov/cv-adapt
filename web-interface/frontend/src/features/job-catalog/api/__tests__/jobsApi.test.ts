@@ -1,62 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
-import type {
-  JobDescriptionResponse,
-  JobDescriptionCreate,
-  JobDescriptionUpdate
-} from '../types';
+import { server } from '../../../../lib/test/server';
+import type { JobDescriptionResponse } from '../types';
 import { getJobs, getJob, createJob, updateJob, deleteJob } from '../jobsApi';
 
 const mockJob: JobDescriptionResponse = {
   id: 1,
-  title: 'Software Engineer',
-  description: 'Full-stack developer role',
+  title: 'Frontend Developer',
+  description: 'Frontend development role',
   language_code: 'en',
   created_at: '2024-02-17T22:00:00Z',
   updated_at: null,
 };
 
-const server = setupServer(
-  // GET /jobs
-  http.get('/v1/api/jobs', ({ request }) => {
-    const url = new URL(request.url);
-    const languageCode = url.searchParams.get('language_code') || 'en';
-    return HttpResponse.json([{ ...mockJob, language_code: languageCode }]);
-  }),
-
-  // GET /jobs/:id
-  http.get('/v1/api/jobs/:id', () => {
-    return HttpResponse.json(mockJob);
-  }),
-
-  // POST /jobs
-  http.post('/v1/api/jobs', async ({ request }) => {
-    const body = await request.json() as JobDescriptionCreate;
-    return HttpResponse.json({
-      ...mockJob,
-      ...body,
-    });
-  }),
-
-  // PUT /jobs/:id
-  http.put('/v1/api/jobs/:id', async ({ request }) => {
-    const body = await request.json() as JobDescriptionUpdate;
-    return HttpResponse.json({
-      ...mockJob,
-      ...body,
-    });
-  }),
-
-  // DELETE /jobs/:id
-  http.delete('/v1/api/jobs/:id', () => {
-    return new HttpResponse(null, { status: 204 });
-  })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 describe('jobsApi', () => {
   describe('getJobs', () => {
