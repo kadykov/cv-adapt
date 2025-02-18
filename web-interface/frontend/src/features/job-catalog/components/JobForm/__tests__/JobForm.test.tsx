@@ -51,38 +51,12 @@ describe('JobForm', () => {
       await waitFor(() => {
         expect(screen.getByText(/title is required/i)).toBeInTheDocument();
         expect(screen.getByText(/description is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/language code must be at least 2 characters long/i)).toBeInTheDocument();
+        expect(screen.getByText(/please select a valid language/i)).toBeInTheDocument();
       });
 
       expect(mockCreateJob.mutateAsync).not.toHaveBeenCalled();
     });
 
-    it('validates language code length', async () => {
-      renderForm();
-      const user = userEvent.setup();
-
-      // Fill form with invalid language code (too short)
-      await user.type(screen.getByLabelText(/title/i), 'Software Engineer');
-      await user.type(screen.getByLabelText(/description/i), 'Job description here');
-      await user.type(screen.getByLabelText(/language code/i), 'e');
-
-      // Click submit to trigger validation
-      const submitButton = screen.getByRole('button', { name: /create job/i });
-      await user.click(submitButton);
-
-      // First check if there are any validation errors
-      await waitFor(() => {
-        expect(screen.getAllByRole('alert')).not.toHaveLength(0);
-      });
-
-      // Then check the specific error message
-      const errorMessages = screen.getAllByRole('alert').map(el => el.textContent);
-      console.log('Error messages:', errorMessages); // Debug line
-      // Assert the exact error message for language code length
-      expect(errorMessages).toContain("Language code must be at least 2 characters long");
-      // Finally verify submission was prevented
-      expect(mockCreateJob.mutateAsync).not.toHaveBeenCalled();
-    });
 
     it('handles submission error and shows error message', async () => {
       const error = new Error('Failed to create job');

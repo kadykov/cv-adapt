@@ -2,7 +2,19 @@
 
 ## Current Focus
 
-1. **Job Catalog Implementation**
+1. **Language System Improvements**
+   - Centralizing frontend language handling
+     - Moving from simple validation to enum-based system
+     - Aligning with backend LanguageCode standards
+     - Creating unified language configuration
+   - Form validation enhancements
+     - Updating JobForm validation
+     - Implementing type-safe language selection
+   - Testing and documentation
+     - Adding tests for language utilities
+     - Documenting language system usage
+
+2. **Job Catalog Implementation**
    - ✓ API integration with OpenAPI types completed
    - ✓ React Query hooks implemented with tests
    - ✓ UI Components Development
@@ -95,7 +107,13 @@
 
 ## Active Decisions
 
-1. **Component Architecture**
+1. **Language System Architecture**
+   - Centralized language type system
+   - Enum-based validation approach
+   - Alignment with backend language codes
+   - Type-safe language selection components
+
+2. **Component Architecture**
    - Continued feature-based organization
    - Shared components in lib directory
    - Strong accessibility focus

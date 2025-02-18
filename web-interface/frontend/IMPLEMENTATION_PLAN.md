@@ -159,6 +159,17 @@ src/
 
 ## Phase 3: Feature Implementation
 
+### Language System Improvements
+
+- [x] Centralize frontend language handling
+  - [x] Create language types and configs
+  - [x] Implement language utilities
+  - [x] Update form validations to use centralized system
+- [x] Improve type safety
+  - [x] Add proper enum-based validation
+  - [x] Align with backend language codes
+  - [x] Update affected components
+
 ### Job Catalog Feature
 
 #### Completed Data Layer

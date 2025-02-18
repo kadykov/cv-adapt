@@ -37,7 +37,20 @@
 
 ## Frontend Architecture Patterns
 
-1. **Feature-Based Organization**
+1. **Language Management**
+   ```
+   lib/language/
+     types.ts       # Language enums and interfaces
+     config.ts      # Language configurations
+     utils.ts       # Language utility functions
+     hooks/         # Language-related hooks
+   ```
+   - Centralized language type system
+   - Enum-based language code validation
+   - Type-safe language selection
+   - Shared language utilities
+
+2. **Feature-Based Organization**
    ```
    features/
      feature-name/
@@ -78,7 +91,19 @@
 
 ## Component Patterns
 
-1. **Smart/Dumb Component Split**
+1. **Language-Aware Components**
+   ```
+   Language-Aware Component
+     ↓
+   Language Context/Config
+     ↓
+   Typed Language Selection
+   ```
+   - Enum-based language selection
+   - Type-safe language code handling
+   - Centralized language validation
+
+2. **Smart/Dumb Component Split**
    ```
    Smart Component
      ↓
@@ -140,7 +165,13 @@
 
 ## Error Handling
 
-1. **Validation Layer**
+1. **Language Validation**
+   - Enum-based validation
+   - Type-safe language code checks
+   - Consistent error messages
+   - Cross-component validation rules
+
+2. **Validation Layer**
    - Pydantic model validation
    - Language validation
    - Template validation
