@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../../lib/test/server';
-import type { JobDescriptionResponse } from '../types';
+import type { JobDescriptionResponse } from '../../../../lib/api/generated-types';
 import { getJobs, getJob, createJob, updateJob, deleteJob } from '../jobsApi';
 
 const mockJob: JobDescriptionResponse = {

@@ -3,7 +3,7 @@ import type {
   JobDescriptionUpdate,
   JobDescriptionResponse,
   JobsResponse
-} from './types';
+} from '../../../lib/api/generated-types';
 
 const BASE_URL = '/v1/api/jobs';
 

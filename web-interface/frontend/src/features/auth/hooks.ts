@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { RegisterRequest } from '../../lib/api/types';
+import type { RegisterRequest } from '../../lib/api/generated-types';
 import { authApi } from '../../lib/api/auth';
 import { ApiError } from '../../lib/api/client';
 import { useAuth } from './context';

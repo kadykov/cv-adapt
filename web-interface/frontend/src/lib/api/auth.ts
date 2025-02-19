@@ -1,5 +1,4 @@
-import type { AuthResponse, LoginRequest, RegisterRequest } from './types';
-import type { User } from './types';
+import type { AuthResponse, LoginRequest, RegisterRequest, User } from './generated-types';
 import { client } from './client';
 
 export const authApi = {

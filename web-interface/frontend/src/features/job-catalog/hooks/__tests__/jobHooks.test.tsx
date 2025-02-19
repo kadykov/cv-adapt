@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useJobs } from '../useJobs';
 import { useJob } from '../useJob';
 import { useJobMutations } from '../useJobMutations';
-import type { JobDescriptionResponse } from '../../api/types';
+import type { JobDescriptionResponse } from '../../../../lib/api/generated-types';
 
 const mockJob: JobDescriptionResponse = {
   id: 1,

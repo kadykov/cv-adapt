@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import type { JobDescriptionResponse } from '../api/types';
+import type { JobDescriptionResponse } from '../../../lib/api/generated-types';
 import { Badge } from '../../../lib/components/Badge';
 
 interface JobCardProps {

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getJob } from '../api/jobsApi';
-import type { JobDescriptionResponse } from '../api/types';
+import type { JobDescriptionResponse } from '../../../lib/api/generated-types';
 
 export const JOB_QUERY_KEY = ['job'] as const;
 

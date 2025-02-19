@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import type { UseMutationResult, UseMutateFunction, UseMutateAsyncFunction } from '@tanstack/react-query';
-import type { AuthResponse } from '../types';
+import type { AuthResponse } from '../../../lib/api/generated-types';
 import { ApiError } from '../../../lib/api/client';
 
 export type RegisterVariables = {

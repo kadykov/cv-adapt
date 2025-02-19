@@ -2,7 +2,14 @@
 
 ## Current Focus
 
-1. **Language System Improvements**
+1. **Type System Cleanup**
+   - ✓ Added generate-api-types to pretest script
+   - ✓ Removed duplicate API type definitions
+   - ✓ Type generation automated in test workflow
+   - ✓ Preserved frontend-specific type configs (language types)
+   - ✓ Ensured single source of truth from OpenAPI schema
+
+2. **Language System Improvements**
    - Centralizing frontend language handling
      - Moving from simple validation to enum-based system
      - Aligning with backend LanguageCode standards
@@ -40,7 +47,13 @@
 
 ## Recent Changes
 
-1. **Job Catalog Component Implementation**
+1. **API Type System Enhancement**
+   - ✓ Automated type generation in test workflow
+   - ✓ Removed redundant manual type definitions
+   - ✓ Preserved frontend-specific language configurations
+   - ✓ Improved development workflow with pretest integration
+
+2. **Job Catalog Component Implementation**
    - JobCard component created
      - Responsive design with DaisyUI
      - Accessibility features
@@ -54,12 +67,6 @@
      - Integration tests added
      - Custom test utilities created
 
-2. **Reusable Components**
-   - Badge component implemented
-     - DaisyUI styling integration
-     - Variant support
-     - Accessibility features
-
 3. **Testing Infrastructure**
    - Custom render utilities with providers
    - Centralized MSW handlers in src/lib/test
@@ -69,28 +76,7 @@
 
 ## Next Steps
 
-1. **Job Catalog Advanced UI**
-   - ✓ Implement JobDetail component
-     - ✓ Full information display
-     - ✓ Edit/Delete actions
-     - ✓ Loading states
-     - ✓ Accessibility features
-   - ✓ Create JobForm component
-     - ✓ Complete component implementation
-       - ✓ JobForm/JobForm.tsx with Headless UI
-       - ✓ Form validation with Zod
-       - ✓ Create/Edit modes
-     - ✓ API Integration
-       - ✓ useJobMutations for CRUD
-       - ✓ Loading states
-       - ✓ Error handling
-     - ✓ Full test coverage
-       - ✓ Validation tests
-       - ✓ API interaction tests
-       - ✓ UI states
-       - ✓ Accessibility testing
-
-2. **Testing Enhancement**
+1. **Testing Enhancement**
    - ✓ Centralized test infrastructure
    - ✓ API path consistency
    - ✓ Mock data alignment
@@ -99,7 +85,7 @@
    - Error boundary testing
    - E2E test planning
 
-3. **Documentation Updates**
+2. **Documentation Updates**
    - Component usage guidelines
    - Test pattern documentation
    - API integration examples

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createJob, updateJob, deleteJob } from '../api/jobsApi';
-import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../api/types';
+import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../../lib/api/generated-types';
 import { JOB_QUERY_KEY } from './useJob';
 import { JOBS_QUERY_KEY } from './useJobs';
 

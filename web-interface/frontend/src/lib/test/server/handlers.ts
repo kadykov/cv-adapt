@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { JobsResponse } from '../../../features/job-catalog/api/types';
+import type { JobsResponse, JobDescriptionResponse } from '../../api/generated-types';
 
 const mockJobs: JobsResponse = [
   {
@@ -27,7 +27,7 @@ export const handlers = [
 
     if (languageCode) {
       return HttpResponse.json(
-        mockJobs.filter((job) => job.language_code === languageCode)
+        mockJobs.filter((job: JobDescriptionResponse) => job.language_code === languageCode)
       );
     }
 
@@ -35,7 +35,7 @@ export const handlers = [
   }),
 
   http.get('/v1/api/jobs/:id', ({ params }) => {
-    const job = mockJobs.find((j) => j.id === Number(params.id));
+    const job = mockJobs.find((job: JobDescriptionResponse) => job.id === Number(params.id));
     if (job) {
       return HttpResponse.json(job);
     }

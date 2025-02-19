@@ -1,6 +1,6 @@
 import { createContext, useContext, useCallback, ReactNode, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { AuthResponse } from '../../lib/api/types';
+import type { AuthResponse } from '../../lib/api/generated-types';
 import { authApi } from '../../lib/api/auth';
 
 export interface AuthContextType {
@@ -29,7 +29,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const loginWithCredentials = useCallback(async (credentials: { email: string; password: string }) => {
-    const response = await authApi.login(credentials);
+    const response = await authApi.login({
+      username: credentials.email,
+      password: credentials.password,
+      scope: '',
+      grant_type: 'password'
+    });
     login(response);
   }, [login]);
 

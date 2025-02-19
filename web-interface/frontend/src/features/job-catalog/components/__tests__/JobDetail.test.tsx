@@ -5,7 +5,7 @@ import type {
   UseQueryResult,
   UseMutationResult,
 } from '@tanstack/react-query';
-import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../api/types';
+import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../../../lib/api/generated-types';
 import { JobDetail } from '../JobDetail';
 import { createTestWrapper } from '../../../../lib/test-utils';
 import { useJob } from '../../hooks/useJob';

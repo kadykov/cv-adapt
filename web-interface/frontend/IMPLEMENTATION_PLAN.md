@@ -46,6 +46,11 @@
 - [x] Create base API client configuration
 - [x] Implement API error handling utilities
 - [x] Set up React Query defaults
+- [x] Type System Cleanup
+  - [x] Remove manual type definitions
+  - [x] Update imports to use generated types
+  - [x] Add type generation to pretest script
+  - [x] Update documentation for type generation workflow
 
 ### Testing Infrastructure
 - [x] Configure Vitest with React Testing Library

@@ -1,5 +1,5 @@
 import type { UseMutationResult } from '@tanstack/react-query';
-import type { AuthResponse } from '../api/auth';
+import type { AuthResponse } from '../api/generated-types';
 import type { ApiError } from '../api/client';
 
 export type MockAuthMutation = Pick<

@@ -1,6 +1,6 @@
-import { UseMutationResult } from '@tanstack/react-query';
-import { AuthResponse, RegisterRequest } from '../../lib/api/auth';
-import { ApiError } from '../../lib/api/client';
+import type { UseMutationResult } from '@tanstack/react-query';
+import type { AuthResponse, RegisterRequest } from '../../../lib/api/generated-types';
+import { ApiError } from '../../../lib/api/client';
 
 type RegisterMutationResult = UseMutationResult<
   AuthResponse,
@@ -17,21 +17,19 @@ export const createMockMutation = (overrides?: Partial<RegisterMutationResult>):
   failureCount: 0,
   failureReason: null,
   isError: false,
-  isIdle: true,
-  isLoading: false,
-  isPending: false,
   isPaused: false,
   isSuccess: false,
   reset: jest.fn(),
   status: 'idle',
   variables: undefined,
   context: undefined,
+  isIdle: false,
+  isPending: false,
   ...overrides,
-});
+} as RegisterMutationResult);
 
 export const createLoadingMutation = (): RegisterMutationResult => createMockMutation({
   status: 'pending',
-  isLoading: true,
   isIdle: false,
   isPending: true,
 });

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { mockAuthResponse, mockUser } from '../../../features/auth/testing/fixtures';
-import type { JobDescriptionResponse } from '../../../features/job-catalog/api/types';
+import type { JobDescriptionResponse } from '../../api/generated-types';
 
 const API_PREFIX = '/v1/api';
 
