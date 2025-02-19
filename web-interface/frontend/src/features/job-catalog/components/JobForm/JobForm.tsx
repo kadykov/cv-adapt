@@ -1,8 +1,24 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Field, Input, Label, Description, Button } from '@headlessui/react';
+import {
+  Field,
+  Input,
+  Label,
+  Description,
+  Button,
+  Listbox,
+} from '@headlessui/react';
+import { ChevronUpDownIcon, CheckIcon } from '@heroicons/react/20/solid';
+import { getLanguageOptions } from '@/lib/language/config';
 import { useJobMutations } from '../../hooks/useJobMutations';
-import { jobFormSchema, type JobFormData } from './jobFormSchema';
+import {
+  jobFormSchema,
+  type JobFormData,
+  type JobFormInput,
+  type FormResolver,
+} from './jobFormSchema';
+import { LanguageCode } from '@/lib/language/types';
 
 interface JobFormProps {
   mode: 'create' | 'edit';
@@ -20,38 +36,55 @@ export function JobForm({
   onCancel,
 }: JobFormProps) {
   const { createJob, updateJob } = useJobMutations();
+  const languages = getLanguageOptions();
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode | null>(
+    initialData?.language_code ?? null,
+  );
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
-  } = useForm<JobFormData>({
-    resolver: zodResolver(jobFormSchema),
+    setValue,
+  } = useForm<JobFormInput>({
+    resolver: zodResolver(jobFormSchema) as FormResolver,
     mode: 'onChange',
-    reValidateMode: 'onChange',
-    delayError: 0,
-    criteriaMode: 'all',
-    defaultValues: initialData,
+    defaultValues: {
+      title: initialData?.title ?? '',
+      description: initialData?.description ?? '',
+      language_code: initialData?.language_code ?? null,
+    },
   });
 
-  const onSubmit = handleSubmit(async (data: JobFormData) => {
+  useEffect(() => {
+    setValue('language_code', selectedLanguage);
+  }, [selectedLanguage, setValue]);
+
+  const onSubmit = handleSubmit(async (formData: JobFormInput) => {
     // Reset any previous root errors
     setError('root', { type: 'custom', message: '' });
+
+    // We know the data is valid at this point due to schema validation
+    const validData: JobFormData = {
+      title: formData.title,
+      description: formData.description,
+      language_code: formData.language_code!,
+    };
+
     try {
       if (mode === 'edit' && jobId) {
-        await updateJob.mutateAsync({ id: jobId, data });
+        await updateJob.mutateAsync({ id: jobId, data: validData });
       } else {
-        await createJob.mutateAsync(data);
+        await createJob.mutateAsync(validData);
       }
       onSuccess();
     } catch (error) {
       console.error('Form submission failed:', error);
-      // Set a form-level error
       setError('root', {
         type: 'custom',
         message: 'Failed to submit form. Please try again.',
       });
-      return false; // Prevent form submission
     }
   });
 
@@ -102,24 +135,80 @@ export function JobForm({
       </Field>
 
       <Field>
-        <Label
-          htmlFor="language_code"
-          className="text-sm font-medium text-gray-700"
-        >
-          Language Code
-        </Label>
-        <Input
-          type="text"
-          id="language_code"
-          {...register('language_code')}
-          aria-required="true"
-          className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
-        />
-        {errors.language_code && (
-          <Description className="mt-1 text-sm text-error" role="alert">
-            {errors.language_code.message}
-          </Description>
-        )}
+        <Listbox value={selectedLanguage} onChange={setSelectedLanguage}>
+          {({ open }) => (
+            <div className="relative">
+              <Listbox.Label className="text-sm font-medium text-gray-700">
+                Language
+              </Listbox.Label>
+              <div className="relative mt-1">
+                <Listbox.Button
+                  aria-required="true"
+                  className="relative w-full select input input-bordered data-[hover]:input-primary data-[focus]:input-primary"
+                >
+                  <span className="block truncate">
+                    {selectedLanguage
+                      ? languages.find((opt) => opt.value === selectedLanguage)
+                          ?.label
+                      : 'Select language'}
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Listbox.Button>
+                {open && (
+                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    {languages.map((option) => (
+                      <Listbox.Option
+                        key={option.value}
+                        value={option.value}
+                        className={({ active }) =>
+                          `relative select-none py-2 pl-10 pr-4 ${
+                            active
+                              ? 'bg-primary text-primary-content'
+                              : 'text-base-content'
+                          }`
+                        }
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            <span
+                              className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
+                            >
+                              {option.label}
+                            </span>
+                            {selected && (
+                              <span
+                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                                  active
+                                    ? 'text-primary-content'
+                                    : 'text-primary'
+                                }`}
+                              >
+                                <CheckIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                )}
+              </div>
+              {errors.language_code && (
+                <Description className="mt-1 text-sm text-error" role="alert">
+                  {errors.language_code.message}
+                </Description>
+              )}
+            </div>
+          )}
+        </Listbox>
       </Field>
 
       <div className="flex justify-end space-x-3">

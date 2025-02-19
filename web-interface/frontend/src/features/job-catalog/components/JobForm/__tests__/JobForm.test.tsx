@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { useJobMutations } from '../../../hooks/useJobMutations';
+import { LanguageCode } from '@/lib/language/types';
 import { JobForm } from '../JobForm';
 
 // Mock useJobMutations hook
@@ -41,13 +42,20 @@ describe('JobForm', () => {
       screen.getByLabelText(/description/i),
       'Job description here',
     );
-    await user.type(screen.getByLabelText(/language code/i), 'en');
+
+    // Open language dropdown and select English
+    await user.click(screen.getByRole('button', { name: /language/i }));
+    await user.click(screen.getByRole('option', { name: /English/ }));
   };
 
   describe('Form Validation', () => {
     it('validates required fields', async () => {
       renderForm();
       const user = userEvent.setup();
+
+      // Clear default language selection
+      await user.click(screen.getByRole('button', { name: /language/i }));
+      await user.click(screen.getByRole('button', { name: /language/i }));
 
       await user.click(screen.getByRole('button', { name: /create job/i }));
 
@@ -113,18 +121,20 @@ describe('JobForm', () => {
       initialData: {
         title: 'Existing Job',
         description: 'Existing description',
-        language_code: 'fr',
+        language_code: LanguageCode.FRENCH,
       },
     };
 
-    it('pre-fills form with initial data', () => {
+    it('pre-fills form with initial data', async () => {
       renderForm(editProps);
 
       expect(screen.getByLabelText(/title/i)).toHaveValue('Existing Job');
       expect(screen.getByLabelText(/description/i)).toHaveValue(
         'Existing description',
       );
-      expect(screen.getByLabelText(/language code/i)).toHaveValue('fr');
+      await waitFor(() => {
+        expect(screen.getByText(/French \(Français\)/)).toBeInTheDocument();
+      });
     });
 
     it('updates existing job on submit', async () => {
@@ -141,7 +151,7 @@ describe('JobForm', () => {
           data: {
             title: 'Updated Job',
             description: 'Existing description',
-            language_code: 'fr',
+            language_code: LanguageCode.FRENCH,
           },
         });
         expect(mockOnSuccess).toHaveBeenCalled();
@@ -188,17 +198,84 @@ describe('JobForm', () => {
     });
   });
 
+  describe('Language Selection', () => {
+    it('shows all supported languages in dropdown', async () => {
+      renderForm();
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /language/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/English \(English\)/)).toBeInTheDocument();
+        expect(screen.getByText(/French \(Français\)/)).toBeInTheDocument();
+        expect(screen.getByText(/German \(Deutsch\)/)).toBeInTheDocument();
+        expect(screen.getByText(/Spanish \(Español\)/)).toBeInTheDocument();
+        expect(screen.getByText(/Italian \(Italiano\)/)).toBeInTheDocument();
+      });
+    });
+
+    it('allows selecting a language', async () => {
+      renderForm();
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /language/i }));
+      await user.click(screen.getByText(/German/));
+
+      await waitFor(() => {
+        expect(screen.getByText(/German \(Deutsch\)/)).toBeInTheDocument();
+      });
+    });
+
+    it('persists selected language after form errors', async () => {
+      renderForm();
+      const user = userEvent.setup();
+
+      // Select a language first
+      await user.click(screen.getByRole('button', { name: /language/i }));
+      await user.click(screen.getByText(/Italian/));
+
+      // Clear required fields to trigger validation
+      const titleInput = screen.getByLabelText(/title/i);
+      await user.clear(titleInput);
+
+      // Try to submit
+      await user.click(screen.getByRole('button', { name: /create job/i }));
+
+      // Verify language selection persists
+      await waitFor(() => {
+        expect(screen.getByText(/Italian \(Italiano\)/)).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('Accessibility', () => {
     it('marks required fields with aria-required', () => {
       renderForm();
 
       const titleInput = screen.getByLabelText(/title/i);
       const descriptionInput = screen.getByLabelText(/description/i);
-      const languageCodeInput = screen.getByLabelText(/language code/i);
+      const languageButton = screen.getByRole('button', { name: /language/i });
 
       expect(titleInput).toHaveAttribute('aria-required', 'true');
       expect(descriptionInput).toHaveAttribute('aria-required', 'true');
-      expect(languageCodeInput).toHaveAttribute('aria-required', 'true');
+      expect(languageButton).toHaveAttribute('aria-required', 'true');
+    });
+
+    it('supports keyboard navigation for language selection', async () => {
+      renderForm();
+      const user = userEvent.setup();
+
+      const languageButton = screen.getByRole('button', { name: /language/i });
+      await user.click(languageButton);
+
+      // Now we should see the listbox options
+      const option = await screen.findByText(/German \(Deutsch\)/i);
+      await user.click(option);
+
+      // Verify selection was made
+      await waitFor(() => {
+        expect(screen.getByText(/German \(Deutsch\)/i)).toBeInTheDocument();
+      });
     });
 
     it('announces form errors with role="alert"', async () => {
