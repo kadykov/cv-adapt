@@ -1,32 +1,33 @@
+/**
+ * @vitest-environment jsdom
+ */
+
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { mockAuthContext, mockAuthContextValue } from '../../testing/setup';
+
+// These mocks must be defined before any other imports
+const mockLoginWithCredentials = vi.fn();
+const mockOnSuccess = vi.fn();
+
+vi.mock('../../auth-context', () => ({
+  ...mockAuthContext,
+  useAuth: () => ({
+    ...mockAuthContextValue,
+    loginWithCredentials: mockLoginWithCredentials,
+  }),
+}));
+
+// Regular imports after mocks
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useAuth } from '../../context';
 import { LoginForm } from '../LoginForm';
 import { createTestQueryClient } from '../../testing';
 import '@testing-library/jest-dom';
 
-// Mock useAuth hook
-vi.mock('../../context', () => ({
-  useAuth: vi.fn(),
-}));
-
-const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
-
 describe('LoginForm', () => {
-  const mockLoginWithCredentials = vi.fn();
-  const mockOnSuccess = vi.fn();
-
   beforeEach(() => {
-    mockUseAuth.mockReturnValue({
-      loginWithCredentials: mockLoginWithCredentials,
-      logout: vi.fn(),
-      user: null,
-      isAuthenticated: false,
-    });
-    mockLoginWithCredentials.mockReset();
-    mockOnSuccess.mockReset();
+    vi.clearAllMocks();
   });
 
   const renderForm = (props = {}) => {
@@ -95,7 +96,7 @@ describe('LoginForm', () => {
   });
 
   it('shows loading state during submission', async () => {
-    mockLoginWithCredentials.mockImplementation(
+    mockLoginWithCredentials.mockImplementationOnce(
       () => new Promise((resolve) => setTimeout(resolve, 100)),
     );
     renderForm();
@@ -113,6 +114,7 @@ describe('LoginForm', () => {
   });
 
   it('calls onSuccess after successful login', async () => {
+    mockLoginWithCredentials.mockResolvedValueOnce({});
     renderForm();
     const user = userEvent.setup();
 
@@ -121,14 +123,20 @@ describe('LoginForm', () => {
     await submitForm(user);
 
     await waitFor(() => {
+      expect(mockLoginWithCredentials).toHaveBeenCalled();
+    });
+
+    // onSuccess should only be called after login is successful
+    await waitFor(() => {
       expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
 
   it('handles login error', async () => {
-    mockLoginWithCredentials.mockRejectedValue(
+    mockLoginWithCredentials.mockRejectedValueOnce(
       new Error('Invalid credentials'),
     );
+
     renderForm();
     const user = userEvent.setup();
 
@@ -138,10 +146,11 @@ describe('LoginForm', () => {
     const submitButton = await submitForm(user);
 
     await waitFor(() => {
-      expect(mockOnSuccess).not.toHaveBeenCalled();
       expect(submitButton).not.toBeDisabled();
       expect(submitButton).not.toHaveAttribute('data-disabled');
     });
+
+    expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
   it('shows hover styles on form elements', async () => {

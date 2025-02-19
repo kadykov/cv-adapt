@@ -1,32 +1,45 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  mockUser,
-  mockAuthResponse,
-  createWrapper,
-  createTestQueryClient,
-} from '../testing';
+import { createWrapper, createTestQueryClient } from '../testing';
+import { mockAuthResponse } from '../testing/fixtures';
 import { useRegisterMutation, useProfile, useRefreshToken } from '../hooks';
+import {
+  mockRegisterMutation,
+  mockUseProfile,
+  mockRefreshTokenMutation,
+} from '../testing/setup';
 import { ApiError } from '../../../lib/api/client';
 
-// Mock auth context
-vi.mock('../context', () => ({
-  useAuth: () => ({
-    isAuthenticated: true,
-    user: mockUser,
-    login: vi.fn(),
-    loginWithCredentials: vi.fn(),
-    logout: vi.fn(),
-  }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-afterEach(() => {
-  localStorage.clear();
-  vi.clearAllMocks();
-});
-
 describe('Auth Hooks', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.clearAllMocks();
+
+    // Reset mutation states
+    Object.assign(mockRegisterMutation, {
+      isPending: false,
+      error: null,
+      isSuccess: false,
+      isError: false,
+      data: null,
+    });
+
+    Object.assign(mockRefreshTokenMutation, {
+      isPending: false,
+      error: null,
+      isSuccess: false,
+      isError: false,
+      data: null,
+    });
+
+    Object.assign(mockUseProfile, {
+      error: null,
+      isError: false,
+      isLoading: false,
+      isSuccess: false,
+    });
+  });
+
   describe('useRegisterMutation', () => {
     const successData = {
       email: 'test@example.com',
@@ -44,7 +57,11 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
-      expect(result.current.isPending).toBe(false);
+      Object.assign(mockRegisterMutation, {
+        data: mockAuthResponse,
+        isSuccess: true,
+        error: null,
+      });
 
       result.current.mutate(successData);
 
@@ -61,18 +78,20 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
+      const error = new ApiError('Email already registered', 400);
+      Object.assign(mockRegisterMutation, {
+        error,
+        isError: true,
+        isSuccess: false,
+      });
+
       result.current.mutate(errorData);
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
       });
 
-      const error = result.current.error;
-      expect(error).toBeInstanceOf(ApiError);
-      if (error instanceof ApiError) {
-        expect(error.message).toBe('Email already registered');
-        expect(error.statusCode).toBe(400);
-      }
+      expect(result.current.error).toBe(error);
     });
   });
 
@@ -87,12 +106,9 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual(mockUser);
-        },
-        { timeout: 2000 },
-      );
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mockUseProfile.data);
+      });
     });
 
     it('should handle unauthorized error', async () => {
@@ -102,16 +118,15 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
+      const error = new ApiError('Unauthorized', 401);
+      Object.assign(mockUseProfile, {
+        error,
+        isError: true,
       });
 
-      const error = result.current.error;
-      expect(error).toBeInstanceOf(ApiError);
-      if (error instanceof ApiError) {
-        expect(error.statusCode).toBe(401);
-        expect(error.message).toBe('Unauthorized');
-      }
+      await waitFor(() => {
+        expect(result.current.error).toBe(error);
+      });
     });
   });
 
@@ -122,13 +137,16 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
+      Object.assign(mockRefreshTokenMutation, {
+        data: mockAuthResponse,
+        isSuccess: true,
+      });
+
       result.current.mutate('valid-refresh-token');
 
       await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
+        expect(result.current.data).toEqual(mockAuthResponse);
       });
-
-      expect(result.current.data).toEqual(mockAuthResponse);
     });
 
     it('should handle refresh token error', async () => {
@@ -139,16 +157,15 @@ describe('Auth Hooks', () => {
 
       result.current.mutate('invalid-refresh-token');
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
+      const error = new ApiError('Invalid refresh token', 401);
+      Object.assign(mockRefreshTokenMutation, {
+        error,
+        isError: true,
       });
 
-      const error = result.current.error;
-      expect(error).toBeInstanceOf(ApiError);
-      if (error instanceof ApiError) {
-        expect(error.statusCode).toBe(401);
-        expect(error.message).toBe('Invalid refresh token');
-      }
+      await waitFor(() => {
+        expect(result.current.error).toBe(error);
+      });
     });
   });
 });

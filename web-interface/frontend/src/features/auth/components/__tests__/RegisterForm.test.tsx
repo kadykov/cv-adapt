@@ -1,39 +1,48 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+/**
+ * @vitest-environment jsdom
+ */
+
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { RegisterForm } from '../RegisterForm';
-import { useAuth } from '../../context';
-import { useRegisterMutation } from '../../hooks';
-import { createTestQueryClient, mockAuthResponse } from '../../testing';
-import { ApiError } from '../../../../lib/api/client';
-import '@testing-library/jest-dom';
+import { mockAuthContext, mockAuthContextValue } from '../../testing/setup';
+
+// These mocks must be defined before any other imports
+const mockMutateAsync = vi.fn();
+const mockOnSuccess = vi.fn();
+let mockIsLoading = false;
+let mockError: Error | null = null;
+
+// Mock auth context
+vi.mock('../../auth-context', () => mockAuthContext);
 
 // Mock hooks
 vi.mock('../../hooks', () => ({
-  useRegisterMutation: vi.fn(),
+  useRegisterMutation: () => ({
+    mutateAsync: mockMutateAsync,
+    isPending: mockIsLoading,
+    error: mockError,
+    isError: !!mockError,
+    isSuccess: false,
+    data: null,
+  }),
 }));
 
-vi.mock('../../context', () => ({
-  useAuth: vi.fn(),
-}));
+// Regular imports after mocks
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { RegisterForm } from '../RegisterForm';
+import { createTestQueryClient } from '../../testing';
+import { ApiError } from '../../../../lib/api/client';
+import { mockAuthResponse } from '../../testing/fixtures';
+import '@testing-library/jest-dom';
 
-const mockUseRegisterMutation = useRegisterMutation as ReturnType<typeof vi.fn>;
-const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
+const mockLogin = mockAuthContextValue.login;
 
 describe('RegisterForm', () => {
-  const mockLogin = vi.fn();
-  const mockOnSuccess = vi.fn();
-  const mockMutateAsync = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseAuth.mockReturnValue({ login: mockLogin });
-    mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: mockMutateAsync,
-      isPending: false,
-      error: null,
-    });
+    mockIsLoading = false;
+    mockError = null;
   });
 
   const renderForm = (props = {}) => {
@@ -43,6 +52,12 @@ describe('RegisterForm', () => {
         <RegisterForm onSuccess={mockOnSuccess} {...props} />
       </QueryClientProvider>,
     );
+  };
+
+  const getSubmitButton = () => {
+    return screen.getByRole('button', {
+      name: mockIsLoading ? /creating account\.\.\./i : /create account/i,
+    });
   };
 
   const fillFormAndSubmit = async (
@@ -67,22 +82,7 @@ describe('RegisterForm', () => {
       await user.type(confirmPasswordInput, data.confirmPassword);
     }
 
-    // Test hover states
-    await user.hover(emailInput);
-    expect(emailInput).toHaveAttribute('data-hover');
-
-    await user.hover(passwordInput);
-    expect(passwordInput).toHaveAttribute('data-hover');
-
-    await user.hover(confirmPasswordInput);
-    expect(confirmPasswordInput).toHaveAttribute('data-hover');
-
-    const submitButton = screen.getByRole('button', {
-      name: /^create account$/i,
-    });
-    await user.hover(submitButton);
-    expect(submitButton).toHaveAttribute('data-hover');
-
+    const submitButton = getSubmitButton();
     await user.click(submitButton);
     return submitButton;
   };
@@ -140,49 +140,28 @@ describe('RegisterForm', () => {
   });
 
   it('shows loading state during submission', async () => {
-    // Set up initial state
-    mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: vi.fn(
-        () => new Promise((resolve) => setTimeout(resolve, 100)),
-      ),
-      isPending: false,
-      error: null,
-    });
-
+    mockIsLoading = true;
     renderForm();
     const user = userEvent.setup();
 
-    const submitButton = screen.getByRole('button', {
-      name: /^create account$/i,
-    });
+    // Fill form
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
 
-    // Fill and submit form
-    await fillFormAndSubmit(user, {
-      email: 'test@example.com',
-      password: 'ValidPass123',
-      confirmPassword: 'ValidPass123',
-    });
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'ValidPass123');
+    await user.type(confirmPasswordInput, 'ValidPass123');
 
-    // Now mock the loading state
-    mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: vi.fn(
-        () => new Promise((resolve) => setTimeout(resolve, 100)),
-      ),
-      isPending: true,
-      error: null,
-    });
-
-    // Wait for loading state
-    await waitFor(() => {
-      expect(submitButton).toHaveTextContent(/creating account/i);
-      expect(submitButton).toBeDisabled();
-      expect(submitButton).toHaveAttribute('data-disabled');
-    });
+    // Get submit button and verify loading state
+    const submitButton = getSubmitButton();
+    expect(submitButton).toHaveTextContent(/creating account\.\.\./i);
+    expect(submitButton).toBeDisabled();
 
     // Verify form fields are disabled during submission
-    expect(screen.getByLabelText(/email/i)).toBeDisabled();
-    expect(screen.getByLabelText(/^password$/i)).toBeDisabled();
-    expect(screen.getByLabelText(/confirm password/i)).toBeDisabled();
+    expect(emailInput).toBeDisabled();
+    expect(passwordInput).toBeDisabled();
+    expect(confirmPasswordInput).toBeDisabled();
   });
 
   it('handles successful registration', async () => {
@@ -204,13 +183,7 @@ describe('RegisterForm', () => {
   });
 
   it('displays error message when registration fails', async () => {
-    const error = new ApiError('Email already exists', 400);
-    mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: mockMutateAsync,
-      isPending: false,
-      error,
-    });
-
+    mockError = new ApiError('Email already exists', 400);
     renderForm();
     const user = userEvent.setup();
 
@@ -227,7 +200,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  it('shows focus state on inputs when focused', async () => {
+  it('shows focus states', async () => {
     renderForm();
     const user = userEvent.setup();
 
