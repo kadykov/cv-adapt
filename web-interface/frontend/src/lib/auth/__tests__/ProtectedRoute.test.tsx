@@ -16,9 +16,7 @@ import { useAuth } from '../useAuth';
 const LocationDisplay = () => {
   const location = useLocation();
   return (
-    <div data-testid="location-display">
-      {JSON.stringify(location.state)}
-    </div>
+    <div data-testid="location-display">{JSON.stringify(location.state)}</div>
   );
 };
 
@@ -54,7 +52,7 @@ describe('ProtectedRoute', () => {
   const renderWithProviders = (
     initialPath = '/',
     redirectTo = '/login',
-    mockAuthOverrides: Partial<MockAuthState> = {}
+    mockAuthOverrides: Partial<MockAuthState> = {},
   ) => {
     const mockAuth = { ...defaultMockAuth, ...mockAuthOverrides };
     (useAuth as Mock).mockReturnValue(mockAuth);
@@ -82,7 +80,7 @@ describe('ProtectedRoute', () => {
             />
           </Routes>
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -130,7 +128,7 @@ describe('ProtectedRoute', () => {
 
     const locationState = screen.getByTestId('location-display');
     expect(locationState.textContent).toBe(
-      JSON.stringify({ from: '/protected-path' })
+      JSON.stringify({ from: '/protected-path' }),
     );
   });
 });

@@ -1,6 +1,7 @@
 # Authentication System
 
 ## Overview
+
 The authentication system provides secure route protection and token management for the web interface. It uses React Query for state management and React Router for protected route handling.
 
 ## Components
@@ -8,6 +9,7 @@ The authentication system provides secure route protection and token management 
 ### Authentication Forms
 
 #### `LoginForm` Component
+
 A form component that handles user login with email and password.
 
 ```typescript
@@ -15,6 +17,7 @@ A form component that handles user login with email and password.
 ```
 
 Features:
+
 - Email format validation
 - Required field validation
 - Loading state handling
@@ -22,6 +25,7 @@ Features:
 - Type-safe form handling with Zod
 
 #### `RegisterForm` Component
+
 A form component that handles new user registration.
 
 ```typescript
@@ -29,6 +33,7 @@ A form component that handles new user registration.
 ```
 
 Features:
+
 - Email format validation
 - Password complexity requirements:
   - Minimum 8 characters
@@ -39,6 +44,7 @@ Features:
 - Loading state handling
 
 #### `AuthDialog` Component
+
 A modal dialog that switches between login and registration forms.
 
 ```typescript
@@ -46,19 +52,23 @@ A modal dialog that switches between login and registration forms.
 ```
 
 Features:
+
 - Smooth transitions between forms
 - Modal dialog with backdrop
 - Keyboard navigation support
 - Accessible design
 
 ### `useAuth` Hook
+
 The main authentication hook that manages token state and provides authentication utilities.
 
 ```typescript
-const { isAuthenticated, isLoading, token, clearAuth, loginWithCredentials } = useAuth();
+const { isAuthenticated, isLoading, token, clearAuth, loginWithCredentials } =
+  useAuth();
 ```
 
 #### Features
+
 - Token persistence with localStorage
 - Reactive state updates with React Query
 - Type-safe authentication state
@@ -66,6 +76,7 @@ const { isAuthenticated, isLoading, token, clearAuth, loginWithCredentials } = u
 - Credentials-based login
 
 #### Usage Example
+
 ```typescript
 function Header() {
   const { isAuthenticated, clearAuth } = useAuth();
@@ -88,6 +99,7 @@ function Header() {
 ```
 
 ### `ProtectedRoute` Component
+
 A higher-order component that handles route protection based on authentication state.
 
 ```typescript
@@ -97,12 +109,14 @@ A higher-order component that handles route protection based on authentication s
 ```
 
 #### Features
+
 - Automatic redirect for unauthenticated users
 - Loading state handling
 - Preserves attempted URL for post-login redirect
 - Configurable redirect path
 
 #### Usage Example
+
 ```typescript
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/lib/auth';
@@ -127,21 +141,27 @@ function AppRoutes() {
 ## Implementation Details
 
 ### Authentication State
+
 The authentication state is managed using React Query, which provides:
+
 - Consistent state across components
 - Automatic background updates
 - Token persistence
 - Type-safe state management
 
 ### Form Validation
+
 Form validation is implemented using:
+
 - Zod schema validation
 - React Hook Form
 - Real-time error feedback
 - Customizable validation rules
 
 ### Testing
+
 The authentication system includes comprehensive tests:
+
 - Unit tests for all components
 - Integration tests for forms and dialogs
 - Mocked API responses
@@ -150,6 +170,7 @@ The authentication system includes comprehensive tests:
 - Accessibility testing
 
 ## Next Steps
+
 - Add refresh token handling
 - Implement password reset functionality
 - Add social authentication providers

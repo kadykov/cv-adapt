@@ -44,7 +44,7 @@ describe('JobList', () => {
     server.use(
       http.get('/v1/api/jobs', () => {
         return HttpResponse.error();
-      })
+      }),
     );
 
     render(<JobList />);
@@ -58,7 +58,7 @@ describe('JobList', () => {
     server.use(
       http.get('/v1/api/jobs', () => {
         return HttpResponse.json([]);
-      })
+      }),
     );
 
     render(<JobList />);

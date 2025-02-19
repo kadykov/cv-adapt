@@ -24,7 +24,7 @@ describe('AuthDialog', () => {
         <AuthProvider>
           <AuthDialog isOpen={true} onClose={() => {}} {...props} />
         </AuthProvider>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -36,7 +36,9 @@ describe('AuthDialog', () => {
 
   it('shows correct heading in DialogTitle', () => {
     renderDialog();
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Sign In');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Sign In',
+    );
   });
 
   it('updates DialogTitle when switching views', async () => {
@@ -44,10 +46,14 @@ describe('AuthDialog', () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByText(/sign up/i));
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Create Account');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Create Account',
+    );
 
     await user.click(screen.getByText(/sign in/i));
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Sign In');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Sign In',
+    );
   });
 
   it('switches to register form when clicking sign up', async () => {
@@ -80,7 +86,9 @@ describe('AuthDialog', () => {
     const onClose = vi.fn();
     renderDialog({ onClose });
 
-    const backdrop = screen.getByRole('dialog').parentElement?.querySelector('.fixed.bg-black\\/30');
+    const backdrop = screen
+      .getByRole('dialog')
+      .parentElement?.querySelector('.fixed.bg-black\\/30');
     expect(backdrop).toBeInTheDocument();
     if (backdrop) {
       await userEvent.click(backdrop);
@@ -93,25 +101,35 @@ describe('AuthDialog', () => {
 
     expect(screen.getByTestId('register-form')).toBeInTheDocument();
     expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Create Account');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
+      'Create Account',
+    );
   });
 
   it('renders dialog with correct structure and styling', () => {
     renderDialog();
 
     // Check backdrop
-    const backdrop = screen.getByRole('dialog').parentElement?.querySelector('.fixed.bg-black\\/30');
+    const backdrop = screen
+      .getByRole('dialog')
+      .parentElement?.querySelector('.fixed.bg-black\\/30');
     expect(backdrop).toBeInTheDocument();
     expect(backdrop).toHaveAttribute('aria-hidden', 'true');
 
     // Check dialog root and panel
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveClass('relative', 'z-50');
-    expect(dialog.querySelector('.modal-box')).toHaveClass('modal-box', 'bg-base-100');
+    expect(dialog.querySelector('.modal-box')).toHaveClass(
+      'modal-box',
+      'bg-base-100',
+    );
 
     // Check dialog header
-    expect(screen.getByRole('heading', { level: 3 }))
-      .toHaveClass('text-2xl', 'font-bold', 'text-primary');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveClass(
+      'text-2xl',
+      'font-bold',
+      'text-primary',
+    );
 
     // Check buttons styling
     const button = screen.getByRole('button', { name: /sign up/i });

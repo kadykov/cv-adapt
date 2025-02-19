@@ -17,7 +17,6 @@ const mockJob: JobDescriptionResponse = {
   updated_at: null,
 };
 
-
 // Wrapper component with React Query provider
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -65,9 +64,9 @@ describe('Job Hooks', () => {
         http.get('/v1/api/jobs', () => {
           return HttpResponse.json(
             { detail: { message: 'Server error' } },
-            { status: 500 }
+            { status: 500 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useJobs(), {
@@ -98,9 +97,9 @@ describe('Job Hooks', () => {
         http.get('/v1/api/jobs/:id', () => {
           return HttpResponse.json(
             { detail: { message: 'Job not found' } },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useJob(999), {
@@ -132,7 +131,7 @@ describe('Job Hooks', () => {
       });
 
       expect(result.current.createJob.data).toEqual(
-        expect.objectContaining(newJob)
+        expect.objectContaining(newJob),
       );
     });
 
@@ -171,9 +170,9 @@ describe('Job Hooks', () => {
         http.post('/v1/api/jobs', () => {
           return HttpResponse.json(
             { detail: { message: 'Invalid data' } },
-            { status: 422 }
+            { status: 422 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useJobMutations(), {

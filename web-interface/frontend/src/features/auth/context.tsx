@@ -1,4 +1,10 @@
-import { createContext, useContext, useCallback, ReactNode, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useCallback,
+  ReactNode,
+  useState,
+} from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AuthResponse } from '../../lib/api/generated-types';
 import { authApi } from '../../lib/api/auth';
@@ -6,7 +12,10 @@ import { authApi } from '../../lib/api/auth';
 export interface AuthContextType {
   user: AuthResponse['user'] | null;
   login: (response: AuthResponse) => void;
-  loginWithCredentials: (credentials: { email: string; password: string }) => Promise<void>;
+  loginWithCredentials: (credentials: {
+    email: string;
+    password: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -28,15 +37,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem('refreshToken', response.refresh_token);
   }, []);
 
-  const loginWithCredentials = useCallback(async (credentials: { email: string; password: string }) => {
-    const response = await authApi.login({
-      username: credentials.email,
-      password: credentials.password,
-      scope: '',
-      grant_type: 'password'
-    });
-    login(response);
-  }, [login]);
+  const loginWithCredentials = useCallback(
+    async (credentials: { email: string; password: string }) => {
+      const response = await authApi.login({
+        username: credentials.email,
+        password: credentials.password,
+        scope: '',
+        grant_type: 'password',
+      });
+      login(response);
+    },
+    [login],
+  );
 
   const logout = useCallback(async () => {
     await authApi.logout();

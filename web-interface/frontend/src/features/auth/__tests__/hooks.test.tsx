@@ -87,9 +87,12 @@ describe('Auth Hooks', () => {
         wrapper: createWrapper(queryClient),
       });
 
-      await waitFor(() => {
-        expect(result.current.data).toEqual(mockUser);
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(result.current.data).toEqual(mockUser);
+        },
+        { timeout: 2000 },
+      );
     });
 
     it('should handle unauthorized error', async () => {

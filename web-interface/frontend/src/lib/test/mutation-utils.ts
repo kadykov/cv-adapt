@@ -4,14 +4,21 @@ import type { ApiError } from '../api/client';
 
 export type MockAuthMutation = Pick<
   UseMutationResult<AuthResponse, ApiError, unknown, unknown>,
-  'mutate' | 'mutateAsync' | 'isError' | 'error' | 'isPending' | 'isSuccess' | 'status' | 'data'
+  | 'mutate'
+  | 'mutateAsync'
+  | 'isError'
+  | 'error'
+  | 'isPending'
+  | 'isSuccess'
+  | 'status'
+  | 'data'
 >;
 
 /**
  * Creates a mock auth mutation result for testing.
  */
 export function createMockAuthMutation(
-  overrides: Partial<MockAuthMutation> = {}
+  overrides: Partial<MockAuthMutation> = {},
 ): MockAuthMutation {
   return {
     mutate: jest.fn(),
@@ -33,11 +40,13 @@ export function createPendingAuthMutation(): MockAuthMutation {
   return createMockAuthMutation({
     isPending: true,
     isSuccess: false,
-    status: 'pending'
+    status: 'pending',
   });
 }
 
-export function createSuccessAuthMutation(data: AuthResponse): MockAuthMutation {
+export function createSuccessAuthMutation(
+  data: AuthResponse,
+): MockAuthMutation {
   return createMockAuthMutation({
     isError: false,
     error: null,
@@ -45,7 +54,7 @@ export function createSuccessAuthMutation(data: AuthResponse): MockAuthMutation 
     isSuccess: true,
     status: 'success',
     data,
-    mutateAsync: jest.fn().mockResolvedValue(data)
+    mutateAsync: jest.fn().mockResolvedValue(data),
   });
 }
 
@@ -57,6 +66,6 @@ export function createErrorAuthMutation(error: ApiError): MockAuthMutation {
     isSuccess: false,
     status: 'error',
     data: undefined,
-    mutateAsync: jest.fn().mockRejectedValue(error)
+    mutateAsync: jest.fn().mockRejectedValue(error),
   });
 }

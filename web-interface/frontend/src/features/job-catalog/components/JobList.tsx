@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
+} from '@headlessui/react';
 import { JobCard } from './JobCard';
 import { useJobs } from '../hooks/useJobs';
 
@@ -17,7 +22,11 @@ interface JobListProps {
 
 export function JobList({ onJobSelect }: JobListProps) {
   const [selectedLang, setSelectedLang] = useState(LANGUAGE_OPTIONS[0]);
-  const { data: jobs, isLoading, error } = useJobs({ languageCode: selectedLang.id });
+  const {
+    data: jobs,
+    isLoading,
+    error,
+  } = useJobs({ languageCode: selectedLang.id });
 
   if (error) {
     return (
@@ -30,7 +39,10 @@ export function JobList({ onJobSelect }: JobListProps) {
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <span role="status" className="loading loading-spinner loading-lg"></span>
+        <span
+          role="status"
+          className="loading loading-spinner loading-lg"
+        ></span>
       </div>
     );
   }
@@ -71,7 +83,9 @@ export function JobList({ onJobSelect }: JobListProps) {
                 >
                   {({ selected }) => (
                     <>
-                      <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                      <span
+                        className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
+                      >
                         {lang.name}
                       </span>
                       {selected && (

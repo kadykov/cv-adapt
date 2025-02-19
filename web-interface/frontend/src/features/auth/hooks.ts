@@ -51,12 +51,15 @@ export function useTokenRefresh() {
     if (!user) return;
 
     // Set up token refresh interval
-    const refreshInterval = setInterval(() => {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        refreshMutation.mutate(refreshToken);
-      }
-    }, 1000 * 60 * 14); // Refresh token every 14 minutes (assuming 15-minute token expiry)
+    const refreshInterval = setInterval(
+      () => {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          refreshMutation.mutate(refreshToken);
+        }
+      },
+      1000 * 60 * 14,
+    ); // Refresh token every 14 minutes (assuming 15-minute token expiry)
 
     return () => clearInterval(refreshInterval);
   }, [user, refreshMutation]);

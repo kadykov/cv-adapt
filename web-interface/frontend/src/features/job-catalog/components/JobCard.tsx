@@ -27,10 +27,14 @@ export function JobCard({ job, onClick }: JobCardProps) {
     >
       <div className="card-body">
         <div className="flex justify-between items-start gap-4">
-          <h3 className="card-title text-lg font-semibold truncate">{job.title}</h3>
+          <h3 className="card-title text-lg font-semibold truncate">
+            {job.title}
+          </h3>
           <Badge variant="outline">{job.language_code}</Badge>
         </div>
-        <p className="text-sm text-base-content/70 line-clamp-2">{job.description}</p>
+        <p className="text-sm text-base-content/70 line-clamp-2">
+          {job.description}
+        </p>
         <div className="card-actions justify-end mt-4">
           <span className="text-xs text-base-content/50">{timeAgo}</span>
         </div>

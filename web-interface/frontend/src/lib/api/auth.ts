@@ -1,4 +1,9 @@
-import type { AuthResponse, LoginRequest, RegisterRequest, User } from './generated-types';
+import type {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  User,
+} from './generated-types';
 import { client } from './client';
 
 export const authApi = {
@@ -23,8 +28,7 @@ export const authApi = {
   /**
    * Get current user profile
    */
-  getProfile: (): Promise<User> =>
-    client.get<User>('/users/me'),
+  getProfile: (): Promise<User> => client.get<User>('/users/me'),
 
   /**
    * Logout the current user

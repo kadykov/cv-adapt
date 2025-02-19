@@ -41,15 +41,18 @@ describe('RegisterForm', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <RegisterForm onSuccess={mockOnSuccess} {...props} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
-  const fillFormAndSubmit = async (user: ReturnType<typeof userEvent.setup>, data: {
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-  }) => {
+  const fillFormAndSubmit = async (
+    user: ReturnType<typeof userEvent.setup>,
+    data: {
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+    },
+  ) => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
@@ -74,7 +77,9 @@ describe('RegisterForm', () => {
     await user.hover(confirmPasswordInput);
     expect(confirmPasswordInput).toHaveAttribute('data-hover');
 
-    const submitButton = screen.getByRole('button', { name: /^create account$/i });
+    const submitButton = screen.getByRole('button', {
+      name: /^create account$/i,
+    });
     await user.hover(submitButton);
     expect(submitButton).toHaveAttribute('data-hover');
 
@@ -137,7 +142,9 @@ describe('RegisterForm', () => {
   it('shows loading state during submission', async () => {
     // Set up initial state
     mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: vi.fn(() => new Promise((resolve) => setTimeout(resolve, 100))),
+      mutateAsync: vi.fn(
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
+      ),
       isPending: false,
       error: null,
     });
@@ -145,7 +152,9 @@ describe('RegisterForm', () => {
     renderForm();
     const user = userEvent.setup();
 
-    const submitButton = screen.getByRole('button', { name: /^create account$/i });
+    const submitButton = screen.getByRole('button', {
+      name: /^create account$/i,
+    });
 
     // Fill and submit form
     await fillFormAndSubmit(user, {
@@ -156,7 +165,9 @@ describe('RegisterForm', () => {
 
     // Now mock the loading state
     mockUseRegisterMutation.mockReturnValue({
-      mutateAsync: vi.fn(() => new Promise((resolve) => setTimeout(resolve, 100))),
+      mutateAsync: vi.fn(
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
+      ),
       isPending: true,
       error: null,
     });

@@ -16,7 +16,11 @@ interface AuthDialogProps {
   initialView?: 'login' | 'register';
 }
 
-export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialogProps) {
+export function AuthDialog({
+  isOpen,
+  onClose,
+  initialView = 'login',
+}: AuthDialogProps) {
   const [view, setView] = useState<'login' | 'register'>(initialView);
 
   return (
@@ -47,16 +51,21 @@ export function AuthDialog({ isOpen, onClose, initialView = 'login' }: AuthDialo
             leaveTo="opacity-0 scale-95"
           >
             <DialogPanel className="modal-box w-full max-w-md bg-base-100">
-              <DialogTitle as="h3" className="text-2xl font-bold mb-6 text-primary">
+              <DialogTitle
+                as="h3"
+                className="text-2xl font-bold mb-6 text-primary"
+              >
                 {view === 'login' ? 'Sign In' : 'Create Account'}
               </DialogTitle>
 
               {view === 'login' ? (
                 <LoginForm onSuccess={onClose} />
               ) : (
-                <RegisterForm onSuccess={() => {
-                  setView('login');
-                }} />
+                <RegisterForm
+                  onSuccess={() => {
+                    setView('login');
+                  }}
+                />
               )}
 
               <div className="divider my-6">OR</div>

@@ -3,6 +3,7 @@
 ## Phase 1: Project Setup and Infrastructure
 
 ### Clean Slate Setup
+
 - [x] Clear existing frontend implementation
 - [x] Initialize new Vite + React + TypeScript project
 - [x] Configure ESLint with TypeScript
@@ -11,7 +12,9 @@
 - [x] Set up path aliases
 
 ### Core Dependencies
+
 - [x] Install and configure key packages:
+
   ```bash
   # Core
   @tanstack/react-query
@@ -41,6 +44,7 @@
   ```
 
 ### OpenAPI Integration
+
 - [x] Set up OpenAPI schema generation script
 - [x] Configure type generation with openapi-typescript
 - [x] Create base API client configuration
@@ -53,6 +57,7 @@
   - [x] Update documentation for type generation workflow
 
 ### Testing Infrastructure
+
 - [x] Configure Vitest with React Testing Library
 - [x] Set up MSW for API mocking
 - [x] Create test utilities and fixtures
@@ -66,6 +71,7 @@
 ### Testing Strategy
 
 ### Unit Tests
+
 - Hook tests with test-utils
   - Mock providers (Auth, Query)
   - Mock localStorage
@@ -79,6 +85,7 @@
 - Utility function tests
 
 ### Integration Tests
+
 - Feature-level tests with MSW
   - Standardized API paths (/v1/api)
   - Centralized handlers
@@ -94,12 +101,14 @@
   - Token management
 
 ### Contract Tests
+
 - OpenAPI schema validation
 - Response type checking
 - Error handling tests
 - API path consistency
 
 ### Best Practices
+
 - [x] Use centralized MSW handlers
 - [x] Maintain consistent API paths
 - [x] Share mock data between tests
@@ -111,6 +120,7 @@
 ## Phase 2: Authentication Implementation
 
 ### Directory Structure
+
 ```
 src/
   lib/           # Shared utilities
@@ -123,6 +133,7 @@ src/
 ```
 
 ### Authentication Features
+
 - [x] Implement auth context with token management
 - [x] Create auth hooks
   - [x] useRegisterMutation - handles user registration with error handling
@@ -178,15 +189,18 @@ src/
 ### Job Catalog Feature
 
 #### Completed Data Layer
+
 - [x] API Types and Functions
+
   ```typescript
   // types.ts
-  JobDescriptionCreate
-  JobDescriptionUpdate
-  JobDescriptionResponse
+  JobDescriptionCreate;
+  JobDescriptionUpdate;
+  JobDescriptionResponse;
   ```
 
 - [x] API Implementation
+
   ```typescript
   // jobsApi.ts
   getJobs(languageCode?: string)
@@ -197,6 +211,7 @@ src/
   ```
 
 - [x] React Query Hooks
+
   ```typescript
   // hooks/
   useJobs.ts         - List jobs with language filtering
@@ -212,6 +227,7 @@ src/
   ```
 
 #### UI Components
+
 ```
 features/job-catalog/
   components/
@@ -226,7 +242,9 @@ features/job-catalog/
 ```
 
 Components Implemented:
+
 - [x] JobCard
+
   - [x] Responsive card design with DaisyUI
   - [x] Accessibility features (keyboard navigation, ARIA roles)
   - [x] Language badge display
@@ -234,6 +252,7 @@ Components Implemented:
   - [x] Unit tests
 
 - [x] JobList
+
   - [x] Grid layout with responsiveness
   - [x] Language filtering with Headless UI
   - [x] Loading states
@@ -243,6 +262,7 @@ Components Implemented:
   - [x] React Query integration
 
 - [x] JobDetail
+
   - [x] Full information display
   - [x] Edit/Delete actions
   - [x] Loading states and skeleton UI
@@ -260,7 +280,7 @@ Components Implemented:
   - [x] Component Structure
     - [x] Create JobForm/JobForm.tsx
     - [x] Create JobForm/jobFormSchema.ts
-    - [x] Setup __tests__/JobForm.test.tsx
+    - [x] Setup **tests**/JobForm.test.tsx
   - [x] Core Implementation
     - [x] Form schema with Zod validation
     - [x] Headless UI components integration
@@ -282,6 +302,7 @@ Components Implemented:
     - [x] Documentation organization
 
 Supporting Infrastructure Added:
+
 - [x] Base UI components
   - [x] Badge component for labels
 - [x] Test utilities
@@ -290,6 +311,7 @@ Supporting Infrastructure Added:
   - [x] API handlers
 
 ### CV Management Feature
+
 ```
 features/cv-management/
   components/
@@ -307,6 +329,7 @@ features/cv-management/
 ## Testing Strategy
 
 ### Unit Tests
+
 - Hook tests with test-utils
   - Mock providers (Auth, Query)
   - Mock localStorage
@@ -314,6 +337,7 @@ features/cv-management/
 - Utility function tests
 
 ### Integration Tests
+
 - Feature-level tests
 - User flow tests
 - API interaction tests with MSW
@@ -322,6 +346,7 @@ features/cv-management/
   - Token management
 
 ### Contract Tests
+
 - OpenAPI schema validation
 - Response type checking
 - Error handling tests
@@ -339,6 +364,7 @@ features/cv-management/
 ## Development Guidelines
 
 ### UI Component Strategy
+
 - Use Headless UI components as primary building blocks
   - Provides built-in accessibility
   - Handles keyboard navigation
@@ -358,22 +384,26 @@ features/cv-management/
   - Maintain clean separation of concerns
 
 ### Type Safety
+
 - Strict TypeScript configuration
 - No any types
 - Proper type imports from OpenAPI schema
 
 ### Testing Requirements
+
 - Integration tests for features
 - Contract tests for API integrations
 - Minimum 80% coverage
 
 ### Performance Standards
+
 - Bundle size monitoring
 - Code splitting implementation
 - React Query caching strategies
 - Lazy loading for routes
 
 ### Accessibility
+
 - Leverage Headless UI's built-in accessibility
 - Ensure proper heading hierarchy
 - Maintain keyboard navigation

@@ -1,6 +1,6 @@
-import { format } from "date-fns";
-import { getLanguageConfig } from "./config";
-import { LanguageCode } from "./types";
+import { format } from 'date-fns';
+import { getLanguageConfig } from './config';
+import { LanguageCode } from './types';
 
 /**
  * Format a date according to language configuration.
@@ -10,10 +10,11 @@ import { LanguageCode } from "./types";
 export function formatDate(date: Date, languageCode: LanguageCode): string {
   const config = getLanguageConfig(languageCode);
   // Convert Python strftime format to date-fns format
-  const formatStr = config.dateFormat
-    ?.replace("%d", "dd")
-    .replace("%m", "MM")
-    .replace("%Y", "yyyy") ?? "MM/dd/yyyy";
+  const formatStr =
+    config.dateFormat
+      ?.replace('%d', 'dd')
+      .replace('%m', 'MM')
+      .replace('%Y', 'yyyy') ?? 'MM/dd/yyyy';
   return format(date, formatStr);
 }
 
@@ -25,23 +26,23 @@ export function formatDate(date: Date, languageCode: LanguageCode): string {
 export function formatNumber(num: number, languageCode: LanguageCode): string {
   const config = getLanguageConfig(languageCode);
   // Format with explicit separator configuration
-  const parts = Math.abs(num).toString().split(".");
+  const parts = Math.abs(num).toString().split('.');
   const wholeNum = parts[0];
-  const decimals = parts[1] || "00";
+  const decimals = parts[1] || '00';
 
   // Format the whole number part with thousands separator
   const formatted = wholeNum
-    .split("")
+    .split('')
     .reverse()
     .reduce((acc, digit, i) => {
       const shouldAddSeparator = i > 0 && i % 3 === 0;
       return shouldAddSeparator
-        ? digit + (config.thousandsSeparator ?? ",") + acc
+        ? digit + (config.thousandsSeparator ?? ',') + acc
         : digit + acc;
-    }, "");
+    }, '');
 
   // Combine with decimal part using appropriate separator
-  return `${num < 0 ? "-" : ""}${formatted}${config.decimalSeparator ?? "."}${decimals.padEnd(2, "0")}`;
+  return `${num < 0 ? '-' : ''}${formatted}${config.decimalSeparator ?? '.'}${decimals.padEnd(2, '0')}`;
 }
 
 /**
@@ -57,6 +58,8 @@ export function isValidLanguageCode(code: string): code is LanguageCode {
  */
 export function getDefaultLanguageCode(): LanguageCode {
   // Use browser language if it's supported, fallback to English
-  const browserLang = navigator.language.split("-")[0];
-  return isValidLanguageCode(browserLang) ? browserLang as LanguageCode : LanguageCode.ENGLISH;
+  const browserLang = navigator.language.split('-')[0];
+  return isValidLanguageCode(browserLang)
+    ? (browserLang as LanguageCode)
+    : LanguageCode.ENGLISH;
 }

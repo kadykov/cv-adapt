@@ -34,7 +34,7 @@ describe('LoginForm', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <LoginForm onSuccess={mockOnSuccess} {...props} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -95,7 +95,9 @@ describe('LoginForm', () => {
   });
 
   it('shows loading state during submission', async () => {
-    mockLoginWithCredentials.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+    mockLoginWithCredentials.mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 100)),
+    );
     renderForm();
     const user = userEvent.setup();
 
@@ -124,7 +126,9 @@ describe('LoginForm', () => {
   });
 
   it('handles login error', async () => {
-    mockLoginWithCredentials.mockRejectedValue(new Error('Invalid credentials'));
+    mockLoginWithCredentials.mockRejectedValue(
+      new Error('Invalid credentials'),
+    );
     renderForm();
     const user = userEvent.setup();
 

@@ -12,7 +12,13 @@ interface JobFormProps {
   onCancel: () => void;
 }
 
-export function JobForm({ mode, jobId, initialData, onSuccess, onCancel }: JobFormProps) {
+export function JobForm({
+  mode,
+  jobId,
+  initialData,
+  onSuccess,
+  onCancel,
+}: JobFormProps) {
   const { createJob, updateJob } = useJobMutations();
   const {
     register,
@@ -57,7 +63,9 @@ export function JobForm({ mode, jobId, initialData, onSuccess, onCancel }: JobFo
         </div>
       )}
       <Field>
-        <Label htmlFor="title" className="text-sm font-medium text-gray-700">Title</Label>
+        <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+          Title
+        </Label>
         <Input
           type="text"
           id="title"
@@ -73,7 +81,12 @@ export function JobForm({ mode, jobId, initialData, onSuccess, onCancel }: JobFo
       </Field>
 
       <Field>
-        <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
+        <Label
+          htmlFor="description"
+          className="text-sm font-medium text-gray-700"
+        >
+          Description
+        </Label>
         <textarea
           id="description"
           {...register('description')}
@@ -89,7 +102,12 @@ export function JobForm({ mode, jobId, initialData, onSuccess, onCancel }: JobFo
       </Field>
 
       <Field>
-        <Label htmlFor="language_code" className="text-sm font-medium text-gray-700">Language Code</Label>
+        <Label
+          htmlFor="language_code"
+          className="text-sm font-medium text-gray-700"
+        >
+          Language Code
+        </Label>
         <Input
           type="text"
           id="language_code"
@@ -123,8 +141,8 @@ export function JobForm({ mode, jobId, initialData, onSuccess, onCancel }: JobFo
               ? 'Creating...'
               : 'Saving...'
             : mode === 'create'
-            ? 'Create Job'
-            : 'Save Changes'}
+              ? 'Create Job'
+              : 'Save Changes'}
         </Button>
       </div>
     </form>

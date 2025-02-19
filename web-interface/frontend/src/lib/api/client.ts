@@ -10,8 +10,13 @@ export class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-    throw new ApiError(error.message || 'An unknown error occurred', response.status);
+    const error = await response
+      .json()
+      .catch(() => ({ message: 'An unknown error occurred' }));
+    throw new ApiError(
+      error.message || 'An unknown error occurred',
+      response.status,
+    );
   }
   return response.json();
 }
@@ -23,7 +28,7 @@ function getAuthHeaders(): HeadersInit {
 
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const authHeaders = getAuthHeaders();
   const response = await fetch(`/v1/api${path}`, {

@@ -18,7 +18,9 @@ export function createTestWrapper() {
   return function TestWrapper({ children }: { children: React.ReactNode }) {
     return (
       <MemoryRouter>
-        <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={testQueryClient}>
+          {children}
+        </QueryClientProvider>
       </MemoryRouter>
     );
   };

@@ -37,7 +37,10 @@ describe('JobForm', () => {
 
   const fillForm = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.type(screen.getByLabelText(/title/i), 'Software Engineer');
-    await user.type(screen.getByLabelText(/description/i), 'Job description here');
+    await user.type(
+      screen.getByLabelText(/description/i),
+      'Job description here',
+    );
     await user.type(screen.getByLabelText(/language code/i), 'en');
   };
 
@@ -50,13 +53,16 @@ describe('JobForm', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/title is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/description is required/i)).toBeInTheDocument();
-        expect(screen.getByText(/please select a valid language/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/description is required/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/please select a valid language/i),
+        ).toBeInTheDocument();
       });
 
       expect(mockCreateJob.mutateAsync).not.toHaveBeenCalled();
     });
-
 
     it('handles submission error and shows error message', async () => {
       const error = new Error('Failed to create job');
@@ -81,20 +87,23 @@ describe('JobForm', () => {
 
     it('shows loading state during submission', async () => {
       mockCreateJob.mutateAsync.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
       renderForm();
       const user = userEvent.setup();
 
       await fillForm(user);
-      await user.click(screen.getByRole('button', { name: /create job/i })).catch(() => {
-        // Ignore any potential errors
-      });
+      await user
+        .click(screen.getByRole('button', { name: /create job/i }))
+        .catch(() => {
+          // Ignore any potential errors
+        });
 
-      expect(screen.getByRole('button', { name: /creating/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /creating/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /creating/i })).toBeDisabled();
     });
-
   });
 
   describe('Edit Mode', () => {
@@ -112,7 +121,9 @@ describe('JobForm', () => {
       renderForm(editProps);
 
       expect(screen.getByLabelText(/title/i)).toHaveValue('Existing Job');
-      expect(screen.getByLabelText(/description/i)).toHaveValue('Existing description');
+      expect(screen.getByLabelText(/description/i)).toHaveValue(
+        'Existing description',
+      );
       expect(screen.getByLabelText(/language code/i)).toHaveValue('fr');
     });
 
@@ -139,14 +150,16 @@ describe('JobForm', () => {
 
     it('shows appropriate loading state', async () => {
       mockUpdateJob.mutateAsync.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
       renderForm(editProps);
       const user = userEvent.setup();
 
       await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-      expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /saving/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
     });
   });
@@ -163,7 +176,7 @@ describe('JobForm', () => {
 
     it('disables cancel button during submission', async () => {
       mockCreateJob.mutateAsync.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
       renderForm();
       const user = userEvent.setup();

@@ -6,12 +6,9 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-primary text-primary-content hover:bg-primary/80',
-        secondary:
-          'bg-secondary text-secondary-content hover:bg-secondary/80',
-        destructive:
-          'bg-error text-error-content hover:bg-error/80',
+        default: 'bg-primary text-primary-content hover:bg-primary/80',
+        secondary: 'bg-secondary text-secondary-content hover:bg-secondary/80',
+        destructive: 'bg-error text-error-content hover:bg-error/80',
         outline:
           'text-base-content border border-base-content/20 hover:bg-base-content/10',
       },
@@ -19,7 +16,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
+  },
 );
 
 export interface BadgeProps
@@ -28,7 +25,11 @@ export interface BadgeProps
   variant?: 'default' | 'secondary' | 'destructive' | 'outline';
 }
 
-export function Badge({ className, variant = 'default', ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = 'default',
+  ...props
+}: BadgeProps) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props} />
   );

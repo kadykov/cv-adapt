@@ -2,7 +2,7 @@ import type {
   JobDescriptionCreate,
   JobDescriptionUpdate,
   JobDescriptionResponse,
-  JobsResponse
+  JobsResponse,
 } from '../../../lib/api/generated-types';
 
 const BASE_URL = '/v1/api/jobs';
@@ -46,7 +46,9 @@ export async function getJob(jobId: number): Promise<JobDescriptionResponse> {
 /**
  * Create a new job description
  */
-export async function createJob(data: JobDescriptionCreate): Promise<JobDescriptionResponse> {
+export async function createJob(
+  data: JobDescriptionCreate,
+): Promise<JobDescriptionResponse> {
   const response = await fetch(BASE_URL, {
     method: 'POST',
     headers: {
@@ -68,7 +70,7 @@ export async function createJob(data: JobDescriptionCreate): Promise<JobDescript
  */
 export async function updateJob(
   jobId: number,
-  data: JobDescriptionUpdate
+  data: JobDescriptionUpdate,
 ): Promise<JobDescriptionResponse> {
   const response = await fetch(`${BASE_URL}/${jobId}`, {
     method: 'PUT',

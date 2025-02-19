@@ -1,4 +1,4 @@
-import { LanguageCode, LanguageConfig, LanguageLabels } from "./types";
+import { LanguageCode, LanguageConfig, LanguageLabels } from './types';
 
 /**
  * Language configurations matching backend LanguageConfig registry.
@@ -6,43 +6,43 @@ import { LanguageCode, LanguageConfig, LanguageLabels } from "./types";
 export const LANGUAGE_CONFIG: Record<LanguageCode, LanguageConfig> = {
   [LanguageCode.ENGLISH]: {
     code: LanguageCode.ENGLISH,
-    name: "English",
-    nativeName: "English",
-    dateFormat: "%m/%d/%Y",
-    decimalSeparator: ".",
-    thousandsSeparator: ",",
+    name: 'English',
+    nativeName: 'English',
+    dateFormat: '%m/%d/%Y',
+    decimalSeparator: '.',
+    thousandsSeparator: ',',
   },
   [LanguageCode.FRENCH]: {
     code: LanguageCode.FRENCH,
-    name: "French",
-    nativeName: "Français",
-    dateFormat: "%d/%m/%Y",
-    decimalSeparator: ",",
-    thousandsSeparator: " ",
+    name: 'French',
+    nativeName: 'Français',
+    dateFormat: '%d/%m/%Y',
+    decimalSeparator: ',',
+    thousandsSeparator: ' ',
   },
   [LanguageCode.GERMAN]: {
     code: LanguageCode.GERMAN,
-    name: "German",
-    nativeName: "Deutsch",
-    dateFormat: "%d.%m.%Y",
-    decimalSeparator: ",",
-    thousandsSeparator: ".",
+    name: 'German',
+    nativeName: 'Deutsch',
+    dateFormat: '%d.%m.%Y',
+    decimalSeparator: ',',
+    thousandsSeparator: '.',
   },
   [LanguageCode.SPANISH]: {
     code: LanguageCode.SPANISH,
-    name: "Spanish",
-    nativeName: "Español",
-    dateFormat: "%d/%m/%Y",
-    decimalSeparator: ",",
-    thousandsSeparator: ".",
+    name: 'Spanish',
+    nativeName: 'Español',
+    dateFormat: '%d/%m/%Y',
+    decimalSeparator: ',',
+    thousandsSeparator: '.',
   },
   [LanguageCode.ITALIAN]: {
     code: LanguageCode.ITALIAN,
-    name: "Italian",
-    nativeName: "Italiano",
-    dateFormat: "%d/%m/%Y",
-    decimalSeparator: ",",
-    thousandsSeparator: ".",
+    name: 'Italian',
+    nativeName: 'Italiano',
+    dateFormat: '%d/%m/%Y',
+    decimalSeparator: ',',
+    thousandsSeparator: '.',
   },
 };
 
@@ -52,46 +52,49 @@ export const LANGUAGE_CONFIG: Record<LanguageCode, LanguageConfig> = {
 export const LANGUAGE_LABELS: Record<LanguageCode, LanguageLabels> = {
   [LanguageCode.ENGLISH]: {
     code: LanguageCode.ENGLISH,
-    experience: "Professional Experience",
-    education: "Education",
-    skills: "Skills",
-    coreCompetences: "Core Competences",
+    experience: 'Professional Experience',
+    education: 'Education',
+    skills: 'Skills',
+    coreCompetences: 'Core Competences',
   },
   [LanguageCode.FRENCH]: {
     code: LanguageCode.FRENCH,
-    experience: "Expérience Professionnelle",
-    education: "Formation",
-    skills: "Compétences",
-    coreCompetences: "Compétences Clés",
+    experience: 'Expérience Professionnelle',
+    education: 'Formation',
+    skills: 'Compétences',
+    coreCompetences: 'Compétences Clés',
   },
   [LanguageCode.GERMAN]: {
     code: LanguageCode.GERMAN,
-    experience: "Berufserfahrung",
-    education: "Ausbildung",
-    skills: "Fähigkeiten",
-    coreCompetences: "Kernkompetenzen",
+    experience: 'Berufserfahrung',
+    education: 'Ausbildung',
+    skills: 'Fähigkeiten',
+    coreCompetences: 'Kernkompetenzen',
   },
   [LanguageCode.SPANISH]: {
     code: LanguageCode.SPANISH,
-    experience: "Experiencia Profesional",
-    education: "Educación",
-    skills: "Habilidades",
-    coreCompetences: "Competencias Principales",
+    experience: 'Experiencia Profesional',
+    education: 'Educación',
+    skills: 'Habilidades',
+    coreCompetences: 'Competencias Principales',
   },
   [LanguageCode.ITALIAN]: {
     code: LanguageCode.ITALIAN,
-    experience: "Esperienza Professionale",
-    education: "Istruzione",
-    skills: "Competenze",
-    coreCompetences: "Competenze Chiave",
+    experience: 'Esperienza Professionale',
+    education: 'Istruzione',
+    skills: 'Competenze',
+    coreCompetences: 'Competenze Chiave',
   },
 };
 
 /**
  * Get an array of all supported languages with labels for UI display.
  */
-export function getLanguageOptions(): Array<{ value: LanguageCode; label: string }> {
-  return Object.values(LANGUAGE_CONFIG).map(lang => ({
+export function getLanguageOptions(): Array<{
+  value: LanguageCode;
+  label: string;
+}> {
+  return Object.values(LANGUAGE_CONFIG).map((lang) => ({
     value: lang.code,
     label: `${lang.name} (${lang.nativeName})`,
   }));

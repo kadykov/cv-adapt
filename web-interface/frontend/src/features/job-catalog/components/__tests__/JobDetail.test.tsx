@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import type {
-  UseQueryResult,
-  UseMutationResult,
-} from '@tanstack/react-query';
-import type { JobDescriptionCreate, JobDescriptionUpdate, JobDescriptionResponse } from '../../../../lib/api/generated-types';
+  JobDescriptionCreate,
+  JobDescriptionUpdate,
+  JobDescriptionResponse,
+} from '../../../../lib/api/generated-types';
 import { JobDetail } from '../JobDetail';
 import { createTestWrapper } from '../../../../lib/test-utils';
 import { useJob } from '../../hooks/useJob';
@@ -20,12 +21,17 @@ vi.mock('date-fns', () => ({
 
 // Mock Badge component
 vi.mock('../../../../lib/components/Badge', () => ({
-  Badge: ({ children }: { children: React.ReactNode }) => <span data-testid="badge">{children}</span>,
+  Badge: ({ children }: { children: React.ReactNode }) => (
+    <span data-testid="badge">{children}</span>
+  ),
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -42,15 +48,33 @@ const mockJob: JobDescriptionResponse = {
 };
 
 type JobMutationsResult = {
-  createJob: UseMutationResult<JobDescriptionResponse, Error, JobDescriptionCreate, unknown>;
-  updateJob: UseMutationResult<JobDescriptionResponse, Error, { id: number; data: JobDescriptionUpdate }, unknown>;
+  createJob: UseMutationResult<
+    JobDescriptionResponse,
+    Error,
+    JobDescriptionCreate,
+    unknown
+  >;
+  updateJob: UseMutationResult<
+    JobDescriptionResponse,
+    Error,
+    { id: number; data: JobDescriptionUpdate },
+    unknown
+  >;
   deleteJob: UseMutationResult<void, Error, number, unknown>;
 };
 
 function createMockQueryResult(): UseQueryResult<JobDescriptionResponse, Error>;
-function createMockQueryResult(data: JobDescriptionResponse): UseQueryResult<JobDescriptionResponse, Error>;
-function createMockQueryResult(data: undefined, error: Error): UseQueryResult<JobDescriptionResponse, Error>;
-function createMockQueryResult(data?: JobDescriptionResponse, error?: Error): UseQueryResult<JobDescriptionResponse, Error> {
+function createMockQueryResult(
+  data: JobDescriptionResponse,
+): UseQueryResult<JobDescriptionResponse, Error>;
+function createMockQueryResult(
+  data: undefined,
+  error: Error,
+): UseQueryResult<JobDescriptionResponse, Error>;
+function createMockQueryResult(
+  data?: JobDescriptionResponse,
+  error?: Error,
+): UseQueryResult<JobDescriptionResponse, Error> {
   function createBaseQueryResult() {
     return {
       dataUpdatedAt: Date.now(),
@@ -91,7 +115,7 @@ function createMockQueryResult(data?: JobDescriptionResponse, error?: Error): Us
       isSuccess: false,
       status: 'error',
       fetchStatus: 'idle',
-      promise: Promise.resolve(undefined as unknown)
+      promise: Promise.resolve(undefined as unknown),
     } as UseQueryResult<JobDescriptionResponse, Error>;
   }
 
@@ -135,7 +159,9 @@ function createMockQueryResult(data?: JobDescriptionResponse, error?: Error): Us
   } as UseQueryResult<JobDescriptionResponse, Error>;
 }
 
-function createMockMutations(deleteOverrides?: Partial<UseMutationResult<void, Error, number, unknown>>): JobMutationsResult {
+function createMockMutations(
+  deleteOverrides?: Partial<UseMutationResult<void, Error, number, unknown>>,
+): JobMutationsResult {
   const defaultMutation = {
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue(undefined),
@@ -160,12 +186,24 @@ function createMockMutations(deleteOverrides?: Partial<UseMutationResult<void, E
       ...defaultMutation,
       mutateAsync: vi.fn().mockResolvedValue(mockJob),
       variables: undefined as JobDescriptionCreate | undefined,
-    } as UseMutationResult<JobDescriptionResponse, Error, JobDescriptionCreate, unknown>,
+    } as UseMutationResult<
+      JobDescriptionResponse,
+      Error,
+      JobDescriptionCreate,
+      unknown
+    >,
     updateJob: {
       ...defaultMutation,
       mutateAsync: vi.fn().mockResolvedValue(mockJob),
-      variables: undefined as { id: number; data: JobDescriptionUpdate } | undefined,
-    } as UseMutationResult<JobDescriptionResponse, Error, { id: number; data: JobDescriptionUpdate }, unknown>,
+      variables: undefined as
+        | { id: number; data: JobDescriptionUpdate }
+        | undefined,
+    } as UseMutationResult<
+      JobDescriptionResponse,
+      Error,
+      { id: number; data: JobDescriptionUpdate },
+      unknown
+    >,
     deleteJob: {
       ...defaultMutation,
       variables: undefined as number | undefined,
@@ -187,7 +225,9 @@ describe('JobDetail', () => {
     vi.mocked(useJob).mockReturnValue(createMockQueryResult());
     vi.mocked(useJobMutations).mockReturnValue(createMockMutations());
 
-    const { container } = render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
+    const { container } = render(<JobDetail id={1} />, {
+      wrapper: createTestWrapper(),
+    });
     expect(container.firstChild).toHaveClass('animate-pulse');
   });
 
@@ -200,14 +240,18 @@ describe('JobDetail', () => {
 
     await screen.findByText(/Failed to load job/i, {}, { timeout: 1000 });
     expect(screen.getByRole('alert')).toHaveTextContent(/Failed to load job/);
-    expect(screen.getByRole('button', { name: /Go Back/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Go Back/i }),
+    ).toBeInTheDocument();
   });
 
   it('returns null when data is not available', () => {
     vi.mocked(useJob).mockReturnValue(createMockQueryResult());
     vi.mocked(useJobMutations).mockReturnValue(createMockMutations());
 
-    const { container } = render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
+    const { container } = render(<JobDetail id={1} />, {
+      wrapper: createTestWrapper(),
+    });
     expect(container.firstChild).toHaveClass('animate-pulse');
   });
 
@@ -219,7 +263,9 @@ describe('JobDetail', () => {
 
     expect(screen.getByText(mockJob.title)).toBeInTheDocument();
     expect(screen.getByText(mockJob.description)).toBeInTheDocument();
-    expect(screen.getByTestId('badge')).toHaveTextContent(mockJob.language_code);
+    expect(screen.getByTestId('badge')).toHaveTextContent(
+      mockJob.language_code,
+    );
     expect(screen.getByText('1 day ago')).toBeInTheDocument();
   });
 
@@ -228,9 +274,11 @@ describe('JobDetail', () => {
     const mockDelete = vi.fn().mockResolvedValue(undefined);
 
     vi.mocked(useJob).mockReturnValue(createMockQueryResult(mockJob));
-    vi.mocked(useJobMutations).mockReturnValue(createMockMutations({
-      mutateAsync: mockDelete,
-    }));
+    vi.mocked(useJobMutations).mockReturnValue(
+      createMockMutations({
+        mutateAsync: mockDelete,
+      }),
+    );
 
     render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
 
@@ -246,10 +294,12 @@ describe('JobDetail', () => {
     const neverResolve = new Promise<void>(() => {});
 
     vi.mocked(useJob).mockReturnValue(createMockQueryResult(mockJob));
-    vi.mocked(useJobMutations).mockReturnValue(createMockMutations({
-      mutateAsync: vi.fn(() => neverResolve),
-      isPending: true,
-    }));
+    vi.mocked(useJobMutations).mockReturnValue(
+      createMockMutations({
+        mutateAsync: vi.fn(() => neverResolve),
+        isPending: true,
+      }),
+    );
 
     render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
 
@@ -266,11 +316,13 @@ describe('JobDetail', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     vi.mocked(useJob).mockReturnValue(createMockQueryResult(mockJob));
-    vi.mocked(useJobMutations).mockReturnValue(createMockMutations({
-      mutateAsync: vi.fn().mockRejectedValue(mockError),
-      isError: true,
-      error: mockError,
-    }));
+    vi.mocked(useJobMutations).mockReturnValue(
+      createMockMutations({
+        mutateAsync: vi.fn().mockRejectedValue(mockError),
+        isError: true,
+        error: mockError,
+      }),
+    );
 
     render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
 
@@ -278,7 +330,9 @@ describe('JobDetail', () => {
     await user.click(deleteButton);
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/Failed to delete job/);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /Failed to delete job/,
+      );
     });
 
     expect(consoleSpy).toHaveBeenCalledWith('Failed to delete job:', mockError);
@@ -291,10 +345,16 @@ describe('JobDetail', () => {
     vi.mocked(useJob).mockReturnValue(createMockQueryResult(mockJob));
     vi.mocked(useJobMutations).mockReturnValue(createMockMutations());
 
-    const { rerender } = render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
-    expect(screen.queryByRole('button', { name: /Edit job/i })).not.toBeInTheDocument();
+    const { rerender } = render(<JobDetail id={1} />, {
+      wrapper: createTestWrapper(),
+    });
+    expect(
+      screen.queryByRole('button', { name: /Edit job/i }),
+    ).not.toBeInTheDocument();
 
     rerender(<JobDetail id={1} onEdit={onEdit} />);
-    expect(screen.getByRole('button', { name: /Edit job/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Edit job/i }),
+    ).toBeInTheDocument();
   });
 });

@@ -13,7 +13,6 @@ const mockJob: JobDescriptionResponse = {
   updated_at: null,
 };
 
-
 describe('jobsApi', () => {
   describe('getJobs', () => {
     it('fetches jobs successfully', async () => {
@@ -32,9 +31,9 @@ describe('jobsApi', () => {
         http.get('/v1/api/jobs', () => {
           return HttpResponse.json(
             { detail: { message: 'Server error' } },
-            { status: 500 }
+            { status: 500 },
           );
-        })
+        }),
       );
 
       await expect(getJobs()).rejects.toThrow('Server error');
@@ -52,9 +51,9 @@ describe('jobsApi', () => {
         http.get('/v1/api/jobs/:id', () => {
           return HttpResponse.json(
             { detail: { message: 'Job not found' } },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       await expect(getJob(999)).rejects.toThrow('Job not found');
@@ -78,9 +77,9 @@ describe('jobsApi', () => {
         http.post('/v1/api/jobs', () => {
           return HttpResponse.json(
             { detail: { message: 'Invalid data' } },
-            { status: 422 }
+            { status: 422 },
           );
-        })
+        }),
       );
 
       await expect(createJob(newJob)).rejects.toThrow('Invalid data');
@@ -102,9 +101,9 @@ describe('jobsApi', () => {
         http.put('/v1/api/jobs/:id', () => {
           return HttpResponse.json(
             { detail: { message: 'Job not found' } },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       await expect(updateJob(999, updates)).rejects.toThrow('Job not found');
@@ -121,9 +120,9 @@ describe('jobsApi', () => {
         http.delete('/v1/api/jobs/:id', () => {
           return HttpResponse.json(
             { detail: { message: 'Job not found' } },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       await expect(deleteJob(999)).rejects.toThrow('Job not found');

@@ -1,6 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter as Router } from 'react-router-dom'
-import { Button } from '@headlessui/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Button } from '@headlessui/react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -9,7 +9,7 @@ const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 function App() {
   return (
@@ -21,7 +21,8 @@ function App() {
               <div className="max-w-md">
                 <h1 className="text-5xl font-bold">CV Adapt</h1>
                 <p className="py-6">
-                  Intelligent CV customization and generation with multilingual support
+                  Intelligent CV customization and generation with multilingual
+                  support
                 </p>
                 <Button className="btn btn-primary">Get Started</Button>
               </div>
@@ -30,7 +31,7 @@ function App() {
         </div>
       </Router>
     </QueryClientProvider>
-  )
+  );
 }
 
-export default App
+export default App;

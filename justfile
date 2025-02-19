@@ -44,6 +44,7 @@ mypy *ARGS='.':
 format *ARGS='.':
     uv run ruff check --select I --fix {{ARGS}}
     uv run ruff format {{ARGS}}
+    just format-frontend
 
 # Run pre-commit checks
 pre-commit:
@@ -71,6 +72,7 @@ all:
     just export-openapi
     just test-frontend-all
     just test-frontend-cov
+    just type-check-frontend
 
 # Build documentation
 docs:
@@ -145,3 +147,13 @@ test-frontend-cov:
 # Run frontend linting
 lint-frontend:
     cd web-interface/frontend && npm run lint
+    cd web-interface/frontend && npm run format:check
+    cd web-interface/frontend && npm run type-check
+
+# Format frontend code
+format-frontend:
+    cd web-interface/frontend && npm run format
+
+# Run frontend type checking
+type-check-frontend:
+    cd web-interface/frontend && npm run type-check

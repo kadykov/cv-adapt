@@ -3,11 +3,11 @@
  * Must match backend LanguageCode enum.
  */
 export enum LanguageCode {
-  ENGLISH = "en",
-  FRENCH = "fr",
-  GERMAN = "de",
-  SPANISH = "es",
-  ITALIAN = "it",
+  ENGLISH = 'en',
+  FRENCH = 'fr',
+  GERMAN = 'de',
+  SPANISH = 'es',
+  ITALIAN = 'it',
 }
 
 /**

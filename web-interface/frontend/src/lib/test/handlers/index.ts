@@ -1,5 +1,8 @@
 import { http, HttpResponse } from 'msw';
-import { mockAuthResponse, mockUser } from '../../../features/auth/testing/fixtures';
+import {
+  mockAuthResponse,
+  mockUser,
+} from '../../../features/auth/testing/fixtures';
 import type { JobDescriptionResponse } from '../../api/generated-types';
 
 const API_PREFIX = '/v1/api';
@@ -43,12 +46,12 @@ export const handlers = [
   }),
 
   http.post(`${API_PREFIX}/jobs`, async ({ request }) => {
-    const body = await request.json() as JobDescriptionResponse;
+    const body = (await request.json()) as JobDescriptionResponse;
     return HttpResponse.json({ ...mockJob, ...body });
   }),
 
   http.put(`${API_PREFIX}/jobs/:id`, async ({ request }) => {
-    const body = await request.json() as JobDescriptionResponse;
+    const body = (await request.json()) as JobDescriptionResponse;
     return HttpResponse.json({ ...mockJob, ...body });
   }),
 
@@ -58,7 +61,7 @@ export const handlers = [
 
   // Auth handlers
   http.post(`${API_PREFIX}/auth/register`, async ({ request }) => {
-    const data = await request.json() as { email: string; password: string };
+    const data = (await request.json()) as { email: string; password: string };
     if (data?.email === 'exists@example.com') {
       return new HttpResponse(
         JSON.stringify({
@@ -69,7 +72,7 @@ export const handlers = [
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
     }
     return HttpResponse.json(mockAuthResponse);
@@ -80,7 +83,7 @@ export const handlers = [
   }),
 
   http.post(`${API_PREFIX}/auth/refresh`, async ({ request }) => {
-    const data = await request.json() as { token: string };
+    const data = (await request.json()) as { token: string };
     if (data.token === 'invalid-refresh-token') {
       return new HttpResponse(
         JSON.stringify({
@@ -91,7 +94,7 @@ export const handlers = [
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
     }
     return HttpResponse.json(mockAuthResponse);
@@ -110,7 +113,7 @@ export const handlers = [
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
     }
     return HttpResponse.json(mockUser);

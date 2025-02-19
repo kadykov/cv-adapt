@@ -1,5 +1,9 @@
 import { vi } from 'vitest';
-import type { UseMutationResult, UseMutateFunction, UseMutateAsyncFunction } from '@tanstack/react-query';
+import type {
+  UseMutationResult,
+  UseMutateFunction,
+  UseMutateAsyncFunction,
+} from '@tanstack/react-query';
 import type { AuthResponse } from '../../../lib/api/generated-types';
 import { ApiError } from '../../../lib/api/client';
 
@@ -9,8 +13,18 @@ export type RegisterVariables = {
 };
 
 // Create exact mutation function types from React Query
-type MutateFunction = UseMutateFunction<AuthResponse, ApiError, RegisterVariables, unknown>;
-type MutateAsyncFunction = UseMutateAsyncFunction<AuthResponse, ApiError, RegisterVariables, unknown>;
+type MutateFunction = UseMutateFunction<
+  AuthResponse,
+  ApiError,
+  RegisterVariables,
+  unknown
+>;
+type MutateAsyncFunction = UseMutateAsyncFunction<
+  AuthResponse,
+  ApiError,
+  RegisterVariables,
+  unknown
+>;
 
 // Create base mutation type that matches React Query's structure exactly
 type BaseMutationResult = {
@@ -55,22 +69,26 @@ const baseMutation: BaseMutationResult = {
 };
 
 export const createMockMutation = (
-  overrides: Partial<BaseMutationResult> = {}
-): UseMutationResult<AuthResponse, ApiError, RegisterVariables, unknown> => ({
-  ...baseMutation,
-  ...overrides,
-} as UseMutationResult<AuthResponse, ApiError, RegisterVariables, unknown>);
+  overrides: Partial<BaseMutationResult> = {},
+): UseMutationResult<AuthResponse, ApiError, RegisterVariables, unknown> =>
+  ({
+    ...baseMutation,
+    ...overrides,
+  }) as UseMutationResult<AuthResponse, ApiError, RegisterVariables, unknown>;
 
-export const createPendingMutation = () => createMockMutation({
-  status: 'loading',
-  isPending: true,
-  isIdle: false,
-  data: undefined,
-  submittedAt: Date.now(),
-});
+export const createPendingMutation = () =>
+  createMockMutation({
+    status: 'loading',
+    isPending: true,
+    isIdle: false,
+    data: undefined,
+    submittedAt: Date.now(),
+  });
 
 export const createSuccessMutation = (data: AuthResponse) => {
-  const mutateAsync = vi.fn().mockResolvedValue(data) as unknown as MutateAsyncFunction;
+  const mutateAsync = vi
+    .fn()
+    .mockResolvedValue(data) as unknown as MutateAsyncFunction;
   return createMockMutation({
     status: 'success',
     data,
@@ -82,7 +100,9 @@ export const createSuccessMutation = (data: AuthResponse) => {
 };
 
 export const createErrorMutation = (error: ApiError) => {
-  const mutateAsync = vi.fn().mockRejectedValue(error) as unknown as MutateAsyncFunction;
+  const mutateAsync = vi
+    .fn()
+    .mockRejectedValue(error) as unknown as MutateAsyncFunction;
   return createMockMutation({
     status: 'error',
     error,

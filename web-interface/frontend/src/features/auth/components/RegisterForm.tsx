@@ -6,18 +6,20 @@ import { useRegisterMutation } from '../hooks';
 import { useAuth } from '../context';
 import type { RegisterRequest } from '../../../lib/api/generated-types';
 
-const schema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+const schema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -38,11 +40,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     criteriaMode: 'all',
   });
 
-  const {
-    mutateAsync,
-    error,
-    isPending,
-  } = useRegisterMutation();
+  const { mutateAsync, error, isPending } = useRegisterMutation();
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -81,8 +79,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const password = errors.password?.ref?.value;
   const passwordErrors = passwordValidationRules
-    .filter(rule => !rule.test(password))
-    .map(rule => rule.message);
+    .filter((rule) => !rule.test(password))
+    .map((rule) => rule.message);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
@@ -112,14 +110,20 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
         {passwordErrors.map((error, index) => (
-          <Description key={index} className="mt-1 text-sm text-error" role="alert">
+          <Description
+            key={index}
+            className="mt-1 text-sm text-error"
+            role="alert"
+          >
             {error}
           </Description>
         ))}
       </Field>
 
       <Field>
-        <Label className="text-sm font-medium text-gray-700">Confirm Password</Label>
+        <Label className="text-sm font-medium text-gray-700">
+          Confirm Password
+        </Label>
         <Input
           type="password"
           autoComplete="new-password"

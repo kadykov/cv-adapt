@@ -10,7 +10,7 @@ const isExpectedError = (message: string): boolean => {
     'Invalid refresh token',
     'Unauthorized',
   ];
-  return expectedPatterns.some(pattern => message.includes(pattern));
+  return expectedPatterns.some((pattern) => message.includes(pattern));
 };
 
 // Override console.error to suppress expected test errors
@@ -27,7 +27,7 @@ const originalStderrWrite = process.stderr.write.bind(process.stderr);
 process.stderr.write = function (
   buffer: string | Uint8Array,
   encoding?: BufferEncoding | ((err?: Error) => void),
-  cb?: (err?: Error) => void
+  cb?: (err?: Error) => void,
 ): boolean {
   const message = String(buffer);
   if (!isExpectedError(message)) {
@@ -56,7 +56,7 @@ global.ResizeObserver = ResizeObserverStub;
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -71,11 +71,13 @@ Object.defineProperty(window, 'matchMedia', {
 // Setup MSW
 import { server } from './server';
 // Enable request debugging
-beforeAll(() => server.listen({
-  onUnhandledRequest: (req) => {
-    console.error('Found an unhandled %s request to %s', req.method, req.url);
-  }
-}));
+beforeAll(() =>
+  server.listen({
+    onUnhandledRequest: (req) => {
+      console.error('Found an unhandled %s request to %s', req.method, req.url);
+    },
+  }),
+);
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 

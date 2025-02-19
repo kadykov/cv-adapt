@@ -35,13 +35,13 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
       <div className="card bg-base-100 shadow-xl" role="article">
         <div className="card-body">
           <div className="alert alert-error" role="alert">
-            <span>Error loading job details: {error instanceof Error ? error.message : 'Unknown error'}</span>
+            <span>
+              Error loading job details:{' '}
+              {error instanceof Error ? error.message : 'Unknown error'}
+            </span>
           </div>
           <div className="card-actions justify-end mt-4">
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate(-1)}
-            >
+            <button className="btn btn-primary" onClick={() => navigate(-1)}>
               Go Back
             </button>
           </div>
@@ -118,11 +118,10 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
         {deleteJob.isError && (
           <div className="alert alert-error mt-4" role="alert">
             <span>
-              Failed to delete job: {
-                deleteJob.error instanceof Error
-                  ? deleteJob.error.message
-                  : 'Unknown error'
-              }
+              Failed to delete job:{' '}
+              {deleteJob.error instanceof Error
+                ? deleteJob.error.message
+                : 'Unknown error'}
             </span>
           </div>
         )}
