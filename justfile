@@ -121,7 +121,7 @@ test-backend *ARGS='':
 
 # Run frontend unit tests
 test-frontend:
-    cd web-interface/frontend && npm test
+    cd web-interface/frontend && npm test --silent
 
 # Run frontend integration tests
 test-frontend-integration:

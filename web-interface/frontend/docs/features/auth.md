@@ -113,6 +113,7 @@ const { mutateAsync, isPending, error } = useRegisterMutation();
 ```
 
 Features:
+
 - API error handling
 - Loading state management
 - Automatic auth context updates
@@ -127,6 +128,7 @@ const { data: profile, isLoading, error } = useProfile();
 ```
 
 Features:
+
 - Automatic retries disabled
 - Error handling for unauthorized states
 - Type-safe profile data
@@ -140,6 +142,7 @@ const { mutateAsync, isPending } = useRefreshToken();
 ```
 
 Features:
+
 - Token refresh handling
 - Type-safe response handling
 - Error management
@@ -163,6 +166,7 @@ testing/
 ### Component Testing
 
 Tests cover:
+
 - Form validation
 - Loading states
 - Error handling
@@ -174,6 +178,7 @@ Tests cover:
 ### Hook Testing
 
 Tests verify:
+
 - State management
 - API interactions
 - Error handling
