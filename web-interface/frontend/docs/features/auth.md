@@ -4,6 +4,28 @@
 
 The authentication system provides secure route protection and token management for the web interface. It uses React Query for state management and React Router for protected route handling.
 
+## Directory Structure
+
+```
+features/auth/
+  components/     # Auth-related components
+    LoginForm.tsx
+    RegisterForm.tsx
+    __tests__/   # Component tests
+  hooks/         # Auth-specific hooks
+    useAuth.ts
+    useRegisterMutation.ts
+    useProfile.ts
+    useRefreshToken.ts
+    __tests__/   # Hook tests
+  testing/       # Test utilities and mocks
+    fixtures.ts  # Mock data
+    mocks.tsx    # Mock components
+    setup.ts     # Test setup utilities
+  auth-context.tsx
+  auth-types.ts
+```
+
 ## Components
 
 ### Authentication Forms
@@ -23,6 +45,8 @@ Features:
 - Loading state handling
 - Error message display
 - Type-safe form handling with Zod
+- Focus and hover state management
+- Accessibility support with HeadlessUI
 
 #### `RegisterForm` Component
 
@@ -41,7 +65,9 @@ Features:
   - At least one number
 - Password confirmation matching
 - Real-time validation feedback
-- Loading state handling
+- Loading state handling ("Creating Account...")
+- Error state management with API errors
+- HeadlessUI integration for accessibility
 
 #### `AuthDialog` Component
 
@@ -57,6 +83,9 @@ Features:
 - Modal dialog with backdrop
 - Keyboard navigation support
 - Accessible design
+- Proper focus management
+
+## Hooks
 
 ### `useAuth` Hook
 
@@ -75,68 +104,89 @@ const { isAuthenticated, isLoading, token, clearAuth, loginWithCredentials } =
 - Async logout functionality
 - Credentials-based login
 
-#### Usage Example
+### `useRegisterMutation` Hook
+
+Handles user registration with proper error handling.
 
 ```typescript
-function Header() {
-  const { isAuthenticated, clearAuth } = useAuth();
-
-  const handleLogout = async () => {
-    await clearAuth();
-    // User is now logged out
-  };
-
-  return (
-    <header>
-      {isAuthenticated ? (
-        <button onClick={handleLogout}>Logout</button>
-      ) : (
-        <Link to="/login">Login</Link>
-      )}
-    </header>
-  );
-}
+const { mutateAsync, isPending, error } = useRegisterMutation();
 ```
 
-### `ProtectedRoute` Component
+Features:
+- API error handling
+- Loading state management
+- Automatic auth context updates
+- Type-safe mutations
 
-A higher-order component that handles route protection based on authentication state.
+### `useProfile` Hook
+
+Fetches and manages the authenticated user's profile.
 
 ```typescript
-<ProtectedRoute redirectTo="/login">
-  <SecureContent />
-</ProtectedRoute>
+const { data: profile, isLoading, error } = useProfile();
 ```
 
-#### Features
+Features:
+- Automatic retries disabled
+- Error handling for unauthorized states
+- Type-safe profile data
 
-- Automatic redirect for unauthenticated users
-- Loading state handling
-- Preserves attempted URL for post-login redirect
-- Configurable redirect path
+### `useRefreshToken` Hook
 
-#### Usage Example
+Manages token refresh operations.
 
 ```typescript
-import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoute } from '@/lib/auth';
-
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  );
-}
+const { mutateAsync, isPending } = useRefreshToken();
 ```
+
+Features:
+- Token refresh handling
+- Type-safe response handling
+- Error management
+
+## Testing
+
+### Test Structure
+
+```
+__tests__/
+  hooks.test.tsx      # Hook unit tests
+  components/
+    LoginForm.test.tsx
+    RegisterForm.test.tsx
+testing/
+  fixtures.ts         # Shared test data
+  mocks.tsx          # Mock components
+  setup.ts           # Test utilities
+```
+
+### Component Testing
+
+Tests cover:
+- Form validation
+- Loading states
+- Error handling
+- Success scenarios
+- Focus management
+- Accessibility features
+- API integration
+
+### Hook Testing
+
+Tests verify:
+- State management
+- API interactions
+- Error handling
+- Loading states
+- Token management
+
+### Mock Setup
+
+- Centralized mock data
+- Shared test utilities
+- MSW handlers for API
+- QueryClient setup
+- Auth context mocking
 
 ## Implementation Details
 
@@ -158,20 +208,22 @@ Form validation is implemented using:
 - Real-time error feedback
 - Customizable validation rules
 
-### Testing
+### Testing Best Practices
 
-The authentication system includes comprehensive tests:
-
-- Unit tests for all components
-- Integration tests for forms and dialogs
-- Mocked API responses
-- Loading and error state coverage
-- Validation behavior tests
-- Accessibility testing
+- Use role-based queries
+- Test loading states
+- Verify error handling
+- Check accessibility
+- Mock API responses
+- Test focus management
+- Verify form submissions
 
 ## Next Steps
 
-- Add refresh token handling
 - Implement password reset functionality
+  - Request reset form
+  - Reset token handling
+  - New password form
+- Add refresh token rotation
 - Add social authentication providers
 - Enhance security with 2FA

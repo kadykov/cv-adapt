@@ -70,7 +70,7 @@
 
 ### Testing Strategy
 
-### Unit Tests
+#### Unit Tests
 
 - Hook tests with test-utils
   - Mock providers (Auth, Query)
@@ -84,7 +84,7 @@
   - Error state handling
 - Utility function tests
 
-### Integration Tests
+#### Integration Tests
 
 - Feature-level tests with MSW
   - Standardized API paths (/v1/api)
@@ -100,7 +100,7 @@
   - Error handling
   - Token management
 
-### Contract Tests
+#### Contract Tests
 
 - OpenAPI schema validation
 - Response type checking
@@ -123,12 +123,29 @@
 
 ```
 src/
+  features/
+    auth/
+      components/     # Auth-related components
+        LoginForm.tsx
+        RegisterForm.tsx
+        __tests__/   # Component tests
+      hooks/         # Auth-specific hooks
+        useAuth.ts
+        useRegisterMutation.ts
+        useProfile.ts
+        useRefreshToken.ts
+        __tests__/   # Hook tests
+      testing/       # Test utilities and mocks
+        fixtures.ts  # Mock data
+        mocks.tsx    # Mock components
+        setup.ts     # Test setup utilities
+      auth-context.tsx
+      auth-types.ts
   lib/           # Shared utilities
     api/         # API client and types
     hooks/       # Shared hooks
     utils/       # Helper functions
     test/        # Test utilities
-  features/      # Feature-based modules
   config/        # App configuration
 ```
 
