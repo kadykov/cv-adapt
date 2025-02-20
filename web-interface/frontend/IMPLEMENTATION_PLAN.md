@@ -119,6 +119,131 @@
 
 ## Phase 2: Authentication Implementation
 
+### Authentication System Improvements
+
+#### Current Issues
+
+- Inconsistency between login and register components
+- Token management and refresh flow issues
+- Proxy configuration concerns
+- Need for better integration testing
+
+#### Implementation Plan
+
+1. **Standardize Auth Components** (Phase 1)
+
+```typescript
+// Create useLoginMutation hook
+features/auth/hooks/useLoginMutation.ts
+- Mirror useRegisterMutation pattern
+- Handle loading/error states
+- Use React Query mutation
+- Proper error typing
+
+// Update LoginForm component
+features/auth/components/LoginForm.tsx
+- Replace direct context usage with mutation
+- Add proper loading states
+- Implement error display
+- Match RegisterForm patterns
+```
+
+2. **Token Management System** (Phase 2)
+
+```typescript
+// Create token management service
+features/auth/services/token-service.ts
+- Token storage/retrieval
+- Token validation
+- Token refresh logic
+- Expiration handling
+
+// Add axios interceptors
+lib/api/axios-config.ts
+- Request interceptor for token injection
+- Response interceptor for 401 handling
+- Automatic token refresh
+- Request queue during refresh
+
+// Update AuthProvider
+features/auth/components/AuthProvider.tsx
+- Integrate token service
+- Add refresh token logic
+- Proper initial auth check
+- Clear error handling
+```
+
+3. **Auth API Layer** (Phase 3)
+
+```typescript
+// Create auth API service
+lib/api/auth-service.ts
+- Login endpoints
+- Register endpoints
+- Token refresh endpoint
+- Profile fetch endpoint
+
+// Add request/response logging
+lib/api/logging.ts
+- Development mode logging
+- Request/response interceptors
+- Error tracking
+```
+
+4. **Integration Tests** (Phase 4)
+
+```typescript
+// Auth flow tests
+features/auth/tests/auth-flow.test.tsx
+- Registration → Login flow
+- Token storage/retrieval
+- Protected route access
+- 401 handling and recovery
+
+// MSW handlers
+features/auth/testing/handlers.ts
+- Auth endpoint mocks
+- Error scenarios
+- Token validation
+
+// Contract tests
+tests/contract/auth-api.test.ts
+- OpenAPI schema validation
+- Response type checking
+```
+
+5. **Protected Route Enhancement** (Phase 5)
+
+```typescript
+// Create authenticated fetch hook
+features/auth/hooks/useAuthenticatedFetch.ts
+- Automatic token handling
+- Error state management
+- Loading state handling
+
+// Update ProtectedRoute
+routes/ProtectedRoute.tsx
+- Better loading states
+- Error handling
+- Redirect logic
+```
+
+6. **Development Tools** (Phase 6)
+
+```typescript
+// Add debug utilities
+features/auth/utils/debug.ts
+- Token state logging
+- Request tracking
+- Error logging
+
+// Add development components
+features/auth/components/debug/
+- AuthStateViewer
+- TokenInspector
+- RequestLogger
+```
+
 ### Directory Structure
 
 ```
@@ -340,19 +465,20 @@ routes/
 
 #### Required Components:
 
-- [ ] Layout Component
+- [x] Layout Component
 
-  - [ ] Navigation bar
-  - [ ] Auth state integration
-  - [ ] Responsive design
-  - [ ] Route-based content rendering
+  - [x] Navigation bar
+  - [x] Auth state integration
+  - [x] Responsive design
+  - [x] Route-based content rendering
 
-- [ ] Route Configuration
-  - [ ] Define route constants
-  - [ ] Set up protected routes
-  - [ ] Implement route guards
-  - [ ] Add loading states
-  - [ ] Handle auth redirects
+- [x] Route Configuration
+  - [x] Define route constants
+  - [x] Set up protected routes
+  - [x] Implement route guards
+  - [x] Add loading states
+  - [x] Handle auth redirects
+  - [x] API proxy configuration
 
 ```typescript
 // Example Route Structure
@@ -366,11 +492,11 @@ routes/
 
 #### Testing Requirements:
 
-- [ ] Route protection tests
-- [ ] Navigation tests
-- [ ] Auth state integration tests
-- [ ] Loading state tests
-- [ ] Redirect handling tests
+- [x] Route protection tests
+- [x] Navigation tests
+- [x] Auth state integration tests
+- [x] Loading state tests
+- [x] Redirect handling tests
 
 ### CV Management Feature
 

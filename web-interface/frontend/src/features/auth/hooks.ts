@@ -3,8 +3,27 @@ import { authApi } from '../../lib/api/auth';
 import type {
   AuthResponse,
   RegisterRequest,
+  LoginRequest,
 } from '../../lib/api/generated-types';
 import { useAuth } from './auth-context';
+
+export function useLoginMutation() {
+  const { login } = useAuth();
+
+  return useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const data: LoginRequest = {
+        username: credentials.email,
+        password: credentials.password,
+        scope: '',
+        grant_type: 'password',
+      };
+      const response = await authApi.login(data);
+      await login(response);
+      return response;
+    },
+  });
+}
 
 export function useRegisterMutation() {
   const { login } = useAuth();

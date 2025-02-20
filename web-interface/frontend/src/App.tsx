@@ -6,6 +6,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Home } from './routes/Home';
 import { Auth } from './routes/Auth';
 import { ROUTES } from './routes/paths';
+import { setupInterceptors } from './lib/api/axios-interceptors';
 
 // Import job pages
 import { JobList } from './features/job-catalog/components/JobList';
@@ -23,6 +24,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Initialize axios interceptors
+setupInterceptors();
 
 function App() {
   return (

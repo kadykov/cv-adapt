@@ -1,50 +1,74 @@
-# React + TypeScript + Vite
+# Frontend Implementation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Required Changes
 
-Currently, two official plugins are available:
+1. Install Dependencies:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
+```bash
+# Install axios and its types
+npm install axios
+npm install @types/axios --save-dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+2. Update Implementation:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react';
+- [x] Created token service for centralized token management
+- [x] Added axios interceptors for automatic token handling
+- [x] Updated AuthProvider to use token service
+- [x] Standardized login and register flows
+- [ ] Add profile fetching after initial token validation
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-});
+## Current Issues:
+
+1. Missing Dependencies:
+
+- Need to install axios and its types
+- Compilation errors will persist until dependencies are installed
+
+2. Profile Fetching:
+
+- Need to implement profile fetching in AuthProvider when token is valid
+- This will ensure proper initialization of auth state
+
+## Next Steps:
+
+1. After installing dependencies:
+
+```bash
+# Verify types are working
+npm run type-check
+
+# Run tests to ensure nothing is broken
+npm run test
 ```
+
+2. Test Authentication Flow:
+
+- Register new user
+- Verify tokens are stored
+- Test protected routes
+- Verify token refresh works
+- Test logout flow
+
+3. Add Integration Tests:
+
+- Add tests for token refresh
+- Add tests for queued requests during refresh
+- Add tests for auth state persistence
+
+## Configuration
+
+The authentication system uses the following components:
+
+- `token-service.ts`: Manages token storage and validation
+- `axios-interceptors.ts`: Handles automatic token refresh
+- `AuthProvider.tsx`: Manages authentication state
+- `useLoginMutation.ts`: Handles login requests
+
+Tokens are stored in localStorage with the following keys:
+
+- `accessToken`
+- `refreshToken`
+- `tokenExpiresAt`
+
+The access token expires after 1 hour, and refresh attempts start 5 minutes before expiration.

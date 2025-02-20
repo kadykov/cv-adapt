@@ -5,17 +5,26 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { mockAuthContext, mockAuthContextValue } from '../../testing/setup';
 
-// These mocks must be defined before any other imports
-const mockLoginWithCredentials = vi.fn();
 const mockOnSuccess = vi.fn();
+const mockMutateAsync = vi.fn();
 
-vi.mock('../../auth-context', () => ({
-  ...mockAuthContext,
-  useAuth: () => ({
-    ...mockAuthContextValue,
-    loginWithCredentials: mockLoginWithCredentials,
+const mockMutationState = {
+  isPending: false,
+};
+
+vi.mock('../../hooks', () => ({
+  useLoginMutation: () => ({
+    mutateAsync: (...args: unknown[]) => {
+      mockMutationState.isPending = true;
+      return mockMutateAsync(...args).finally(() => {
+        mockMutationState.isPending = false;
+      });
+    },
+    error: undefined,
+    get isPending() {
+      return mockMutationState.isPending;
+    },
   }),
 }));
 
@@ -28,6 +37,7 @@ import '@testing-library/jest-dom';
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutationState.isPending = false;
   });
 
   const renderForm = (props = {}) => {
@@ -58,7 +68,7 @@ describe('LoginForm', () => {
       expect(passwordError).toBeInTheDocument();
     });
 
-    expect(mockLoginWithCredentials).not.toHaveBeenCalled();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
   it('validates email format', async () => {
@@ -75,7 +85,7 @@ describe('LoginForm', () => {
       expect(emailError).toBeInTheDocument();
     });
 
-    expect(mockLoginWithCredentials).not.toHaveBeenCalled();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
   it('submits form with valid data', async () => {
@@ -88,7 +98,7 @@ describe('LoginForm', () => {
     await submitForm(user);
 
     await waitFor(() => {
-      expect(mockLoginWithCredentials).toHaveBeenCalledWith({
+      expect(mockMutateAsync).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'Password123',
       });
@@ -96,7 +106,7 @@ describe('LoginForm', () => {
   });
 
   it('shows loading state during submission', async () => {
-    mockLoginWithCredentials.mockImplementationOnce(
+    mockMutateAsync.mockImplementationOnce(
       () => new Promise((resolve) => setTimeout(resolve, 100)),
     );
     renderForm();
@@ -114,7 +124,7 @@ describe('LoginForm', () => {
   });
 
   it('calls onSuccess after successful login', async () => {
-    mockLoginWithCredentials.mockResolvedValueOnce({});
+    mockMutateAsync.mockResolvedValueOnce({});
     renderForm();
     const user = userEvent.setup();
 
@@ -123,7 +133,7 @@ describe('LoginForm', () => {
     await submitForm(user);
 
     await waitFor(() => {
-      expect(mockLoginWithCredentials).toHaveBeenCalled();
+      expect(mockMutateAsync).toHaveBeenCalled();
     });
 
     // onSuccess should only be called after login is successful
@@ -133,9 +143,7 @@ describe('LoginForm', () => {
   });
 
   it('handles login error', async () => {
-    mockLoginWithCredentials.mockRejectedValueOnce(
-      new Error('Invalid credentials'),
-    );
+    mockMutateAsync.mockRejectedValueOnce(new Error('Invalid credentials'));
 
     renderForm();
     const user = userEvent.setup();

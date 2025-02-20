@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Field, Input, Label, Description, Button } from '@headlessui/react';
-import { useAuth } from '../auth-context';
+import { useLoginMutation } from '../hooks';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,11 +16,11 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { loginWithCredentials } = useAuth();
+  const { mutateAsync, error, isPending } = useLoginMutation();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: 'onSubmit',
@@ -30,11 +30,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await loginWithCredentials(data);
+      await mutateAsync(data);
       onSuccess?.();
-    } catch (error) {
-      // Error handling is done in the login function
-      console.error('Login failed:', error);
+    } catch {
+      // Error is handled by the mutation error state
     }
   };
 
@@ -45,6 +44,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <Input
           type="email"
           autoComplete="email"
+          disabled={isPending}
           {...register('email')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
         />
@@ -60,6 +60,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <Input
           type="password"
           autoComplete="current-password"
+          disabled={isPending}
           {...register('password')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
         />
@@ -70,12 +71,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         )}
       </Field>
 
+      {error && (
+        <Field>
+          <Description className="text-sm text-error" role="alert">
+            {error.message}
+          </Description>
+        </Field>
+      )}
+
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className="btn btn-primary w-full data-[hover]:btn-primary-focus data-[disabled]:btn-disabled"
       >
-        {isSubmitting ? 'Signing in...' : 'Sign in'}
+        {isPending ? 'Signing in' : 'Sign in'}
       </Button>
     </form>
   );

@@ -1,3 +1,6 @@
+import axios from 'axios';
+import type { AxiosResponse } from 'axios';
+
 export class ApiError extends Error {
   statusCode: number;
 
@@ -8,55 +11,39 @@ export class ApiError extends Error {
   }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: 'An unknown error occurred' }));
-    throw new ApiError(
-      error.message || 'An unknown error occurred',
-      response.status,
-    );
-  }
-  return response.json();
-}
+export const axiosInstance = axios.create({
+  baseURL: '/v1/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+// Error handler to convert axios errors to our ApiError format
+axiosInstance.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: unknown) => {
+    if (!axios.isAxiosError(error)) {
+      throw error;
+    }
+    if (error.response) {
+      const data = error.response.data as { message?: string } | undefined;
+      throw new ApiError(
+        data?.message || 'An unknown error occurred',
+        error.response.status,
+      );
+    }
+    throw error;
+  },
+);
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const authHeaders = getAuthHeaders();
-  const response = await fetch(`/v1/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-      ...options.headers,
-    },
-  });
-
-  return handleResponse<T>(response);
-}
-
+// Type-safe request methods
 export const client = {
-  get: <T>(path: string) => apiRequest<T>(path),
+  get: <T>(path: string) =>
+    axiosInstance.get<T>(path).then((response) => response.data),
   post: <T>(path: string, data: unknown) =>
-    apiRequest<T>(path, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    axiosInstance.post<T>(path, data).then((response) => response.data),
   put: <T>(path: string, data: unknown) =>
-    apiRequest<T>(path, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    axiosInstance.put<T>(path, data).then((response) => response.data),
   delete: <T>(path: string) =>
-    apiRequest<T>(path, {
-      method: 'DELETE',
-    }),
+    axiosInstance.delete<T>(path).then((response) => response.data),
 };

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from '../auth-context';
 import type { AuthContextType } from '../auth-types';
 import type { AuthResponse } from '../../../lib/api/generated-types';
+import { tokenService } from '../services/token-service';
+import { useLoginMutation } from '../hooks';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
@@ -9,20 +11,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback((response: AuthResponse) => {
     setUser(response.user);
-    // Here we would also store the token in localStorage or secure storage
+    tokenService.storeTokens(response);
   }, []);
+
+  const { mutateAsync: loginMutation } = useLoginMutation();
 
   const loginWithCredentials = useCallback(
     async (credentials: { email: string; password: string }) => {
-      // This will be implemented to call the API
-      console.log('Login with credentials:', credentials);
+      await loginMutation(credentials);
     },
-    [],
+    [loginMutation],
   );
 
   const logout = useCallback(async () => {
     setUser(null);
-    // Here we would also clear the token from storage
+    tokenService.clearTokens();
   }, []);
 
   // Initialize auth state
@@ -31,9 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       try {
         setIsLoading(true);
-        // Here we would check for stored tokens and fetch user profile
-        // For now, just simulate the check
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        const token = tokenService.getAccessToken();
+        if (!token) {
+          return;
+        }
+
+        // TODO: Fetch user profile using token
       } finally {
         setIsLoading(false);
       }
