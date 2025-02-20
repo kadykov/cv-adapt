@@ -327,6 +327,51 @@ Supporting Infrastructure Added:
   - [x] MSW server setup
   - [x] API handlers
 
+### Routing Implementation
+
+```typescript
+// Routes Structure
+routes/
+  Layout.tsx         # Main layout with navigation
+  ProtectedRoute.tsx # Auth protection wrapper
+  paths.ts          # Route path constants
+  __tests__/        # Route tests
+```
+
+#### Required Components:
+
+- [ ] Layout Component
+
+  - [ ] Navigation bar
+  - [ ] Auth state integration
+  - [ ] Responsive design
+  - [ ] Route-based content rendering
+
+- [ ] Route Configuration
+  - [ ] Define route constants
+  - [ ] Set up protected routes
+  - [ ] Implement route guards
+  - [ ] Add loading states
+  - [ ] Handle auth redirects
+
+```typescript
+// Example Route Structure
+/               // Landing page
+/auth          // Authentication (login/register)
+/jobs          // Protected, Job Catalog
+/jobs/:id      // Protected, Job Detail
+/jobs/new      // Protected, Create Job
+/jobs/:id/edit // Protected, Edit Job
+```
+
+#### Testing Requirements:
+
+- [ ] Route protection tests
+- [ ] Navigation tests
+- [ ] Auth state integration tests
+- [ ] Loading state tests
+- [ ] Redirect handling tests
+
 ### CV Management Feature
 
 ```

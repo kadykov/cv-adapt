@@ -38,7 +38,21 @@
 
 ## In Progress
 
-1. **New Frontend Implementation**
+1. **Frontend Routing Implementation**
+   - [ ] Main Layout
+     - [ ] Navigation bar
+     - [ ] Auth state integration
+     - [ ] Route configuration
+   - [ ] Route Protection
+     - [ ] Auth route guards
+     - [ ] Loading states
+     - [ ] Redirect handling
+   - [ ] Route Testing
+     - [ ] Protection tests
+     - [ ] Navigation tests
+     - [ ] Auth integration tests
+
+2. **New Frontend Implementation**
    - Phase 2: Authentication
      - ✓ Login form implementation
      - ✓ Registration form

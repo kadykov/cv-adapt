@@ -1,4 +1,4 @@
-import { useCallback, ReactNode, useState } from 'react';
+import { useCallback, ReactNode, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AuthResponse } from '../../lib/api/generated-types';
 import { authApi } from '../../lib/api/auth';
@@ -11,6 +11,26 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check initial auth state
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          // Here we would validate token and fetch user profile
+          // For now, just clear invalid tokens
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const login = useCallback((response: AuthResponse) => {
     setUser(response.user);
@@ -47,6 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loginWithCredentials,
     logout,
     isAuthenticated: !!user,
+    isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

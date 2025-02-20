@@ -1,6 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { Button } from '@headlessui/react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './features/auth/components/AuthProvider';
+import { Layout } from './routes/Layout';
+import { ProtectedRoute } from './routes/ProtectedRoute';
+import { Home } from './routes/Home';
+import { Auth } from './routes/Auth';
+import { ROUTES } from './routes/paths';
+
+// Import job pages
+import { JobList } from './features/job-catalog/components/JobList';
+import {
+  CreateJobPage,
+  EditJobPage,
+  JobDetailPage,
+} from './features/job-catalog/components/JobPages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,22 +27,31 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-base-200">
-          <div className="hero min-h-screen">
-            <div className="hero-content text-center">
-              <div className="max-w-md">
-                <h1 className="text-5xl font-bold">CV Adapt</h1>
-                <p className="py-6">
-                  Intelligent CV customization and generation with multilingual
-                  support
-                </p>
-                <Button className="btn btn-primary">Get Started</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route element={<Layout />}>
+              {/* Public routes */}
+              <Route path={ROUTES.HOME} element={<Home />} />
+              <Route path={ROUTES.AUTH} element={<Auth />} />
+
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path={ROUTES.JOBS.LIST} element={<JobList />} />
+                <Route path={ROUTES.JOBS.NEW} element={<CreateJobPage />} />
+                <Route
+                  path={ROUTES.JOBS.DETAIL(':id')}
+                  element={<JobDetailPage />}
+                />
+                <Route
+                  path={ROUTES.JOBS.EDIT(':id')}
+                  element={<EditJobPage />}
+                />
+              </Route>
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

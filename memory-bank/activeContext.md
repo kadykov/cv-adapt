@@ -2,7 +2,14 @@
 
 ## Current Focus
 
-1. **Type System Cleanup**
+1. **Frontend Routing Implementation**
+   - Integrating implemented features through routing
+   - Setting up protected routes for authenticated sections
+   - Implementing main layout with navigation
+   - Connecting auth state with route protection
+   - Testing route interactions and auth flows
+
+2. **Type System Cleanup**
    - ✓ Added generate-api-types to pretest script
    - ✓ Removed duplicate API type definitions
    - ✓ Type generation automated in test workflow

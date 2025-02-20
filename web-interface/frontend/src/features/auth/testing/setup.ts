@@ -43,6 +43,7 @@ export const mockAuthContextValue: AuthContextType = {
   login: vi.fn(),
   loginWithCredentials: vi.fn(),
   logout: vi.fn(),
+  isLoading: false,
 };
 
 // Mock auth-context
