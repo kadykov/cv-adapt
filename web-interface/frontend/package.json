@@ -12,9 +12,9 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "pretest": "npm run generate-api-types",
-    "test": "vitest",
+    "test": "vitest --config vitest.config.ts",
     "test:unit": "vitest --config vitest.config.ts",
-    "test:integration": "vitest --config vitest.config.ts integration",
+    "test:integration": "vitest --config vitest.integration.config.ts",
     "test:coverage": "vitest run --coverage",
     "test:ci": "vitest run",
     "generate-api-types": "tsx scripts/generate-api-types.ts"

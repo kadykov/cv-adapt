@@ -51,8 +51,12 @@
        - ✓ Token management service implementation
        - ✓ Axios interceptors for token handling
        - ✓ Improved login and registration flows
-       - ⏳ Add user profile fetching
-       - ⏳ Add comprehensive integration tests
+       - ✓ Auth API Layer implementation
+       - ✓ Integration Tests Infrastructure
+         - ✓ Schema-based handler generation
+         - ✓ Integration test server setup
+         - ✓ Contract validation in integration tests
+         - ✓ Feature-level flow testing
      - ✓ Login form implementation
      - ✓ Registration form
      - ⏳ Password reset flow (deferred)
@@ -107,6 +111,7 @@
 ## Known Issues
 
 1. **Frontend (Current Focus)**
+   - ✓ Integration test infrastructure setup complete
    - Error boundary implementation
    - Advanced state management for complex features
    - Performance monitoring implementation
