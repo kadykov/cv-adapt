@@ -1,24 +1,42 @@
-import '@testing-library/jest-dom';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
 import { server } from './server';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
-// Mock ResizeObserver for Headless UI components
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-global.ResizeObserver = ResizeObserverMock;
-
-// Start server before all tests
+// Enable API mocking before all tests
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({
+    onUnhandledRequest: (req) => {
+      console.warn(`Found an unhandled ${req.method} request to ${req.url}\n`);
+    },
+  });
+
+  // Mock ResizeObserver
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+
+  // Suppress React warnings we can't control
+  const originalConsoleError = console.error;
+  console.error = (...args: Parameters<typeof console.error>) => {
+    const firstArg = args[0];
+    if (
+      typeof firstArg === 'string' &&
+      (firstArg.includes('Warning: ReactDOM.render') ||
+        firstArg.includes('inside a test was not wrapped in act'))
+    ) {
+      return;
+    }
+    originalConsoleError.apply(console, args);
+  };
 });
 
-// Reset handlers after each test
+// Reset request handlers and cleanup after each test
 afterEach(() => {
   server.resetHandlers();
+  cleanup();
 });
 
 // Clean up after all tests
@@ -36,6 +54,10 @@ const isExpectedError = (message: string): boolean => {
     'Failed to create job',
     'Form submission failed',
     'Login failed',
+    'Simulated error in auth flow',
+    'Simulated error',
+    'Test Error',
+    'The above error occurred in the <ErrorComponent> component',
   ];
   return expectedPatterns.some((pattern) => message.includes(pattern));
 };

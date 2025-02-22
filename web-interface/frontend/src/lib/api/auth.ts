@@ -11,7 +11,14 @@ export const authApi = {
    * Login with email and password
    */
   login: (data: LoginRequest): Promise<AuthResponse> =>
-    client.post<AuthResponse>('/auth/login', data),
+    client.postForm<AuthResponse>('/auth/login', {
+      username: data.username,
+      password: data.password,
+      grant_type: data.grant_type || 'password',
+      scope: data.scope || '',
+      client_id: data.client_id || '',
+      client_secret: data.client_secret || '',
+    }),
 
   /**
    * Register a new user

@@ -1,49 +1,82 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '../auth-context';
 import type { AuthContextType } from '../auth-types';
 import type { AuthResponse } from '../../../lib/api/generated-types';
+import { authMutations } from '../services/auth-mutations';
 import { tokenService } from '../services/token-service';
-import { useLoginMutation } from '../hooks';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const mounted = useRef(true);
 
-  const login = useCallback((response: AuthResponse) => {
-    setUser(response.user);
-    tokenService.storeTokens(response);
+  useEffect(() => {
+    // Cleanup function to handle unmounting
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
-  const { mutateAsync: loginMutation } = useLoginMutation();
+  const login = useCallback(async (response: AuthResponse) => {
+    if (!response?.user) {
+      throw new Error('Invalid response from server');
+    }
+    tokenService.storeTokens(response);
+    if (mounted.current) {
+      setUser(response.user);
+    }
+    return Promise.resolve();
+  }, []);
 
   const loginWithCredentials = useCallback(
     async (credentials: { email: string; password: string }) => {
-      await loginMutation(credentials);
+      const response = await authMutations.login(credentials);
+      await login(response);
+      return response;
     },
-    [loginMutation],
+    [login],
   );
 
   const logout = useCallback(async () => {
-    setUser(null);
-    tokenService.clearTokens();
+    try {
+      await authMutations.logout();
+    } catch {
+      // Ignore logout errors
+    } finally {
+      if (mounted.current) {
+        setUser(null);
+        tokenService.clearTokens();
+      }
+    }
   }, []);
 
   // Initialize auth state
   useEffect(() => {
-    // Simulating initial auth check
     const checkAuth = async () => {
       try {
-        setIsLoading(true);
-        const token = tokenService.getAccessToken();
-        if (!token) {
-          return;
+        const authState = await authMutations.validateToken();
+        if (mounted.current) {
+          if (authState?.user) {
+            setUser(authState.user);
+            tokenService.storeTokens(authState);
+          } else {
+            setUser(null);
+            tokenService.clearTokens();
+          }
         }
-
-        // TODO: Fetch user profile using token
+      } catch {
+        if (mounted.current) {
+          setUser(null);
+          tokenService.clearTokens();
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted.current) {
+          setIsLoading(false);
+        }
       }
     };
+
+    setIsLoading(true);
     checkAuth();
   }, []);
 

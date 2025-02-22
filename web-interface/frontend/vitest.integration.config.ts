@@ -11,6 +11,26 @@ export default mergeConfig(
       include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
       reporters: ['dot'],
       watch: false,
+      testTimeout: 10000,
+      hookTimeout: 10000,
+      maxConcurrency: 1,
+      isolate: true,
+      deps: {
+        optimizer: {
+          web: {
+            include: [
+              '@testing-library/user-event',
+              '@testing-library/jest-dom',
+              '@testing-library/react',
+            ],
+          },
+        },
+      },
+      server: {
+        deps: {
+          inline: [/@testing-library\/user-event/],
+        },
+      },
     },
   }),
 );

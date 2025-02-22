@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
+import { tokenService } from '../../features/auth/services/token-service';
 
 export class ApiError extends Error {
   statusCode: number;
@@ -18,6 +19,15 @@ export const axiosInstance = axios.create({
   },
 });
 
+// Add auth token to requests
+axiosInstance.interceptors.request.use((config) => {
+  const token = tokenService.getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Error handler to convert axios errors to our ApiError format
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -26,9 +36,11 @@ axiosInstance.interceptors.response.use(
       throw error;
     }
     if (error.response) {
-      const data = error.response.data as { message?: string } | undefined;
+      const data = error.response.data as
+        | { message?: string; detail?: string }
+        | undefined;
       throw new ApiError(
-        data?.message || 'An unknown error occurred',
+        data?.message || data?.detail || 'An unknown error occurred',
         error.response.status,
       );
     }
@@ -40,8 +52,21 @@ axiosInstance.interceptors.response.use(
 export const client = {
   get: <T>(path: string) =>
     axiosInstance.get<T>(path).then((response) => response.data),
-  post: <T>(path: string, data: unknown) =>
-    axiosInstance.post<T>(path, data).then((response) => response.data),
+  post: <T>(path: string, data: unknown, config = {}) =>
+    axiosInstance.post<T>(path, data, config).then((response) => response.data),
+  postForm: <T>(path: string, data: Record<string, string>) => {
+    const formData = new URLSearchParams();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    return axiosInstance
+      .post<T>(path, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
+      .then((response) => response.data);
+  },
   put: <T>(path: string, data: unknown) =>
     axiosInstance.put<T>(path, data).then((response) => response.data),
   delete: <T>(path: string) =>

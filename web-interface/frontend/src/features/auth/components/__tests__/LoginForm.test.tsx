@@ -7,24 +7,17 @@ import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 const mockOnSuccess = vi.fn();
-const mockMutateAsync = vi.fn();
-
+const mockMutate = vi.fn();
 const mockMutationState = {
   isPending: false,
+  error: undefined as Error | undefined,
 };
 
 vi.mock('../../hooks', () => ({
   useLoginMutation: () => ({
-    mutateAsync: (...args: unknown[]) => {
-      mockMutationState.isPending = true;
-      return mockMutateAsync(...args).finally(() => {
-        mockMutationState.isPending = false;
-      });
-    },
-    error: undefined,
-    get isPending() {
-      return mockMutationState.isPending;
-    },
+    mutate: mockMutate,
+    error: mockMutationState.error,
+    isPending: mockMutationState.isPending,
   }),
 }));
 
@@ -38,6 +31,7 @@ describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockMutationState.isPending = false;
+    mockMutationState.error = undefined;
   });
 
   const renderForm = (props = {}) => {
@@ -49,17 +43,20 @@ describe('LoginForm', () => {
     );
   };
 
-  const submitForm = async (user: ReturnType<typeof userEvent.setup>) => {
-    const submitButton = screen.getByRole('button', { name: /sign in/i });
+  const fillAndSubmitForm = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'Password123');
+    const submitButton = screen.getByRole('button');
     await user.click(submitButton);
-    return submitButton;
   };
 
   it('validates required fields', async () => {
     renderForm();
     const user = userEvent.setup();
-
-    await submitForm(user);
+    const submitButton = screen.getByRole('button');
+    await user.click(submitButton);
 
     await waitFor(() => {
       const emailError = screen.getByText(/invalid email address/i);
@@ -68,7 +65,7 @@ describe('LoginForm', () => {
       expect(passwordError).toBeInTheDocument();
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('validates email format', async () => {
@@ -78,84 +75,83 @@ describe('LoginForm', () => {
     // Enter invalid email
     await user.type(screen.getByLabelText(/email/i), 'invalid-email');
     await user.type(screen.getByLabelText(/password/i), 'Password123');
-    await submitForm(user);
+    const submitButton = screen.getByRole('button');
+    await user.click(submitButton);
 
     await waitFor(() => {
       const emailError = screen.getByText(/invalid email address/i);
       expect(emailError).toBeInTheDocument();
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('submits form with valid data', async () => {
     renderForm();
     const user = userEvent.setup();
 
-    // Enter valid data
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    await submitForm(user);
+    await fillAndSubmitForm(user);
 
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'Password123',
-      });
+      expect(mockMutate).toHaveBeenCalledWith(
+        {
+          email: 'test@example.com',
+          password: 'Password123',
+        },
+        expect.objectContaining({
+          onSuccess: expect.any(Function),
+        }),
+      );
     });
   });
 
   it('shows loading state during submission', async () => {
-    mockMutateAsync.mockImplementationOnce(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
-    );
+    mockMutationState.isPending = true;
     renderForm();
-    const user = userEvent.setup();
-
-    // Submit form
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    const submitButton = await submitForm(user);
 
     await waitFor(() => {
+      const submitButton = screen.getByRole('button');
       expect(submitButton).toHaveTextContent(/signing in/i);
       expect(submitButton).toBeDisabled();
     });
   });
 
   it('calls onSuccess after successful login', async () => {
-    mockMutateAsync.mockResolvedValueOnce({});
+    let onSuccessCallback: (() => void) | undefined;
+    mockMutate.mockImplementationOnce(
+      (_data: unknown, options: { onSuccess?: () => void }) => {
+        onSuccessCallback = options.onSuccess;
+      },
+    );
+
     renderForm();
     const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    await submitForm(user);
+    await fillAndSubmitForm(user);
 
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalled();
+      expect(mockMutate).toHaveBeenCalled();
     });
 
-    // onSuccess should only be called after login is successful
+    // Simulate successful login
+    if (onSuccessCallback) {
+      onSuccessCallback();
+    }
+
     await waitFor(() => {
       expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
 
   it('handles login error', async () => {
-    mockMutateAsync.mockRejectedValueOnce(new Error('Invalid credentials'));
+    mockMutationState.error = new Error('Invalid credentials');
 
     renderForm();
     const user = userEvent.setup();
-
-    // Submit form
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    const submitButton = await submitForm(user);
+    await fillAndSubmitForm(user);
 
     await waitFor(() => {
-      expect(submitButton).not.toBeDisabled();
-      expect(submitButton).not.toHaveAttribute('data-disabled');
+      const errorMessage = screen.getByText(/invalid credentials/i);
+      expect(errorMessage).toBeInTheDocument();
     });
 
     expect(mockOnSuccess).not.toHaveBeenCalled();
@@ -167,7 +163,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /sign in/i });
+    const submitButton = screen.getByRole('button');
 
     await user.hover(emailInput);
     expect(emailInput).toHaveAttribute('data-hover');

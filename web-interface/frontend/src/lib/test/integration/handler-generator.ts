@@ -8,7 +8,7 @@ type Schema = components['schemas'];
  */
 export function createGetHandler<T extends keyof Schema>(
   path: string,
-  _schemaKey: T, // Keep parameter for type inference but mark as unused
+  _schemaKey: T, // Used only for type inference
   responseData: Schema[T] | Schema[T][] | null,
   options?: { status?: number },
 ) {
@@ -28,11 +28,28 @@ export function createPostHandler<
   R extends keyof Schema,
 >(
   path: string,
-  _requestSchema: T, // Keep parameter for type inference but mark as unused
-  _responseSchema: R, // Keep parameter for type inference but mark as unused
+  _requestSchemaKey: T, // Used only for type inference
+  _responseSchemaKey: R, // Used only for type inference
   responseData: Schema[R],
+  options?: {
+    validateRequest?: (req: Schema[T]) => boolean;
+    errorResponse?: { status: number; message: string };
+  },
 ) {
-  return http.post(path, () => {
+  return http.post(path, async ({ request }) => {
+    const body = (await request.json()) as Schema[T];
+
+    if (options?.validateRequest && !options.validateRequest(body)) {
+      const error = options.errorResponse || {
+        status: 400,
+        message: 'Invalid request',
+      };
+      return new HttpResponse(null, {
+        status: error.status,
+        statusText: error.message,
+      });
+    }
+
     return HttpResponse.json(responseData);
   });
 }
@@ -45,11 +62,28 @@ export function createPutHandler<
   R extends keyof Schema,
 >(
   path: string,
-  _requestSchema: T, // Keep parameter for type inference but mark as unused
-  _responseSchema: R, // Keep parameter for type inference but mark as unused
+  _requestSchemaKey: T, // Used only for type inference
+  _responseSchemaKey: R, // Used only for type inference
   responseData: Schema[R],
+  options?: {
+    validateRequest?: (req: Schema[T]) => boolean;
+    errorResponse?: { status: number; message: string };
+  },
 ) {
-  return http.put(path, () => {
+  return http.put(path, async ({ request }) => {
+    const body = (await request.json()) as Schema[T];
+
+    if (options?.validateRequest && !options.validateRequest(body)) {
+      const error = options.errorResponse || {
+        status: 400,
+        message: 'Invalid request',
+      };
+      return new HttpResponse(null, {
+        status: error.status,
+        statusText: error.message,
+      });
+    }
+
     return HttpResponse.json(responseData);
   });
 }

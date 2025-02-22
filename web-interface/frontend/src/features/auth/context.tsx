@@ -32,7 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth();
   }, []);
 
-  const login = useCallback((response: AuthResponse) => {
+  const login = useCallback(async (response: AuthResponse): Promise<void> => {
     setUser(response.user);
     // Store tokens
     localStorage.setItem('accessToken', response.access_token);
@@ -40,19 +40,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const loginWithCredentials = useCallback(
-    async (credentials: { email: string; password: string }) => {
+    async (credentials: {
+      email: string;
+      password: string;
+    }): Promise<AuthResponse> => {
       const response = await authApi.login({
         username: credentials.email,
         password: credentials.password,
         scope: '',
         grant_type: 'password',
       });
-      login(response);
+      await login(response);
+      return response;
     },
     [login],
   );
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (): Promise<void> => {
     await authApi.logout();
     setUser(null);
     // Clear tokens

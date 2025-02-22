@@ -126,6 +126,18 @@
    - MSW for API simulation
    - Accessibility testing integration
 
+## Current Issues
+
+1. **Frontend (Current Focus)**
+   - Auth system circular dependency discovered
+     - AuthProvider using useLoginMutation
+     - useLoginMutation using useAuth
+     - Needs architectural restructuring
+   - Integration test gaps identified
+     - Missing auth flow tests
+     - Provider hierarchy testing needed
+     - Contract testing improvements required
+
 ## Current Considerations
 
 1. **Feature Completion**

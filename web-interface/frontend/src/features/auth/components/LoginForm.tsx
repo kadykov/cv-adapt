@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Field, Input, Label, Description, Button } from '@headlessui/react';
 import { useLoginMutation } from '../hooks';
+import { ApiError } from '../../../lib/api/client';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,7 +17,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { mutateAsync, error, isPending } = useLoginMutation();
+  const { mutate, error, isPending } = useLoginMutation();
   const {
     register,
     handleSubmit,
@@ -29,12 +30,26 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      await mutateAsync(data);
-      onSuccess?.();
-    } catch {
-      // Error is handled by the mutation error state
+    mutate(data, {
+      onSuccess: () => {
+        onSuccess?.();
+      },
+    });
+  };
+
+  const getErrorMessage = () => {
+    if (error instanceof ApiError) {
+      // Extract detail from API error
+      const detail = error.message;
+      if (detail.includes('Invalid credentials')) {
+        return 'Invalid credentials';
+      }
+      return detail;
     }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'An unexpected error occurred';
   };
 
   return (
@@ -74,7 +89,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       {error && (
         <Field>
           <Description className="text-sm text-error" role="alert">
-            {error.message}
+            {getErrorMessage()}
           </Description>
         </Field>
       )}
