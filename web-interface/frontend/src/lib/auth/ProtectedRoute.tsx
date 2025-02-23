@@ -22,8 +22,15 @@ export const ProtectedRoute: FC<PropsWithChildren<ProtectedRouteProps>> = ({
   }, [isLoading]);
 
   if (isLoading || !isAuthChecked) {
-    // TODO: Replace with proper loading component once created
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span
+          className="loading loading-spinner loading-lg"
+          role="status"
+          aria-label="Loading..."
+        ></span>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

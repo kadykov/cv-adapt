@@ -69,7 +69,7 @@ describe('useAuth', () => {
   it('should detect token in localStorage', async () => {
     // Set up token in localStorage before rendering hook
     const token = 'test-token';
-    mockStorage['auth_token'] = token;
+    mockStorage['access_token'] = token;
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -84,7 +84,7 @@ describe('useAuth', () => {
   it('should clear auth state on clearAuth', async () => {
     // Set up token in localStorage before rendering hook
     const token = 'test-token';
-    mockStorage['auth_token'] = token;
+    mockStorage['access_token'] = token;
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -102,7 +102,7 @@ describe('useAuth', () => {
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    expect(mockStorage['auth_token']).toBeUndefined();
+    expect(mockStorage['access_token']).toBeUndefined();
     expect(queryClient.getQueryData(AUTH_KEYS.token)).toBeNull();
   });
 });

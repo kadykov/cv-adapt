@@ -19,7 +19,7 @@ interface AuthState {
  */
 export const useAuth = (): AuthState => {
   const queryClient = useQueryClient();
-  const initialToken = localStorage.getItem('auth_token');
+  const initialToken = localStorage.getItem('access_token');
   const [isCleared, setIsCleared] = useState(false);
 
   // Initialize query data without effect
@@ -31,7 +31,7 @@ export const useAuth = (): AuthState => {
 
   const { data: token, isLoading } = useQuery({
     queryKey: AUTH_KEYS.token,
-    queryFn: (): string | null => localStorage.getItem('auth_token'),
+    queryFn: (): string | null => localStorage.getItem('access_token'),
     enabled: initialized.current,
     // Ensure we always have initial data
     placeholderData: initialToken,
@@ -48,7 +48,7 @@ export const useAuth = (): AuthState => {
    * Used during logout
    */
   const clearAuth = useCallback(async () => {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('access_token');
     queryClient.setQueryData(AUTH_KEYS.token, null);
     setIsCleared(true);
   }, [queryClient]);

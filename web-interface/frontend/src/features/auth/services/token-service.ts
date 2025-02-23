@@ -1,15 +1,15 @@
 import type { AuthResponse } from '../../../lib/api/generated-types';
 
 interface StoredTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
 }
 
 class TokenService {
-  private static readonly ACCESS_TOKEN_KEY = 'accessToken';
-  private static readonly REFRESH_TOKEN_KEY = 'refreshToken';
-  private static readonly EXPIRES_AT_KEY = 'tokenExpiresAt';
+  private static readonly ACCESS_TOKEN_KEY = 'access_token';
+  private static readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private static readonly EXPIRES_AT_KEY = 'expires_at';
   private static readonly REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
   private static readonly DEFAULT_TOKEN_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -35,9 +35,9 @@ class TokenService {
     }
 
     return {
-      accessToken,
-      refreshToken,
-      expiresAt: parseInt(expiresAt, 10),
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_at: parseInt(expiresAt, 10),
     };
   }
 
@@ -51,7 +51,7 @@ class TokenService {
     const tokens = this.getStoredTokens();
     if (!tokens) return true;
 
-    return Date.now() >= tokens.expiresAt;
+    return Date.now() >= tokens.expires_at;
   }
 
   needsRefresh(): boolean {
@@ -59,17 +59,17 @@ class TokenService {
     if (!tokens) return false;
 
     // Return true if token will expire within the refresh threshold
-    return Date.now() >= tokens.expiresAt - TokenService.REFRESH_THRESHOLD;
+    return Date.now() >= tokens.expires_at - TokenService.REFRESH_THRESHOLD;
   }
 
   getAccessToken(): string | null {
     const tokens = this.getStoredTokens();
-    return tokens?.accessToken ?? null;
+    return tokens?.access_token ?? null;
   }
 
   getRefreshToken(): string | null {
     const tokens = this.getStoredTokens();
-    return tokens?.refreshToken ?? null;
+    return tokens?.refresh_token ?? null;
   }
 }
 
