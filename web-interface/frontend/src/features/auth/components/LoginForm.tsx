@@ -29,13 +29,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     criteriaMode: 'all',
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    mutate(data, {
-      onSuccess: () => {
-        onSuccess?.();
-      },
-    });
-  };
+  const onSubmit = handleSubmit((data) => {
+    mutate({ email: data.email, password: data.password }, { onSuccess });
+  });
 
   const getErrorMessage = () => {
     if (error instanceof ApiError) {
@@ -53,7 +49,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-6" noValidate>
       <Field>
         <Label className="text-sm font-medium text-gray-700">Email</Label>
         <Input

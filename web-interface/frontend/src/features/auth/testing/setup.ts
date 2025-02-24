@@ -53,14 +53,15 @@ export const mockAuthContext = {
 };
 
 // Mock hooks
-vi.mock('../hooks', () => ({
+vi.mock('../hooks/index', () => ({
   useRegisterMutation: () => mockRegisterMutation,
   useProfile: () => mockUseProfile,
   useRefreshToken: () => mockRefreshTokenMutation,
+  useAuth: () => mockAuthContextValue,
 }));
 
 // Mock auth-context
-vi.mock('../auth-context', () => mockAuthContext);
+vi.mock('../context/auth-context', () => mockAuthContext);
 
 // Add ResizeObserver mock
 class ResizeObserver {

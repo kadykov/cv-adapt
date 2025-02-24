@@ -186,6 +186,7 @@ describe('Auth Provider Hierarchy', () => {
   });
 });
 
-// Import useAuth after the mock is set up
-const { useAuth } = await import('../../auth-context');
-const { useLoginMutation, useRegisterMutation } = await import('../../hooks');
+// Import hooks after the mock is set up
+const { useAuth, useLoginMutation, useRegisterMutation } = await import(
+  '../../hooks/index'
+);

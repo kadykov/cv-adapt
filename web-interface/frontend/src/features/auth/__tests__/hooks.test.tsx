@@ -2,7 +2,11 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createWrapper, createTestQueryClient } from '../testing';
 import { mockAuthResponse } from '../testing/fixtures';
-import { useRegisterMutation, useProfile, useRefreshToken } from '../hooks';
+import {
+  useRegisterMutation,
+  useProfile,
+  useRefreshToken,
+} from '../hooks/index';
 import {
   mockRegisterMutation,
   mockUseProfile,

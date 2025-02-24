@@ -26,7 +26,7 @@ export function ProvidersWrapper({ children }: PropsWithChildren) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[window.location.pathname]}>
         <AuthProvider>{children}</AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>

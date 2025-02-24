@@ -3,7 +3,7 @@
  */
 
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { mockAuthContext, mockAuthContextValue } from '../../testing/setup';
+import { mockAuthContextValue } from '../../testing/setup';
 
 // These mocks must be defined before any other imports
 const mockMutateAsync = vi.fn();
@@ -11,11 +11,7 @@ const mockOnSuccess = vi.fn();
 let mockIsLoading = false;
 let mockError: Error | null = null;
 
-// Mock auth context
-vi.mock('../../auth-context', () => mockAuthContext);
-
-// Mock hooks
-vi.mock('../../hooks', () => ({
+vi.mock('../../hooks/index', () => ({
   useRegisterMutation: () => ({
     mutateAsync: mockMutateAsync,
     isPending: mockIsLoading,
@@ -24,6 +20,7 @@ vi.mock('../../hooks', () => ({
     isSuccess: false,
     data: null,
   }),
+  useAuth: () => mockAuthContextValue,
 }));
 
 // Regular imports after mocks

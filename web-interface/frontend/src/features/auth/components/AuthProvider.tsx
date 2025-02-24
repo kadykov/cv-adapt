@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AuthContext } from '../auth-context';
-import type { AuthContextType } from '../auth-types';
 import type { AuthResponse } from '../../../lib/api/generated-types';
 import { authMutations } from '../services/auth-mutations';
 import { tokenService } from '../services/token-service';
+import { AuthContext } from '../context/auth-context';
+import type { AuthContextType } from '../auth-types';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthDialog } from '../AuthDialog';
-import { AuthProvider } from '../../context';
+import { AuthProvider } from '../../components/AuthProvider';
 import { createTestQueryClient } from '../../testing';
 import '@testing-library/jest-dom';
 

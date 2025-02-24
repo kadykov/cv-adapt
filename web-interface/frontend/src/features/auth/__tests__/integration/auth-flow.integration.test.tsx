@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { LoginForm } from '../../components/LoginForm';
 import { ProvidersWrapper } from '../../../../test/setup/providers';
 import { server } from '../../../../lib/test/integration/server';
-import { useAuth } from '../../auth-context';
+import { useAuth } from '../../hooks';
 import { authIntegrationHandlers } from '../../testing/integration-handlers';
 
 // Helper function to setup tests with async user events

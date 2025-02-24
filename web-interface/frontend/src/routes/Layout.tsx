@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/auth-context';
+import { useAuth } from '../features/auth/hooks';
 import { ROUTES } from './paths';
 
 export function Layout() {

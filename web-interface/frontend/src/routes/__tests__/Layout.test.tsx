@@ -4,11 +4,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { Layout } from '../Layout';
 
 // Mock the useAuth hook
-vi.mock('../../features/auth/auth-context', () => ({
+vi.mock('../../features/auth/hooks', () => ({
   useAuth: vi.fn(),
 }));
 
-import { useAuth } from '../../features/auth/auth-context';
+import { useAuth } from '../../features/auth/hooks';
 
 const mockUseAuth = useAuth as jest.Mock;
 

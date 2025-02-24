@@ -2,8 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Field, Input, Label, Description, Button } from '@headlessui/react';
-import { useRegisterMutation } from '../hooks';
-import { useAuth } from '../auth-context';
+import { useRegisterMutation, useAuth } from '../hooks/index';
 import type { RegisterRequest } from '../../../lib/api/generated-types';
 
 const schema = z

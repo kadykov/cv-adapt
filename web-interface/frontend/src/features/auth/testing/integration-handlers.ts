@@ -1,86 +1,55 @@
-import { HttpResponse, http } from 'msw';
+import { http, HttpResponse } from 'msw';
+import type { components } from '../../../lib/api/types';
 
-const mockUserData = {
+type UserResponse = components['schemas']['UserResponse'];
+type AuthResponse = components['schemas']['AuthResponse'];
+
+const mockUser: UserResponse = {
   id: 1,
   email: 'test@example.com',
-  created_at: '2024-02-21T12:00:00Z',
+  created_at: '2024-02-23T10:00:00Z',
+  personal_info: null,
 };
 
-const mockAuthData = {
-  access_token: 'mock-access-token',
-  refresh_token: 'mock-refresh-token',
+const mockAuthResponse: AuthResponse = {
+  access_token: 'fake_token',
+  refresh_token: 'fake_refresh',
   token_type: 'bearer',
-  user: mockUserData,
+  user: mockUser,
 };
 
 export const authIntegrationHandlers = [
   http.post('/v1/api/auth/login', async ({ request }) => {
-    const formData = new URLSearchParams(await request.text());
-    const username = formData.get('username');
-    const password = formData.get('password');
-    const grantType = formData.get('grant_type');
+    const body = await request.text();
 
-    if (
-      username === 'test@example.com' &&
-      password === 'password123' &&
-      grantType === 'password'
-    ) {
-      return HttpResponse.json(mockAuthData, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    // Parse form data
+    const formData = new URLSearchParams(body);
+    const password = formData.get('password');
+
+    if (password === 'wrongpassword') {
+      return HttpResponse.json(
+        { message: 'Invalid credentials' },
+        { status: 401 },
+      );
     }
 
-    return new HttpResponse(JSON.stringify({ detail: 'Invalid credentials' }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.get('/v1/api/users/me', ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader?.includes('mock-access-token')) {
-      return HttpResponse.json(mockUserData, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    }
-    return new HttpResponse(JSON.stringify({ detail: 'Not authenticated' }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  http.post('/v1/api/auth/refresh', () => {
+    return HttpResponse.json(mockAuthResponse);
   }),
 
   http.post('/v1/api/auth/logout', () => {
-    return new HttpResponse(null, { status: 200 });
+    return HttpResponse.json({ message: 'Logged out successfully' });
   }),
 
-  http.post('/v1/api/auth/refresh', ({ request }) => {
+  // Handle user profile fetch for token validation
+  http.get('/v1/api/users/me', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
-    if (authHeader?.includes('Bearer')) {
-      return HttpResponse.json(mockAuthData, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new HttpResponse(null, { status: 401 });
     }
-    return new HttpResponse(
-      JSON.stringify({ detail: 'Invalid refresh token' }),
-      {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    return HttpResponse.json(mockUser);
   }),
 ];

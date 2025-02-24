@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '../context';
+import { AuthProvider } from '../components/AuthProvider';
 import { createTestQueryClient } from './test-utils';
 
 interface TestWrapperProps {
