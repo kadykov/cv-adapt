@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
@@ -60,15 +60,28 @@ describe('Layout Authentication Integration', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
     });
 
-    // Verify navigation updates
-    await waitFor(() => {
-      expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
-      expect(screen.getByText(/jobs/i)).toBeInTheDocument();
-      expect(screen.getByText(/logout/i)).toBeInTheDocument();
-    });
+    // Verify navigation updates immediately after login
+    expect(await screen.findByText(/logout/i)).toBeInTheDocument();
+    expect(await screen.findByText(/jobs/i)).toBeInTheDocument();
+    expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
 
     // Verify token is stored
     expect(localStorage.getItem('access_token')).toBeTruthy();
+
+    // Verify the header update was immediate and not delayed
+    const spyConsoleError = vi.spyOn(console, 'error');
+
+    // Wait for background token validation
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Ensure header content hasn't changed
+    expect(screen.getByText(/logout/i)).toBeInTheDocument();
+    expect(screen.getByText(/jobs/i)).toBeInTheDocument();
+    expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
+
+    // Verify no errors during background validation
+    expect(spyConsoleError).not.toHaveBeenCalled();
+    spyConsoleError.mockRestore();
   });
 
   it('should update navigation after logout', async () => {

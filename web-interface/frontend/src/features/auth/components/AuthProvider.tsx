@@ -23,18 +23,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     tokenService.storeTokens(response);
 
-    // Verify token is valid by making a profile request
+    // Set user immediately from the login response
+    if (mounted.current) {
+      setUser(response.user);
+    }
+
+    // Validate token in the background without blocking UI update
     try {
       const profile = await authMutations.validateToken();
-      if (mounted.current) {
-        if (profile?.user) {
+      if (mounted.current && profile?.user) {
+        // Update with the latest user data if different
+        if (JSON.stringify(profile.user) !== JSON.stringify(response.user)) {
           setUser(profile.user);
-        } else {
-          throw new Error('Failed to validate token');
         }
       }
     } catch (error) {
-      // If validation fails, clear everything
+      // If validation fails, clear everything and throw
       tokenService.clearTokens();
       if (mounted.current) {
         setUser(null);
