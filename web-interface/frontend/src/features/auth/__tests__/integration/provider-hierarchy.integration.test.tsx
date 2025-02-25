@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { ProvidersWrapper } from '../../../../test/setup/providers';
 import { TestErrorBoundary } from '../../../../test/utils/TestErrorBoundary';
 import { server } from '../../../../lib/test/integration/server';
@@ -17,14 +17,13 @@ afterAll(() => {
 describe('Auth Provider Hierarchy', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    localStorage.clear();
   });
 
   afterEach(() => {
-    vi.clearAllTimers();
-    vi.useRealTimers();
     vi.restoreAllMocks();
     server.resetHandlers();
+    localStorage.clear();
   });
 
   describe('Context Dependencies', () => {
@@ -50,11 +49,7 @@ describe('Auth Provider Hierarchy', () => {
         </ProvidersWrapper>,
       );
 
-      // Wait for all async operations to complete
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
+      // Wait for auth state to settle
       await waitFor(() => {
         expect(screen.getByText('Not Authenticated')).toBeInTheDocument();
       });
@@ -79,12 +74,10 @@ describe('Auth Provider Hierarchy', () => {
         </ProvidersWrapper>,
       );
 
-      // Wait for all async operations to complete
-      await act(async () => {
-        await vi.runAllTimersAsync();
+      // Wait for component to mount and auth state to settle
+      await waitFor(() => {
+        expect(screen.getByText('Test Component')).toBeInTheDocument();
       });
-
-      expect(screen.getByText('Test Component')).toBeInTheDocument();
     });
   });
 
@@ -112,11 +105,7 @@ describe('Auth Provider Hierarchy', () => {
         </ProvidersWrapper>,
       );
 
-      // Wait for all async operations to complete
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
+      // Wait for providers to mount
       await waitFor(() => {
         expect(queryClientMounted).toBe(true);
         expect(authProviderMounted).toBe(true);
@@ -145,11 +134,7 @@ describe('Auth Provider Hierarchy', () => {
         </ProvidersWrapper>,
       );
 
-      // Wait for all async operations to complete
-      await act(async () => {
-        await vi.runAllTimersAsync();
-      });
-
+      // Wait for auth state to settle
       await waitFor(() => {
         expect(screen.getByText('Not Authenticated')).toBeInTheDocument();
       });

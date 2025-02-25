@@ -67,46 +67,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state and watch for token changes
   useEffect(() => {
+    let mounted = true;
+    const abortController = new AbortController();
+
     const checkAuth = async () => {
+      if (!mounted) return;
+
       try {
-        const authState = await authMutations.validateToken();
-        if (mounted.current) {
-          if (authState?.user) {
-            setUser(authState.user);
-            tokenService.storeTokens(authState);
-          } else {
+        setIsLoading(true);
+
+        // First check if we have tokens
+        const tokens = tokenService.getStoredTokens();
+        if (!tokens) {
+          if (mounted) {
             setUser(null);
-            tokenService.clearTokens();
           }
+          return;
+        }
+
+        // Validate tokens with backend
+        const authState = await authMutations.validateToken();
+
+        if (!mounted) return;
+
+        if (authState?.user) {
+          setUser(authState.user);
+          // Update stored tokens in case they were refreshed
+          tokenService.storeTokens(authState);
+        } else {
+          setUser(null);
+          tokenService.clearTokens();
         }
       } catch {
-        if (mounted.current) {
+        if (mounted) {
           setUser(null);
           tokenService.clearTokens();
         }
       } finally {
-        if (mounted.current) {
+        if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
-    // Initial check
-    setIsLoading(true);
-    checkAuth();
-
-    // Watch for storage changes
     const handleStorageChange = (e: StorageEvent) => {
+      if (!mounted) return;
       if (e.key === 'access_token' || e.key === 'refresh_token') {
-        checkAuth();
+        // Only check if the token actually changed
+        const currentToken = tokenService.getAccessToken();
+        const newToken = e.newValue;
+
+        if (currentToken !== newToken) {
+          void checkAuth();
+        }
       }
     };
 
+    // Initial auth check
+    void checkAuth();
+
+    // Set up listeners for token changes
     window.addEventListener('storage', handleStorageChange);
+
+    // Set up periodic validation (skip in test environment)
+    const validateInterval =
+      process.env.NODE_ENV !== 'test'
+        ? setInterval(() => {
+            if (mounted) {
+              void checkAuth();
+            }
+          }, 60000)
+        : undefined;
+
+    // Cleanup
     return () => {
+      mounted = false;
+      abortController.abort();
       window.removeEventListener('storage', handleStorageChange);
+      if (validateInterval) {
+        clearInterval(validateInterval);
+      }
     };
-  }, []);
+  }, []); // Run only once on mount, manage state internally
 
   const value = useMemo<AuthContextType>(
     () => ({

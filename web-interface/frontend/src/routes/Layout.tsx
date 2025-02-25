@@ -3,7 +3,7 @@ import { useAuth } from '../features/auth/hooks';
 import { ROUTES } from './paths';
 
 export function Layout() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-base-200">
@@ -14,7 +14,13 @@ export function Layout() {
           </Link>
         </div>
         <div className="flex-none">
-          {isAuthenticated ? (
+          {isLoading ? (
+            <span
+              className="loading loading-spinner loading-md"
+              role="status"
+              aria-label="Loading authentication state..."
+            />
+          ) : isAuthenticated ? (
             <>
               <Link to={ROUTES.JOBS.LIST} className="btn btn-ghost">
                 Jobs
