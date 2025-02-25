@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect, useMemo } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../../features/auth/components/AuthProvider';
 
@@ -22,11 +22,21 @@ const createTestQueryClient = () =>
   });
 
 export function ProvidersWrapper({ children }: PropsWithChildren) {
-  const queryClient = createTestQueryClient();
+  const queryClient = useMemo(() => createTestQueryClient(), []);
+
+  // Clean up query cache on unmount
+  useEffect(() => {
+    return () => {
+      queryClient.clear();
+    };
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[window.location.pathname]}>
+      <MemoryRouter
+        initialEntries={[window.location.pathname]}
+        initialIndex={0}
+      >
         <AuthProvider>{children}</AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>
@@ -34,14 +44,17 @@ export function ProvidersWrapper({ children }: PropsWithChildren) {
 }
 
 /**
- * A utility function that forces React Query to settle before proceeding
- * This ensures all queries/mutations have completed before making assertions
+ * A utility function that forces React Query and routing to settle before proceeding
+ * This ensures all queries/mutations and route transitions have completed before making assertions
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export const waitForQueries = async () => {
-  // First wait for all queries to settle
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  // First wait for React Query's internal timing
+  await new Promise((resolve) => setTimeout(resolve, 10));
 
-  // Then wait for any pending state updates
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // Then wait for React Router transitions and state batching
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // Finally wait for any pending state updates and Suspense boundaries
+  await new Promise((resolve) => setTimeout(resolve, 50));
 };

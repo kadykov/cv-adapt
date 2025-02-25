@@ -40,12 +40,17 @@ export function Layout() {
                       detail: { isAuthenticated: false, user: null },
                     }),
                   );
-                  // Then initiate logout process
+                  // Then initiate logout process and redirect
                   try {
                     await logout();
+                    // Update both history and routing
+                    window.history.replaceState({}, '', ROUTES.AUTH);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                   } catch {
                     // Even if logout fails, we keep the UI in logged out state
-                    // as we've already cleared tokens
+                    // and still redirect since tokens are already cleared
+                    window.history.replaceState({}, '', ROUTES.AUTH);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                   }
                 }}
                 className="btn btn-ghost"

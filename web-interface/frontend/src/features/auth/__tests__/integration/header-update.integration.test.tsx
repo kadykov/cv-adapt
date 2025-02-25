@@ -1,8 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, beforeEach, afterEach, beforeAll } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
-import { ProvidersWrapper } from '../../../../test/setup/providers';
+import {
+  ProvidersWrapper,
+  waitForQueries,
+} from '../../../../test/setup/providers';
 import { server } from '../../../../lib/test/integration/server';
 import { authIntegrationHandlers } from '../../testing/integration-handlers';
 import { Layout } from '../../../../routes/Layout';
@@ -10,6 +13,10 @@ import { LoginForm } from '../../components/LoginForm';
 import { http, HttpResponse, delay } from 'msw';
 
 describe('Header Update Timing', () => {
+  beforeAll(() => {
+    // Reset route history before tests
+    window.history.pushState({}, '', '/');
+  });
   const mockUser = {
     id: 1,
     email: 'test@example.com',
@@ -19,6 +26,8 @@ describe('Header Update Timing', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    // Reset route history for each test
+    window.history.pushState({}, '', '/');
     // Reset event listeners between tests
     window.removeEventListener('auth-state-change', () => {});
     server.use(
@@ -39,7 +48,7 @@ describe('Header Update Timing', () => {
     );
   });
 
-  it('should update header immediately after login success response, before token validation completes', async () => {
+  it('should update header and redirect immediately after login success response, before token validation completes', async () => {
     // Clear any existing tokens
     localStorage.clear();
     render(
@@ -76,14 +85,20 @@ describe('Header Update Timing', () => {
       { timeout: 1000 },
     ); // Header should update within 1 second
 
+    // Verify we are redirected to home page
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/');
+    });
+
     // Wait for validation to complete and verify the header still shows authenticated state
     await new Promise((resolve) => setTimeout(resolve, 2500)); // Wait for the 2s delay plus buffer
-    expect(screen.getByText(/logout/i)).toBeInTheDocument();
-    expect(screen.getByText(/jobs/i)).toBeInTheDocument();
-    expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByText(/logout/i)).toBeInTheDocument();
+    expect(within(nav).getByText(/jobs/i)).toBeInTheDocument();
+    expect(within(nav).queryByText(/login/i)).not.toBeInTheDocument();
   });
 
-  it('should update header immediately when logout is triggered, before API response', async () => {
+  it('should update header and redirect immediately when logout is triggered, before API response', async () => {
     // Set up initial authenticated state with tokens and mock user
     localStorage.setItem('access_token', 'test-token');
     localStorage.setItem('refresh_token', 'test-refresh-token');
@@ -99,18 +114,20 @@ describe('Header Update Timing', () => {
     render(
       <ProvidersWrapper>
         <Routes>
-          <Route path="/" element={<Layout />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<div>Home</div>} />
+            <Route path="auth" element={<div>Auth Page</div>} />
+          </Route>
         </Routes>
       </ProvidersWrapper>,
     );
 
-    // Wait for initial auth check to complete
-    await waitFor(
-      () => {
-        expect(screen.getByText(/logout/i)).toBeInTheDocument();
-      },
-      { timeout: 2000 }, // Increase timeout to ensure auth check completes
-    );
+    // Set initial route
+    window.history.pushState({}, '', '/');
+
+    // Wait for initial auth check and queries to settle
+    await waitForQueries();
+    expect(screen.getByText(/logout/i)).toBeInTheDocument();
 
     const user = userEvent.setup();
 
@@ -135,14 +152,20 @@ describe('Header Update Timing', () => {
       { timeout: 500 }, // Header should update within 500ms
     );
 
+    // Verify we are redirected to auth page
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/auth');
+    });
+
     // Verify the header stays in logged out state after API response
     await new Promise((resolve) => setTimeout(resolve, 2500)); // Wait for API delay
-    expect(screen.getByText(/login/i)).toBeInTheDocument();
-    expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByText(/login/i)).toBeInTheDocument();
+    expect(within(nav).queryByText(/logout/i)).not.toBeInTheDocument();
+    expect(within(nav).queryByText(/jobs/i)).not.toBeInTheDocument();
   });
 
-  it('should not revert header state if logout API call fails', async () => {
+  it('should not revert header state and should still redirect if logout API call fails', async () => {
     // Set up initial authenticated state
     localStorage.setItem('access_token', 'test-token');
     localStorage.setItem('refresh_token', 'test-refresh-token');
@@ -166,20 +189,26 @@ describe('Header Update Timing', () => {
     render(
       <ProvidersWrapper>
         <Routes>
-          <Route path="/" element={<Layout />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<div>Home</div>} />
+            <Route path="auth" element={<div>Auth Page</div>} />
+          </Route>
         </Routes>
       </ProvidersWrapper>,
     );
 
-    // Wait for initial auth check
-    await waitFor(() => {
-      expect(screen.getByText(/logout/i)).toBeInTheDocument();
-    });
+    // Set initial route
+    window.history.pushState({}, '', '/');
+
+    // Wait for initial auth check and queries to settle
+    await waitForQueries();
+    expect(screen.getByText(/logout/i)).toBeInTheDocument();
 
     const user = userEvent.setup();
 
-    // Click logout button
+    // Click logout button and wait for queries to settle
     await user.click(screen.getByText(/logout/i));
+    await waitForQueries();
 
     // Verify header updates immediately
     await waitFor(
@@ -191,15 +220,25 @@ describe('Header Update Timing', () => {
       { timeout: 500 },
     );
 
+    // Verify we are redirected to auth page
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/auth');
+    });
+
     // Verify the header stays in logged out state even after API failure
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    expect(screen.getByText(/login/i)).toBeInTheDocument();
-    expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByText(/login/i)).toBeInTheDocument();
+    expect(within(nav).queryByText(/logout/i)).not.toBeInTheDocument();
+    expect(within(nav).queryByText(/jobs/i)).not.toBeInTheDocument();
   });
 
   afterEach(() => {
     localStorage.clear();
     server.resetHandlers();
+    // Reset route history after each test
+    window.history.replaceState({}, '', '/');
+    // Clean up event listeners
+    window.removeEventListener('auth-state-change', () => {});
   });
 });

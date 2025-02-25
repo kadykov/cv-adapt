@@ -9,6 +9,13 @@ export function useLoginMutation(onSuccess?: (response: AuthResponse) => void) {
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
       const response = await authMutations.login(credentials);
+      // Dispatch auth state change event immediately after successful login response
+      window.dispatchEvent(
+        new CustomEvent('auth-state-change', {
+          detail: { isAuthenticated: true, user: response.user },
+        }),
+      );
+      // Then proceed with auth context update
       await login(response);
       return response;
     },
