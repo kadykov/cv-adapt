@@ -19,6 +19,7 @@ export const mockAuthContextValue: AuthContextType = {
   loginWithCredentials: mockLoginWithCredentials,
   logout: mockLogout,
   isLoading: false,
+  stateVersion: 0,
 };
 
 // Mock implementation for auth-context

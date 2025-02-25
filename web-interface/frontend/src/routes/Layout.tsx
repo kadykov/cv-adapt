@@ -1,9 +1,12 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks';
 import { ROUTES } from './paths';
+import { useAuthStateListener } from '../features/auth/hooks/useAuthStateListener';
 
 export function Layout() {
   const { isAuthenticated, isLoading, logout } = useAuth();
+  // Listen for auth state changes
+  useAuthStateListener();
 
   return (
     <div className="min-h-screen bg-base-200">

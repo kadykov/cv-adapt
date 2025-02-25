@@ -8,6 +8,7 @@ import type { AuthContextType } from '../auth-types';
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [stateVersion, setStateVersion] = useState(0);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -26,6 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set user immediately from the login response
     if (mounted.current) {
       setUser(response.user);
+      setStateVersion((v) => v + 1);
+      window.dispatchEvent(
+        new CustomEvent('auth-state-change', {
+          detail: { isAuthenticated: true },
+        }),
+      );
     }
 
     // Validate token in the background without blocking UI update
@@ -65,6 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (mounted.current) {
         setUser(null);
         tokenService.clearTokens();
+        setStateVersion((v) => v + 1);
+        window.dispatchEvent(
+          new CustomEvent('auth-state-change', {
+            detail: { isAuthenticated: false },
+          }),
+        );
       }
     }
   }, []);
@@ -96,15 +109,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (authState?.user) {
           setUser(authState.user);
+          setStateVersion((v) => v + 1);
+          window.dispatchEvent(
+            new CustomEvent('auth-state-change', {
+              detail: { isAuthenticated: true },
+            }),
+          );
           // Update stored tokens in case they were refreshed
           tokenService.storeTokens(authState);
         } else {
           setUser(null);
+          setStateVersion((v) => v + 1);
+          window.dispatchEvent(
+            new CustomEvent('auth-state-change', {
+              detail: { isAuthenticated: false },
+            }),
+          );
           tokenService.clearTokens();
         }
       } catch {
         if (mounted) {
           setUser(null);
+          setStateVersion((v) => v + 1);
+          window.dispatchEvent(
+            new CustomEvent('auth-state-change', {
+              detail: { isAuthenticated: false },
+            }),
+          );
           tokenService.clearTokens();
         }
       } finally {
@@ -162,8 +193,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isAuthenticated: !!user,
       isLoading,
+      stateVersion,
     }),
-    [user, login, loginWithCredentials, logout, isLoading],
+    [user, login, loginWithCredentials, logout, isLoading, stateVersion],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

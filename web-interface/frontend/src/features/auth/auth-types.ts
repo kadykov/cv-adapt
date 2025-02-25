@@ -10,4 +10,5 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  stateVersion: number;
 }

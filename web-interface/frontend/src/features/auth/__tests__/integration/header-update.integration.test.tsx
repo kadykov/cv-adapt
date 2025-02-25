@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
@@ -10,6 +10,13 @@ import { LoginForm } from '../../components/LoginForm';
 import { http, HttpResponse, delay } from 'msw';
 
 describe('Header Update Timing', () => {
+  const mockUser = {
+    id: 1,
+    email: 'test@example.com',
+    created_at: '2024-02-23T10:00:00Z',
+    personal_info: null,
+  };
+
   beforeEach(() => {
     localStorage.clear();
     server.use(
@@ -22,12 +29,7 @@ describe('Header Update Timing', () => {
 
         await delay(2000); // 2-second delay
 
-        return HttpResponse.json({
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-23T10:00:00Z',
-          personal_info: null,
-        });
+        return HttpResponse.json(mockUser);
       }),
       ...authIntegrationHandlers.filter(
         (h) => h.info.path !== 'http://localhost:3000/users/me',
@@ -36,6 +38,8 @@ describe('Header Update Timing', () => {
   });
 
   it('should update header immediately after login, before token validation completes', async () => {
+    // Clear any existing tokens
+    localStorage.clear();
     render(
       <ProvidersWrapper>
         <Routes>
@@ -46,15 +50,19 @@ describe('Header Update Timing', () => {
       </ProvidersWrapper>,
     );
 
+    const user = userEvent.setup();
+
     // Navigate to auth page
-    await userEvent.click(screen.getByText(/login/i));
+    await user.click(screen.getByText(/login/i));
 
     // Fill in form and submit
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    await userEvent.type(emailInput, 'test@example.com');
-    await userEvent.type(passwordInput, 'password123');
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
+
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(submitButton);
 
     // Verify header updates immediately after login, before validation completes
     await waitFor(
@@ -73,7 +81,53 @@ describe('Header Update Timing', () => {
     expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
   });
 
+  it('should update header immediately after logout', async () => {
+    // Set up initial authenticated state with tokens and mock user
+    localStorage.setItem('access_token', 'test-token');
+    localStorage.setItem('refresh_token', 'test-refresh-token');
+    localStorage.setItem('expires_at', (Date.now() + 3600000).toString()); // 1 hour from now
+
+    // Mock /users/me endpoint for initial auth check
+    server.use(
+      http.get('http://localhost:3000/users/me', () => {
+        return HttpResponse.json(mockUser);
+      }),
+    );
+
+    render(
+      <ProvidersWrapper>
+        <Routes>
+          <Route path="/" element={<Layout />} />
+        </Routes>
+      </ProvidersWrapper>,
+    );
+
+    // Wait for initial auth check to complete
+    await waitFor(
+      () => {
+        expect(screen.getByText(/logout/i)).toBeInTheDocument();
+      },
+      { timeout: 2000 }, // Increase timeout to ensure auth check completes
+    );
+
+    const user = userEvent.setup();
+
+    // Click logout button
+    await user.click(screen.getByText(/logout/i));
+
+    // Verify header updates immediately
+    await waitFor(
+      () => {
+        expect(screen.getByText(/login/i)).toBeInTheDocument();
+        expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    ); // Header should update within 1 second
+  });
+
   afterEach(() => {
+    localStorage.clear();
     server.resetHandlers();
   });
 });
