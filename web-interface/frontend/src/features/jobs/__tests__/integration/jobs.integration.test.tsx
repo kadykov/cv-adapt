@@ -50,7 +50,7 @@ describe('Jobs Integration', () => {
 
   describe('Jobs Page Authentication Flow', () => {
     it('should redirect to login page for unauthenticated users', async () => {
-      setupTestRouter({
+      await setupTestRouter({
         initialRoute: ROUTES.JOBS.LIST,
         authenticated: false,
         children: routeConfig,
@@ -65,7 +65,7 @@ describe('Jobs Integration', () => {
     });
 
     it('should load jobs after successful login', async () => {
-      const { user } = setupTestRouter({
+      const { user } = await setupTestRouter({
         initialRoute: ROUTES.JOBS.LIST,
         authenticated: false,
         children: routeConfig,
@@ -90,12 +90,7 @@ describe('Jobs Integration', () => {
     });
 
     it('should show loading state then jobs when navigating to jobs page while authenticated', async () => {
-      // Setup individual tokens as expected by TokenService
-      localStorage.setItem('access_token', 'fake_token');
-      localStorage.setItem('refresh_token', 'fake_refresh');
-      localStorage.setItem('expires_at', (Date.now() + 3600000).toString()); // 1 hour from now
-
-      setupTestRouter({
+      await setupTestRouter({
         initialRoute: ROUTES.JOBS.LIST,
         authenticated: true,
         children: routeConfig,
@@ -114,14 +109,9 @@ describe('Jobs Integration', () => {
     });
 
     it('should handle jobs loading error states', async () => {
-      // Setup individual tokens as expected by TokenService
-      localStorage.setItem('access_token', 'fake_token');
-      localStorage.setItem('refresh_token', 'fake_refresh');
-      localStorage.setItem('expires_at', (Date.now() + 3600000).toString()); // 1 hour from now
-
       // Mock error response
       server.use(
-        http.get('/v1/api/jobs', () => {
+        http.get('/jobs', () => {
           return HttpResponse.json(
             { message: 'Internal Server Error' },
             { status: 500 },
@@ -129,7 +119,7 @@ describe('Jobs Integration', () => {
         }),
       );
 
-      setupTestRouter({
+      await setupTestRouter({
         initialRoute: ROUTES.JOBS.LIST,
         authenticated: true,
         children: routeConfig,

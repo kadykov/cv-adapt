@@ -13,7 +13,9 @@ export class ApiError extends Error {
 }
 
 export const axiosInstance = axios.create({
-  baseURL: '/v1/api',
+  // baseURL configured through environment
+  baseURL:
+    process.env.NODE_ENV === 'test' ? 'http://localhost:3000' : '/v1/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,12 +39,17 @@ axiosInstance.interceptors.response.use(
     }
     if (error.response) {
       const data = error.response.data as
-        | { message?: string; detail?: string }
+        | { message?: string; detail?: { message?: string } }
         | undefined;
-      throw new ApiError(
-        data?.message || data?.detail || 'An unknown error occurred',
-        error.response.status,
-      );
+
+      // Extract message from various possible locations in response
+      const message =
+        data?.message ||
+        data?.detail?.message ||
+        error.response.statusText ||
+        'An unknown error occurred';
+
+      throw new ApiError(message, error.response.status);
     }
     throw error;
   },

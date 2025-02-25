@@ -7,6 +7,7 @@ import {
 } from '@headlessui/react';
 import { JobCard } from './JobCard';
 import { useJobs } from '../hooks/useJobs';
+import type { ApiError } from '../../../lib/api/client';
 
 const LANGUAGE_OPTIONS = [
   { id: 'en', name: 'English' },
@@ -29,9 +30,10 @@ export function JobList({ onJobSelect }: JobListProps) {
   } = useJobs({ languageCode: selectedLang.id });
 
   if (error) {
+    const errorMessage = (error as ApiError).message ?? 'Failed to load jobs';
     return (
       <div className="text-center py-8">
-        <p className="text-error">Failed to load jobs</p>
+        <p className="text-error">{errorMessage}</p>
       </div>
     );
   }

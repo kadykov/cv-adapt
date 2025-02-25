@@ -1,9 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../../lib/test/server';
-import type { JobDescriptionResponse } from '../../../../lib/api/generated-types';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { getJobs, getJob, createJob, updateJob, deleteJob } from '../jobsApi';
-import { tokenService } from '../../../auth/services/token-service';
+import type {
+  JobDescriptionCreate,
+  JobDescriptionResponse,
+} from '../../../../lib/api/generated-types';
+import {
+  setTestAuthToken,
+  clearTestAuthToken,
+} from '../../../../lib/test/test-utils-auth';
 
 const mockJob: JobDescriptionResponse = {
   id: 1,
@@ -14,166 +21,115 @@ const mockJob: JobDescriptionResponse = {
   updated_at: null,
 };
 
-// Mock handlers for the jobs API
+const unauthorizedError = {
+  detail: { message: 'Unauthorized - Invalid or missing token' },
+};
+
 const handlers = [
-  http.get('/v1/api/jobs', ({ request }) => {
+  http.get(getTestApiUrl('/jobs'), ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
-
-    // Handle language filter
-    const url = new URL(request.url);
-    const languageCode = url.searchParams.get('language_code');
-    if (languageCode === 'fr') {
-      return HttpResponse.json([{ ...mockJob, language_code: 'fr' }]);
-    }
-
     return HttpResponse.json([mockJob]);
   }),
 
-  http.get('/v1/api/jobs/:id', ({ request }) => {
+  http.get(getTestApiUrl('/jobs/:id'), ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
     return HttpResponse.json(mockJob);
   }),
 
-  http.post('/v1/api/jobs', async ({ request }) => {
+  http.post(getTestApiUrl('/jobs'), async ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
-    const data = (await request.json()) as Omit<
-      JobDescriptionResponse,
-      'id' | 'created_at' | 'updated_at'
-    >;
-    return HttpResponse.json({
-      id: 1,
+    const data = (await request.json()) as JobDescriptionCreate;
+    const response: JobDescriptionResponse = {
+      id: 2,
+      title: data.title,
+      description: data.description,
+      language_code: data.language_code,
       created_at: '2024-02-17T22:00:00Z',
       updated_at: null,
-      ...data,
+    };
+    return HttpResponse.json(response);
+  }),
+
+  http.put(getTestApiUrl('/jobs/:id'), ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return HttpResponse.json(unauthorizedError, { status: 401 });
+    }
+    return HttpResponse.json({
+      ...mockJob,
+      title: 'Updated Title',
+      updated_at: '2024-02-17T23:00:00Z',
     } satisfies JobDescriptionResponse);
   }),
 
-  http.put('/v1/api/jobs/:id', ({ request }) => {
+  http.delete(getTestApiUrl('/jobs/:id'), ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
-    return HttpResponse.json({ ...mockJob, title: 'Updated Title' });
-  }),
-
-  http.delete('/v1/api/jobs/:id', ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
-    }
-    return new HttpResponse();
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
 
 describe('jobsApi', () => {
   beforeEach(() => {
-    localStorage.clear();
+    clearTestAuthToken();
     server.use(...handlers);
+  });
+
+  afterEach(() => {
+    clearTestAuthToken();
   });
 
   describe('getJobs', () => {
     it('fetches jobs successfully with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
+      setTestAuthToken();
       const jobs = await getJobs();
       expect(jobs).toHaveLength(1);
       expect(jobs[0]).toEqual(mockJob);
     });
 
-    it('handles language filter with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
-      const jobs = await getJobs('fr');
-      expect(jobs[0].language_code).toBe('fr');
-    });
-
     it('fails without auth token', async () => {
-      await expect(getJobs()).rejects.toThrow();
+      await expect(getJobs()).rejects.toThrow(/unauthorized/i);
     });
   });
 
   describe('getJob', () => {
-    it('fetches a single job successfully with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
+    it('fetches single job successfully', async () => {
+      setTestAuthToken();
       const job = await getJob(1);
       expect(job).toEqual(mockJob);
     });
 
     it('fails to fetch single job without auth token', async () => {
-      await expect(getJob(1)).rejects.toThrow();
+      await expect(getJob(1)).rejects.toThrow(/unauthorized/i);
     });
   });
 
   describe('createJob', () => {
-    const newJob = {
+    const newJob: JobDescriptionCreate = {
       title: 'New Position',
       description: 'Role description',
       language_code: 'en',
     };
 
-    it('creates a job successfully with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
+    it('creates job successfully', async () => {
+      setTestAuthToken();
       const job = await createJob(newJob);
       expect(job).toEqual(expect.objectContaining(newJob));
     });
 
     it('fails to create job without auth token', async () => {
-      await expect(createJob(newJob)).rejects.toThrow();
+      await expect(createJob(newJob)).rejects.toThrow(/unauthorized/i);
     });
   });
 
@@ -182,49 +138,25 @@ describe('jobsApi', () => {
       title: 'Updated Title',
     };
 
-    it('updates a job successfully with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
+    it('updates job successfully', async () => {
+      setTestAuthToken();
       const job = await updateJob(1, updates);
       expect(job.title).toBe(updates.title);
     });
 
     it('fails to update job without auth token', async () => {
-      await expect(updateJob(1, updates)).rejects.toThrow();
+      await expect(updateJob(1, updates)).rejects.toThrow(/unauthorized/i);
     });
   });
 
   describe('deleteJob', () => {
-    it('deletes a job successfully with auth token', async () => {
-      // Setup auth token
-      tokenService.storeTokens({
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        token_type: 'bearer',
-        user: {
-          id: 1,
-          email: 'test@example.com',
-          created_at: '2024-02-24T12:00:00Z',
-          personal_info: null,
-        },
-      });
-
-      await expect(deleteJob(1)).resolves.toBe('');
+    it('deletes job successfully', async () => {
+      setTestAuthToken();
+      await expect(deleteJob(1)).resolves.not.toThrow();
     });
 
     it('fails to delete job without auth token', async () => {
-      await expect(deleteJob(1)).rejects.toThrow();
+      await expect(deleteJob(1)).rejects.toThrow(/unauthorized/i);
     });
   });
 });

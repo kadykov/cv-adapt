@@ -22,10 +22,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Invalid response from server');
     }
     tokenService.storeTokens(response);
-    if (mounted.current) {
-      setUser(response.user);
+
+    // Verify token is valid by making a profile request
+    try {
+      const profile = await authMutations.validateToken();
+      if (mounted.current) {
+        if (profile?.user) {
+          setUser(profile.user);
+        } else {
+          throw new Error('Failed to validate token');
+        }
+      }
+    } catch (error) {
+      // If validation fails, clear everything
+      tokenService.clearTokens();
+      if (mounted.current) {
+        setUser(null);
+      }
+      throw error;
     }
-    return Promise.resolve();
   }, []);
 
   const loginWithCredentials = useCallback(
@@ -50,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initialize auth state
+  // Initialize auth state and watch for token changes
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -76,8 +91,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Initial check
     setIsLoading(true);
     checkAuth();
+
+    // Watch for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'access_token' || e.key === 'refresh_token') {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const value = useMemo<AuthContextType>(

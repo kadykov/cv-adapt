@@ -10,6 +10,7 @@ import {
   addIntegrationHandlers,
 } from '../../../../lib/test/integration';
 import { JobList } from '../../components/JobList';
+import { http, HttpResponse } from 'msw';
 
 describe('Job Operations Integration', () => {
   const mockJobs = [
@@ -37,15 +38,19 @@ describe('Job Operations Integration', () => {
     language_code: 'en',
   };
 
+  const serverError = {
+    detail: { message: 'Internal Server Error' },
+  };
+
   // Add handlers for job operations
   addIntegrationHandlers([
     // List jobs
-    createGetHandler('/v1/api/jobs', 'JobDescriptionResponse', mockJobs),
+    createGetHandler('/jobs', 'JobDescriptionResponse', mockJobs),
     // Get single job
-    createGetHandler('/v1/api/jobs/1', 'JobDescriptionResponse', mockJobs[0]),
+    createGetHandler('/jobs/1', 'JobDescriptionResponse', mockJobs[0]),
     // Create job
     createPostHandler(
-      '/v1/api/jobs',
+      '/jobs',
       'JobDescriptionCreate',
       'JobDescriptionResponse',
       {
@@ -57,7 +62,7 @@ describe('Job Operations Integration', () => {
     ),
     // Update job
     createPutHandler(
-      '/v1/api/jobs/1',
+      '/jobs/1',
       'JobDescriptionUpdate',
       'JobDescriptionResponse',
       {
@@ -67,7 +72,7 @@ describe('Job Operations Integration', () => {
       },
     ),
     // Delete job
-    createDeleteHandler('/v1/api/jobs/1'),
+    createDeleteHandler('/jobs/1'),
   ]);
 
   test('should list jobs with language filtering', async () => {
@@ -88,10 +93,10 @@ describe('Job Operations Integration', () => {
   });
 
   test('should display loading and error states', async () => {
-    // Add error handler
+    // Add custom error handler
     addIntegrationHandlers([
-      createGetHandler('/v1/api/jobs', 'JobDescriptionResponse', null, {
-        status: 500,
+      http.get('http://localhost:3000/jobs', () => {
+        return HttpResponse.json(serverError, { status: 500 });
       }),
     ]);
 
@@ -102,7 +107,7 @@ describe('Job Operations Integration', () => {
 
     // Should show error state with specific message
     await waitFor(() => {
-      expect(screen.getByText(/failed to load jobs/i)).toBeInTheDocument();
+      expect(screen.getByText(serverError.detail.message)).toBeInTheDocument();
     });
   });
 

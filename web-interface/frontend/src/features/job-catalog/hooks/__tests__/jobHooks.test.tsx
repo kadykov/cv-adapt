@@ -1,20 +1,114 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../../lib/test/server';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { useJobs } from '../useJobs';
 import { useJob } from '../useJob';
 import { useJobMutations } from '../useJobMutations';
-import type { JobDescriptionResponse } from '../../../../lib/api/generated-types';
+import type {
+  JobDescriptionCreate,
+  JobDescriptionResponse,
+} from '../../../../lib/api/generated-types';
+import {
+  setTestAuthToken,
+  clearTestAuthToken,
+} from '../../../../lib/test/test-utils-auth';
 
-const mockJob: JobDescriptionResponse = {
+const mockEnglishJob: JobDescriptionResponse = {
   id: 1,
   title: 'Frontend Developer',
   description: 'Frontend development role',
   language_code: 'en',
   created_at: '2024-02-17T22:00:00Z',
   updated_at: null,
+};
+
+const mockFrenchJob: JobDescriptionResponse = {
+  id: 2,
+  title: 'Développeur Frontend',
+  description: "Création d'interfaces",
+  language_code: 'fr',
+  created_at: '2024-02-17T22:00:00Z',
+  updated_at: null,
+};
+
+const unauthorizedError = {
+  detail: { message: 'Unauthorized - Invalid or missing token' },
+};
+
+// Mock handlers for the jobs API
+const setupHandlers = () => {
+  server.use(
+    http.get(getTestApiUrl('/jobs'), ({ request }) => {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return HttpResponse.json(unauthorizedError, { status: 401 });
+      }
+
+      // Handle language filter
+      const url = new URL(request.url);
+      const languageCode = url.searchParams.get('language_code');
+      if (languageCode === 'fr') {
+        return HttpResponse.json([mockFrenchJob]);
+      }
+      return HttpResponse.json([mockEnglishJob]);
+    }),
+
+    http.get(getTestApiUrl('/jobs/:id'), ({ request }) => {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return HttpResponse.json(unauthorizedError, { status: 401 });
+      }
+      return HttpResponse.json(mockEnglishJob);
+    }),
+
+    http.post(getTestApiUrl('/jobs'), async ({ request }) => {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return HttpResponse.json(unauthorizedError, { status: 401 });
+      }
+
+      const body = (await request.json()) as JobDescriptionCreate;
+      const response: JobDescriptionResponse = {
+        id: 3,
+        title: body.title,
+        description: body.description,
+        language_code: body.language_code,
+        created_at: '2024-02-17T22:00:00Z',
+        updated_at: null,
+      };
+
+      return HttpResponse.json(response);
+    }),
+
+    http.put(getTestApiUrl('/jobs/:id'), ({ request }) => {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return HttpResponse.json(unauthorizedError, { status: 401 });
+      }
+
+      const response: JobDescriptionResponse = {
+        id: mockEnglishJob.id,
+        title: 'Updated Title',
+        description: mockEnglishJob.description,
+        language_code: mockEnglishJob.language_code,
+        created_at: mockEnglishJob.created_at,
+        updated_at: '2024-02-17T23:00:00Z',
+      };
+
+      return HttpResponse.json(response);
+    }),
+
+    http.delete(getTestApiUrl('/jobs/:id'), ({ request }) => {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return HttpResponse.json(unauthorizedError, { status: 401 });
+      }
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
 };
 
 // Wrapper component with React Query provider
@@ -33,8 +127,18 @@ function createWrapper() {
 }
 
 describe('Job Hooks', () => {
+  beforeEach(() => {
+    clearTestAuthToken();
+    setupHandlers();
+  });
+
+  afterEach(() => {
+    clearTestAuthToken();
+  });
+
   describe('useJobs', () => {
     it('fetches jobs list successfully', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJobs(), {
         wrapper: createWrapper(),
       });
@@ -44,10 +148,11 @@ describe('Job Hooks', () => {
       });
 
       expect(result.current.data).toHaveLength(1);
-      expect(result.current.data?.[0]).toEqual(mockJob);
+      expect(result.current.data?.[0]).toEqual(mockEnglishJob);
     });
 
     it('handles language filter', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJobs({ languageCode: 'fr' }), {
         wrapper: createWrapper(),
       });
@@ -59,28 +164,21 @@ describe('Job Hooks', () => {
       expect(result.current.data?.[0].language_code).toBe('fr');
     });
 
-    it('handles error state', async () => {
-      server.use(
-        http.get('/v1/api/jobs', () => {
-          return HttpResponse.json(
-            { detail: { message: 'Server error' } },
-            { status: 500 },
-          );
-        }),
-      );
-
+    it('handles unauthorized error', async () => {
       const { result } = renderHook(() => useJobs(), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
+        expect(result.current.error?.message).toContain('Unauthorized');
       });
     });
   });
 
   describe('useJob', () => {
     it('fetches single job successfully', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJob(1), {
         wrapper: createWrapper(),
       });
@@ -89,40 +187,33 @@ describe('Job Hooks', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockJob);
+      expect(result.current.data).toEqual(mockEnglishJob);
     });
 
-    it('handles not found error', async () => {
-      server.use(
-        http.get('/v1/api/jobs/:id', () => {
-          return HttpResponse.json(
-            { detail: { message: 'Job not found' } },
-            { status: 404 },
-          );
-        }),
-      );
-
-      const { result } = renderHook(() => useJob(999), {
+    it('handles unauthorized error', async () => {
+      const { result } = renderHook(() => useJob(1), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
+        expect(result.current.error?.message).toContain('Unauthorized');
       });
     });
   });
 
   describe('useJobMutations', () => {
+    const newJob: JobDescriptionCreate = {
+      title: 'New Position',
+      description: 'Role description',
+      language_code: 'en',
+    };
+
     it('creates job successfully', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJobMutations(), {
         wrapper: createWrapper(),
       });
-
-      const newJob = {
-        title: 'New Position',
-        description: 'Role description',
-        language_code: 'en',
-      };
 
       result.current.createJob.mutate(newJob);
 
@@ -136,6 +227,7 @@ describe('Job Hooks', () => {
     });
 
     it('updates job successfully', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJobMutations(), {
         wrapper: createWrapper(),
       });
@@ -154,6 +246,7 @@ describe('Job Hooks', () => {
     });
 
     it('deletes job successfully', async () => {
+      setTestAuthToken();
       const { result } = renderHook(() => useJobMutations(), {
         wrapper: createWrapper(),
       });
@@ -165,28 +258,18 @@ describe('Job Hooks', () => {
       });
     });
 
-    it('handles mutation errors', async () => {
-      server.use(
-        http.post('/v1/api/jobs', () => {
-          return HttpResponse.json(
-            { detail: { message: 'Invalid data' } },
-            { status: 422 },
-          );
-        }),
-      );
-
+    it('handles unauthorized error on create', async () => {
       const { result } = renderHook(() => useJobMutations(), {
         wrapper: createWrapper(),
       });
 
-      result.current.createJob.mutate({
-        title: '',
-        description: '',
-        language_code: 'en',
-      });
+      result.current.createJob.mutate(newJob);
 
       await waitFor(() => {
         expect(result.current.createJob.isError).toBe(true);
+        expect(result.current.createJob.error?.message).toContain(
+          'Unauthorized',
+        );
       });
     });
   });

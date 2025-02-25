@@ -36,20 +36,38 @@ interface TestSetupOptions {
 /**
  * Setup function for tests that need Memory Router with a specific initial route
  */
-export function setupTestRouter({
+export async function setupTestRouter({
   initialRoute = '/',
   authenticated = false,
   queryClient,
   children,
-}: PropsWithChildren<TestSetupOptions>): TestRouterResult {
+}: PropsWithChildren<TestSetupOptions>): Promise<TestRouterResult> {
   // Clear any previous auth state
   localStorage.clear();
 
   // Setup auth state if needed
   if (authenticated) {
-    localStorage.setItem('access_token', 'fake_token');
-    localStorage.setItem('refresh_token', 'fake_refresh');
-    localStorage.setItem('expires_at', (Date.now() + 3600000).toString()); // 1 hour from now
+    // Set tokens in a format that matches our auth response
+    const authResponse = {
+      access_token: 'fake_token',
+      refresh_token: 'fake_refresh',
+      token_type: 'bearer',
+      user: {
+        id: 1,
+        email: 'test@example.com',
+        created_at: '2024-02-23T10:00:00Z',
+        personal_info: null,
+      },
+    };
+
+    // Use the token service to ensure proper storage format
+    const { tokenService } = await import(
+      '../../features/auth/services/token-service'
+    );
+    tokenService.storeTokens(authResponse);
+
+    // Wait for any promises to resolve
+    await flushPromises();
   }
 
   const user = userEvent.setup({ delay: null });

@@ -22,7 +22,7 @@ const mockJobs: Job[] = [
 ];
 
 export const jobsIntegrationHandlers = [
-  http.get('/v1/api/jobs', async ({ request }) => {
+  http.get('http://localhost:3000/jobs', async ({ request }) => {
     // Add delay to ensure loading states are visible
     await delay(150);
 
@@ -36,7 +36,7 @@ export const jobsIntegrationHandlers = [
   }),
 
   http.get<PathParams, DefaultBodyType>(
-    '/v1/api/jobs/:id',
+    'http://localhost:3000/jobs/:id',
     async ({ params, request }) => {
       await delay(150);
 

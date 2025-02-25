@@ -16,19 +16,23 @@ const mockJobs: JobsResponse = [
   {
     id: 1,
     title: 'Software Engineer',
-    description: 'Building awesome software',
+    description: 'Full stack developer position',
     language_code: 'en',
     created_at: '2024-02-24T12:00:00Z',
     updated_at: '2024-02-24T12:00:00Z',
   },
 ];
 
+const unauthorizedError = {
+  detail: { message: 'Unauthorized - Invalid or missing token' },
+};
+
 const jobsHandlers = [
   // Return mockJobs with 401 if no auth token
-  http.get('/v1/api/jobs', ({ request }) => {
+  http.get('http://localhost:3000/jobs', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
+      return HttpResponse.json(unauthorizedError, { status: 401 });
     }
     return HttpResponse.json(mockJobs);
   }),
@@ -76,7 +80,9 @@ describe('Jobs with Authentication Integration', () => {
     // Then shows job data
     await waitFor(() => {
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
-      expect(screen.getByText('Building awesome software')).toBeInTheDocument();
+      expect(
+        screen.getByText('Full stack developer position'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -94,7 +100,9 @@ describe('Jobs with Authentication Integration', () => {
 
     // Should show error state due to 401
     await waitFor(() => {
-      expect(screen.getByText(/failed to load jobs/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(unauthorizedError.detail.message),
+      ).toBeInTheDocument();
     });
   });
 
@@ -129,7 +137,9 @@ describe('Jobs with Authentication Integration', () => {
     );
     await waitFor(() => {
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
-      expect(screen.getByText('Building awesome software')).toBeInTheDocument();
+      expect(
+        screen.getByText('Full stack developer position'),
+      ).toBeInTheDocument();
     });
   });
 });
