@@ -5,8 +5,11 @@ import { useAuthStateListener } from '../features/auth/hooks/useAuthStateListene
 
 export function Layout() {
   const { isAuthenticated, isLoading, logout } = useAuth();
-  // Listen for auth state changes
-  useAuthStateListener();
+  // Listen for auth state changes and force re-render when they occur
+  const { lastEvent } = useAuthStateListener();
+
+  // Use event state if available, otherwise fall back to direct auth state
+  const showAuthenticatedUI = lastEvent?.isAuthenticated ?? isAuthenticated;
 
   return (
     <div className="min-h-screen bg-base-200">
@@ -23,12 +26,30 @@ export function Layout() {
               role="status"
               aria-label="Loading authentication state..."
             />
-          ) : isAuthenticated ? (
+          ) : showAuthenticatedUI ? (
             <>
               <Link to={ROUTES.JOBS.LIST} className="btn btn-ghost">
                 Jobs
               </Link>
-              <button onClick={logout} className="btn btn-ghost">
+              <button
+                type="button"
+                onClick={async () => {
+                  // First update local state through event dispatch
+                  window.dispatchEvent(
+                    new CustomEvent('auth-state-change', {
+                      detail: { isAuthenticated: false, user: null },
+                    }),
+                  );
+                  // Then initiate logout process
+                  try {
+                    await logout();
+                  } catch {
+                    // Even if logout fails, we keep the UI in logged out state
+                    // as we've already cleared tokens
+                  }
+                }}
+                className="btn btn-ghost"
+              >
                 Logout
               </button>
             </>

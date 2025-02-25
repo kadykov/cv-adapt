@@ -18,7 +18,8 @@ describe('useAuthStateListener', () => {
     });
 
     // Initial count should be 0
-    expect(result.current).toBe(0);
+    expect(result.current.updateCount).toBe(0);
+    expect(result.current.lastEvent).toBe(null);
 
     // Simulate login event
     await act(async () => {
@@ -28,8 +29,9 @@ describe('useAuthStateListener', () => {
       window.dispatchEvent(loginEvent);
     });
 
-    // Verify count incremented
-    expect(result.current).toBe(1);
+    // Verify count incremented and event data
+    expect(result.current.updateCount).toBe(1);
+    expect(result.current.lastEvent).toEqual({ isAuthenticated: true });
 
     // Simulate logout event
     await act(async () => {
@@ -39,7 +41,8 @@ describe('useAuthStateListener', () => {
       window.dispatchEvent(logoutEvent);
     });
 
-    // Verify count incremented again
-    expect(result.current).toBe(2);
+    // Verify count incremented again and event data
+    expect(result.current.updateCount).toBe(2);
+    expect(result.current.lastEvent).toEqual({ isAuthenticated: false });
   });
 });

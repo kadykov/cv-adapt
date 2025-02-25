@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { AuthResponse } from '../../../lib/api/generated-types';
 import { authMutations } from '../services/auth-mutations';
 import { tokenService } from '../services/token-service';
@@ -6,6 +7,7 @@ import { AuthContext } from '../context/auth-context';
 import type { AuthContextType } from '../auth-types';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [stateVersion, setStateVersion] = useState(0);
@@ -18,41 +20,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (response: AuthResponse) => {
-    if (!response?.user) {
-      throw new Error('Invalid response from server');
-    }
-    tokenService.storeTokens(response);
-
-    // Set user immediately from the login response
-    if (mounted.current) {
-      setUser(response.user);
-      setStateVersion((v) => v + 1);
-      window.dispatchEvent(
-        new CustomEvent('auth-state-change', {
-          detail: { isAuthenticated: true },
-        }),
-      );
-    }
-
-    // Validate token in the background without blocking UI update
-    try {
-      const profile = await authMutations.validateToken();
-      if (mounted.current && profile?.user) {
-        // Update with the latest user data if different
-        if (JSON.stringify(profile.user) !== JSON.stringify(response.user)) {
-          setUser(profile.user);
-        }
+  const login = useCallback(
+    async (response: AuthResponse) => {
+      if (!response?.user) {
+        throw new Error('Invalid response from server');
       }
-    } catch (error) {
-      // If validation fails, clear everything and throw
-      tokenService.clearTokens();
+      tokenService.storeTokens(response);
+
+      // Set user immediately from the login response
       if (mounted.current) {
-        setUser(null);
+        setUser(response.user);
+        setStateVersion((v) => v + 1);
+        // Invalidate all queries to ensure fresh data after login
+        queryClient.invalidateQueries();
+        // Notify all components about auth state change
+        window.dispatchEvent(
+          new CustomEvent('auth-state-change', {
+            detail: { isAuthenticated: true, user: response.user },
+          }),
+        );
       }
-      throw error;
-    }
-  }, []);
+
+      // Validate token in the background without blocking UI update
+      try {
+        const profile = await authMutations.validateToken();
+        if (mounted.current && profile?.user) {
+          // Update with the latest user data if different
+          if (JSON.stringify(profile.user) !== JSON.stringify(response.user)) {
+            setUser(profile.user);
+          }
+        }
+      } catch (error) {
+        // If validation fails, clear everything and throw
+        tokenService.clearTokens();
+        if (mounted.current) {
+          setUser(null);
+        }
+        throw error;
+      }
+    },
+    [queryClient],
+  ); // queryClient needed since it's used in the callback
 
   const loginWithCredentials = useCallback(
     async (credentials: { email: string; password: string }) => {
@@ -60,27 +68,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await login(response);
       return response;
     },
-    [login],
+    [login], // queryClient not needed since we only use login
   );
 
   const logout = useCallback(async () => {
-    try {
-      await authMutations.logout();
-    } catch {
-      // Ignore logout errors
-    } finally {
-      if (mounted.current) {
-        setUser(null);
-        tokenService.clearTokens();
-        setStateVersion((v) => v + 1);
-        window.dispatchEvent(
-          new CustomEvent('auth-state-change', {
-            detail: { isAuthenticated: false },
-          }),
-        );
-      }
+    // Clear state before API call
+    if (mounted.current) {
+      setUser(null);
+      tokenService.clearTokens();
+      setStateVersion((v) => v + 1);
+      // Invalidate all queries to ensure fresh data after logout
+      queryClient.invalidateQueries();
+      // Remove all queries from the cache to prevent stale data
+      queryClient.removeQueries();
+      // Notify all components about auth state change
+      window.dispatchEvent(
+        new CustomEvent('auth-state-change', {
+          detail: { isAuthenticated: false, user: null },
+        }),
+      );
     }
-  }, []);
+
+    // Now attempt the API call, but don't wait for it and handle any errors
+    authMutations.logout().catch(() => {
+      // Ignore logout errors - state is already cleared
+    });
+  }, [queryClient]); // Add queryClient dependency since it's used in the callback
 
   // Initialize auth state and watch for token changes
   useEffect(() => {
@@ -183,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearInterval(validateInterval);
       }
     };
-  }, []); // Run only once on mount, manage state internally
+  }, [queryClient]); // Run only once on mount, manage state internally
 
   const value = useMemo<AuthContextType>(
     () => ({
