@@ -40,6 +40,11 @@ describe('Navigation Integration', () => {
     it('should show login form when navigating to auth route', async () => {
       const { user } = setupNavigationTest();
 
+      // Wait for loading state to finish
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+      });
+
       // Click login button
       await user.click(screen.getByText(/login/i));
 
@@ -54,8 +59,15 @@ describe('Navigation Integration', () => {
     it('should show correct navigation items based on auth state', async () => {
       const { user } = setupNavigationTest();
 
+      // Wait for loading state to finish
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+      });
+
       // Initial state - unauthenticated
-      expect(screen.getByText(/login/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/login/i)).toBeInTheDocument();
+      });
       expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
 
@@ -79,6 +91,11 @@ describe('Navigation Integration', () => {
 
     it('should show login button after logout', async () => {
       const { user } = setupNavigationTest();
+
+      // Wait for loading state to finish
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+      });
 
       // First login
       await user.click(screen.getByText(/login/i));

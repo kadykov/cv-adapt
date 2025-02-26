@@ -3,13 +3,13 @@ import { vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from '../ProtectedRoute';
 
-// Mock the useAuth hook
+// Mock the useAuthState hook
 vi.mock('../../features/auth/hooks', () => ({
-  useAuth: vi.fn(),
+  useAuthState: vi.fn(),
 }));
 
-import { useAuth } from '../../features/auth/hooks';
-const mockUseAuth = useAuth as jest.Mock;
+import { useAuthState } from '../../features/auth/hooks';
+const mockUseAuthState = useAuthState as jest.Mock;
 
 function TestComponent() {
   return <div>Protected Content</div>;
@@ -19,7 +19,7 @@ function renderProtectedRoute(
   { isAuthenticated = false, isLoading = false } = {},
   initialRoute = '/protected',
 ) {
-  mockUseAuth.mockReturnValue({
+  mockUseAuthState.mockReturnValue({
     isAuthenticated,
     isLoading,
   });
@@ -38,7 +38,7 @@ function renderProtectedRoute(
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    mockUseAuth.mockClear();
+    mockUseAuthState.mockClear();
   });
 
   it('shows loading state when authentication is being checked', () => {

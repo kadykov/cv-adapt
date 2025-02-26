@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Field, Input, Label, Description, Button } from '@headlessui/react';
-import { useRegisterMutation, useAuth } from '../hooks/index';
+import { useRegisterMutation } from '../hooks/index';
 import type { RegisterRequest } from '../../../lib/api/generated-types';
 
 const schema = z
@@ -27,7 +27,6 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
-  const { login } = useAuth();
   const {
     register,
     handleSubmit,
@@ -39,23 +38,20 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     criteriaMode: 'all',
   });
 
-  const { mutateAsync, error, isPending } = useRegisterMutation();
+  const { mutate: registerUser, error, isPending } = useRegisterMutation();
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      const variables: RegisterRequest = {
-        email: data.email,
-        password: data.password,
-      };
-      const response = await mutateAsync(variables);
-      // Update auth context with the registration response
-      login(response);
-      reset(); // Clear form
-      onSuccess();
-    } catch {
-      // Error is handled by the mutation error state
-    }
-  };
+  const handleFormSubmit = handleSubmit((data: FormData) => {
+    const variables: RegisterRequest = {
+      email: data.email,
+      password: data.password,
+    };
+    registerUser(variables, {
+      onSuccess: () => {
+        reset(); // Clear form on success
+        onSuccess();
+      },
+    });
+  });
 
   // Determine all password validation errors
   const passwordValidationRules = [
@@ -82,13 +78,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     .map((rule) => rule.message);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form onSubmit={handleFormSubmit} className="space-y-6" noValidate>
       <Field>
         <Label className="text-sm font-medium text-gray-700">Email</Label>
         <Input
           type="email"
           autoComplete="email"
           disabled={isPending}
+          data-testid="email-input"
           {...register('email')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
@@ -105,6 +102,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           type="password"
           autoComplete="new-password"
           disabled={isPending}
+          data-testid="password-input"
           {...register('password')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
@@ -127,6 +125,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           type="password"
           autoComplete="new-password"
           disabled={isPending}
+          data-testid="confirm-password-input"
           {...register('confirmPassword')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
@@ -148,6 +147,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <Button
         type="submit"
         disabled={isPending}
+        data-testid="submit-button"
         className="btn btn-primary w-full data-[hover]:btn-primary-focus data-[disabled]:btn-disabled"
       >
         {isPending ? 'Creating Account...' : 'Create Account'}

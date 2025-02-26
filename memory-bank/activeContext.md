@@ -2,12 +2,12 @@
 
 ## Current Focus
 
-1. **Frontend Routing Implementation**
-   - Integrating implemented features through routing
-   - Setting up protected routes for authenticated sections
-   - Implementing main layout with navigation
-   - Connecting auth state with route protection
-   - Testing route interactions and auth flows
+1. **Authentication System Refactoring**
+   - Replacing custom event-based auth state with React Query
+   - Centralizing auth state management
+   - Fixing synchronization issues between components
+   - Improving maintainability and reliability
+   - Testing all auth flows and protected routes
 
 2. **Type System Cleanup**
    - ✓ Added generate-api-types to pretest script
@@ -62,11 +62,11 @@
 
 ## Recent Changes
 
-1. **API Type System Enhancement**
-   - ✓ Automated type generation in test workflow
-   - ✓ Removed redundant manual type definitions
-   - ✓ Preserved frontend-specific language configurations
-   - ✓ Improved development workflow with pretest integration
+1. **Authentication System Enhancement**
+   - Identified synchronization issues in auth state
+   - Planned refactoring to React Query-based solution
+   - Documented new architecture approach
+   - Started implementation of centralized auth state
 
 2. **Job Catalog Component Implementation**
    - JobCard component created
@@ -91,14 +91,12 @@
 
 ## Next Steps
 
-1. **Testing Enhancement**
-   - ✓ Centralized test infrastructure
-   - ✓ API path consistency
-   - ✓ Mock data alignment
-   - Advanced interaction tests
-   - Form validation testing
-   - Error boundary testing
-   - E2E test planning
+1. **Authentication Refactoring Implementation**
+   - Create centralized auth query hooks
+   - Update core components (Layout, ProtectedRoute)
+   - Remove custom event system
+   - Comprehensive testing of auth flows
+   - Documentation of new auth system
 
 2. **Documentation Updates**
    - Component usage guidelines

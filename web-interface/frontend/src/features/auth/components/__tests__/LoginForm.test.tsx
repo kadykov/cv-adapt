@@ -5,33 +5,37 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { LoginForm } from '../LoginForm';
+import { createTestQueryClient } from '../../testing/setup';
+import { mockAuthResponse } from '../../testing/mocks';
+import { ApiError } from '../../../../lib/api/client';
+import '@testing-library/jest-dom';
 
+// Test mocks
 const mockOnSuccess = vi.fn();
-const mockMutate = vi.fn();
-const mockMutationState = {
-  isPending: false,
-  error: undefined as Error | undefined,
-};
+let mockMutate = vi.fn();
+let mockIsPending = false;
+let mockError: Error | null = null;
 
+// Mock the hooks
 vi.mock('../../hooks', () => ({
   useLoginMutation: () => ({
     mutate: mockMutate,
-    error: mockMutationState.error,
-    isPending: mockMutationState.isPending,
+    error: mockError,
+    isPending: mockIsPending,
+    isError: !!mockError,
+    isSuccess: false,
+    data: null,
   }),
 }));
-
-// Regular imports after mocks
-import { QueryClientProvider } from '@tanstack/react-query';
-import { LoginForm } from '../LoginForm';
-import { createTestQueryClient } from '../../testing';
-import '@testing-library/jest-dom';
 
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMutationState.isPending = false;
-    mockMutationState.error = undefined;
+    mockIsPending = false;
+    mockError = null;
+    mockMutate = vi.fn();
   });
 
   const renderForm = (props = {}) => {
@@ -46,16 +50,16 @@ describe('LoginForm', () => {
   const fillAndSubmitForm = async (
     user: ReturnType<typeof userEvent.setup>,
   ) => {
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    const submitButton = screen.getByRole('button');
+    await user.type(screen.getByTestId('email-input'), 'test@example.com');
+    await user.type(screen.getByTestId('password-input'), 'Password123');
+    const submitButton = screen.getByTestId('submit-button');
     await user.click(submitButton);
   };
 
   it('validates required fields', async () => {
     renderForm();
     const user = userEvent.setup();
-    const submitButton = screen.getByRole('button');
+    const submitButton = screen.getByTestId('submit-button');
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -73,9 +77,9 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
 
     // Enter invalid email
-    await user.type(screen.getByLabelText(/email/i), 'invalid-email');
-    await user.type(screen.getByLabelText(/password/i), 'Password123');
-    const submitButton = screen.getByRole('button');
+    await user.type(screen.getByTestId('email-input'), 'invalid-email');
+    await user.type(screen.getByTestId('password-input'), 'Password123');
+    const submitButton = screen.getByTestId('submit-button');
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -98,29 +102,31 @@ describe('LoginForm', () => {
           email: 'test@example.com',
           password: 'Password123',
         },
-        expect.objectContaining({
-          onSuccess: expect.any(Function),
-        }),
+        { onSuccess: mockOnSuccess },
       );
     });
   });
 
   it('shows loading state during submission', async () => {
-    mockMutationState.isPending = true;
+    mockIsPending = true;
     renderForm();
 
     await waitFor(() => {
-      const submitButton = screen.getByRole('button');
+      const submitButton = screen.getByTestId('submit-button');
       expect(submitButton).toHaveTextContent(/signing in/i);
       expect(submitButton).toBeDisabled();
     });
   });
 
   it('calls onSuccess after successful login', async () => {
-    let onSuccessCallback: (() => void) | undefined;
-    mockMutate.mockImplementationOnce(
-      (_data: unknown, options: { onSuccess?: () => void }) => {
-        onSuccessCallback = options.onSuccess;
+    mockMutate.mockImplementation(
+      (
+        _: { email: string; password: string },
+        options?: { onSuccess?: (data: unknown) => void },
+      ) => {
+        if (options?.onSuccess) {
+          options.onSuccess(mockAuthResponse);
+        }
       },
     );
 
@@ -129,22 +135,15 @@ describe('LoginForm', () => {
     await fillAndSubmitForm(user);
 
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalled();
-    });
-
-    // Simulate successful login
-    if (onSuccessCallback) {
-      onSuccessCallback();
-    }
-
-    await waitFor(() => {
-      expect(mockOnSuccess).toHaveBeenCalled();
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ onSuccess: mockOnSuccess }),
+      );
     });
   });
 
   it('handles login error', async () => {
-    mockMutationState.error = new Error('Invalid credentials');
-
+    mockError = new ApiError('Invalid credentials', 401);
     renderForm();
     const user = userEvent.setup();
     await fillAndSubmitForm(user);
@@ -152,26 +151,36 @@ describe('LoginForm', () => {
     await waitFor(() => {
       const errorMessage = screen.getByText(/invalid credentials/i);
       expect(errorMessage).toBeInTheDocument();
+      expect(errorMessage).toHaveClass('text-error');
     });
 
     expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
-  it('shows hover styles on form elements', async () => {
+  it('shows interactive states on inputs', async () => {
     renderForm();
     const user = userEvent.setup();
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button');
+    const emailInput = screen.getByTestId('email-input');
+    const passwordInput = screen.getByTestId('password-input');
+    const submitButton = screen.getByTestId('submit-button');
 
-    await user.hover(emailInput);
-    expect(emailInput).toHaveAttribute('data-hover');
+    await user.click(emailInput);
+    expect(emailInput).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('focus'),
+    );
 
-    await user.hover(passwordInput);
-    expect(passwordInput).toHaveAttribute('data-hover');
+    await user.click(passwordInput);
+    expect(passwordInput).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('focus'),
+    );
 
-    await user.hover(submitButton);
-    expect(submitButton).toHaveAttribute('data-hover');
+    await user.click(submitButton);
+    expect(submitButton).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('hover'),
+    );
   });
 });

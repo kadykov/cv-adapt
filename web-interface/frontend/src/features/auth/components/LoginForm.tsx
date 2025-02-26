@@ -16,8 +16,11 @@ interface LoginFormProps {
   onSuccess?: () => void;
 }
 
+/**
+ * Login form component that uses React Query mutation for authentication.
+ */
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { mutate, error, isPending } = useLoginMutation();
+  const { mutate: login, error: apiError, isPending } = useLoginMutation();
   const {
     register,
     handleSubmit,
@@ -30,21 +33,22 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   });
 
   const onSubmit = handleSubmit((data) => {
-    mutate({ email: data.email, password: data.password }, { onSuccess });
+    login(
+      { email: data.email, password: data.password },
+      { onSuccess: onSuccess },
+    );
   });
 
   const getErrorMessage = () => {
-    if (error instanceof ApiError) {
-      // Extract detail from API error
-      const detail = error.message;
-      if (detail.includes('Invalid credentials')) {
+    if (!apiError) return null;
+
+    if (apiError instanceof ApiError) {
+      if (apiError.message.includes('Invalid credentials')) {
         return 'Invalid credentials';
       }
-      return detail;
+      return apiError.message;
     }
-    if (error instanceof Error) {
-      return error.message;
-    }
+
     return 'An unexpected error occurred';
   };
 
@@ -56,6 +60,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="email"
           autoComplete="email"
           disabled={isPending}
+          data-testid="email-input"
           {...register('email')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
         />
@@ -72,6 +77,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="password"
           autoComplete="current-password"
           disabled={isPending}
+          data-testid="password-input"
           {...register('password')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary"
         />
@@ -82,7 +88,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         )}
       </Field>
 
-      {error && (
+      {apiError && (
         <Field>
           <Description className="text-sm text-error" role="alert">
             {getErrorMessage()}
@@ -93,9 +99,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <Button
         type="submit"
         disabled={isPending}
+        data-testid="submit-button"
         className="btn btn-primary w-full data-[hover]:btn-primary-focus data-[disabled]:btn-disabled"
       >
-        {isPending ? 'Signing in' : 'Sign in'}
+        {isPending ? 'Signing in...' : 'Sign in'}
       </Button>
     </form>
   );

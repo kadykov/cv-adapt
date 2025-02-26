@@ -1,68 +1,83 @@
 import { vi } from 'vitest';
-import { createContext } from 'react';
-import type { AuthContextType } from '../auth-types';
-import { mockUser, mockAuthResponse } from './fixtures';
+import { QueryClient } from '@tanstack/react-query';
 import type { ApiError } from '../../../lib/api/client';
+import {
+  mockAuthResponse,
+  createAuthQueryResult,
+  createLoginMutationResult,
+  createRegisterMutationResult,
+  createLogoutMutationResult,
+} from './mocks';
 
-// Create a mock context
-export const MockAuthContext = createContext<AuthContextType | null>(null);
+// Create test QueryClient
+export const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: Infinity,
+      },
+    },
+  });
 
-// Mock hooks
+// Mock mutations with default state
+export const mockLoginMutation = {
+  ...createLoginMutationResult(),
+  mutateAsync: vi.fn(),
+  isSuccess: false,
+  isError: false,
+  data: null,
+};
+
 export const mockRegisterMutation = {
-  mutate: vi.fn(),
+  ...createRegisterMutationResult(),
   mutateAsync: vi.fn(),
-  isPending: false,
-  error: null as null | ApiError,
   isSuccess: false,
   isError: false,
-  data: mockAuthResponse,
+  data: null,
 };
 
-export const mockRefreshTokenMutation = {
-  mutate: vi.fn(),
+export const mockLogoutMutation = {
+  ...createLogoutMutationResult(),
   mutateAsync: vi.fn(),
-  isPending: false,
-  error: null as null | ApiError,
   isSuccess: false,
   isError: false,
-  data: mockAuthResponse,
 };
 
-export const mockUseProfile = {
-  data: mockUser,
-  error: null as null | ApiError,
-  isError: false,
-  isLoading: false,
+export const mockAuthQuery = {
+  ...createAuthQueryResult(null),
   isSuccess: false,
-};
-
-// Default mock values for useAuth
-export const mockAuthContextValue: AuthContextType = {
-  isAuthenticated: false,
-  user: mockUser,
-  login: vi.fn(),
-  loginWithCredentials: vi.fn(),
-  logout: vi.fn(),
-  isLoading: false,
-  stateVersion: 0,
-};
-
-// Mock auth-context
-export const mockAuthContext = {
-  AuthContext: MockAuthContext,
-  useAuth: () => mockAuthContextValue,
+  isError: false,
+  error: null as null | ApiError,
 };
 
 // Mock hooks
 vi.mock('../hooks/index', () => ({
+  useAuthQuery: () => mockAuthQuery,
+  useAuthState: () => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+  }),
+  useLoginMutation: () => mockLoginMutation,
   useRegisterMutation: () => mockRegisterMutation,
-  useProfile: () => mockUseProfile,
-  useRefreshToken: () => mockRefreshTokenMutation,
-  useAuth: () => mockAuthContextValue,
+  useLogoutMutation: () => mockLogoutMutation,
 }));
 
-// Mock auth-context
-vi.mock('../context/auth-context', () => mockAuthContext);
+// Helper to setup authenticated state
+export const setupAuthenticatedState = (queryClient: QueryClient) => {
+  mockAuthQuery.data = mockAuthResponse;
+  mockAuthQuery.isSuccess = true;
+  queryClient.setQueryData(['auth'], mockAuthResponse);
+};
+
+// Helper to setup unauthenticated state
+export const setupUnauthenticatedState = (queryClient: QueryClient) => {
+  mockAuthQuery.data = null;
+  mockAuthQuery.isSuccess = true;
+  queryClient.setQueryData(['auth'], null);
+};
 
 // Add ResizeObserver mock
 class ResizeObserver {

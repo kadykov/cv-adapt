@@ -45,30 +45,26 @@
 ## In Progress
 
 1. **Frontend Implementation**
-   - Phase 2: Authentication
-     - ✓ Authentication System Improvements
-       - ✓ Standardize auth components and mutations
-       - ✓ Token management service implementation
-       - ✓ Axios interceptors for token handling
-       - ✓ Improved login and registration flows
-       - ✓ Auth API Layer implementation
-     - ✓ Testing Infrastructure Improvements
-       - Integration Tests ✓
-         - ✓ Schema-based handler generation
-         - ✓ Integration test server setup
-         - ✓ Contract validation in integration tests
-         - ✓ Feature-level flow testing
-         - ✓ React Query mutation testing
-         - ✓ Proper async operation handling
-         - ✓ Loading state verification
-         - ✓ Error state validation
-       - Unit Tests ✓
-         - ✓ Component state verification
-         - ✓ Loading state testing
-         - ✓ Error handling coverage
-         - ✓ Form validation testing
-     - ✓ Login form implementation
-     - ✓ Registration form
+   - Authentication System Refactoring
+     - Centralizing auth state with React Query
+       - Core auth query hooks development
+       - AuthProvider simplification
+       - Token management integration
+       - Custom event system removal
+     - Component Updates
+       - Layout component refactoring
+       - Protected routes enhancement
+       - Login/Registration form updates
+       - Navigation state management
+     - Testing Infrastructure Updates
+       - React Query testing setup
+       - Integration test refactoring
+       - Auth flow testing coverage
+       - Contract validation tests
+     - Documentation
+       - Architecture documentation
+       - Migration guide
+       - Testing patterns
      - ⏳ Password reset flow (deferred)
    - Phase 3: Job Catalog Feature
      - ✓ API Types & Functions
@@ -121,13 +117,15 @@
 ## Known Issues
 
 1. **Frontend (Current Focus)**
-   - ✓ Integration test infrastructure setup complete
-   - ✓ Unit test framework improvements completed
-   - ✓ Auth component testing patterns established
-   - Error boundary implementation
-   - Advanced state management for complex features
-   - Performance monitoring implementation
-   - Documentation updates needed
+   - Auth state synchronization issues identified
+     - Inconsistent state between components
+     - Delayed updates to protected routes
+     - Complex state management with events
+   - Migration Priorities
+     - Core auth query implementation
+     - Component refactoring
+     - Testing infrastructure updates
+     - Documentation completion
 
 2. **Core System**
    - Performance optimization needed

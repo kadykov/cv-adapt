@@ -1,9 +1,13 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../features/auth/hooks';
+import { useAuthState } from '../features/auth/hooks';
 import { ROUTES } from './paths';
 
+/**
+ * Protected route component that requires authentication.
+ * Uses the new React Query-based auth state management.
+ */
 export function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuthState();
   const location = useLocation();
 
   if (isLoading) {

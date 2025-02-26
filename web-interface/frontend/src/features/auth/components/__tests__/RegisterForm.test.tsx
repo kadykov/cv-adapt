@@ -3,43 +3,37 @@
  */
 
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { mockAuthContextValue } from '../../testing/setup';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { RegisterForm } from '../RegisterForm';
+import { ApiError } from '../../../../lib/api/client';
+import { createTestQueryClient } from '../../testing/setup';
+import '@testing-library/jest-dom';
 
-// These mocks must be defined before any other imports
-const mockMutateAsync = vi.fn();
+// These mocks must be defined before other imports
+let mockMutate = vi.fn();
 const mockOnSuccess = vi.fn();
-let mockIsLoading = false;
+let mockIsPending = false;
 let mockError: Error | null = null;
 
 vi.mock('../../hooks/index', () => ({
   useRegisterMutation: () => ({
-    mutateAsync: mockMutateAsync,
-    isPending: mockIsLoading,
+    mutate: mockMutate,
+    isPending: mockIsPending,
     error: mockError,
     isError: !!mockError,
     isSuccess: false,
     data: null,
   }),
-  useAuth: () => mockAuthContextValue,
 }));
-
-// Regular imports after mocks
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { RegisterForm } from '../RegisterForm';
-import { createTestQueryClient } from '../../testing';
-import { ApiError } from '../../../../lib/api/client';
-import { mockAuthResponse } from '../../testing/fixtures';
-import '@testing-library/jest-dom';
-
-const mockLogin = mockAuthContextValue.login;
 
 describe('RegisterForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsLoading = false;
+    mockIsPending = false;
     mockError = null;
+    mockMutate = vi.fn();
   });
 
   const renderForm = (props = {}) => {
@@ -51,12 +45,6 @@ describe('RegisterForm', () => {
     );
   };
 
-  const getSubmitButton = () => {
-    return screen.getByRole('button', {
-      name: mockIsLoading ? /creating account\.\.\./i : /create account/i,
-    });
-  };
-
   const fillFormAndSubmit = async (
     user: ReturnType<typeof userEvent.setup>,
     data: {
@@ -65,9 +53,9 @@ describe('RegisterForm', () => {
       confirmPassword?: string;
     },
   ) => {
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const emailInput = screen.getByTestId('email-input');
+    const passwordInput = screen.getByTestId('password-input');
+    const confirmPasswordInput = screen.getByTestId('confirm-password-input');
 
     if (data.email) {
       await user.type(emailInput, data.email);
@@ -79,7 +67,7 @@ describe('RegisterForm', () => {
       await user.type(confirmPasswordInput, data.confirmPassword);
     }
 
-    const submitButton = getSubmitButton();
+    const submitButton = screen.getByTestId('submit-button');
     await user.click(submitButton);
     return submitButton;
   };
@@ -94,7 +82,7 @@ describe('RegisterForm', () => {
       expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('validates password complexity requirements', async () => {
@@ -114,7 +102,7 @@ describe('RegisterForm', () => {
       expect(errorMessages[0]).toHaveClass('text-error');
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('validates password confirmation match', async () => {
@@ -133,36 +121,41 @@ describe('RegisterForm', () => {
       expect(errorMessage).toHaveClass('text-error');
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('shows loading state during submission', async () => {
-    mockIsLoading = true;
+    mockIsPending = true;
     renderForm();
     const user = userEvent.setup();
 
-    // Fill form
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    await fillFormAndSubmit(user, {
+      email: 'test@example.com',
+      password: 'ValidPass123',
+      confirmPassword: 'ValidPass123',
+    });
 
-    await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'ValidPass123');
-    await user.type(confirmPasswordInput, 'ValidPass123');
-
-    // Get submit button and verify loading state
-    const submitButton = getSubmitButton();
+    const submitButton = screen.getByTestId('submit-button');
     expect(submitButton).toHaveTextContent(/creating account\.\.\./i);
     expect(submitButton).toBeDisabled();
 
     // Verify form fields are disabled during submission
-    expect(emailInput).toBeDisabled();
-    expect(passwordInput).toBeDisabled();
-    expect(confirmPasswordInput).toBeDisabled();
+    expect(screen.getByTestId('email-input')).toBeDisabled();
+    expect(screen.getByTestId('password-input')).toBeDisabled();
+    expect(screen.getByTestId('confirm-password-input')).toBeDisabled();
   });
 
   it('handles successful registration', async () => {
-    mockMutateAsync.mockResolvedValue(mockAuthResponse);
+    mockMutate.mockImplementation(
+      (
+        _: { email: string; password: string },
+        options?: { onSuccess?: () => void },
+      ) => {
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
+      },
+    );
 
     renderForm();
     const user = userEvent.setup();
@@ -174,9 +167,16 @@ describe('RegisterForm', () => {
     });
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith(mockAuthResponse);
-      expect(mockOnSuccess).toHaveBeenCalled();
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          onSuccess: expect.any(Function),
+        }),
+      );
     });
+
+    // The mock implementation should have triggered onSuccess
+    expect(mockOnSuccess).toHaveBeenCalled();
   });
 
   it('displays error message when registration fails', async () => {
@@ -197,21 +197,30 @@ describe('RegisterForm', () => {
     });
   });
 
-  it('shows focus states', async () => {
+  it('shows interactive states on inputs', async () => {
     renderForm();
     const user = userEvent.setup();
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const emailInput = screen.getByTestId('email-input');
+    const passwordInput = screen.getByTestId('password-input');
+    const confirmPasswordInput = screen.getByTestId('confirm-password-input');
 
     await user.click(emailInput);
-    expect(emailInput).toHaveAttribute('data-focus');
+    expect(emailInput).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('focus'),
+    );
 
     await user.click(passwordInput);
-    expect(passwordInput).toHaveAttribute('data-focus');
+    expect(passwordInput).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('focus'),
+    );
 
     await user.click(confirmPasswordInput);
-    expect(confirmPasswordInput).toHaveAttribute('data-focus');
+    expect(confirmPasswordInput).toHaveAttribute(
+      'data-headlessui-state',
+      expect.stringContaining('focus'),
+    );
   });
 });

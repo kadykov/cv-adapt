@@ -13,6 +13,7 @@ const isExpectedError = (message: string): boolean => {
     'Failed to create job',
     'Form submission failed',
     'Login failed',
+    'Token validation failed',
   ];
   return expectedPatterns.some((pattern) => message.includes(pattern));
 };

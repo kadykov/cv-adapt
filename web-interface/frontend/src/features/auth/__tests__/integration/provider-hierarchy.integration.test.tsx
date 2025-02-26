@@ -1,8 +1,10 @@
 import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProvidersWrapper } from '../../../../test/setup/providers';
 import { TestErrorBoundary } from '../../../../test/utils/TestErrorBoundary';
 import { server } from '../../../../lib/test/integration/server';
+import { AUTH_QUERY_KEY } from '../../hooks/useAuthQuery';
 import { http, HttpResponse } from 'msw';
 
 // Register MSW handlers for this test suite
@@ -14,10 +16,25 @@ afterAll(() => {
   server.close();
 });
 
+// Create a fresh QueryClient for each test
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: Infinity,
+      },
+    },
+  });
+}
+
 describe('Auth Provider Hierarchy', () => {
+  let queryClient: QueryClient;
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    queryClient = createTestQueryClient();
   });
 
   afterEach(() => {
@@ -27,7 +44,7 @@ describe('Auth Provider Hierarchy', () => {
   });
 
   describe('Context Dependencies', () => {
-    it('should allow using auth context with schema-validated responses', async () => {
+    it('should allow using auth state with schema-validated responses', async () => {
       server.use(
         http.get('/api/auth/validate', () => {
           return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,23 +52,26 @@ describe('Auth Provider Hierarchy', () => {
       );
 
       const TestComponent = () => {
-        const auth = useAuth();
+        const { isAuthenticated } = useAuthState();
         return (
-          <div>
-            {auth.isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
-          </div>
+          <div>{isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
         );
       };
 
       render(
-        <ProvidersWrapper>
-          <TestComponent />
-        </ProvidersWrapper>,
+        <QueryClientProvider client={queryClient}>
+          <ProvidersWrapper>
+            <TestComponent />
+          </ProvidersWrapper>
+        </QueryClientProvider>,
       );
 
-      // Wait for auth state to settle
       await waitFor(() => {
         expect(screen.getByText('Not Authenticated')).toBeInTheDocument();
+        // After a failed auth check, the query data might be undefined rather than null
+        // Both indicate unauthenticated state
+        const authData = queryClient.getQueryData(AUTH_QUERY_KEY);
+        expect(authData).toBeFalsy();
       });
     });
 
@@ -63,28 +83,52 @@ describe('Auth Provider Hierarchy', () => {
       );
 
       const TestComponent = () => {
-        useLoginMutation();
-        useRegisterMutation();
-        return <div>Test Component</div>;
+        const { mutate: login } = useLoginMutation();
+        const { mutate: register } = useRegisterMutation();
+        const { isAuthenticated } = useAuthState();
+        return (
+          <div>
+            <div data-testid="auth-state">
+              {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
+            </div>
+            <button
+              onClick={() =>
+                login({ email: 'test@example.com', password: 'password123' })
+              }
+            >
+              Login
+            </button>
+            <button
+              onClick={() =>
+                register({ email: 'test@example.com', password: 'password123' })
+              }
+            >
+              Register
+            </button>
+          </div>
+        );
       };
 
       render(
-        <ProvidersWrapper>
-          <TestComponent />
-        </ProvidersWrapper>,
+        <QueryClientProvider client={queryClient}>
+          <ProvidersWrapper>
+            <TestComponent />
+          </ProvidersWrapper>
+        </QueryClientProvider>,
       );
 
-      // Wait for component to mount and auth state to settle
       await waitFor(() => {
-        expect(screen.getByText('Test Component')).toBeInTheDocument();
+        expect(screen.getByTestId('auth-state')).toHaveTextContent(
+          'Not Authenticated',
+        );
       });
     });
   });
 
   describe('Provider Initialization', () => {
-    it('should initialize all providers in correct order with valid responses', async () => {
-      let queryClientMounted = false;
-      let authProviderMounted = false;
+    it('should initialize all providers in correct order', async () => {
+      let queryClientInitialized = false;
+      let authStateInitialized = false;
 
       server.use(
         http.get('/api/auth/validate', () => {
@@ -93,22 +137,23 @@ describe('Auth Provider Hierarchy', () => {
       );
 
       const TestComponent = () => {
-        const auth = useAuth();
-        authProviderMounted = true;
-        queryClientMounted = !!auth;
+        const { isLoading } = useAuthState();
+        queryClientInitialized = true;
+        authStateInitialized = !isLoading;
         return <div>Test Component</div>;
       };
 
       render(
-        <ProvidersWrapper>
-          <TestComponent />
-        </ProvidersWrapper>,
+        <QueryClientProvider client={queryClient}>
+          <ProvidersWrapper>
+            <TestComponent />
+          </ProvidersWrapper>
+        </QueryClientProvider>,
       );
 
-      // Wait for providers to mount
       await waitFor(() => {
-        expect(queryClientMounted).toBe(true);
-        expect(authProviderMounted).toBe(true);
+        expect(queryClientInitialized).toBe(true);
+        expect(authStateInitialized).toBe(true);
       });
     });
 
@@ -120,21 +165,20 @@ describe('Auth Provider Hierarchy', () => {
       );
 
       const TestComponent = () => {
-        const auth = useAuth();
+        const { isAuthenticated } = useAuthState();
         return (
-          <div>
-            {auth.isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
-          </div>
+          <div>{isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
         );
       };
 
       render(
-        <ProvidersWrapper>
-          <TestComponent />
-        </ProvidersWrapper>,
+        <QueryClientProvider client={queryClient}>
+          <ProvidersWrapper>
+            <TestComponent />
+          </ProvidersWrapper>
+        </QueryClientProvider>,
       );
 
-      // Wait for auth state to settle
       await waitFor(() => {
         expect(screen.getByText('Not Authenticated')).toBeInTheDocument();
       });
@@ -143,7 +187,6 @@ describe('Auth Provider Hierarchy', () => {
 
   describe('Error Handling', () => {
     it('should prevent provider errors from crashing the app', async () => {
-      // Set up auth mock to prevent auth-related errors
       server.use(
         http.get('/api/auth/validate', () => {
           return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -157,11 +200,13 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <ProvidersWrapper>
-          <TestErrorBoundary>
-            <ErrorComponent />
-          </TestErrorBoundary>
-        </ProvidersWrapper>,
+        <QueryClientProvider client={queryClient}>
+          <ProvidersWrapper>
+            <TestErrorBoundary>
+              <ErrorComponent />
+            </TestErrorBoundary>
+          </ProvidersWrapper>
+        </QueryClientProvider>,
       );
 
       await waitFor(() => {
@@ -171,7 +216,9 @@ describe('Auth Provider Hierarchy', () => {
   });
 });
 
-// Import hooks after the mock is set up
-const { useAuth, useLoginMutation, useRegisterMutation } = await import(
-  '../../hooks/index'
-);
+// Import hooks after mock setup
+import {
+  useAuthState,
+  useLoginMutation,
+  useRegisterMutation,
+} from '../../hooks';

@@ -29,6 +29,11 @@ describe('Layout Authentication Integration', () => {
       </ProvidersWrapper>,
     );
 
+    // Wait for loading state to finish
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+    });
+
     await waitFor(() => {
       expect(screen.getByText(/login/i)).toBeInTheDocument();
       expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
@@ -43,8 +48,15 @@ describe('Layout Authentication Integration', () => {
       </ProvidersWrapper>,
     );
 
+    // Wait for loading state to finish
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+    });
+
     // Initial state - only Login button visible
-    expect(screen.getByText(/login/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/login/i)).toBeInTheDocument();
+    });
     expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
 
@@ -91,8 +103,15 @@ describe('Layout Authentication Integration', () => {
       </ProvidersWrapper>,
     );
 
+    // Wait for loading state to finish
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
+    });
+
     // Navigate to auth page and login
-    await userEvent.click(screen.getByText(/login/i));
+    await waitFor(async () => {
+      await userEvent.click(screen.getByText(/login/i));
+    });
 
     // Fill in and submit login form (wait for form to be rendered)
     await waitFor(async () => {

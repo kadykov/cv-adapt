@@ -37,7 +37,25 @@
 
 ## Frontend Architecture Patterns
 
-1. **Language Management**
+1. **Authentication State Management**
+   ```
+   features/auth/
+     hooks/
+       useAuthQuery.ts      # Core auth query hook
+       useAuthState.ts      # Auth state helper hook
+       useLoginMutation.ts  # Login mutation hook
+       useLogoutMutation.ts # Logout mutation hook
+     components/
+       AuthProvider.tsx     # Query initialization
+     services/
+       token-service.ts     # Token management
+   ```
+   - Centralized auth state with React Query
+   - Single source of truth for auth information
+   - Automatic synchronization across components
+   - Token management integrated with query system
+
+2. **Language Management**
    ```
    lib/language/
      types.ts       # Language enums and interfaces

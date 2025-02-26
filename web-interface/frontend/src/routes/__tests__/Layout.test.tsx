@@ -3,19 +3,26 @@ import { vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { Layout } from '../Layout';
 
-// Mock the useAuth hook
+// Mock the auth hooks
 vi.mock('../../features/auth/hooks', () => ({
-  useAuth: vi.fn(),
+  useAuthState: vi.fn(),
+  useLogoutMutation: vi.fn(),
 }));
 
-import { useAuth } from '../../features/auth/hooks';
+import { useAuthState, useLogoutMutation } from '../../features/auth/hooks';
 
-const mockUseAuth = useAuth as jest.Mock;
+const mockUseAuthState = useAuthState as jest.Mock;
+const mockUseLogoutMutation = useLogoutMutation as jest.Mock;
 
 function renderLayout(isAuthenticated: boolean = false) {
-  mockUseAuth.mockReturnValue({
+  mockUseAuthState.mockReturnValue({
     isAuthenticated,
-    logout: vi.fn(),
+    isLoading: false,
+  });
+
+  mockUseLogoutMutation.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
   });
 
   return render(
@@ -27,7 +34,8 @@ function renderLayout(isAuthenticated: boolean = false) {
 
 describe('Layout', () => {
   beforeEach(() => {
-    mockUseAuth.mockClear();
+    mockUseAuthState.mockClear();
+    mockUseLogoutMutation.mockClear();
   });
 
   it('shows login button when not authenticated', () => {
@@ -35,6 +43,21 @@ describe('Layout', () => {
     expect(screen.getByText(/login/i)).toBeInTheDocument();
     expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+  });
+
+  it('shows loading state when checking authentication', () => {
+    mockUseAuthState.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <Layout />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('shows navigation options when authenticated', () => {
@@ -55,5 +78,25 @@ describe('Layout', () => {
     const brandLink = screen.getByText(/cv adapt/i);
     expect(brandLink).toBeInTheDocument();
     expect(brandLink.closest('a')).toHaveAttribute('href', '/');
+  });
+
+  it('shows loading state during logout', () => {
+    mockUseAuthState.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    mockUseLogoutMutation.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <Layout />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 });
