@@ -1,718 +1,168 @@
-# Frontend Implementation Plan
+# Implementation Plan
 
-## Phase 1: Project Setup and Infrastructure
+## Overview
 
-### Clean Slate Setup
+CV Adapt's frontend is a modern React application built with TypeScript, focusing on type safety, component reusability, and maintainable architecture. The implementation follows a feature-based organization pattern with comprehensive testing.
 
-- [x] Clear existing frontend implementation
-- [x] Initialize new Vite + React + TypeScript project
-- [x] Configure ESLint with TypeScript
-- [x] Set up Prettier
-- [x] Configure Tailwind CSS and DaisyUI
-- [x] Set up path aliases
+## Current Status
 
-### Core Dependencies
+All core features from Phase 1-3 have been completed:
+- Project infrastructure and setup ✓
+- Authentication system with React Query ✓
+- Job catalog with full CRUD operations ✓
 
-- [x] Install and configure key packages:
+For details on completed phases, see [docs/archive/COMPLETED_PHASES.md](docs/archive/COMPLETED_PHASES.md).
+For testing strategy details, see [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md).
 
-  ```bash
-  # Core
-  @tanstack/react-query
-  @headlessui/react
-
-  # Forms and Validation
-  zod
-  zod-form-data
-  react-hook-form
-  @hookform/resolvers
-
-  # Routing
-  react-router-dom
-
-  # Utilities
-  date-fns
-  clsx
-
-  # Error Handling
-  @sentry/react
-
-  # Testing
-  vitest
-  @testing-library/react
-  @testing-library/user-event
-  msw
-  ```
-
-### OpenAPI Integration
-
-- [x] Set up OpenAPI schema generation script
-- [x] Configure type generation with openapi-typescript
-- [x] Create base API client configuration
-- [x] Implement API error handling utilities
-- [x] Set up React Query defaults
-- [x] Type System Cleanup
-  - [x] Remove manual type definitions
-  - [x] Update imports to use generated types
-  - [x] Add type generation to pretest script
-  - [x] Update documentation for type generation workflow
-
-### Testing Infrastructure
-
-- [x] Configure Vitest with React Testing Library
-- [x] Set up MSW for API mocking
-- [x] Create test utilities and fixtures
-- [x] Configure contract testing
-- [x] Centralize test server and handlers
-  - [x] Create unified MSW server setup
-  - [x] Standardize API paths (/v1/api)
-  - [x] Centralize mock data
-  - [x] Implement request debugging
-
-### Testing Strategy
-
-#### Unit Tests
-
-- Hook tests with test-utils
-  - Mock providers (Auth, Query)
-  - Mock localStorage
-  - Mock API responses with flexible MSW handlers
-  - Mock data consistency
-  - Edge case coverage
-- Component tests
-  - Role-based queries
-  - Accessibility checks
-  - Loading states verification
-  - Error state handling
-  - Component isolation
-- Utility function tests
-
-#### Integration Tests ✓
-
-- Test Infrastructure ✓
-
-  - Schema-based handler generation ✓
-  - Integration-specific test server ✓
-  - OpenAPI contract validation ✓
-  - Standard response patterns ✓
-  - React Query integration ✓
-  - Proper async operation handling ✓
-  - Mutation state management ✓
-
-- Test Focus ✓
-
-  - Complete user flows ✓
-  - Feature interactions ✓
-  - State management ✓
-  - API contract compliance ✓
-  - Real-world scenarios ✓
-  - Loading states ✓
-  - Error handling ✓
-
-- Directory Structure
-
-  ```
-  features/
-    auth/
-      __tests__/
-        integration/
-          auth-flow.integration.test.tsx
-          token-management.integration.test.tsx
-    job-catalog/
-      __tests__/
-        integration/
-          job-operations.integration.test.tsx
-          language-filter.integration.test.tsx
-    routes/
-      __tests__/
-        integration/
-          protected-routes.integration.test.tsx
-  ```
-
-- Handler Generation ✓
-  - OpenAPI schema-based handlers ✓
-  - Automatic type generation ✓
-  - Standard response patterns ✓
-  - Contract validation ✓
-  - Error scenario simulation ✓
-
-#### Unit Tests ✓
-
-- Component Testing ✓
-
-  - Loading state verification ✓
-  - Error state handling ✓
-  - Form validation ✓
-  - User interaction flows ✓
-  - Accessibility checks ✓
-
-- Hook Testing ✓
-
-  - React Query integration ✓
-  - Mutation state management ✓
-  - Loading/error states ✓
-  - Cache behavior ✓
-
-- Best Practices ✓
-  - Provider isolation ✓
-  - Mock consistency ✓
-  - Type safety ✓
-  - Error boundary testing ✓
-  - Async operation handling ✓
-
-#### Contract Tests ✓
-
-- OpenAPI schema validation ✓
-- Response type checking ✓
-- Error handling tests ✓
-- API path consistency ✓
-
-### Development Guidelines
-
-#### Testing Requirements
-
-- Integration tests for features ✓
-
-  - User flow coverage
-  - API interaction testing
-  - Error handling scenarios
-  - Loading state verification
-  - State management validation
-
-- Unit tests for components ✓
-
-  - Component isolation
-  - Prop validation
-  - Event handling
-  - State changes
-  - Side effects
-
-- Contract tests for API ✓
-  - Type safety
-  - Schema validation
-  - Error responses
-  - Success patterns
-
-### Best Practices
-
-- [x] Use centralized MSW handlers
-- [x] Maintain consistent API paths
-- [x] Share mock data between tests
-- [x] Test component accessibility
-- [x] Verify loading states
-- [x] Test error scenarios
-- [x] Implement request debugging
-
-## Phase 2: Authentication Implementation
-
-### Authentication System Improvements
-
-#### Current Issues
-
-- Inconsistency between login and register components
-- Token management and refresh flow issues
-- Proxy configuration concerns
-- Need for better integration testing
-
-#### Implementation Plan
-
-1. **Standardize Auth Components** (Phase 1)
-
-```typescript
-// Create useLoginMutation hook
-features/auth/hooks/useLoginMutation.ts
-- Mirror useRegisterMutation pattern
-- Handle loading/error states
-- Use React Query mutation
-- Proper error typing
-
-// Update LoginForm component
-features/auth/components/LoginForm.tsx
-- Replace direct context usage with mutation
-- Add proper loading states
-- Implement error display
-- Match RegisterForm patterns
-```
-
-2. **Token Management System** (Phase 2)
-
-```typescript
-// Create token management service
-features/auth/services/token-service.ts
-- Token storage/retrieval
-- Token validation
-- Token refresh logic
-- Expiration handling
-
-// Add axios interceptors
-lib/api/axios-config.ts
-- Request interceptor for token injection
-- Response interceptor for 401 handling
-- Automatic token refresh
-- Request queue during refresh
-
-// Update AuthProvider
-features/auth/components/AuthProvider.tsx
-- Integrate token service
-- Add refresh token logic
-- Proper initial auth check
-- Clear error handling
-```
-
-3. **Auth API Layer** ✓ (Phase 3)
-
-```typescript
-// Auth API service implementation complete
-lib/api/auth.ts      ✓ Login, register endpoints
-                     ✓ Token refresh endpoint
-                     ✓ Profile fetch endpoint
-                     ✓ Logout endpoint
-
-// Basic request/response logging
-axios-interceptors.ts ✓ Development mode logging
-                     ✓ Request/response tracking
-```
-
-// Note: Additional enhancements like advanced logging, error types,
-// and documentation are deferred until needed (YAGNI)
-
-4. **Integration Tests** (Phase 4)
-
-```typescript
-// Auth flow tests
-features/auth/tests/auth-flow.test.tsx
-- Registration → Login flow
-- Token storage/retrieval
-- Protected route access
-- 401 handling and recovery
-
-// MSW handlers
-features/auth/testing/handlers.ts
-- Auth endpoint mocks
-- Error scenarios
-- Token validation
-
-// Contract tests
-tests/contract/auth-api.test.ts
-- OpenAPI schema validation
-- Response type checking
-```
-
-5. **Protected Route Enhancement** (Phase 5)
-
-```typescript
-// Create authenticated fetch hook
-features/auth/hooks/useAuthenticatedFetch.ts
-- Automatic token handling
-- Error state management
-- Loading state handling
-
-// Update ProtectedRoute
-routes/ProtectedRoute.tsx
-- Better loading states
-- Error handling
-- Redirect logic
-```
-
-6. **Development Tools** (Phase 6)
-
-```typescript
-// Add debug utilities
-features/auth/utils/debug.ts
-- Token state logging
-- Request tracking
-- Error logging
-
-// Add development components
-features/auth/components/debug/
-- AuthStateViewer
-- TokenInspector
-- RequestLogger
-```
-
-7. **Architecture Improvements** (Phase 7)
-
-```typescript
-// Auth System Restructuring
-features/auth/services/auth-mutations.ts
-- Direct API mutation logic
-- No context dependencies
-- Token management integration
-
-features/auth/components/AuthProvider.tsx
-- Remove hook dependencies
-- Use service directly
-- Clear initialization flow
-
-// Enhanced Integration Testing
-features/auth/
-  __tests__/
-    integration/
-      auth-flow.integration.test.tsx      # Complete auth flow testing
-      provider-hierarchy.integration.test.tsx # Provider structure testing
-
-// Test Infrastructure
-test/
-  setup/
-    providers.tsx      # Provider hierarchy setup
-  utils/
-    auth-test-utils.ts # Auth testing utilities
-
-// Contract Testing
-tests/contract/
-  auth/
-    provider-structure.test.tsx # Component hierarchy validation
-```
-
-### Directory Structure
-
-```
-src/
-  features/
-    auth/
-      components/     # Auth-related components
-        LoginForm.tsx
-        RegisterForm.tsx
-        __tests__/   # Component tests
-      hooks/         # Auth-specific hooks
-        useAuth.ts
-        useRegisterMutation.ts
-        useProfile.ts
-        useRefreshToken.ts
-        __tests__/   # Hook tests
-      testing/       # Test utilities and mocks
-        fixtures.ts  # Mock data
-        mocks.tsx    # Mock components
-        setup.ts     # Test setup utilities
-      auth-context.tsx
-      auth-types.ts
-  lib/           # Shared utilities
-    api/         # API client and types
-    hooks/       # Shared hooks
-    utils/       # Helper functions
-    test/        # Test utilities
-  config/        # App configuration
-```
-
-### Authentication Features
-
-- [x] Implement auth context with token management
-- [x] Create auth hooks
-  - [x] useRegisterMutation - handles user registration with error handling
-  - [x] useProfile - fetches authenticated user profile
-  - [x] useRefreshToken - manages token refresh
-  - [x] useTokenRefresh - automatic token refresh on interval
-- [x] Set up comprehensive testing
-  - [x] MSW handlers for auth endpoints
-  - [x] Mock localStorage for token management
-  - [x] Test success and error cases
-  - [x] Test authenticated requests
-- [x] Set up protected routes
-  - [x] Route protection component
-  - [x] Authentication state management with React Query
-  - [x] Loading states and error handling
-  - [x] Redirect handling with path preservation
-  - [x] Comprehensive test coverage
-- [x] Implement auth forms
-  - [x] Login form
-    - [x] Form validation with Zod
-    - [x] Error handling and display
-    - [x] Loading states
-    - [x] Success redirection
-    - [x] Test coverage
-  - [x] Registration form
-    - [x] Password complexity validation
-    - [x] API integration with mutations
-    - [x] Loading and error states
-    - [x] Test coverage
-  - [x] Auth dialog
-    - [x] Form switching
-    - [x] Modal handling
-    - [x] Accessibility features
-    - [x] Test coverage
-  - [ ] Password reset flow
-    - [ ] Request reset form
-    - [ ] Reset token handling
-    - [ ] New password form
-
-## Phase 3: Feature Implementation
-
-### Language System Improvements
-
-- [x] Centralize frontend language handling
-  - [x] Create language types and configs
-  - [x] Implement language utilities
-  - [x] Update form validations to use centralized system
-- [x] Improve type safety
-  - [x] Add proper enum-based validation
-  - [x] Align with backend language codes
-  - [x] Update affected components
-
-### Job Catalog Feature
-
-#### Completed Data Layer
-
-- [x] API Types and Functions
-
-  ```typescript
-  // types.ts
-  JobDescriptionCreate;
-  JobDescriptionUpdate;
-  JobDescriptionResponse;
-  ```
-
-- [x] API Implementation
-
-  ```typescript
-  // jobsApi.ts
-  getJobs(languageCode?: string)
-  getJob(id: number)
-  createJob(data: JobDescriptionCreate)
-  updateJob(id: number, data: JobDescriptionUpdate)
-  deleteJob(id: number)
-  ```
-
-- [x] React Query Hooks
-
-  ```typescript
-  // hooks/
-  useJobs.ts         - List jobs with language filtering
-  useJob.ts          - Single job fetching
-  useJobMutations.ts - CRUD operations with cache management
-  ```
-
-- [x] Comprehensive Tests
-  ```typescript
-  // __tests__/
-  jobsApi.test.ts    - API function tests with MSW
-  jobHooks.test.tsx  - Hook tests with React Query
-  ```
-
-#### UI Components
-
-```
-features/job-catalog/
-  components/
-    JobList.tsx      # ✓ Grid layout with job cards and language filtering
-    JobCard.tsx      # ✓ Individual job display component
-    JobDetail.tsx    # ✓ Full job information display
-    JobForm.tsx      # Create/Edit form with validation
-  __tests__/
-    JobCard.test.tsx    # ✓ Component unit tests
-    JobList.test.tsx    # ✓ Integration tests with MSW
-    JobDetail.test.tsx  # ✓ Full test coverage for detail view
-```
-
-Components Implemented:
-
-- [x] JobCard
-
-  - [x] Responsive card design with DaisyUI
-  - [x] Accessibility features (keyboard navigation, ARIA roles)
-  - [x] Language badge display
-  - [x] Timestamp formatting
-  - [x] Unit tests
-
-- [x] JobList
-
-  - [x] Grid layout with responsiveness
-  - [x] Language filtering with Headless UI
-  - [x] Loading states
-  - [x] Error handling
-  - [x] Empty state
-  - [x] Integration tests with MSW
-  - [x] React Query integration
-
-- [x] JobDetail
-
-  - [x] Full information display
-  - [x] Edit/Delete actions
-  - [x] Loading states and skeleton UI
-  - [x] Error handling with alerts
-  - [x] Navigation integration
-  - [x] Comprehensive test coverage
-    - [x] Loading states
-    - [x] Error states
-    - [x] Success states
-    - [x] Delete functionality
-    - [x] Edit button conditional rendering
-    - [x] Accessibility testing
-
-- [x] JobForm Implementation
-  - [x] Component Structure
-    - [x] Create JobForm/JobForm.tsx
-    - [x] Create JobForm/jobFormSchema.ts
-    - [x] Setup **tests**/JobForm.test.tsx
-  - [x] Core Implementation
-    - [x] Form schema with Zod validation
-    - [x] Headless UI components integration
-    - [x] Create/Edit mode handling
-    - [x] Form validation using react-hook-form
-  - [x] API Integration
-    - [x] Connect useJobMutations hook
-    - [x] Implement submission logic
-    - [x] Loading states
-    - [x] Error handling
-  - [x] Testing
-    - [x] Form validation tests
-    - [x] API interaction tests
-    - [x] UI state tests
-    - [x] Accessibility testing
-  - [x] Refinement
-    - [x] Loading state polish
-    - [x] Error handling enhancement
-    - [x] Documentation organization
-
-Supporting Infrastructure Added:
-
-- [x] Base UI components
-  - [x] Badge component for labels
-- [x] Test utilities
-  - [x] Custom render with providers
-  - [x] MSW server setup
-  - [x] API handlers
-
-### Routing Implementation
-
-```typescript
-// Routes Structure
-routes/
-  Layout.tsx         # Main layout with navigation
-  ProtectedRoute.tsx # Auth protection wrapper
-  paths.ts          # Route path constants
-  __tests__/        # Route tests
-```
-
-#### Required Components:
-
-- [x] Layout Component
-
-  - [x] Navigation bar
-  - [x] Auth state integration
-  - [x] Responsive design
-  - [x] Route-based content rendering
-
-- [x] Route Configuration
-  - [x] Define route constants
-  - [x] Set up protected routes
-  - [x] Implement route guards
-  - [x] Add loading states
-  - [x] Handle auth redirects
-  - [x] API proxy configuration
-
-```typescript
-// Example Route Structure
-/               // Landing page
-/auth          // Authentication (login/register)
-/jobs          // Protected, Job Catalog
-/jobs/:id      // Protected, Job Detail
-/jobs/new      // Protected, Create Job
-/jobs/:id/edit // Protected, Edit Job
-```
-
-#### Testing Requirements:
-
-- [x] Route protection tests
-- [x] Navigation tests
-- [x] Auth state integration tests
-- [x] Loading state tests
-- [x] Redirect handling tests
+## Current Focus
 
 ### CV Management Feature
-
+```mermaid
+flowchart TD
+    A[CV Editor] --> B[CV Preview]
+    B --> C[Language Variants]
+    C --> D[Export Options]
 ```
+
+#### Components to Implement
+```typescript
 features/cv-management/
   components/
-    CVList.tsx
-    CVEditor.tsx
-    CVPreview.tsx
+    CVList.tsx       // CV overview and management
+    CVEditor.tsx     // CV content editing
+    CVPreview.tsx    // Real-time preview
+    ExportDialog.tsx // Export options
   hooks/
-    useCVs.ts
-    useCVGeneration.ts
+    useCVs.ts           // CV data management
+    useCVGeneration.ts  // CV generation utilities
   types.ts
   utils.ts
-  __tests__/
 ```
 
-## Testing Strategy
+#### Key Features
+1. CV Editor
+   - Rich text editing
+   - Section management
+   - Template selection
+   - Real-time preview
 
-### Unit Tests
+2. Language Support
+   - Multi-language CV versions
+   - Language-specific formatting
+   - Translation management
 
-- Hook tests with test-utils
-  - Mock providers (Auth, Query)
-  - Mock localStorage
-  - Mock API responses
-- Utility function tests
+3. Export Options
+   - Multiple format support
+   - Template customization
+   - Style configuration
 
-### Integration Tests
+## Upcoming Work
 
-- Feature-level tests
-- User flow tests
-- API interaction tests with MSW
-  - Success cases
-  - Error handling
-  - Token management
+### Phase 4: CV Management
 
-### Contract Tests
+1. Backend Integration
+   - API endpoint configuration
+   - CV data structures
+   - Template management
+   - Export handling
 
-- OpenAPI schema validation
-- Response type checking
-- Error handling tests
+2. UI Components
+   - CV editor interface
+   - Template selection
+   - Preview functionality
+   - Export dialog
 
-## Documentation Requirements
+3. Language Support
+   - Multi-language CV support
+   - Language switching
+   - Translation management
 
-- [ ] API integration guides
-- [x] Testing guidelines
-  - [x] MSW setup and handlers
-  - [x] Mock providers
-  - [x] Token management in tests
-- [ ] Setup instructions
-- [ ] Contribution guidelines
+### Phase 5: Advanced Features
+
+1. Template System
+   - Custom template support
+   - Style customization
+   - Layout options
+
+2. Export Capabilities
+   - PDF generation
+   - Multiple formats
+   - Style preservation
+
+3. Collaboration Features
+   - Sharing options
+   - Review system
+   - Version control
+
+## Architecture Decisions
+
+### 1. Component Architecture
+```typescript
+// Feature-based organization
+features/
+  feature-name/
+    components/  // Feature-specific components
+    hooks/       // Custom hooks
+    utils/       // Helper functions
+    types.ts     // Type definitions
+    constants.ts // Feature constants
+```
+
+### 2. State Management
+- React Query for server state
+- Local state with hooks
+- Context for global state
+- Strict TypeScript usage
+
+### 3. UI Component Strategy
+- Headless UI for accessibility
+- DaisyUI for styling
+- Custom components for business logic
+- Composition over inheritance
 
 ## Development Guidelines
 
-### UI Component Strategy
-
-- Use Headless UI components as primary building blocks
-  - Provides built-in accessibility
-  - Handles keyboard navigation
-  - Manages ARIA attributes
-  - Reduces maintenance burden
-- Apply DaisyUI classes for styling
-  - Consistent theming
-  - Predefined style variants
-  - Responsive design patterns
-- Create custom components only when:
-  - Implementing complex business logic
-  - Building feature-specific interfaces
-  - Composing multiple Headless UI components
-- Follow composition over inheritance
-  - Compose Headless UI components
-  - Add feature-specific behavior
-  - Maintain clean separation of concerns
+### Code Organization
+- Feature-based structure
+- Clear separation of concerns
+- Consistent file naming
+- Code co-location
 
 ### Type Safety
-
 - Strict TypeScript configuration
+- OpenAPI type generation
+- Proper type imports
 - No any types
-- Proper type imports from OpenAPI schema
 
-### Testing Requirements
-
-- Integration tests for features
-- Contract tests for API integrations
-- Minimum 80% coverage
-
-#### Performance Standards
-
+### Performance Standards
 - Bundle size monitoring
-- Code splitting implementation
-- React Query caching strategies
-- Lazy loading for routes
+- Code splitting
+- React Query caching
+- Lazy loading
 
-#### Accessibility
+### Accessibility
+- ARIA attributes
+- Keyboard navigation
+- Screen reader support
+- Color contrast
+- Focus management
 
-- Headless UI implementation ✓
-- ARIA attributes validation ✓
-- Keyboard navigation testing ✓
-- Screen reader compatibility ✓
-- Color contrast verification ✓
+## Documentation Requirements
+
+### API Integration
+- OpenAPI schema usage
+- Type generation workflow
+- Response handling
+- Error management
+
+### Component Documentation
+- Usage examples
+- Props documentation
+- State management
+- Integration points
+
+### Setup Instructions
+- Development setup
+- Testing environment
+- Build process
+- Deployment workflow
