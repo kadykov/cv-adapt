@@ -9,13 +9,11 @@ export function useLogoutMutation(onSuccess?: () => void) {
 
   return useMutation<void, ApiError>({
     mutationFn: async () => {
-      // Clear local state before API call
+      // Clear local state first
       tokenService.clearTokens();
       // Update auth state immediately
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
-      // Invalidate all queries to ensure fresh state
-      queryClient.invalidateQueries();
-      // Remove all queries from cache to prevent stale data
+      // Remove all queries from cache to prevent stale data and refetches
       queryClient.removeQueries();
 
       // Now attempt the API call, but don't wait for it
