@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Badge } from '../../../lib/components/Badge';
 import { useJob } from '../hooks/useJob';
 import { useJobMutations } from '../hooks/useJobMutations';
@@ -11,7 +12,13 @@ interface JobDetailProps {
 
 export function JobDetail({ id, onEdit }: JobDetailProps) {
   const navigate = useNavigate();
-  const { data: job, isLoading, isError, error } = useJob(id);
+  const [isEnabled, setIsEnabled] = useState(true);
+  const {
+    data: job,
+    isLoading,
+    isError,
+    error,
+  } = useJob(id, { enabled: isEnabled });
   const { deleteJob } = useJobMutations();
 
   if (isLoading) {
@@ -60,9 +67,11 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
 
   const handleDelete = async () => {
     try {
+      setIsEnabled(false); // Disable job query before deletion
       await deleteJob.mutateAsync(id);
       navigate(-1);
     } catch (error) {
+      setIsEnabled(true); // Re-enable query if deletion fails
       // Error will be handled by the mutation
       console.error('Failed to delete job:', error);
     }
