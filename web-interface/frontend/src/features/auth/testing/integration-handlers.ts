@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { components } from '../../../lib/api/types';
+import { getTestApiUrl } from '../../../lib/test/url-helper';
 
 type UserResponse = components['schemas']['UserResponse'];
 type AuthResponse = components['schemas']['AuthResponse'];
@@ -19,7 +20,7 @@ const mockAuthResponse: AuthResponse = {
 };
 
 export const authIntegrationHandlers = [
-  http.post('/v1/api/auth/login', async ({ request }) => {
+  http.post(getTestApiUrl('auth/login'), async ({ request }) => {
     const body = await request.text();
 
     // Parse form data
@@ -36,16 +37,16 @@ export const authIntegrationHandlers = [
     return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.post('/v1/api/auth/refresh', () => {
+  http.post(getTestApiUrl('auth/refresh'), () => {
     return HttpResponse.json(mockAuthResponse);
   }),
 
-  http.post('/v1/api/auth/logout', () => {
+  http.post(getTestApiUrl('auth/logout'), () => {
     return HttpResponse.json({ message: 'Logged out successfully' });
   }),
 
   // Handle user profile fetch for token validation
-  http.get('/v1/api/users/me', ({ request }) => {
+  http.get(getTestApiUrl('users/me'), ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new HttpResponse(null, { status: 401 });

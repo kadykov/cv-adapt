@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach, beforeAll } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { ProvidersWrapper } from '../../../../test/setup/providers';
 import { server } from '../../../../lib/test/integration/server';
 import { authIntegrationHandlers } from '../../testing/integration-handlers';
@@ -27,7 +28,7 @@ describe('Header Update Timing', () => {
     window.history.pushState({}, '', '/');
     server.use(
       // Override /users/me endpoint with a delayed response
-      http.get('/v1/api/users/me', async ({ request }) => {
+      http.get(getTestApiUrl('users/me'), async ({ request }) => {
         const authHeader = request.headers.get('Authorization');
         if (!authHeader?.startsWith('Bearer ')) {
           return new HttpResponse(null, { status: 401 });
@@ -38,7 +39,7 @@ describe('Header Update Timing', () => {
         return HttpResponse.json(mockUser);
       }),
       ...authIntegrationHandlers.filter(
-        (h) => h.info.path !== '/v1/api/users/me',
+        (h) => h.info.path !== getTestApiUrl('users/me'),
       ),
     );
   });
@@ -103,7 +104,7 @@ describe('Header Update Timing', () => {
     localStorage.setItem('expires_at', (Date.now() + 3600000).toString());
 
     server.use(
-      http.get('/v1/api/users/me', ({ request }) => {
+      http.get(getTestApiUrl('users/me'), ({ request }) => {
         const authHeader = request.headers.get('Authorization');
         if (!authHeader?.startsWith('Bearer test-token')) {
           return new HttpResponse(null, { status: 401 });
@@ -153,14 +154,14 @@ describe('Header Update Timing', () => {
     localStorage.setItem('expires_at', (Date.now() + 3600000).toString());
 
     server.use(
-      http.get('/v1/api/users/me', ({ request }) => {
+      http.get(getTestApiUrl('users/me'), ({ request }) => {
         const authHeader = request.headers.get('Authorization');
         if (!authHeader?.startsWith('Bearer test-token')) {
           return new HttpResponse(null, { status: 401 });
         }
         return HttpResponse.json(mockUser);
       }),
-      http.post('/v1/api/auth/logout', async () => {
+      http.post(getTestApiUrl('auth/logout'), async () => {
         await delay(1000);
         return new HttpResponse(null, { status: 500 });
       }),

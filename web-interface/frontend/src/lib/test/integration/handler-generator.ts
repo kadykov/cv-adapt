@@ -1,27 +1,19 @@
 import { components } from '../../api/types';
 import { http, HttpResponse } from 'msw';
+import { getTestApiUrl } from '../url-helper';
 
 type Schema = components['schemas'];
 
 /**
  * Creates an MSW handler for GET endpoints that returns schema-validated data
  */
-/**
- * Handle test requests using /v1/api prefix with proxy support
- */
-const getTestUrl = (path: string) => {
-  // Ensure consistent /v1/api prefix
-  const apiPath = `/v1/api${path.startsWith('/') ? path : `/${path}`}`;
-  return apiPath;
-};
-
 export function createGetHandler<T extends keyof Schema>(
   path: string,
   _schemaKey: T, // Used only for type inference
   responseData: Schema[T] | Schema[T][] | null,
   options?: { status?: number },
 ) {
-  return http.get(getTestUrl(path), () => {
+  return http.get(getTestApiUrl(path), () => {
     if (!responseData) {
       return new HttpResponse(null, { status: options?.status || 500 });
     }
@@ -45,7 +37,7 @@ export function createPostHandler<
     errorResponse?: { status: number; message: string };
   },
 ) {
-  return http.post(getTestUrl(path), async ({ request }) => {
+  return http.post(getTestApiUrl(path), async ({ request }) => {
     const body = (await request.json()) as Schema[T];
 
     if (options?.validateRequest && !options.validateRequest(body)) {
@@ -79,7 +71,7 @@ export function createPutHandler<
     errorResponse?: { status: number; message: string };
   },
 ) {
-  return http.put(getTestUrl(path), async ({ request }) => {
+  return http.put(getTestApiUrl(path), async ({ request }) => {
     const body = (await request.json()) as Schema[T];
 
     if (options?.validateRequest && !options.validateRequest(body)) {
@@ -101,7 +93,7 @@ export function createPutHandler<
  * Creates an MSW handler for DELETE endpoints
  */
 export function createDeleteHandler(path: string) {
-  return http.delete(getTestUrl(path), () => {
+  return http.delete(getTestApiUrl(path), () => {
     return new HttpResponse(null, { status: 204 });
   });
 }

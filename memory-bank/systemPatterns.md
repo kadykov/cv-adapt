@@ -122,11 +122,65 @@
    - Automated schema export process
    - Type generation for frontend
 
-2. **Contract Testing**
+2. **URL Management**
+   ```
+   lib/api/
+     config.ts            # API configuration
+       ↓
+   lib/test/
+     url-helper.ts       # URL generation
+     handler-generator.ts # MSW handlers
+   ```
+   - Centralized API version and prefix
+   - Environment-specific configurations
+   - Type-safe URL generation
+   - Path sanitization and validation
+
+3. **Contract Testing**
    - Schema-based contract validation
    - Type-safe API integration
    - MSW for API mocking
    - React Query integration
+
+## Testing Infrastructure Patterns
+
+1. **Test File Organization**
+   ```
+   __tests__/
+     integration/      # Integration tests
+       feature1.test.ts
+       feature2.test.ts
+     unit/            # Unit tests
+       component.test.ts
+     common/          # Shared test utilities
+       helpers.ts
+   ```
+
+2. **Handler Management**
+   ```
+   Testing Infrastructure
+         ↓
+   URL Helper → Handler Generator → Integration Handlers
+         ↓                                ↓
+   URL Validation            Schema-Based Response Types
+   ```
+   - Centralized API URL management
+   - Type-safe request/response handling
+   - Reusable handler generation
+   - Consistent error simulation
+
+3. **Testing Utilities**
+   ```
+   Test Setup
+     ↓
+   Providers → Query Client → Auth State
+     ↓
+   Component Render
+   ```
+   - Common test wrapper components
+   - Shared utility functions
+   - Standard mock data patterns
+   - Route simulation helpers
 
 ## Component Patterns
 

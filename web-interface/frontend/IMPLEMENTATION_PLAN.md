@@ -62,7 +62,7 @@ flowchart TD
 
 #### Components to Implement
 
-```typescript
+```
 features/cv-management/
   components/
     CVList.tsx       // CV overview and management
@@ -142,7 +142,7 @@ features/cv-management/
 
 ### 1. Component Architecture
 
-```typescript
+```
 // Feature-based organization
 features/
   feature-name/

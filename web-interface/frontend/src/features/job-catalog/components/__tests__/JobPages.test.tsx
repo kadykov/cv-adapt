@@ -1,6 +1,7 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { CreateJobPage, EditJobPage, JobDetailPage } from '../JobPages';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../auth/components/AuthProvider';
@@ -98,7 +99,7 @@ import { server } from '../../../../lib/test/integration';
 beforeEach(() => {
   server.resetHandlers();
   addIntegrationHandlers([
-    http.get('/v1/api/jobs/:id', ({ params }) => {
+    http.get(getTestApiUrl('jobs/:id'), ({ params }) => {
       if (params.id === '123') {
         return HttpResponse.json(mockJob, { status: 200 });
       }

@@ -107,6 +107,39 @@ features/
 - Network behavior simulation
 - Contract validation
 
+### URL Management
+
+The testing infrastructure includes a centralized system for managing API URLs:
+
+```typescript
+// Configuration (lib/api/config.ts)
+export const API_VERSION = 'v1';
+export const API_PREFIX = 'api';
+export const BASE_PATH = `/${API_VERSION}/${API_PREFIX}`;
+
+// URL Helper (lib/test/url-helper.ts)
+export function getTestApiUrl(path: string): string {
+  // Sanitize and validate path
+  return `${BASE_PATH}/${cleanPath}`;
+}
+
+// Handler Generator Usage
+createGetHandler('jobs', 'JobResponse', mockData);
+// Generates: GET /v1/api/jobs
+
+// Direct MSW Usage
+http.get(getTestApiUrl('jobs'), responseHandler);
+// Generates: GET /v1/api/jobs
+```
+
+Key Features:
+
+- Centralized API configuration
+- Path validation and sanitization
+- Type-safe URL generation
+- Environment-specific configurations
+- Integration with MSW handlers
+
 ### Test Utilities
 
 ```typescript
@@ -117,9 +150,13 @@ render(ui: React.ReactElement, {
   ...options
 }: TestOptions = {})
 
-// API test helpers
-createMockHandler(path, method, response)
-createErrorHandler(path, method, error)
+// Handler Generation
+createGetHandler<T extends Schema>(path: string, schemaKey: T, response: T)
+createPostHandler<T, R>(path: string, reqSchema: T, resSchema: R, response: R)
+
+// URL Management
+getTestApiUrl(path: string): string
+getBaseUrl(environment: ApiEnvironment): string
 
 // Auth test utilities
 mockAuthenticatedUser()
@@ -164,12 +201,14 @@ mockUnauthenticatedState()
 2. Testing Standards
 
    - Use centralized MSW handlers
-   - Maintain consistent API paths
+   - Use getTestApiUrl for all API paths
+   - Utilize handler generators for consistent responses
    - Share mock data between tests
    - Test component accessibility
    - Verify loading states
    - Test error scenarios
    - Implement request debugging
+   - Validate API path consistency
 
 3. Coverage Requirements
 

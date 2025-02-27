@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import type { RenderOptions } from '@testing-library/react';
 import {
   render,
@@ -188,7 +189,7 @@ describe('Job Operations Integration', () => {
   test('should display loading and error states', async () => {
     // Add custom error handler
     addIntegrationHandlers([
-      http.get('/v1/api/jobs', () => {
+      http.get(getTestApiUrl('jobs'), () => {
         return HttpResponse.json(serverError, { status: 500 });
       }),
     ]);
@@ -280,11 +281,11 @@ describe('Job Operations Integration', () => {
     // Override handlers for delete test
     addIntegrationHandlers([
       // After delete, list should return jobs without the deleted one
-      http.get('/v1/api/jobs', () => {
+      http.get(getTestApiUrl('jobs'), () => {
         return HttpResponse.json(mockJobs.filter((job) => job.id !== 1));
       }),
       // Delete handler
-      http.delete('/v1/api/jobs/1', async () => {
+      http.delete(getTestApiUrl('jobs/1'), async () => {
         // Return success and trigger redirect
         await new Promise((resolve) => setTimeout(resolve, 100));
         window.history.pushState({}, '', '/jobs');

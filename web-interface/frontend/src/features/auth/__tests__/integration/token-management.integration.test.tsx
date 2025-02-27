@@ -15,14 +15,14 @@ describe('Token Management Integration', () => {
   // Add handlers for token management flow
   addIntegrationHandlers([
     createPostHandler(
-      '/v1/api/auth/login',
+      'auth/login',
       'Body_login_v1_api_auth_login_post',
       'AuthResponse',
       mockAuthResponse,
     ),
-    createGetHandler('/v1/api/users/me', 'UserResponse', mockUser),
+    createGetHandler('users/me', 'UserResponse', mockUser),
     createPostHandler(
-      '/v1/api/auth/refresh',
+      'auth/refresh',
       'Body_refresh_token_v1_api_auth_refresh_post',
       'AuthResponse',
       {

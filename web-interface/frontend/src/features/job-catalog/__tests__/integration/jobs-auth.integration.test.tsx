@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { Routes, Route } from 'react-router-dom';
 import { ProvidersWrapper } from '../../../../test/setup/providers';
 import { server } from '../../../../lib/test/integration/server';
@@ -29,7 +30,7 @@ const unauthorizedError = {
 
 const jobsHandlers = [
   // Return mockJobs with 401 if no auth token
-  http.get('/v1/api/jobs', ({ request }) => {
+  http.get(getTestApiUrl('jobs'), ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return HttpResponse.json(unauthorizedError, { status: 401 });

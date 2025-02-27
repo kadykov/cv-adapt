@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import type { RenderOptions } from '@testing-library/react';
+import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import {
   render,
   screen,
@@ -44,7 +45,7 @@ describe('Protected Route Integration', () => {
   test('should redirect to login when not authenticated', async () => {
     // Set up handlers for unauthenticated state
     addIntegrationHandlers([
-      createGetHandler('/v1/api/users/me', 'UserResponse', null, {
+      createGetHandler(getTestApiUrl('users/me'), 'UserResponse', null, {
         status: 401,
       }),
     ]);
@@ -81,7 +82,7 @@ describe('Protected Route Integration', () => {
   test('should preserve original route after authentication', async () => {
     // Set up handlers for unauthenticated state
     addIntegrationHandlers([
-      createGetHandler('/v1/api/users/me', 'UserResponse', null, {
+      createGetHandler(getTestApiUrl('users/me'), 'UserResponse', null, {
         status: 401,
       }),
     ]);
@@ -125,7 +126,7 @@ describe('Protected Route Integration', () => {
     // Set up handlers for authenticated state
     addIntegrationHandlers([
       // Mock successful auth check
-      http.get('/v1/api/users/me', ({ request }) => {
+      http.get(getTestApiUrl('users/me'), ({ request }) => {
         const authHeader = request.headers.get('Authorization');
         if (authHeader?.includes('valid-access-token')) {
           return HttpResponse.json(mockUser);
