@@ -61,9 +61,8 @@ preview-frontend:
 
 # Run all checks
 all:
+    just format
     just lint
-    just docs
-    just build-frontend
     just test
     just test-backend
     just export-openapi
@@ -71,7 +70,8 @@ all:
     just test-frontend-all
     just test-frontend-cov
     just type-check-frontend
-    just format
+    just docs
+    just build-frontend
     just pre-commit
 
 # Build documentation
@@ -135,13 +135,14 @@ test-frontend-all:
 # Run frontend tests with coverage
 test-frontend-cov:
     mkdir -p web-interface/frontend/coverage/.tmp
-    cd web-interface/frontend && npm test -- --coverage
+    cd web-interface/frontend && npm run test -- --coverage
+    cd web-interface/frontend && npm run test:integration -- --coverage
 
 # Run frontend linting
 lint-frontend:
     cd web-interface/frontend && npm run lint
     cd web-interface/frontend && npm run format:check
-    cd web-interface/frontend && npm run type-check
+    just type-check-frontend
 
 # Format frontend code
 format-frontend:

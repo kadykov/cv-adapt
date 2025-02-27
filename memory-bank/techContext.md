@@ -84,8 +84,15 @@
 3. **Quality Tools**
    - Pre-commit hooks
    - ESLint + TypeScript
-   - Prettier formatting
+   - Prettier configuration:
+     - Single quotes (singleQuote: true)
+     - 2 spaces indentation
+     - Trailing commas
+     - Line endings: LF
    - Type checking
+   - Generated code handling:
+     - API types auto-generated from OpenAPI schema
+     - Post-processing for consistent style
 
 ## Package Management
 
