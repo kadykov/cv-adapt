@@ -6,8 +6,14 @@ type Schema = components['schemas'];
 /**
  * Creates an MSW handler for GET endpoints that returns schema-validated data
  */
-const getTestUrl = (path: string) =>
-  `http://localhost:3000${path.startsWith('/') ? path : `/${path}`}`;
+/**
+ * Handle test requests using /v1/api prefix with proxy support
+ */
+const getTestUrl = (path: string) => {
+  // Ensure consistent /v1/api prefix
+  const apiPath = `/v1/api${path.startsWith('/') ? path : `/${path}`}`;
+  return apiPath;
+};
 
 export function createGetHandler<T extends keyof Schema>(
   path: string,

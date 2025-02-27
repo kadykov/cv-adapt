@@ -55,6 +55,27 @@
    - Automatic synchronization across components
    - Token management integrated with query system
 
+2. **Job Management Pattern**
+   ```
+   features/job-catalog/
+     components/             # UI Components
+       JobList.tsx          # Grid layout with filtering
+       JobForm/             # Form with validation
+       JobDetail.tsx        # Full job information
+       JobCard.tsx          # Job preview card
+     hooks/                 # Data management
+       useJobs.ts          # Jobs query hook
+       useJob.ts           # Single job query
+       useJobMutations.ts  # CRUD operations
+     api/                  # API integration
+       jobsApi.ts         # API client functions
+   ```
+   - Feature-complete implementation
+   - Type-safe API integration
+   - React Query for state management
+   - Component-based architecture
+   - Comprehensive testing
+
 2. **Language Management**
    ```
    lib/language/

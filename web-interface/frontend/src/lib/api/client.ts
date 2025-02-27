@@ -13,9 +13,8 @@ export class ApiError extends Error {
 }
 
 export const axiosInstance = axios.create({
-  // baseURL configured through environment
-  baseURL:
-    process.env.NODE_ENV === 'test' ? 'http://localhost:3000' : '/v1/api',
+  // Use /v1/api prefix in all environments with proxy forwarding in tests
+  baseURL: '/v1/api',
   headers: {
     'Content-Type': 'application/json',
   },

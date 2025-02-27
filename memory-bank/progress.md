@@ -15,6 +15,14 @@
    - Template system
    - Multiple renderer support
 
+2. **Job Management**
+   - ✓ Job listing implementation
+   - ✓ Job creation form with validation
+   - ✓ Language filtering support
+   - ✓ Full CRUD operations
+   - ✓ API integration with OpenAPI types
+   - ✓ React Query state management
+
 2. **Backend**
    - API endpoint implementation
    - Database integration

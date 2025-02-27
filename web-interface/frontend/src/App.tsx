@@ -6,8 +6,13 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Home } from './routes/Home';
 import { Auth } from './routes/Auth';
 import { ROUTES } from './routes/paths';
-// Import job pages
-import { Jobs } from './features/jobs/components/Jobs';
+// Import job catalog components
+import { JobList } from './features/job-catalog/components/JobList';
+import {
+  CreateJobPage,
+  EditJobPage,
+  JobDetailPage,
+} from './features/job-catalog/components/JobPages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +36,16 @@ function App() {
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
-                <Route path={ROUTES.JOBS.LIST} element={<Jobs />} />
+                <Route path={ROUTES.JOBS.LIST} element={<JobList />} />
+                <Route path={ROUTES.JOBS.CREATE} element={<CreateJobPage />} />
+                <Route
+                  path={ROUTES.JOBS.DETAIL(':id')}
+                  element={<JobDetailPage />}
+                />
+                <Route
+                  path={ROUTES.JOBS.EDIT(':id')}
+                  element={<EditJobPage />}
+                />
               </Route>
             </Route>
           </Routes>

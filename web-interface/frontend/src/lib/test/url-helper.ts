@@ -1,4 +1,4 @@
-const TEST_API_BASE = 'http://localhost:3000';
+const TEST_API_BASE = '/v1/api';
 
 /**
  * Helper function to generate test API URLs consistently
@@ -6,11 +6,8 @@ const TEST_API_BASE = 'http://localhost:3000';
 export function getTestApiUrl(path: string): string {
   // Remove any leading slash for consistency
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  // Remove /v1/api prefix if present
-  const finalPath = cleanPath.startsWith('v1/api/')
-    ? cleanPath.slice(7)
-    : cleanPath;
-  return `${TEST_API_BASE}/${finalPath}`;
+  // Always return path with /v1/api prefix
+  return `${TEST_API_BASE}/${cleanPath}`;
 }
 
 // Export base URL for direct use

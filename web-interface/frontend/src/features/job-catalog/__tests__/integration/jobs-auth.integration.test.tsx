@@ -29,7 +29,7 @@ const unauthorizedError = {
 
 const jobsHandlers = [
   // Return mockJobs with 401 if no auth token
-  http.get('http://localhost:3000/jobs', ({ request }) => {
+  http.get('/v1/api/jobs', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return HttpResponse.json(unauthorizedError, { status: 401 });
@@ -41,8 +41,9 @@ const jobsHandlers = [
 const TestApp = () => (
   <Routes>
     <Route path="/" element={<JobList />} />
-    <Route path="/auth" element={<LoginForm onSuccess={() => {}} />} />
+    <Route path="/auth" element={<LoginForm onSuccess={() => null} />} />
     <Route path="/jobs" element={<JobList />} />
+    <Route path="*" element={<div>Not Found</div>} />
   </Routes>
 );
 
@@ -69,7 +70,7 @@ describe('Jobs with Authentication Integration', () => {
     // Set initial path before rendering
     window.history.pushState({}, '', '/jobs');
     render(
-      <ProvidersWrapper>
+      <ProvidersWrapper initialEntries={['/jobs']}>
         <TestApp />
       </ProvidersWrapper>,
     );
@@ -90,7 +91,7 @@ describe('Jobs with Authentication Integration', () => {
     // Set initial path before rendering
     window.history.pushState({}, '', '/jobs');
     render(
-      <ProvidersWrapper>
+      <ProvidersWrapper initialEntries={['/jobs']}>
         <TestApp />
       </ProvidersWrapper>,
     );
@@ -110,7 +111,7 @@ describe('Jobs with Authentication Integration', () => {
     // Set initial path before rendering
     window.history.pushState({}, '', '/auth');
     render(
-      <ProvidersWrapper>
+      <ProvidersWrapper initialEntries={['/auth']}>
         <TestApp />
       </ProvidersWrapper>,
     );

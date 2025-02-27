@@ -36,7 +36,7 @@ export function render(ui: ReactElement, options: TestOptions = {}) {
     if (initialEntries) {
       return (
         <IntegrationTestWrapper
-          routerComponent={(props) => (
+          routerComponent={(props: { children: ReactNode }) => (
             <RouterWrapper initialEntries={initialEntries} {...props} />
           )}
         >

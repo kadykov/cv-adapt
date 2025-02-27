@@ -1,11 +1,11 @@
 import { setupServer } from 'msw/node';
 import { authIntegrationHandlers } from '../../../features/auth/testing/integration-handlers';
-import { jobsIntegrationHandlers } from '../../../features/jobs/testing/integration-handlers';
+import { jobCatalogIntegrationHandlers } from '../../../features/job-catalog/testing/integration-handlers';
 
 // Create base server with all integration test handlers
 export const server = setupServer(
   ...authIntegrationHandlers,
-  ...jobsIntegrationHandlers,
+  ...jobCatalogIntegrationHandlers,
 );
 
 // Log request handling for debugging

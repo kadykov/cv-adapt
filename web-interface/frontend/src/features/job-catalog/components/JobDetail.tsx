@@ -88,29 +88,31 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <span className="text-sm text-base-content/70">{timeAgo}</span>
           <div className="flex gap-2">
-            <button
-              className="btn btn-error"
-              onClick={handleDelete}
-              disabled={deleteJob.isPending}
-              aria-label="Delete job"
-            >
-              {deleteJob.isPending ? (
-                <>
-                  <span className="loading loading-spinner" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete'
-              )}
-            </button>
-            {onEdit && (
-              <button
-                className="btn btn-primary"
-                onClick={onEdit}
-                aria-label="Edit job"
-              >
-                Edit
-              </button>
+            {deleteJob.isPending ? (
+              <span
+                role="status"
+                className="loading loading-spinner loading-lg"
+                aria-label="Deleting job..."
+              />
+            ) : (
+              <>
+                <button
+                  className="btn btn-error"
+                  onClick={handleDelete}
+                  aria-label="Delete job"
+                >
+                  Delete
+                </button>
+                {onEdit && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={onEdit}
+                    aria-label="Edit job"
+                  >
+                    Edit
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -2,6 +2,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { JobForm } from './JobForm';
 import { JobDetail } from './JobDetail';
 import { ROUTES } from '../../../routes/paths';
+import { useJob } from '../hooks/useJob'; // Import useJob hook
+import { LanguageCode } from '@/lib/language/types'; // Import LanguageCode type
+// import { Loading } from '@/lib/components/Loading'; // Removed Loading import
 
 // Wrapper for the JobForm with required props
 export function CreateJobPage() {
@@ -21,9 +24,24 @@ export function EditJobPage() {
   const navigate = useNavigate();
   const jobId = parseInt(id!, 10);
 
+  const { data: job, isLoading } = useJob(jobId); // Fetch job data using useJob hook
+
+  if (isLoading || !job) {
+    return (
+      <div className="text-center py-8">
+        <span
+          role="status"
+          className="loading loading-spinner loading-lg"
+        ></span>
+      </div>
+    );
+  }
+
   return (
     <JobForm
       mode="edit"
+      jobId={jobId}
+      initialData={{ ...job, language_code: job.language_code as LanguageCode }} // Cast language_code to LanguageCode
       onSuccess={() => navigate(ROUTES.JOBS.DETAIL(jobId))}
       onCancel={() => navigate(ROUTES.JOBS.DETAIL(jobId))}
     />

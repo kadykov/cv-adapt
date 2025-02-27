@@ -29,6 +29,7 @@ flowchart TD
 ### Integration Tests
 
 #### Infrastructure
+
 - Schema-based handler generation
 - Integration-specific test server
 - OpenAPI contract validation
@@ -38,6 +39,7 @@ flowchart TD
 - Mutation state management
 
 #### Focus Areas
+
 - Complete user flows
 - Feature interactions
 - State management
@@ -47,6 +49,7 @@ flowchart TD
 - Error handling
 
 #### Directory Structure
+
 ```
 features/
   auth/
@@ -68,6 +71,7 @@ features/
 ### Unit Tests
 
 #### Component Testing
+
 - Loading state verification
 - Error state handling
 - Form validation
@@ -77,6 +81,7 @@ features/
 - Role-based queries
 
 #### Hook Testing
+
 - Mock providers (Auth, Query)
 - Mock localStorage
 - Mock API responses
@@ -85,6 +90,7 @@ features/
 - Cache behavior
 
 #### Best Practices
+
 - Provider isolation
 - Mock consistency
 - Type safety
@@ -94,6 +100,7 @@ features/
 ## Testing Infrastructure
 
 ### MSW (Mock Service Worker)
+
 - Centralized handler setup
 - Request/response mocking
 - Error scenario simulation
@@ -101,6 +108,7 @@ features/
 - Contract validation
 
 ### Test Utilities
+
 ```typescript
 // Custom render with providers
 render(ui: React.ReactElement, {
@@ -121,7 +129,9 @@ mockUnauthenticatedState()
 ### Development Guidelines
 
 #### Testing Requirements
+
 1. Integration Tests (Feature Level)
+
    - User flow coverage
    - API interaction testing
    - Error handling scenarios
@@ -129,6 +139,7 @@ mockUnauthenticatedState()
    - State management validation
 
 2. Unit Tests (Component Level)
+
    - Component isolation
    - Prop validation
    - Event handling
@@ -144,12 +155,14 @@ mockUnauthenticatedState()
 ### Best Practices
 
 1. Test Organization
+
    - Co-locate tests with implementation
    - Use descriptive test names
    - Group related tests
    - Maintain test independence
 
 2. Testing Standards
+
    - Use centralized MSW handlers
    - Maintain consistent API paths
    - Share mock data between tests
@@ -159,6 +172,7 @@ mockUnauthenticatedState()
    - Implement request debugging
 
 3. Coverage Requirements
+
    - Minimum 80% code coverage
    - Critical paths: 100%
    - Error scenarios

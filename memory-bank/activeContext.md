@@ -2,17 +2,18 @@
 
 ## Current Focus
 
-1. **CV Management Feature Development**
-   - Planning CV editor implementation
-   - Designing language variant support
-   - Structuring export capabilities
-   - Integrating with backend services
+1. **Feature Consolidation**
+   - Remove redundant /features/jobs implementation
+   - Consolidate job management to job-catalog
+   - Update routing configuration
+   - Verify all references and dependencies
 
-2. **Documentation Organization**
-   - Split implementation plan into focused documents
-   - Centralized testing strategy documentation
-   - Archived completed phases
-   - Improved maintainability
+2. **Testing Completion**
+   - Complete job operations integration tests
+   - Implement form validation tests
+   - Add cache update verification
+   - Test modal interactions
+   - Document testing patterns
 
 3. **Type System Cleanup**
    - ✓ Added generate-api-types to pretest script

@@ -292,22 +292,53 @@ describe('JobDetail', () => {
   it('shows loading state during delete', async () => {
     const user = userEvent.setup();
     const neverResolve = new Promise<void>(() => {});
+    const mutateAsync = vi.fn(() => neverResolve);
 
-    vi.mocked(useJob).mockReturnValue(createMockQueryResult(mockJob));
-    vi.mocked(useJobMutations).mockReturnValue(
-      createMockMutations({
-        mutateAsync: vi.fn(() => neverResolve),
-        isPending: true,
-      }),
-    );
+    // Setup initial mocks before render
+    const jobQuery = createMockQueryResult(mockJob);
+    const initialMutation = createMockMutations({
+      mutateAsync,
+      isPending: false,
+      status: 'idle',
+      isIdle: true,
+    });
 
-    render(<JobDetail id={1} />, { wrapper: createTestWrapper() });
+    vi.mocked(useJob).mockReturnValue(jobQuery);
+    vi.mocked(useJobMutations).mockReturnValue(initialMutation);
 
+    // Initial render
+    const { rerender } = render(<JobDetail id={1} />, {
+      wrapper: createTestWrapper(),
+    });
+
+    // First re-render to ensure hooks are stable
+    rerender(<JobDetail id={1} />);
+
+    // Get and click delete button
     const deleteButton = screen.getByRole('button', { name: /Delete job/i });
     await user.click(deleteButton);
 
-    expect(screen.getByText('Deleting...')).toBeInTheDocument();
-    expect(deleteButton).toBeDisabled();
+    // Update to pending state and re-render
+    const pendingMutation = createMockMutations({
+      mutateAsync,
+      isPending: true,
+      status: 'pending',
+      isIdle: false,
+      variables: 1,
+    });
+    vi.mocked(useJobMutations).mockReturnValue(pendingMutation);
+    rerender(<JobDetail id={1} />);
+
+    // Verify loading state
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Delete job/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    // Verify mutation was called
+    expect(mutateAsync).toHaveBeenCalledWith(1);
   });
 
   it('shows error when delete fails', async () => {
