@@ -34,8 +34,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    mode: 'onSubmit',
-    criteriaMode: 'all',
+    mode: 'onTouched',
   });
 
   const { mutate: registerUser, error, isPending } = useRegisterMutation();
@@ -52,30 +51,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       },
     });
   });
-
-  // Determine all password validation errors
-  const passwordValidationRules = [
-    {
-      id: 'minLength',
-      message: 'Password must be at least 8 characters',
-      test: (pw?: string) => pw && pw.length >= 8,
-    },
-    {
-      id: 'uppercase',
-      message: 'Password must contain at least one uppercase letter',
-      test: (pw?: string) => pw && /[A-Z]/.test(pw),
-    },
-    {
-      id: 'number',
-      message: 'Password must contain at least one number',
-      test: (pw?: string) => pw && /[0-9]/.test(pw),
-    },
-  ];
-
-  const password = errors.password?.ref?.value;
-  const passwordErrors = passwordValidationRules
-    .filter((rule) => !rule.test(password))
-    .map((rule) => rule.message);
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6" noValidate>
@@ -106,15 +81,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           {...register('password')}
           className="input input-bordered w-full data-[hover]:input-primary data-[focus]:input-primary data-[disabled]:input-disabled"
         />
-        {passwordErrors.map((error, index) => (
-          <Description
-            key={index}
-            className="mt-1 text-sm text-error"
-            role="alert"
-          >
-            {error}
+        {errors.password && (
+          <Description className="mt-1 text-sm text-error" role="alert">
+            {errors.password.message}
           </Description>
-        ))}
+        )}
       </Field>
 
       <Field>

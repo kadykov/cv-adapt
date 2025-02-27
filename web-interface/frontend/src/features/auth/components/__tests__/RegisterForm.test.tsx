@@ -85,21 +85,66 @@ describe('RegisterForm', () => {
     expect(mockMutate).not.toHaveBeenCalled();
   });
 
-  it('validates password complexity requirements', async () => {
+  it('validates password length requirement', async () => {
     renderForm();
     const user = userEvent.setup();
 
-    await fillFormAndSubmit(user, {
-      email: 'test@example.com',
-      password: 'weak',
-      confirmPassword: 'weak',
-    });
+    // Type in a short password and blur the field
+    const passwordInput = screen.getByTestId('password-input');
+    await user.type(passwordInput, 'weak');
+    await user.tab();
 
-    // Wait for all error messages to appear
-    await waitFor(async () => {
-      const errorMessages = await screen.findAllByRole('alert');
-      expect(errorMessages).toHaveLength(3);
-      expect(errorMessages[0]).toHaveClass('text-error');
+    // Submit form to ensure validation triggers
+    const submitButton = screen.getByTestId('submit-button');
+    await user.click(submitButton);
+
+    // Should show length validation error
+    await waitFor(() => {
+      expect(
+        screen.getByText(/must be at least 8 characters/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('validates password uppercase requirement', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Type in password without uppercase and blur
+    const passwordInput = screen.getByTestId('password-input');
+    await user.type(passwordInput, 'password123');
+    await user.tab();
+
+    // Submit form to ensure validation triggers
+    const submitButton = screen.getByTestId('submit-button');
+    await user.click(submitButton);
+
+    // Should show uppercase validation error
+    await waitFor(() => {
+      expect(
+        screen.getByText(/must contain at least one uppercase letter/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('validates password number requirement', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Type in password without number and blur
+    const passwordInput = screen.getByTestId('password-input');
+    await user.type(passwordInput, 'Password');
+    await user.tab();
+
+    // Submit form to ensure validation triggers
+    const submitButton = screen.getByTestId('submit-button');
+    await user.click(submitButton);
+
+    // Should show number validation error
+    await waitFor(() => {
+      expect(
+        screen.getByText(/must contain at least one number/i),
+      ).toBeInTheDocument();
     });
 
     expect(mockMutate).not.toHaveBeenCalled();
