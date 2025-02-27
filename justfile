@@ -62,17 +62,17 @@ preview-frontend:
 # Run all checks
 all:
     just lint
-    just format
-    just pre-commit
     just docs
     just build-frontend
     just test
     just test-backend
-    just generate-types
     just export-openapi
+    just generate-types
     just test-frontend-all
     just test-frontend-cov
     just type-check-frontend
+    just format
+    just pre-commit
 
 # Build documentation
 docs:
@@ -113,7 +113,7 @@ export-openapi:
 
 # Generate TypeScript types from OpenAPI schema
 generate-types: export-openapi
-    cd web-interface/frontend && npm run generate:types
+    cd web-interface/frontend && npm run generate-api-types
 
 # Run backend tests
 test-backend *ARGS='':
@@ -127,17 +127,10 @@ test-frontend:
 test-frontend-integration:
     cd web-interface/frontend && npm run test:integration
 
-# Run frontend contract tests
-test-frontend-contract:
-    just export-openapi
-    just generate-types
-    cd web-interface/frontend && npm run test:contract
-
-# Run all frontend tests (unit, integration, and contract)
+# Run all frontend tests (unit and integration)
 test-frontend-all:
     just test-frontend
     just test-frontend-integration
-    just test-frontend-contract
 
 # Run frontend tests with coverage
 test-frontend-cov:

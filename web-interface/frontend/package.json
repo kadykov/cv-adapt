@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "pretest": "npm run generate-api-types",
     "test": "vitest --config vitest.config.ts",

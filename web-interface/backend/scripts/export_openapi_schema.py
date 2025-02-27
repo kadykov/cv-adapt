@@ -6,11 +6,12 @@ import os
 import sys
 from pathlib import Path
 
-from app.main import app
-
-# Add backend directory to Python path
+# Add backend directory to Python path first
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
+
+# Now we can safely import the app
+from app.main import app  # noqa: E402
 
 
 def export_schema() -> None:
