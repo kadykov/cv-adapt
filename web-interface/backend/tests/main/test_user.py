@@ -53,7 +53,9 @@ def test_update_user_profile(
         "bio": "Test bio",
     }
     response = client.put(
-        "/v1/api/users/me", headers=auth_headers, json={"personal_info": new_personal_info}
+        "/v1/api/users/me",
+        headers=auth_headers,
+        json={"personal_info": new_personal_info},
     )
     assert response.status_code == 200
     data = response.json()

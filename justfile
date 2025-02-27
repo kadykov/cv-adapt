@@ -33,7 +33,8 @@ lint *ARGS='.':
 
 # Run ruff on a specific file or directory with auto-fixes
 ruff *ARGS='.':
-    just format {{ARGS}}
+    uv run ruff check --select I --fix {{ARGS}}
+    uv run ruff format {{ARGS}}
     uv run ruff check --fix {{ARGS}}
 
 # Run mypy on a specific file or directory
@@ -42,8 +43,7 @@ mypy *ARGS='.':
 
 # Format code
 format *ARGS='.':
-    uv run ruff check --select I --fix {{ARGS}}
-    uv run ruff format {{ARGS}}
+    just ruff {{ARGS}}
     just format-frontend
 
 # Run pre-commit checks

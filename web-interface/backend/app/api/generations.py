@@ -1,16 +1,17 @@
 import sys
 from typing import Annotated, Dict, List
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
+from cv_adapter.dto.language import Language
 from cv_adapter.models.context import language_context
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_language
-from cv_adapter.dto.language import Language
 from ..logger import logger
 from ..models.models import User
 from ..schemas.cv import (
@@ -26,11 +27,13 @@ cv_adapter = AsyncCVAdapterApplication(
 
 router = APIRouter(prefix="/v1/api/generations", tags=["generations"])
 
+
 # Request models
 class GenerateCompetencesRequest(BaseModel):
     cv_text: str
     job_description: str
     notes: str | None = None
+
 
 class ContactRequest(BaseModel):
     value: str
@@ -38,11 +41,13 @@ class ContactRequest(BaseModel):
     icon: str | None = None
     url: str | None = None
 
+
 class PersonalInfo(BaseModel):
     full_name: str
     email: ContactRequest
     phone: ContactRequest | None = None
     location: ContactRequest | None = None
+
 
 class GenerateCVRequest(BaseModel):
     cv_text: str
@@ -50,6 +55,7 @@ class GenerateCVRequest(BaseModel):
     personal_info: PersonalInfo
     approved_competences: List[str]
     notes: str | None = None
+
 
 @router.post("/competences")
 async def generate_competences(
@@ -75,6 +81,7 @@ async def generate_competences(
     except Exception as e:
         logger.error(f"Error generating competences: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/cv")
 async def generate_cv(
@@ -158,6 +165,7 @@ async def generate_cv(
         logger.error(f"Error generating CV: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("", response_model=GeneratedCVResponse)
 async def generate_and_save_cv(
     cv_data: GeneratedCVCreate,
@@ -169,6 +177,7 @@ async def generate_and_save_cv(
     cv = generated_cv_service.create_generated_cv(int(current_user.id), cv_data)
     return GeneratedCVResponse.model_validate(cv)
 
+
 @router.get("", response_model=list[GeneratedCVResponse])
 async def get_user_generations(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -178,6 +187,7 @@ async def get_user_generations(
     generated_cv_service = GeneratedCVService(db)
     cvs = generated_cv_service.get_by_user(int(current_user.id))
     return [GeneratedCVResponse.model_validate(cv) for cv in cvs]
+
 
 @router.get("/{cv_id}", response_model=GeneratedCVResponse)
 async def get_generated_cv(

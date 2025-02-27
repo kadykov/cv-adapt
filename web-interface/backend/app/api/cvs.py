@@ -1,4 +1,5 @@
 from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,7 @@ from ..services.cv import DetailedCVService
 
 router = APIRouter(prefix="/v1/api/user/detailed-cvs", tags=["detailed-cvs"])
 
+
 @router.get("", response_model=list[DetailedCVResponse])
 async def get_user_detailed_cvs(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -23,6 +25,7 @@ async def get_user_detailed_cvs(
     cv_service = DetailedCVService(db)
     cvs = cv_service.get_user_cvs(int(current_user.id))
     return [DetailedCVResponse.model_validate(cv) for cv in cvs]
+
 
 @router.get("/{language_code}", response_model=DetailedCVResponse)
 async def get_user_detailed_cv(
@@ -39,6 +42,7 @@ async def get_user_detailed_cv(
             detail=f"No CV found for language: {language_code}",
         )
     return DetailedCVResponse.model_validate(cv)
+
 
 @router.put("/{language_code}", response_model=DetailedCVResponse)
 async def upsert_user_detailed_cv(
@@ -71,6 +75,7 @@ async def upsert_user_detailed_cv(
     cv = cv_service.create_cv(int(current_user.id), cv_data)
     return DetailedCVResponse.model_validate(cv)
 
+
 @router.delete("/{language_code}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_detailed_cv(
     language_code: str,
@@ -86,6 +91,7 @@ async def delete_user_detailed_cv(
             detail=f"No CV found for language: {language_code}",
         )
     cv_service.delete(int(cv.id))
+
 
 @router.put("/{language_code}/primary", response_model=DetailedCVResponse)
 async def set_primary_cv(

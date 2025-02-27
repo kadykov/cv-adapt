@@ -78,7 +78,9 @@ def test_generate_and_save_cv(
         language_code="en",
         content={"test": "content"},
     )
-    response = client.post("/v1/api/generations", headers=auth_headers, json=cv_data.model_dump())
+    response = client.post(
+        "/v1/api/generations", headers=auth_headers, json=cv_data.model_dump()
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["detailed_cv_id"] == test_detailed_cv.id
@@ -104,7 +106,9 @@ def test_get_generated_cv(
     test_generated_cv: GeneratedCV, auth_headers: dict[str, str], client: TestClient
 ) -> None:
     """Test getting specific generated CV."""
-    response = client.get(f"/v1/api/generations/{test_generated_cv.id}", headers=auth_headers)
+    response = client.get(
+        f"/v1/api/generations/{test_generated_cv.id}", headers=auth_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == test_generated_cv.id
@@ -134,7 +138,9 @@ def test_get_other_user_generated_cv(
     headers = {"Authorization": f"Bearer {other_user_token}"}
 
     # Try to access first user's CV
-    response = client.get(f"/v1/api/generations/{test_generated_cv.id}", headers=headers)
+    response = client.get(
+        f"/v1/api/generations/{test_generated_cv.id}", headers=headers
+    )
     assert response.status_code == 403
 
 

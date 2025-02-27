@@ -18,6 +18,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 # OAuth2PasswordBearer for token extraction
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
+
 class Token(BaseModel):
     """Token schema."""
 
@@ -25,12 +26,14 @@ class Token(BaseModel):
     token_type: str = "bearer"
     refresh_token: Optional[str] = None
 
+
 class TokenPayload(BaseModel):
     """Token payload schema."""
 
     sub: int  # user id
     exp: datetime
     type: str  # "access" or "refresh"
+
 
 def create_token(
     subject: int, expires_delta: Optional[timedelta] = None, token_type: str = "access"
@@ -51,13 +54,16 @@ def create_token(
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 def create_access_token(subject: int) -> str:
     """Create access token."""
     return create_token(subject, token_type="access")
 
+
 def create_refresh_token(subject: int) -> str:
     """Create refresh token."""
     return create_token(subject, token_type="refresh")
+
 
 def verify_token(
     token: str, expected_type: Optional[str] = None
@@ -75,6 +81,7 @@ def verify_token(
     except JWTError:
         return None
 
+
 async def decode_access_token(
     token: str = Depends(oauth2_scheme),
 ) -> Dict[str, Any]:
@@ -84,13 +91,19 @@ async def decode_access_token(
         if payload is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"message": "Could not validate credentials", "code": "INVALID_TOKEN"},
+                detail={
+                    "message": "Could not validate credentials",
+                    "code": "INVALID_TOKEN",
+                },
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return payload
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Could not validate credentials", "code": "INVALID_TOKEN"},
+            detail={
+                "message": "Could not validate credentials",
+                "code": "INVALID_TOKEN",
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )

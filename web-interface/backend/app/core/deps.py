@@ -4,7 +4,6 @@ from fastapi import Depends, HTTPException, Query, status
 from jose import JWTError
 
 from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
-from cv_adapter.models.context import language_context
 
 from ..core.database import get_db
 from ..core.security import decode_access_token
@@ -12,9 +11,9 @@ from ..logger import auth_logger, logger
 from ..models.models import User
 from ..services.user import UserService
 
+
 async def get_current_user(
-    db: Annotated[Any, Depends(get_db)],
-    token: dict = Depends(decode_access_token)
+    db: Annotated[Any, Depends(get_db)], token: dict = Depends(decode_access_token)
 ) -> User:
     """Get current user from JWT token."""
     try:
@@ -34,9 +33,8 @@ async def get_current_user(
             detail={"message": "Invalid token", "code": "INVALID_TOKEN"},
         )
 
-async def get_language(
-    language_code: str = Query(default="en")
-) -> Language:
+
+async def get_language(language_code: str = Query(default="en")) -> Language:
     """Dependency to get language from request, defaulting to English."""
     try:
         if not language_code:

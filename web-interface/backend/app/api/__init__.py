@@ -1,7 +1,3 @@
-from . import auth
-from . import users
-from . import cvs
-from . import jobs
-from . import generations
+from . import auth, cvs, generations, jobs, users
 
 __all__ = ["auth", "users", "cvs", "jobs", "generations"]

@@ -1,20 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..core.security import oauth2_scheme, decode_access_token
+from cv_adapter.dto.language import Language
+
 from ..core.database import get_db
 from ..core.deps import get_language
-from ..models.models import User
-from ..services.user import UserService
-from cv_adapter.dto.language import Language
+from ..core.security import decode_access_token, oauth2_scheme
 from ..schemas.cv import (
-    JobDescriptionResponse,
     JobDescriptionCreate,
+    JobDescriptionResponse,
     JobDescriptionUpdate,
 )
 from ..services.cv import JobDescriptionService
+from ..services.user import UserService
 
 router = APIRouter(prefix="/v1/api/jobs", tags=["jobs"])
+
 
 @router.get(
     "",
@@ -26,9 +27,9 @@ router = APIRouter(prefix="/v1/api/jobs", tags=["jobs"])
                 "application/json": {
                     "example": {"detail": {"message": "Could not validate credentials"}}
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def get_jobs(
     language: Language = Depends(get_language),
@@ -46,12 +47,13 @@ async def get_jobs(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         )
 
     job_service = JobDescriptionService(db)
     jobs = job_service.get_by_language(language.code)
     return [JobDescriptionResponse.model_validate(job) for job in jobs]
+
 
 @router.get(
     "/{job_id}",
@@ -63,17 +65,15 @@ async def get_jobs(
                 "application/json": {
                     "example": {"detail": {"message": "Could not validate credentials"}}
                 }
-            }
+            },
         },
         404: {
             "description": "Job not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Job description not found"}
-                }
-            }
-        }
-    }
+                "application/json": {"example": {"detail": "Job description not found"}}
+            },
+        },
+    },
 )
 async def get_job(
     job_id: int,
@@ -91,7 +91,7 @@ async def get_job(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         )
 
     job_service = JobDescriptionService(db)
@@ -103,6 +103,7 @@ async def get_job(
         )
     return JobDescriptionResponse.model_validate(job)
 
+
 @router.post(
     "",
     response_model=JobDescriptionResponse,
@@ -113,9 +114,9 @@ async def get_job(
                 "application/json": {
                     "example": {"detail": {"message": "Could not validate credentials"}}
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def create_job(
     job_data: JobDescriptionCreate,
@@ -133,12 +134,13 @@ async def create_job(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         )
 
     job_service = JobDescriptionService(db)
     job = job_service.create_job_description(job_data)
     return JobDescriptionResponse.model_validate(job)
+
 
 @router.put(
     "/{job_id}",
@@ -150,17 +152,15 @@ async def create_job(
                 "application/json": {
                     "example": {"detail": {"message": "Could not validate credentials"}}
                 }
-            }
+            },
         },
         404: {
             "description": "Job not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Job description not found"}
-                }
-            }
-        }
-    }
+                "application/json": {"example": {"detail": "Job description not found"}}
+            },
+        },
+    },
 )
 async def update_job(
     job_id: int,
@@ -179,7 +179,7 @@ async def update_job(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         )
 
     job_service = JobDescriptionService(db)
@@ -192,6 +192,7 @@ async def update_job(
     job = job_service.update_job_description(job, job_data)
     return JobDescriptionResponse.model_validate(job)
 
+
 @router.delete(
     "/{job_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -202,17 +203,15 @@ async def update_job(
                 "application/json": {
                     "example": {"detail": {"message": "Could not validate credentials"}}
                 }
-            }
+            },
         },
         404: {
             "description": "Job not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Job description not found"}
-                }
-            }
-        }
-    }
+                "application/json": {"example": {"detail": "Job description not found"}}
+            },
+        },
+    },
 )
 async def delete_job(
     job_id: int,
@@ -230,7 +229,7 @@ async def delete_job(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            detail="Could not validate credentials",
         )
 
     job_service = JobDescriptionService(db)

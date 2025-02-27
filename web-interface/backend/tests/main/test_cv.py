@@ -74,7 +74,9 @@ def test_create_cv(auth_headers: dict[str, str], client: TestClient) -> None:
     cv_data = DetailedCVCreate(
         language_code="fr", content={"test": "content"}, is_primary=False
     ).model_dump()
-    response = client.put("/v1/api/user/detailed-cvs/fr", headers=auth_headers, json=cv_data)
+    response = client.put(
+        "/v1/api/user/detailed-cvs/fr", headers=auth_headers, json=cv_data
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["language_code"] == "fr"
@@ -136,7 +138,8 @@ def test_set_primary_cv(
 
     # Now set it as primary
     response = client.put(
-        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}/primary", headers=auth_headers
+        f"/v1/api/user/detailed-cvs/{str(test_cv.language_code)}/primary",
+        headers=auth_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -166,5 +169,7 @@ def test_mismatched_language_code(
         content={"test": "content"},
         is_primary=True,
     ).model_dump()
-    response = client.put("/v1/api/user/detailed-cvs/en", headers=auth_headers, json=cv_data)
+    response = client.put(
+        "/v1/api/user/detailed-cvs/en", headers=auth_headers, json=cv_data
+    )
     assert response.status_code == 400

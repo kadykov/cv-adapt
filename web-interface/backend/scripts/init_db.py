@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Database initialization script."""
+
 import os
 import sys
 from typing import Optional
@@ -15,6 +16,7 @@ DEFAULT_DB_HOST = "db"
 DEFAULT_DB_PORT = "5432"
 DEFAULT_DB_NAME = "cv_adapt"
 
+
 def get_db_url(database: Optional[str] = None) -> str:
     """Get the database URL with optional database name."""
     db_user = os.getenv("POSTGRES_USER", DEFAULT_DB_USER)
@@ -25,6 +27,7 @@ def get_db_url(database: Optional[str] = None) -> str:
     if database:
         return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{database}"
     return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}"
+
 
 def create_database() -> None:
     """Create the database if it doesn't exist."""
@@ -49,6 +52,7 @@ def create_database() -> None:
     cur.close()
     conn.close()
 
+
 def verify_database() -> bool:
     """Verify database connection and basic functionality."""
     try:
@@ -60,6 +64,7 @@ def verify_database() -> bool:
         print(f"Database verification failed: {e}")
         return False
 
+
 def main() -> None:
     """Main initialization function."""
     try:
@@ -68,13 +73,19 @@ def main() -> None:
 
         if verify_database():
             print("Database initialization successful!")
-            # Import and run alembic upgrade after verifying we're in the right directory
+            # Import and run alembic upgrade after verifying we're in the right
+            # directory
             if os.path.exists("alembic.ini"):
                 print("Running database migrations...")
                 os.system("alembic upgrade head")
                 print("Migrations completed successfully!")
             else:
-                print("Error: alembic.ini not found. Make sure you're running this script from the backend directory.")
+                error_message = (
+                    "Error: alembic.ini not found. "
+                    "Make sure you're running this script "
+                    "from the backend directory."
+                )
+                print(error_message)
                 sys.exit(1)
         else:
             print("Error: Database verification failed.")
@@ -83,6 +94,7 @@ def main() -> None:
     except Exception as e:
         print(f"Error during database initialization: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

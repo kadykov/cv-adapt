@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,7 @@ from ..schemas.user import UserResponse, UserUpdate
 from ..services.user import UserService
 
 router = APIRouter(prefix="/v1/api/users", tags=["users"])
+
 
 @router.get("/me", response_model=UserResponse)
 async def get_user_profile(
@@ -24,6 +26,7 @@ async def get_user_profile(
         else None,
         created_at=datetime.fromtimestamp(current_user.created_at.timestamp()),
     )
+
 
 @router.put("/me", response_model=UserResponse)
 async def update_user_profile(

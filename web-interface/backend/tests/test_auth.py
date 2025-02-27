@@ -1,9 +1,9 @@
 """Authentication system tests."""
 
+from app.services.user import UserService
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.services.user import UserService
 
 def test_register(client: TestClient, db: Session) -> None:
     """Test user registration and ensure proper bcrypt hash format."""
@@ -33,6 +33,7 @@ def test_register(client: TestClient, db: Session) -> None:
     assert user_service.verify_password("testpassword", str(user.hashed_password))
     assert not user_service.verify_password("wrongpassword", str(user.hashed_password))
 
+
 def test_register_duplicate_email(client: TestClient) -> None:
     """Test registration with duplicate email."""
     # Register first user
@@ -56,12 +57,13 @@ def test_register_duplicate_email(client: TestClient) -> None:
     assert response.status_code == 400
     assert "Email already registered" in response.json()["detail"]["message"]
 
+
 def test_login(client: TestClient) -> None:
     """Test user login."""
     # Register user first
     client.post(
-            "/v1/api/auth/register",
-            json={
+        "/v1/api/auth/register",
+        json={
             "email": "test@example.com",
             "password": "testpassword",
         },
@@ -81,6 +83,7 @@ def test_login(client: TestClient) -> None:
     assert "refresh_token" in data
     assert data["user"]["email"] == "test@example.com"
 
+
 def test_login_invalid_credentials(client: TestClient) -> None:
     """Test login with invalid credentials."""
     response = client.post(
@@ -92,6 +95,7 @@ def test_login_invalid_credentials(client: TestClient) -> None:
     )
     assert response.status_code == 401
     assert "Incorrect email or password" in response.json()["detail"]["message"]
+
 
 def test_refresh_token(client: TestClient) -> None:
     """Test token refresh."""
@@ -122,6 +126,7 @@ def test_refresh_token(client: TestClient) -> None:
     assert "access_token" in data
     assert "refresh_token" in data
     assert data["user"]["email"] == "test@example.com"
+
 
 def test_refresh_invalid_token(client: TestClient) -> None:
     """Test refresh with invalid token."""

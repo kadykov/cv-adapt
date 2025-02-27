@@ -1,12 +1,10 @@
-import sys
 import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from cv_adapter.core.async_application import AsyncCVAdapterApplication
-
+from .api import auth, cvs, generations, jobs, users
 from .logger import setup_logging_middleware
-from .api import auth, users, cvs, jobs, generations
 
 # Only import test router if we're in a test environment
 if os.environ.get("TESTING") == "1":
@@ -20,7 +18,11 @@ setup_logging_middleware(app)
 # Configure CORS with more permissive settings for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],  # Allow both localhost variants and Vite dev server
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+    ],  # Allow both localhost variants and Vite dev server
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods during development
     allow_headers=["*"],  # Allow all headers during development
@@ -41,4 +43,5 @@ if os.environ.get("TESTING") == "1":
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

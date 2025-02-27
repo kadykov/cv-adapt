@@ -1,16 +1,18 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from .. import auth_logger
 from ..core.database import get_db
 from ..core.security import create_access_token, create_refresh_token, verify_token
 from ..schemas.auth import AuthResponse
 from ..schemas.user import UserCreate, UserResponse
 from ..services.user import UserService
-from .. import auth_logger
 
 router = APIRouter(prefix="/v1/api/auth", tags=["auth"])
+
 
 @router.post(
     "/register",
@@ -24,13 +26,13 @@ router = APIRouter(prefix="/v1/api/auth", tags=["auth"])
                         "detail": {
                             "message": "Email already registered",
                             "code": "EMAIL_EXISTS",
-                            "field": "email"
+                            "field": "email",
                         }
                     }
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def register(
     user_data: UserCreate, db: Session = Depends(get_db)
@@ -42,24 +44,28 @@ async def register(
     existing_user = user_service.get_by_email(user_data.email)
 
     if existing_user:
-        auth_logger.warning(f"Registration failed - email already exists: {user_data.email}")
+        auth_logger.warning(
+            f"Registration failed - email already exists: {user_data.email}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "message": "Email already registered",
                 "code": "EMAIL_EXISTS",
-                "field": "email"
-            }
+                "field": "email",
+            },
         )
 
     try:
         user = user_service.create_user(user_data)
         auth_logger.info(f"User registered successfully: {user.email}")
     except Exception as e:
-        auth_logger.error(f"Registration failed for {user_data.email}: {str(e)}", exc_info=True)
+        auth_logger.error(
+            f"Registration failed for {user_data.email}: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": "Registration failed", "code": "REGISTRATION_ERROR"}
+            detail={"message": "Registration failed", "code": "REGISTRATION_ERROR"},
         )
 
     # Create tokens
@@ -79,6 +85,7 @@ async def register(
         ),
     )
 
+
 @router.post("/login", response_model=AuthResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
@@ -90,13 +97,15 @@ async def login(
     try:
         user = user_service.authenticate(form_data.username, form_data.password)
         if not user:
-            auth_logger.warning(f"Login failed - invalid credentials for: {form_data.username}")
+            auth_logger.warning(
+                f"Login failed - invalid credentials for: {form_data.username}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
                     "message": "Incorrect email or password",
                     "code": "INVALID_CREDENTIALS",
-                    "field": "password"
+                    "field": "password",
                 },
                 headers={"WWW-Authenticate": "Bearer"},
             )
@@ -109,10 +118,12 @@ async def login(
     except HTTPException:
         raise
     except Exception as e:
-        auth_logger.error(f"Login failed for {form_data.username}: {str(e)}", exc_info=True)
+        auth_logger.error(
+            f"Login failed for {form_data.username}: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": "Login failed", "code": "LOGIN_ERROR"}
+            detail={"message": "Login failed", "code": "LOGIN_ERROR"},
         )
 
     return AuthResponse(
@@ -128,12 +139,14 @@ async def login(
         ),
     )
 
+
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout() -> dict[str, str]:
     """Logout user."""
     # Since we're using JWT, we don't need to do anything server-side
     # The client should clear the tokens from local storage
     return {"status": "success"}
+
 
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh_token(
@@ -147,8 +160,8 @@ async def refresh_token(
             detail={
                 "message": "Invalid refresh token",
                 "code": "INVALID_REFRESH_TOKEN",
-                "field": "token"
-            }
+                "field": "token",
+            },
         )
 
     user_service = UserService(db)
@@ -159,8 +172,8 @@ async def refresh_token(
             detail={
                 "message": "User not found",
                 "code": "USER_NOT_FOUND",
-                "field": "token"
-            }
+                "field": "token",
+            },
         )
 
     # Create new tokens
