@@ -6,6 +6,7 @@ import { TestErrorBoundary } from '../../../../test/utils/TestErrorBoundary';
 import { server } from '../../../../lib/test/integration/server';
 import { AUTH_QUERY_KEY } from '../../hooks/useAuthQuery';
 import { http, HttpResponse } from 'msw';
+import { Button } from '@headlessui/react';
 
 // Register MSW handlers for this test suite
 beforeAll(() => {
@@ -91,20 +92,20 @@ describe('Auth Provider Hierarchy', () => {
             <div data-testid="auth-state">
               {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
             </div>
-            <button
+            <Button
               onClick={() =>
                 login({ email: 'test@example.com', password: 'password123' })
               }
             >
               Login
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() =>
                 register({ email: 'test@example.com', password: 'password123' })
               }
             >
               Register
-            </button>
+            </Button>
           </div>
         );
       };

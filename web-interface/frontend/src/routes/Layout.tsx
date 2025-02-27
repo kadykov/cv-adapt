@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthState, useLogoutMutation } from '../features/auth/hooks';
 import { ROUTES } from './paths';
+import { Button } from '@headlessui/react';
 
 /**
  * Main layout component that handles navigation and auth state display.
@@ -33,14 +34,14 @@ export function Layout() {
               <Link to={ROUTES.JOBS.LIST} className="btn btn-ghost">
                 Jobs
               </Link>
-              <button
+              <Button
                 type="button"
                 onClick={() => logout()}
                 className="btn btn-ghost"
                 disabled={isLoggingOut}
               >
                 Logout
-              </button>
+              </Button>
             </>
           ) : (
             <Link to={ROUTES.AUTH} className="btn btn-primary">

@@ -5,6 +5,7 @@ import { getTestApiUrl } from '../../../../lib/test/url-helper';
 import { CreateJobPage, EditJobPage, JobDetailPage } from '../JobPages';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../auth/components/AuthProvider';
+import { Button } from '@headlessui/react';
 
 interface JobFormProps {
   mode: 'create' | 'edit';
@@ -22,8 +23,8 @@ function JobDetailView() {
 vi.mock('../JobForm', () => ({
   JobForm: ({ mode, onSuccess, onCancel }: JobFormProps) => (
     <div>
-      Job Form ({mode})<button onClick={onSuccess}>Save</button>
-      <button onClick={onCancel}>Cancel</button>
+      Job Form ({mode})<Button onClick={onSuccess}>Save</Button>
+      <Button onClick={onCancel}>Cancel</Button>
     </div>
   ),
 }));

@@ -2,13 +2,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { Auth } from '../Auth';
+import { Button } from '@headlessui/react';
 
 // Mock the login/register forms
 vi.mock('../../features/auth/components/LoginForm', () => ({
   LoginForm: ({ onSuccess }: { onSuccess: () => void }) => (
     <div>
       Login Form
-      <button onClick={onSuccess}>Submit Login</button>
+      <Button onClick={onSuccess}>Submit Login</Button>
     </div>
   ),
 }));
@@ -17,7 +18,7 @@ vi.mock('../../features/auth/components/RegisterForm', () => ({
   RegisterForm: ({ onSuccess }: { onSuccess: () => void }) => (
     <div>
       Register Form
-      <button onClick={onSuccess}>Submit Register</button>
+      <Button onClick={onSuccess}>Submit Register</Button>
     </div>
   ),
 }));

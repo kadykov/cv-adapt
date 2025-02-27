@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Badge } from '../../../lib/components/Badge';
 import { useJob } from '../hooks/useJob';
 import { useJobMutations } from '../hooks/useJobMutations';
+import { Button } from '@headlessui/react';
 
 interface JobDetailProps {
   id: number;
@@ -48,9 +49,9 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
             </span>
           </div>
           <div className="card-actions justify-end mt-4">
-            <button className="btn btn-primary" onClick={() => navigate(-1)}>
+            <Button className="btn btn-primary" onClick={() => navigate(-1)}>
               Go Back
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -105,21 +106,21 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
               />
             ) : (
               <>
-                <button
+                <Button
                   className="btn btn-error"
                   onClick={handleDelete}
                   aria-label="Delete job"
                 >
                   Delete
-                </button>
+                </Button>
                 {onEdit && (
-                  <button
+                  <Button
                     className="btn btn-primary"
                     onClick={onEdit}
                     aria-label="Edit job"
                   >
                     Edit
-                  </button>
+                  </Button>
                 )}
               </>
             )}

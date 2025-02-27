@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LoginForm } from '../features/auth/components/LoginForm';
 import { RegisterForm } from '../features/auth/components/RegisterForm';
 import { ROUTES } from './paths';
+import { Button } from '@headlessui/react';
 
 type LocationState = {
   from?: string | { pathname: string };
@@ -40,14 +41,14 @@ export function Auth() {
 
           <div className="divider">OR</div>
 
-          <button
+          <Button
             className="btn btn-ghost"
             onClick={() => setIsLogin(!isLogin)}
           >
             {isLogin
               ? 'Need an account? Sign up'
               : 'Already have an account? Sign in'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
