@@ -1,10 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { JobForm } from './JobForm';
 import { JobDetail } from './JobDetail';
+import { JobList } from './JobList';
 import { ROUTES } from '../../../routes/paths';
-import { useJob } from '../hooks/useJob'; // Import useJob hook
-import { LanguageCode } from '@/lib/language/types'; // Import LanguageCode type
-// import { Loading } from '@/lib/components/Loading'; // Removed Loading import
+import { useJob } from '../hooks/useJob';
+import { LanguageCode } from '@/lib/language/types';
+
+// Wrapper for JobList with navigation
+export function JobListPage() {
+  const navigate = useNavigate();
+  return (
+    <JobList onJobSelect={(jobId) => navigate(ROUTES.JOBS.DETAIL(jobId))} />
+  );
+}
 
 // Wrapper for the JobForm with required props
 export function CreateJobPage() {
@@ -51,7 +59,10 @@ export function EditJobPage() {
 // Wrapper for JobDetail with parsed ID
 export function JobDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const jobId = parseInt(id!, 10);
 
-  return <JobDetail id={jobId} />;
+  return (
+    <JobDetail id={jobId} onEdit={() => navigate(ROUTES.JOBS.EDIT(jobId))} />
+  );
 }

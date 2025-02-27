@@ -7,8 +7,8 @@ import { Home } from './routes/Home';
 import { Auth } from './routes/Auth';
 import { ROUTES } from './routes/paths';
 // Import job catalog components
-import { JobList } from './features/job-catalog/components/JobList';
 import {
+  JobListPage,
   CreateJobPage,
   EditJobPage,
   JobDetailPage,
@@ -36,7 +36,7 @@ function App() {
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
-                <Route path={ROUTES.JOBS.LIST} element={<JobList />} />
+                <Route path={ROUTES.JOBS.LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOBS.CREATE} element={<CreateJobPage />} />
                 <Route
                   path={ROUTES.JOBS.DETAIL(':id')}

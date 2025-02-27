@@ -13,8 +13,8 @@ import {
   addIntegrationHandlers,
 } from '../../../../lib/test/integration';
 import type { ReactNode } from 'react';
-import { JobList } from '../../components/JobList';
 import {
+  JobListPage,
   CreateJobPage,
   EditJobPage,
   JobDetailPage,
@@ -108,7 +108,7 @@ describe('Job Operations Integration', () => {
         <Route path="/" element={<Layout />}>
           <Route element={<ProtectedRoute />}>
             <Route index element={<div>Welcome to CV Adapt</div>} />
-            <Route path={ROUTES.JOBS.LIST} element={<JobList />} />
+            <Route path={ROUTES.JOBS.LIST} element={<JobListPage />} />
             <Route path={ROUTES.JOBS.CREATE} element={<CreateJobPage />} />
             <Route path={ROUTES.JOBS.EDIT(':id')} element={<EditJobPage />} />
             <Route
@@ -308,6 +308,35 @@ describe('Job Operations Integration', () => {
     // Should not see deleted job in the list
     await waitFor(() => {
       expect(screen.queryByText('Frontend Developer')).not.toBeInTheDocument();
+    });
+  });
+
+  test('should navigate from list to detail and edit pages', async () => {
+    const user = userEvent.setup();
+    await renderWithAuth([ROUTES.JOBS.LIST]);
+
+    // Click on the job card to navigate to detail page
+    await waitFor(() => {
+      expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('Frontend Developer'));
+
+    // Should see job details
+    await waitFor(() => {
+      expect(screen.getByRole('article')).toBeInTheDocument();
+      expect(screen.getByText('Building user interfaces')).toBeInTheDocument();
+    });
+
+    // Click edit button
+    const editButton = screen.getByRole('button', { name: /edit job/i });
+    await user.click(editButton);
+
+    // Should see the edit form
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /save changes/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/title/i)).toHaveValue('Frontend Developer');
     });
   });
 
