@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Listbox,
   ListboxButton,
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/react';
+import { ROUTES } from '../../../routes/paths';
 import { JobCard } from './JobCard';
 import { useJobs } from '../hooks/useJobs';
 import type { ApiError } from '../../../lib/api/client';
@@ -51,7 +53,10 @@ export function JobList({ onJobSelect }: JobListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <Link to={ROUTES.JOBS.CREATE} className="btn btn-primary">
+          Add Job
+        </Link>
         <Listbox value={selectedLang} onChange={setSelectedLang}>
           <div className="relative w-48">
             <ListboxButton className="relative w-full cursor-default rounded-lg bg-base-200 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-75 focus-visible:ring-offset-2">

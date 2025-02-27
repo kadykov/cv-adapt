@@ -344,9 +344,14 @@ describe('Job Operations Integration', () => {
     const user = userEvent.setup();
     await renderWithAuth([ROUTES.JOBS.LIST]);
 
-    // Click "Add Job" link in the navigation
-    const addJobLink = screen.getByText('Add Job');
-    await user.click(addJobLink);
+    // Wait for jobs list to load
+    await waitFor(() => {
+      expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
+    });
+
+    // Click "Add Job" button in the JobList
+    const addJobButton = screen.getByRole('link', { name: /add job/i });
+    await user.click(addJobButton);
 
     // Should see the create job form
     await waitFor(() => {

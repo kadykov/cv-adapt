@@ -142,6 +142,17 @@ describe('JobList', () => {
     });
   });
 
+  it('renders Add Job button with correct link', async () => {
+    setTestAuthToken();
+    render(<JobList />);
+
+    await waitFor(() => {
+      const addJobButton = screen.getByRole('link', { name: /add job/i });
+      expect(addJobButton).toBeInTheDocument();
+      expect(addJobButton).toHaveAttribute('href', '/jobs/new');
+    });
+  });
+
   it('calls onJobSelect when a job is clicked', async () => {
     setTestAuthToken();
     const handleSelect = vi.fn();

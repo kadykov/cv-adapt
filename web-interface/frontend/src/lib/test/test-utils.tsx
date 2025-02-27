@@ -8,6 +8,7 @@ import {
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactElement, type ReactNode } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 
 // Create a custom render function that includes providers
 function customRender(
@@ -24,7 +25,9 @@ function customRender(
 
   return rtlRender(ui, {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>{children}</MemoryRouter>
+      </QueryClientProvider>
     ),
     ...options,
   });
