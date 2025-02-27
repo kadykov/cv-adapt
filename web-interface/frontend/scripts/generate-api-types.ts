@@ -1,9 +1,9 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const execAsync = promisify(exec);
+const execAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SCHEMA_PATH = path.resolve(
@@ -16,7 +16,8 @@ async function generateTypes() {
   try {
     console.log('Generating API types...');
     await execAsync(
-      `npx openapi-typescript ${SCHEMA_PATH} --output ${OUTPUT_PATH}`,
+      'npx',
+      ['openapi-typescript', SCHEMA_PATH, '--output', OUTPUT_PATH],
     );
     console.log('Types generated successfully!');
   } catch (error) {
