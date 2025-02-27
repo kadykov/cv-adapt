@@ -13,11 +13,11 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "pretest": "npm run generate-api-types",
-    "test": "vitest --config vitest.config.ts",
-    "test:unit": "vitest --config vitest.config.ts",
-    "test:integration": "vitest --config vitest.integration.config.ts",
+    "test": "vitest",
+    "test:unit": "vitest --project unit",
+    "test:integration": "vitest --project integration",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run",
+    "test:ci": "vitest run --coverage",
     "generate-api-types": "tsx scripts/generate-api-types.ts"
   },
   "dependencies": {

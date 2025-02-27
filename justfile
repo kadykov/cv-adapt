@@ -67,7 +67,6 @@ all:
     just test-backend
     just export-openapi
     just generate-types
-    just test-frontend-all
     just test-frontend-cov
     just type-check-frontend
     just docs
@@ -132,11 +131,10 @@ test-frontend-all:
     just test-frontend
     just test-frontend-integration
 
-# Run frontend tests with coverage
+# Run frontend tests with coverage (unit and integration tests together)
 test-frontend-cov:
     mkdir -p web-interface/frontend/coverage/.tmp
-    cd web-interface/frontend && npm run test -- --coverage
-    cd web-interface/frontend && npm run test:integration -- --coverage
+    cd web-interface/frontend && npm run test:coverage
 
 # Run frontend linting
 lint-frontend:

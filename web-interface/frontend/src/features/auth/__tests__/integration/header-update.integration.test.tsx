@@ -191,18 +191,24 @@ describe('Header Update Timing', () => {
     // Click logout
     await user.click(screen.getByText(/logout/i));
 
-    // Verify header updates and state is cleared, regardless of API failure
-    await waitFor(() => {
-      expect(screen.getByText(/login/i)).toBeInTheDocument();
-      expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
-    });
+    // Give the UI a chance to update after the logout action
+    await waitFor(
+      () => {
+        const nav = screen.getByRole('navigation');
+        expect(within(nav).getByText(/login/i)).toBeInTheDocument();
+        expect(within(nav).queryByText(/logout/i)).not.toBeInTheDocument();
+      },
+      { timeout: 2000 }, // Increased timeout to account for API delay
+    );
 
     // Verify we stay on auth page
     expect(window.location.pathname).toBe('/auth');
 
-    // Verify UI state persists even after API failure
+    // Wait for the failed API call to complete and verify UI state persists
+    await new Promise((resolve) => setTimeout(resolve, 1500)); // Wait longer than the API delay
     const nav = screen.getByRole('navigation');
     expect(within(nav).getByText(/login/i)).toBeInTheDocument();
+    expect(within(nav).queryByText(/logout/i)).not.toBeInTheDocument();
   });
 
   afterEach(() => {

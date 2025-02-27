@@ -5,10 +5,6 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/lib/test/setup.ts'],
-      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
       reporters: ['dot'],
       watch: false,
       coverage: {
@@ -20,6 +16,7 @@ export default mergeConfig(
           'src/**/*.test.{js,jsx,ts,tsx}',
           'src/lib/test/**',
         ],
+        all: true,
       },
     },
   }),
