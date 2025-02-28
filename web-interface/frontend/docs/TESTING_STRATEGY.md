@@ -8,23 +8,22 @@ Our testing approach follows a comprehensive strategy that ensures code quality,
 
 ```mermaid
 flowchart TD
-    A[Contract Tests] --> B[Integration Tests]
-    B --> C[Unit Tests]
+    A[Integration Tests] --> B[Unit Tests]
 
-    style A fill:#e1f5fe
-    style B fill:#e8f5e9
-    style C fill:#fff3e0
+    style A fill:#e8f5e9
+    style B fill:#fff3e0
 ```
 
+## Type Safety & API Contract
+
+We ensure API contract compliance through:
+- Generated TypeScript types from OpenAPI schema
+- Automatic type generation in CI/CD pipeline
+- Type checking during development and builds
+- Integration tests using typed API responses
+- MSW handlers conforming to API types
+
 ## Test Types
-
-### Contract Tests
-
-- OpenAPI schema validation
-- Response type checking
-- Error handling verification
-- API path consistency
-- Type safety enforcement
 
 ### Integration Tests
 
@@ -223,14 +222,72 @@ mockUnauthenticatedState()
    - Component re-renders
    - Network request optimization
 
+## Test Configuration
+
+### Vitest Workspace
+
+We use Vitest workspaces to organize our tests into separate projects with specific configurations:
+
+```typescript
+// vitest.workspace.ts
+export default defineWorkspace([
+  {
+    // Unit tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/setup.ts'],
+      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
+      exclude: ['src/**/__tests__/integration/**'],
+    },
+  },
+  {
+    // Integration tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/integration/setup.ts'],
+      include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
+      testTimeout: 15000,
+      hookTimeout: 15000,
+      maxConcurrency: 1,
+      isolate: true,
+      sequence: {
+        shuffle: false
+      },
+      deps: {
+        optimizer: {
+          web: {
+            include: ['@testing-library/*'],
+          },
+        },
+      },
+    },
+  },
+]);
+```
+
+Key features of the workspace configuration:
+- Separate configurations for unit and integration tests
+- Extended timeout for integration tests to handle async operations
+- Single test concurrency for integration tests to prevent race conditions
+- Disabled test shuffling for more predictable test runs
+- Proper environment and setup file configuration for each test type
+- Shared coverage configuration through base vitest.config.ts
+
 ## Test Scripts
 
 ```json
 {
   "test": "vitest",
+  "test:unit": "vitest --project unit",
+  "test:integration": "vitest --project integration",
   "test:coverage": "vitest run --coverage",
-  "test:ui": "vitest --ui",
-  "test:integration": "vitest integration",
+  "test:ci": "vitest run --coverage",
   "pretest": "npm run generate-api-types"
 }
 ```

@@ -78,15 +78,21 @@ nav:
       - Custom Renderers: how-to/custom-renderers.md
       - Testing Generators: how-to/testing-generators.md
       - Frontend Testing: how-to/frontend-testing.md
+      - Implement Job Catalog: how-to/implement-job-catalog.md
   - Reference:
       - reference/index.md
       - API:
+          - Authentication: reference/api/auth.md
+          - Conventions: reference/api/conventions.md
           - Core: reference/api/core.md
           - Models: reference/api/models.md
           - Services: reference/api/services.md
           - Renderers: reference/api/renderers.md
+          - Web: reference/api/web.md
   - Explanation:
       - explanation/index.md
       - Architecture: explanation/architecture.md
       - Design Principles: explanation/design-principles.md
+      - Frontend Architecture: explanation/frontend-architecture.md
       - Multilingual System: explanation/multilingual-system.md
+      - Persistence: explanation/persistence.md

@@ -2,130 +2,363 @@
 
 ## Overview
 
-The job description catalog is a core feature that allows users to manage job descriptions. This guide covers both implementation details and testing strategy.
+The job description catalog is a core feature that allows users to manage multilingual job descriptions. This guide covers implementation details, language support, and authentication integration.
 
 ## Architecture
 
-### Component Structure
+### Feature Organization
 ```
 src/features/job-catalog/
-├── components/
-│   ├── JobList.tsx         # Main list of job descriptions
-│   ├── JobForm.tsx         # Form for creating/editing jobs
-│   └── JobDetail.tsx       # Detailed view of a single job
-├── api/
-│   ├── jobsApi.ts         # API functions for job operations
+├── components/              # UI Components
+│   ├── JobList.tsx         # Job grid with filtering
+│   ├── JobForm/            # Forms with validation
+│   │   ├── index.tsx
+│   │   ├── validation.ts
+│   │   └── hooks.ts
+│   ├── JobDetail.tsx       # Detailed view
+│   └── language/           # Language components
+│       ├── LanguageFilter.tsx
+│       └── LanguageBadge.tsx
+├── api/                    # API Integration
+│   ├── jobsApi.ts         # API functions
 │   └── __tests__/         # API tests
 │       ├── jobsApi.test.ts
-│       └── jobsApi.contract.test.ts
-└── components/__tests__/   # Component tests
-    ├── JobList.test.tsx
-    ├── JobForm.test.tsx
-    └── JobDetail.test.tsx
+│       ├── jobsApi.contract.test.ts
+│       └── jobsApi.integration.test.ts
+├── hooks/                  # Data Management
+│   ├── useJobs.ts         # Query hooks
+│   ├── useJobMutations.ts # Mutations
+│   └── useJobLanguage.ts  # Language state
+└── __tests__/             # Feature Tests
+    ├── unit/
+    └── integration/
 ```
 
-## Implementation Status ✓
+### Data Flow
+```mermaid
+graph TD
+    A[API Client] --> B[React Query Hooks]
+    B --> C[Components]
+    C --> D[User Actions]
+    D --> E[Mutations]
+    E --> A
 
-### API Layer (Completed)
-- [x] CRUD operations in jobsApi.ts
-- [x] Type-safe API function signatures
-- [x] Error handling with custom error types
-- [x] Response data transformation
-
-### Components (Completed)
-1. JobList Component
-   - [x] Responsive grid layout
-   - [x] Loading, error, and empty states
-   - [x] Delete functionality with confirmation
-   - [x] Navigation to detail/edit views
-
-2. JobForm Component
-   - [x] Create and edit modes
-   - [x] Form validation
-   - [x] Error handling
-   - [x] Loading states during submission
-   - [x] Success feedback and redirection
-
-3. JobDetail Component
-   - [x] Complete job information display
-   - [x] Metadata (created/updated dates)
-   - [x] Navigation back to list
-   - [x] Edit button with routing
-
-### Routes (Completed)
-```
-/jobs                 # List all jobs
-/jobs/new            # Create new job
-/jobs/:id            # View job details
-/jobs/:id/edit       # Edit existing job
+    F[Language Context] --> C
+    G[Auth Context] --> C
 ```
 
-## Testing Implementation ✓
+## Implementation Details
 
-### Unit Tests
-1. API Tests (jobsApi.test.ts):
-   - [x] CRUD operation tests
-   - [x] Error handling tests
-   - [x] Response parsing tests
-   - [x] Mock fetch implementation
+### 1. Language Support
 
-2. Contract Tests (jobsApi.contract.test.ts):
-   - [x] Type validation for responses
-   - [x] Type validation for requests
-   - [x] Type compatibility checks
-   - [x] Null/undefined handling
+1. **Language System Integration**
+   ```typescript
+   // hooks/useJobLanguage.ts
+   import { useLanguageContext } from '@/lib/language';
+   import { LanguageCode } from '@/generated/api';
 
-3. Component Tests:
-   - JobList.test.tsx (7 tests)
-     - [x] Initial loading state
-     - [x] Successful data rendering
-     - [x] Error state handling
-     - [x] Empty state UI
-     - [x] Delete functionality
-     - [x] Navigation links
-     - [x] Action buttons
+   export const useJobLanguage = () => {
+     const { language } = useLanguageContext();
+     const [filter, setFilter] = useState<LanguageCode | null>(null);
 
-   - JobForm.test.tsx (7 tests)
-     - [x] Create mode rendering
-     - [x] Edit mode with data
-     - [x] Form submission
-     - [x] Validation behavior
-     - [x] Loading states
-     - [x] Error handling
-     - [x] Success callbacks
+     // Filter jobs by language
+     const filterJobs = (jobs: Job[]) => {
+       if (!filter) return jobs;
+       return jobs.filter(job => job.language === filter);
+     };
 
-   - JobDetail.test.tsx (7 tests)
-     - [x] Loading state
-     - [x] Data display
-     - [x] Error handling
-     - [x] Not found state
-     - [x] Action buttons
-     - [x] Date formatting
-     - [x] Metadata display
+     return { filter, setFilter, filterJobs };
+   };
+   ```
 
-### Running Tests
-```bash
-# Run all frontend tests
-cd web-interface/frontend
-npm test
+2. **Language Filter Component**
+   ```typescript
+   // components/language/LanguageFilter.tsx
+   import { Menu } from '@headlessui/react';
+   import { LanguageCode } from '@/generated/api';
 
-# Run specific test files
-npm test src/features/job-catalog/api/__tests__/jobsApi.test.ts
-npm test src/features/job-catalog/components/__tests__/JobList.test.tsx
+   export const LanguageFilter = () => {
+     const { filter, setFilter } = useJobLanguage();
+     const { languages } = useLanguageContext();
+
+     return (
+       <Menu as="div" className="relative">
+         <Menu.Button>Filter by Language</Menu.Button>
+         <Menu.Items>
+           {languages.map(lang => (
+             <Menu.Item key={lang}>
+               {({ active }) => (
+                 <button
+                   className={active ? 'bg-primary-100' : ''}
+                   onClick={() => setFilter(lang)}
+                 >
+                   {lang}
+                 </button>
+               )}
+             </Menu.Item>
+           ))}
+         </Menu.Items>
+       </Menu>
+     );
+   };
+   ```
+
+### 2. Auth Integration
+
+1. **Protected Routes**
+   ```typescript
+   // routes/jobs.tsx
+   import { ProtectedRoute } from '@/features/auth';
+
+   export const JobRoutes = () => (
+     <ProtectedRoute>
+       <Routes>
+         <Route path="/" element={<JobList />} />
+         <Route path="/new" element={<JobForm />} />
+         <Route path="/:id" element={<JobDetail />} />
+         <Route path="/:id/edit" element={<JobForm />} />
+       </Routes>
+     </ProtectedRoute>
+   );
+   ```
+
+2. **Authenticated API Calls**
+   ```typescript
+   // api/jobsApi.ts
+   import { useAuthHeader } from '@/features/auth';
+
+   export const jobsApi = {
+     getJobs: async () => {
+       const headers = useAuthHeader();
+       return axios.get('/api/v1/jobs', { headers });
+     },
+     // Other API functions
+   };
+   ```
+
+### 3. Components
+
+1. **Job List with Language Filtering**
+   ```typescript
+   // components/JobList.tsx
+   export const JobList = () => {
+     const { data: jobs, isLoading } = useJobs();
+     const { filterJobs } = useJobLanguage();
+     const filteredJobs = filterJobs(jobs ?? []);
+
+     return (
+       <div>
+         <header className="flex justify-between">
+           <h1>Jobs</h1>
+           <LanguageFilter />
+         </header>
+
+         {isLoading ? (
+           <JobsLoadingGrid />
+         ) : (
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {filteredJobs.map(job => (
+               <JobCard
+                 key={job.id}
+                 job={job}
+                 language={job.language}
+               />
+             ))}
+           </div>
+         )}
+       </div>
+     );
+   };
+   ```
+
+2. **Job Form with Language Selection**
+   ```typescript
+   // components/JobForm/index.tsx
+   export const JobForm = () => {
+     const { languages } = useLanguageContext();
+     const { createJob } = useJobMutations();
+
+     return (
+       <form onSubmit={handleSubmit(onSubmit)}>
+         {/* ... other fields */}
+         <Select
+           name="language"
+           options={languages}
+           label="Job Language"
+           rules={{ required: 'Language is required' }}
+         />
+       </form>
+     );
+   };
+   ```
+
+## Testing Strategy
+
+### 1. Unit Tests
+
+1. **Component Tests**
+   ```typescript
+   // components/__tests__/unit/JobList.test.tsx
+   describe('JobList', () => {
+     it('filters jobs by language', async () => {
+       const jobs = [
+         createJob({ language: 'en' }),
+         createJob({ language: 'de' })
+       ];
+
+       server.use(
+         rest.get('/api/v1/jobs', (_, res, ctx) => {
+           return res(ctx.json(jobs));
+         })
+       );
+
+       render(<JobList />, { wrapper });
+
+       // Wait for jobs to load
+       await screen.findByText(jobs[0].title);
+
+       // Filter by language
+       await userEvent.click(screen.getByText(/filter/i));
+       await userEvent.click(screen.getByText(/english/i));
+
+       // Verify filtering
+       expect(screen.queryByText(jobs[1].title)).not.toBeInTheDocument();
+     });
+   });
+   ```
+
+2. **Hook Tests**
+   ```typescript
+   // hooks/__tests__/useJobLanguage.test.ts
+   describe('useJobLanguage', () => {
+     it('filters jobs correctly', () => {
+       const { result } = renderHook(() => useJobLanguage());
+
+       act(() => {
+         result.current.setFilter('en');
+       });
+
+       const jobs = [
+         { id: 1, language: 'en' },
+         { id: 2, language: 'de' }
+       ];
+
+       const filtered = result.current.filterJobs(jobs);
+       expect(filtered).toHaveLength(1);
+       expect(filtered[0].language).toBe('en');
+     });
+   });
+   ```
+
+### 2. Integration Tests
+
+1. **Job Operations**
+   ```typescript
+   // __tests__/integration/job-operations.test.tsx
+   describe('Job Operations', () => {
+     it('creates and filters jobs', async () => {
+       // Login user
+       await loginUser();
+
+       // Create job
+       await navigateToNewJob();
+       await fillJobForm({
+         title: 'Test Job',
+         language: 'en'
+       });
+       await submitForm();
+
+       // Filter jobs
+       await filterByLanguage('en');
+
+       // Verify job is visible
+       expect(screen.getByText('Test Job')).toBeInTheDocument();
+     });
+   });
+   ```
+
+2. **Auth Integration**
+   ```typescript
+   // __tests__/integration/auth-protection.test.tsx
+   describe('Auth Protection', () => {
+     it('redirects to login when unauthorized', async () => {
+       // Clear auth
+       queryClient.clear();
+       removeSavedTokens();
+
+       // Try to access jobs
+       navigate('/jobs');
+
+       // Verify redirect
+       expect(await screen.findByText(/sign in/i)).toBeInTheDocument();
+       expect(window.location.pathname).toBe('/login');
+     });
+   });
+   ```
+
+## API Integration
+
+### 1. Type Generation
+```typescript
+// scripts/generate-api-types.ts
+import { generateApi } from '@modelcontextprotocol/openapi-typescript';
+
+generateApi({
+  input: '../backend/docs/api/openapi.json',
+  output: './src/generated/api.ts',
+  exportClient: true,
+  prettier: true
+});
+```
+
+### 2. React Query Hooks
+```typescript
+// hooks/useJobs.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { jobsApi } from '../api/jobsApi';
+import type { Job } from '@/generated/api';
+
+export const useJobs = () => {
+  return useQuery<Job[]>({
+    queryKey: ['jobs'],
+    queryFn: jobsApi.getJobs
+  });
+};
+
+export const useJobMutations = () => {
+  const queryClient = useQueryClient();
+
+  const createJob = useMutation({
+    mutationFn: jobsApi.createJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    }
+  });
+
+  return { createJob };
+};
 ```
 
 ## Future Enhancements
 
-Future improvements that can be added:
-- Search and filtering
-- Pagination for large lists
-- Advanced sorting
-- Job templates
-- Bulk operations
-- Export functionality
+### Planned Features
+1. **Advanced Filtering**
+   - Title search
+   - Date ranges
+   - Multiple language selection
+   - Custom filter combinations
 
-The current implementation provides a solid foundation for these future features with:
-- Type-safe API layer
-- Component-based architecture
-- Comprehensive test coverage
-- Clear separation of concerns
+2. **Job Templates**
+   - Template management
+   - Language-specific templates
+   - Quick job creation
+
+3. **Bulk Operations**
+   - Multi-select jobs
+   - Batch language updates
+   - Bulk delete with confirmation
+
+4. **Export/Import**
+   - Export jobs as JSON/CSV
+   - Import from file
+   - Batch language translation

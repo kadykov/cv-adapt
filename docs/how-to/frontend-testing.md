@@ -1,254 +1,349 @@
 # Frontend Testing
 
-This guide explains the different types of tests in the frontend and how to run them.
+This guide explains the frontend testing infrastructure and best practices.
 
-## Types of Tests
+## Testing Infrastructure
 
-### 1. Unit Tests
+### 1. Testing Pyramid
 
-Unit tests verify individual components and functions in isolation. These tests use Vitest and React Testing Library.
+```mermaid
+flowchart TD
+    A[Integration Tests] --> B[Unit Tests]
 
-```bash
-just test-frontend
+    style A fill:#e8f5e9
+    style B fill:#fff3e0
 ```
 
-### 2. Integration Tests
+### 2. API Contract & Type Safety
 
-Integration tests verify how multiple components work together. These tests use MSW (Mock Service Worker) to mock API calls.
+We ensure API contract compliance through:
 
-```bash
-just test-frontend-integration
-```
-
-### 3. Contract Tests
-
-Contract tests ensure that our frontend's API expectations match the backend's OpenAPI specification. These tests:
-- Validate that mock responses match the OpenAPI schema
-- Catch breaking changes in API contracts early
-- Ensure consistency between frontend and backend
-
-```bash
-just test-frontend-contract
-```
-
-## Test Files Organization
-
-```
-web-interface/frontend/src/tests/
-├── unit/               # Unit tests for components
-├── integration/        # Integration tests
-├── contract.test.ts   # Contract tests
-└── mocks/             # Mock handlers and server setup
-    ├── server.ts
-    ├── handlers.ts
-    └── generate-handlers.ts
-```
-
-## Mock Service Worker (MSW)
-
-We use MSW to intercept and mock API requests in tests. MSW handlers are generated from the OpenAPI specification to ensure consistency.
-
-### Handler Generation
-
-Handlers are automatically generated from the OpenAPI schema:
-
-1. Export the latest OpenAPI schema:
-   ```bash
-   just export-openapi  # Exports schema from backend to frontend
+1. **Type Generation**
+   - Generated TypeScript types from OpenAPI schema
+   - Automatic generation in pretest hook
+   - Integration with CI/CD pipeline
+   ```typescript
+   // Example: Type generation script
+   import { generateTypes } from '@/scripts/generate-api-types';
+   generateTypes(); // Generates types from OpenAPI schema
    ```
 
-2. `generate-handlers.ts` reads the OpenAPI schema
-3. Creates type-safe mock responses
-4. Ensures responses match API contract
+2. **Type Safety**
+   - Strongly typed API clients
+   - MSW handlers using generated types
+   - Response validation in integration tests
+   ```typescript
+   // Example: Typed MSW handler
+   import type { paths } from '@/lib/api/types';
+   type LoginResponse = paths['/auth/login']['post']['responses']['200'];
 
-Example handler generation using Zod schemas:
-```typescript
-import { authResponseSchema } from '../validation/openapi';
+   server.use(
+     http.post('/auth/login', () => {
+       return HttpResponse.json<LoginResponse>({
+         // Type-checked response
+       });
+     }),
+   );
+   ```
 
-// Generate mock responses that match our Zod schemas
-const generateAuthResponse = (): AuthResponse => ({
-  access_token: 'mock_access_token',
-  refresh_token: 'mock_refresh_token',
-  token_type: 'bearer',
-  user: {
-    id: 1,
-    email: 'user@example.com',
-    created_at: new Date().toISOString(),
-    personal_info: null
-  }
-});
+3. **Integration Testing**
+   - Schema-based response validation
+   - Type-safe request/response handling
+   - API contract verification through typed tests
+   ```typescript
+   // Example: Type-safe API test
+   test('authenticates user', async () => {
+     const response = await loginUser(credentials);
+     expectTypeOf(response).toMatchTypeOf<LoginResponse>();
+   });
+   ```
 
-// Validate mock response matches schema
-const mockResponse = generateAuthResponse();
-authResponseSchema.parse(mockResponse); // Will throw if invalid
+### 3. Test Types
+
+1. **Integration Tests**
+   - Complete user flows
+   - Feature interactions
+   - State management
+   - API contract compliance
+   - Real-world scenarios
+   - Loading states
+   - Error handling
+   ```bash
+   just test-frontend-integration
+   ```
+
+3. **Unit Tests**
+   - Component isolation
+   - Prop validation
+   - Event handling
+   - State changes
+   - Side effects
+   ```bash
+   just test-frontend
+   ```
+
+## Project Structure
+
+```
+web-interface/frontend/
+├── src/
+│   ├── features/
+│   │   └── feature-name/
+│   │       └── __tests__/
+│   │           ├── unit/
+│   │           │   └── component.test.tsx
+│   │           └── integration/
+│   │               └── feature.test.tsx
+│   └── lib/
+│       └── test/
+│           ├── setup/
+│           │   ├── unit.ts
+│           │   └── integration.ts
+│           ├── handlers/
+│           │   ├── generator.ts
+│           │   └── auth.ts
+│           ├── utils/
+│           │   ├── render.tsx
+│           │   ├── url-helper.ts
+│           │   └── setup-msw.ts
+│           └── config/
+│               └── api.ts
+├── vitest.workspace.ts
+├── vitest.config.ts
+└── vitest.integration.config.ts
 ```
 
-Example auth component test:
+## Testing Infrastructure
+
+### 1. URL Management
+
 ```typescript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { LoginForm } from '../features/auth/components/LoginForm';
-import { AuthProvider } from '../features/auth/context/AuthContext';
-import { BrowserRouter } from 'react-router-dom';
+// lib/api/config.ts
+export const API_VERSION = 'v1';
+export const API_PREFIX = 'api';
+export const BASE_PATH = `/${API_VERSION}/${API_PREFIX}`;
+
+// lib/test/url-helper.ts
+export function getTestApiUrl(path: string): string {
+  // Sanitize and validate path
+  return `${BASE_PATH}/${cleanPath}`;
+}
+
+// Handler usage
+createGetHandler('jobs', 'JobResponse', mockData);
+// Generates: GET /v1/api/jobs
+```
+
+### 2. MSW Configuration
+
+1. **Handler Generation**
+   ```typescript
+   // lib/test/handlers/generator.ts
+   import { generateHandlers } from './generator';
+   import { paths } from '../../../generated/api';
+
+   export const handlers = generateHandlers<paths>({
+     // Handler configuration with type checking
+     'POST /api/v1/auth/login': {
+       response: {
+         status: 200,
+         data: mockAuthResponse
+       }
+     }
+   });
+   ```
+
+2. **Test Setup**
+   ```typescript
+   // lib/test/utils/setup-msw.ts
+   import { setupServer } from 'msw/node';
+   import { handlers } from '../handlers';
+
+   export const server = setupServer(...handlers);
+
+   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+   afterAll(() => server.close());
+   ```
+
+### 3. Test Utilities
+
+```typescript
+// lib/test/utils/render.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/features/auth/context';
+
+export const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
+};
+```
+
+## Testing Examples
+
+### 1. Component Test
+```typescript
+// features/auth/components/__tests__/unit/LoginForm.test.tsx
+import { render, screen } from '@testing-library/react';
+import { createWrapper } from '@/lib/test/utils/render';
+import { LoginForm } from '../../LoginForm';
 
 describe('LoginForm', () => {
-  it('handles successful login', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
+  const wrapper = createWrapper();
 
-    // Fill form
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    });
+  it('validates form inputs', async () => {
+    render(<LoginForm />, { wrapper });
 
-    // Submit form
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-    // Verify redirect after successful login
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/jobs');
-    });
-  });
-
-  it('displays validation errors', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    // Submit empty form
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Check for validation errors
-    await waitFor(() => {
-      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
-      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
-    });
-  });
-
-  it('handles server errors', async () => {
-    // Mock API to return error
-    server.use(
-      rest.post('/api/v1/auth/login', (req, res, ctx) => {
-        return res(
-          ctx.status(401),
-          ctx.json({
-            detail: {
-              message: "Invalid email or password"
-            }
-          })
-        );
-      })
-    );
-
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoginForm />
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    // Fill and submit form
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'wrong_password' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Verify error message
-    await waitFor(() => {
-      expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
   });
 });
+```
+
+### 2. Integration Test
+```typescript
+// features/job-catalog/__tests__/integration/job-operations.test.tsx
+import { render, screen } from '@testing-library/react';
+import { createWrapper } from '@/lib/test/utils/render';
+import { JobList } from '../../components/JobList';
+import { mockJobs } from '@/lib/test/mocks/jobs';
+import { getTestApiUrl } from '@/lib/test/url-helper';
+
+describe('Job Operations', () => {
+  const wrapper = createWrapper();
+
+  beforeEach(() => {
+    server.use(
+      rest.get(getTestApiUrl('jobs'), (req, res, ctx) => {
+        return res(ctx.json(mockJobs));
+      })
+    );
+  });
+
+  it('displays and filters jobs', async () => {
+    render(<JobList />, { wrapper });
+
+    await screen.findByText(mockJobs[0].title);
+
+    await userEvent.click(screen.getByRole('button', { name: /filter/i }));
+    await userEvent.click(screen.getByText(/english/i));
+
+    expect(screen.queryByText(/deutsche/i)).not.toBeInTheDocument();
+  });
+});
+```
+
+## Test Configuration
+
+### Vitest Workspace
+
+```typescript
+// vitest.workspace.ts
+export default defineWorkspace([
+  {
+    // Unit tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/setup.ts'],
+      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
+      exclude: ['src/**/__tests__/integration/**'],
+    },
+  },
+  {
+    // Integration tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/integration/setup.ts'],
+      include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
+      testTimeout: 15000,
+      hookTimeout: 15000,
+      maxConcurrency: 1,
+      isolate: true,
+      sequence: {
+        shuffle: false
+      }
+    },
+  },
+]);
 ```
 
 ## Running Tests
 
-### All Frontend Tests
-
-To run all frontend tests (unit, integration, and contract):
+### Test Commands
 
 ```bash
-just test-frontend-all
-```
+# Run specific test suites
+just test-frontend          # Unit tests
+just test-frontend-integration  # Integration tests
 
-### With Coverage
-
-To run tests with coverage reporting:
-
-```bash
+# Coverage reporting
 just test-frontend-cov
+
+# Run all tests and coverage
+just test-frontend-all     # All tests with coverage
+
+# Watch mode
+cd web-interface/frontend
+npm run test:watch         # Unit tests
+npm run test:integration   # Integration tests
 ```
 
-### Watch Mode
+### Test Scripts
 
-During development, you can run tests in watch mode:
-
-```bash
-cd web-interface/frontend
-npm run test:watch        # Unit tests
-npm run test:integration  # Integration tests
-npm run test:contract    # Contract tests
+```json
+{
+  "test": "vitest",
+  "test:unit": "vitest --project unit",
+  "test:integration": "vitest --project integration",
+  "test:coverage": "vitest run --coverage",
+  "test:ci": "vitest run --coverage",
+  "pretest": "npm run generate-api-types"
+}
 ```
 
 ## Best Practices
 
-1. **Contract Testing**
-   - Always update contract tests when making API-related changes
-   - Use generated handlers from OpenAPI spec
-   - Keep mock responses in sync with schema
+### 1. Test Organization
+- Co-locate tests with implementation
+- Use descriptive test names
+- Group related tests
+- Maintain test independence
 
-2. **Integration Testing**
-   - Use MSW for API mocking
-   - Test complete user workflows
-   - Verify error handling
+### 2. Testing Standards
+- Use centralized MSW handlers
+- Use getTestApiUrl for all API paths
+- Utilize handler generators
+- Share mock data between tests
+- Test component accessibility
+- Verify loading states
+- Test error scenarios
+- Validate API path consistency
 
-3. **Unit Testing**
-   - Test component rendering
-   - Verify user interactions
-   - Mock dependencies appropriately
+### 3. Coverage Requirements
+- Minimum 80% code coverage
+- Critical paths: 100%
+- Error scenarios
+- Edge cases
 
-## Debugging Tests
-
-- Use `console.error()` for debugging (automatically shown in test output)
-- Run individual test files for focused debugging:
-  ```bash
-  cd web-interface/frontend
-  npm run test src/tests/contract.test.ts
-  ```
-- Use watch mode for faster development cycles
-- Enable verbose logging in vitest with the `--debug` flag:
-  ```bash
-  npm run test:contract -- --debug
-  ```
-
-## Adding New Tests
-
-1. **Contract Tests**
-   - Add test cases in `contract.test.ts`
-   - Update mock handlers if needed
-   - Verify against OpenAPI schema
-
-2. **Integration Tests**
-   - Create new test file in integration/
-   - Use MSW for API mocking
-   - Test complete features
-
-3. **Unit Tests**
-   - Create test file next to component
-   - Focus on component behavior
-   - Mock external dependencies
+### 4. Performance Testing
+- Loading performance
+- React Query caching
+- Component re-renders
+- Network request optimization

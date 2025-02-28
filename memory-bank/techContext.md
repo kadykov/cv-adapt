@@ -76,10 +76,24 @@
    - Test fixtures and utilities
 
 2. **Frontend Testing**
-   - Vitest test runner
-   - React Testing Library
-   - MSW for API mocking
-   - Contract testing with OpenAPI
+   - Vitest Workspace Configuration
+     - Separate unit and integration configs
+     - Environment-specific setup files
+     - Extended timeouts for integration tests
+     - Single test concurrency
+     - Project-based test execution
+
+   - Testing Stack
+     - Vitest test runner
+     - React Testing Library
+     - MSW for API mocking
+     - Contract testing with OpenAPI
+
+   - Test Organization
+     - Feature-based test structure
+     - Shared configuration through workspaces
+     - Environment-specific setup files
+     - Comprehensive coverage reporting
 
 3. **Quality Tools**
    - Pre-commit hooks

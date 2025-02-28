@@ -7,11 +7,32 @@ The frontend application provides a web interface for the CV adaptation system. 
 ## Current Architecture
 
 The frontend is built with:
-- TypeScript for type safety
-- React for UI components
-- Tailwind CSS for styling
+- React 19+ with TypeScript for type safety and modern features
+- React Query for server state management
+- Tailwind CSS with DaisyUI for styling
 - Zod for runtime type validation
-- Vitest for testing
+- Vitest with workspace configuration for testing
+- MSW for API mocking and contract testing
+
+### State Management
+
+1. **Server State**
+   - React Query for data fetching and caching
+   - Centralized hooks for reusable queries
+   - Automated cache invalidation
+   - Type-safe mutations
+
+2. **Auth State**
+   - Centralized auth context with React Query
+   - Token-based authentication
+   - Automatic token refresh
+   - Protected route management
+
+3. **Language System**
+   - Enum-based language validation
+   - Centralized language configuration
+   - Type-safe language selection
+   - Shared language utilities
 
 ## API Integration
 
@@ -28,90 +49,90 @@ For new frontend implementations:
 2. Generate TypeScript types from the schema
 3. Implement contract testing against the schema
 
-## Frontend Implementation
+## Project Organization
 
-The frontend is being reimplemented to address several challenges with the initial version:
+### Feature-Based Structure
+```
+src/
+├── features/           # Feature modules
+│   ├── auth/          # Authentication
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── api/
+│   ├── job-catalog/   # Job management
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── api/
+│   └── cv-editor/     # CV editing
+│       ├── components/
+│       ├── hooks/
+│       └── api/
+├── lib/               # Shared utilities
+│   ├── api/          # API configuration
+│   ├── test/         # Test utilities
+│   └── language/     # Language system
+└── routes/           # Application routing
+```
 
-### Migration Plan
+### Component Architecture
+```mermaid
+graph TD
+    A[Smart Components] --> B[Data Fetching/State]
+    B --> C[Presentational Components]
+    C --> D[UI Components]
 
-#### Phase 1: Project Setup
+    E[Component Patterns]
+    E --> F[React Query Hooks]
+    E --> G[Form Validation]
+    E --> H[Language Context]
+```
 
-1. Initialize new Vite project:
-   ```bash
-   npm create vite@latest frontend-new -- --template react-ts
-   ```
+### Performance Optimizations
+1. **Data Management**
+   - React Query caching strategies
+   - Optimistic updates
+   - Background refetching
+   - Parallel query optimization
 
-2. Port configuration:
-   - TypeScript configuration
-   - ESLint/Prettier setup
-   - Tailwind configuration
-   - Vitest test configuration
-   - Development server setup
-   - Production build pipeline
+2. **Bundle Optimization**
+   - Code splitting by feature
+   - Dynamic imports for routes
+   - Tree shaking
+   - Module/dependency optimization
 
-#### Phase 2: Dependencies Setup
-
-Core dependencies to migrate:
-- Frontend core: react, react-dom, react-router-dom
-- Forms: react-hook-form, @hookform/resolvers
-- API integration: axios, zod
-- UI framework: tailwindcss, daisyui
-- Testing: vitest, @testing-library/react
-
-#### Phase 3: Code Migration
-
-1. Core Features:
-   - Authentication context and flow
-   - API services and type definitions
-   - Routing configuration
-   - Navigation guards
-
-2. Components:
-   - React components migration
-   - Convert Astro pages to React
-   - Update import paths
-   - Client-side navigation implementation
-
-3. Testing:
-   - Test utilities migration
-   - Update test configurations
-   - Verify test coverage
-
-#### Phase 4: Build & Deploy
-
-1. Build Configuration:
-   - Vite production setup
-   - Static asset handling
-   - Bundle optimization
-
-2. CI/CD Updates:
-   - Build script updates
-   - Deployment configuration
-   - Environment variable setup
-
-### Success Metrics
-
-1. Bundle Size:
-   - Target: 40% reduction in initial JavaScript load
-   - Per-route bundle size analysis
-
-2. Performance:
-   - Lighthouse score improvements
-   - First Contentful Paint optimization
-   - Time to Interactive reduction
-
-3. Development Experience:
-   - Build time improvement
-   - Hot reload efficiency
-   - Simplified debugging process
+3. **Development Experience**
+   - Fast refresh enabled
+   - Type checking optimization
+   - Development proxy configuration
+   - Enhanced debugging setup
 
 ## Security Considerations
 
-The frontend implements several security measures:
-- CSRF protection via secure cookie handling
-- Token-based authentication
-- Input validation using Zod schemas
-- Security headers in production builds
+The frontend implements comprehensive security measures:
+
+1. **Authentication**
+   - Token-based authentication with refresh mechanism
+   - Secure token storage in memory
+   - Automatic token refresh handling
+   - Protected route infrastructure
+
+2. **Data Validation**
+   - Runtime validation with Zod schemas
+   - Type-safe API contracts
+   - Input sanitization
+   - Error boundary implementation
+
+3. **API Security**
+   - HTTPS enforcement
+   - API version management
+   - Request/response validation
+   - Error handling standardization
+
+4. **Production Hardening**
+   - Security headers configuration
+   - CSP implementation
+   - Asset integrity verification
+   - Environment variable handling
 
 ## Testing Strategy
 

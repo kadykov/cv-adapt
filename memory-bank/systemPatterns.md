@@ -107,11 +107,16 @@
 
 3. **Testing Pyramid**
    ```
-   Contract Tests (API Schema)
-         ↓
    Integration Tests (Features)
          ↓
    Unit Tests (Components)
+   ```
+
+4. **API Contract Management**
+   ```
+   OpenAPI Schema → Generated Types → Integration Tests
+                                  ↓
+                        Type-Safe API Handlers
    ```
 
 ## API Integration Patterns
@@ -144,7 +149,21 @@
 
 ## Testing Infrastructure Patterns
 
-1. **Test File Organization**
+1. **Workspace Configuration**
+   ```
+   Testing Infrastructure
+         ↓
+   Base Config (vitest.config.ts) → Workspace Projects
+         ↓                              ↓
+   Shared Settings             Project-Specific Settings
+   ```
+   - Separate unit and integration test configs
+   - Extended timeouts for integration tests
+   - Single test concurrency for stability
+   - Environment-specific setup files
+   - Shared coverage configuration
+
+2. **Test File Organization**
    ```
    __tests__/
      integration/      # Integration tests
@@ -156,7 +175,7 @@
        helpers.ts
    ```
 
-2. **Handler Management**
+3. **Handler Management**
    ```
    Testing Infrastructure
          ↓

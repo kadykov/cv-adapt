@@ -90,6 +90,7 @@ When adding new features or making changes:
 
 ### 4. Testing
 
+#### Backend Testing
 - Write tests for all new features
 - Maintain high test coverage
 - Follow existing test patterns
@@ -106,6 +107,39 @@ def test_new_feature():
 
     # Assert
     assert result.is_valid()
+```
+
+#### Frontend Testing
+- Follow the three-tier testing strategy (contract, integration, unit)
+- Use the testing infrastructure from vitest.workspace.ts
+- Follow test file organization guidelines
+- Maintain test coverage requirements
+- Use centralized test utilities and helpers
+
+Example:
+```typescript
+describe('Component', () => {
+  it('handles user interaction', async () => {
+    render(<Component />, { wrapper: createWrapper() });
+
+    await userEvent.click(screen.getByRole('button'));
+
+    expect(screen.getByText(/success/i)).toBeInTheDocument();
+  });
+});
+```
+
+Run frontend tests:
+```bash
+# All frontend tests
+just test-frontend-all
+
+# Specific test types
+just test-frontend          # Unit tests
+just test-frontend-integration  # Integration tests
+
+# With coverage
+just test-frontend-cov
 ```
 
 ## Pull Request Process
@@ -181,6 +215,76 @@ When creating new renderers:
 3. Add comprehensive tests
 4. Document usage and examples
 
+## Working with Frontend
+
+### Type Generation
+
+The frontend uses OpenAPI for type generation:
+
+1. Export schema from backend:
+   ```bash
+   just export-openapi
+   ```
+
+2. Generate TypeScript types:
+   ```bash
+   just generate-types
+   ```
+
+3. Verify mock data matches types:
+   ```bash
+   just verify-types
+   ```
+
+### Component Development
+
+1. Follow feature organization:
+   ```
+   src/features/feature-name/
+   ├── components/     # UI Components
+   ├── hooks/         # Data management
+   ├── api/          # API integration
+   └── __tests__/    # Tests
+   ```
+
+2. Use shared components:
+   ```typescript
+   import { Button, Input } from '@/components/ui';
+   import { createWrapper } from '@/lib/test';
+   ```
+
+3. Implement tests:
+   - Contract tests using OpenAPI schema
+   - Integration tests for complete features
+   - Unit tests for components
+   - Follow coverage requirements:
+     - Minimum 80% overall
+     - Critical paths: 100%
+
+### Frontend Guidelines
+
+1. **State Management**
+   - Use React Query for server state
+   - Local state with hooks
+   - Context for global state
+
+2. **API Integration**
+   - Type-safe API functions
+   - Generated OpenAPI types
+   - MSW for test mocking
+
+3. **Testing**
+   - Component behavior
+   - User interactions
+   - API integrations
+   - Edge cases
+
+4. **Styling**
+   - Tailwind CSS classes
+   - DaisyUI components
+   - Responsive design
+   - Accessibility
+
 ## Issue Guidelines
 
 When creating issues:
@@ -188,7 +292,8 @@ When creating issues:
 1. Use appropriate templates
 2. Provide clear reproduction steps
 3. Include relevant context
-4. Tag appropriately
+4. Specify type (backend/frontend)
+5. Tag appropriately
 
 ## Getting Help
 
