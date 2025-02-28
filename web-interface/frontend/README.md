@@ -1,48 +1,74 @@
-# Astro Starter Kit: Basics
+# Frontend Implementation
 
-```sh
-npm create astro@latest -- --template basics
+## Required Changes
+
+1. Install Dependencies:
+
+```bash
+# Install axios and its types
+npm install axios
+npm install @types/axios --save-dev
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+2. Update Implementation:
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+- [x] Created token service for centralized token management
+- [x] Added axios interceptors for automatic token handling
+- [x] Updated AuthProvider to use token service
+- [x] Standardized login and register flows
+- [ ] Add profile fetching after initial token validation
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+## Current Issues:
 
-## 🚀 Project Structure
+1. Missing Dependencies:
 
-Inside of your Astro project, you'll see the following folders and files:
+- Need to install axios and its types
+- Compilation errors will persist until dependencies are installed
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+2. Profile Fetching:
+
+- Need to implement profile fetching in AuthProvider when token is valid
+- This will ensure proper initialization of auth state
+
+## Next Steps:
+
+1. After installing dependencies:
+
+```bash
+# Verify types are working
+npm run type-check
+
+# Run tests to ensure nothing is broken
+npm run test
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+2. Test Authentication Flow:
 
-## 🧞 Commands
+- Register new user
+- Verify tokens are stored
+- Test protected routes
+- Verify token refresh works
+- Test logout flow
 
-All commands are run from the root of the project, from a terminal:
+3. Add Integration Tests:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+- Add tests for token refresh
+- Add tests for queued requests during refresh
+- Add tests for auth state persistence
 
-## 👀 Want to learn more?
+## Configuration
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+The authentication system uses the following components:
+
+- `token-service.ts`: Manages token storage and validation
+- `axios-interceptors.ts`: Handles automatic token refresh
+- `AuthProvider.tsx`: Manages authentication state
+- `useLoginMutation.ts`: Handles login requests
+
+Tokens are stored in localStorage with the following keys:
+
+- `accessToken`
+- `refreshToken`
+- `tokenExpiresAt`
+
+The access token expires after 1 hour, and refresh attempts start 5 minutes before expiration.

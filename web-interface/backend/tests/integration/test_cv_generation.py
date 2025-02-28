@@ -44,7 +44,7 @@ async def test_complete_cv_generation_flow(
     """Test the complete flow of CV generation with the test AI model."""
     # 1. Generate competences
     competences_response = client.post(
-        "/api/generate-competences",
+        "/v1/api/generations/competences",
         json=test_cv_data,
     )
     assert competences_response.status_code == 200
@@ -61,7 +61,7 @@ async def test_complete_cv_generation_flow(
         "approved_competences": competences_result["competences"],
     }
 
-    cv_response = client.post("/api/generate-cv", json=cv_request)
+    cv_response = client.post("/v1/api/generations/cv", json=cv_request)
     assert cv_response.status_code == 200
     cv_result = cv_response.json()
 
@@ -94,7 +94,7 @@ async def test_contact_validation() -> None:
             "email": {"value": "test@example.com"},  # Missing type
         },
     }
-    response = client.post("/api/generate-cv", json=invalid_email)
+    response = client.post("/v1/api/generations/cv", json=invalid_email)
     assert response.status_code == 422
     assert "type" in response.text.lower()
 
@@ -106,7 +106,7 @@ async def test_contact_validation() -> None:
             "email": {"type": "Email"},  # Missing value
         },
     }
-    response = client.post("/api/generate-cv", json=invalid_email_2)
+    response = client.post("/v1/api/generations/cv", json=invalid_email_2)
     assert response.status_code == 422
     assert "value" in response.text.lower()
 
@@ -120,7 +120,7 @@ async def test_multilanguage_generation(
     """Test CV generation in different languages."""
     # Generate competences in French
     competences_response = client.post(
-        "/api/generate-competences",
+        "/v1/api/generations/competences",
         json=test_cv_data,
         params={"language_code": "fr"},
     )
@@ -134,7 +134,7 @@ async def test_multilanguage_generation(
         "approved_competences": competences,
     }
     cv_response = client.post(
-        "/api/generate-cv",
+        "/v1/api/generations/cv",
         json=cv_request,
         params={"language_code": "fr"},
     )
@@ -152,7 +152,7 @@ async def test_multilanguage_generation(
 async def test_invalid_language_code(test_cv_data: dict) -> None:
     """Test handling of invalid language codes."""
     response = client.post(
-        "/api/generate-competences",
+        "/v1/api/generations/competences",
         json=test_cv_data,
         params={"language_code": "invalid"},
     )

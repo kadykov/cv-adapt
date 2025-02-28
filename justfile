@@ -5,13 +5,17 @@ default:
 install-frontend:
     cd web-interface/frontend && npm install
 
+# Initialize the database
+init-db:
+    cd web-interface/backend && python scripts/init_db.py
+
 # Install dependencies
 install:
     uv sync --frozen --all-groups --quiet
-    uv pip install -e .
     bash -c 'source ./.venv/bin/activate'
     uv run pre-commit install
     just install-frontend
+    @echo "Run 'just init-db' to initialize the database"
 
 # Run tests
 test *ARGS='./tests':
@@ -29,7 +33,8 @@ lint *ARGS='.':
 
 # Run ruff on a specific file or directory with auto-fixes
 ruff *ARGS='.':
-    just format {{ARGS}}
+    uv run ruff check --select I --fix {{ARGS}}
+    uv run ruff format {{ARGS}}
     uv run ruff check --fix {{ARGS}}
 
 # Run mypy on a specific file or directory
@@ -38,8 +43,8 @@ mypy *ARGS='.':
 
 # Format code
 format *ARGS='.':
-    uv run ruff check --select I --fix {{ARGS}}
-    uv run ruff format {{ARGS}}
+    just ruff {{ARGS}}
+    just format-frontend
 
 # Run pre-commit checks
 pre-commit:
@@ -56,15 +61,17 @@ preview-frontend:
 
 # Run all checks
 all:
-    just lint
     just format
-    just pre-commit
-    just docs && rm -rf ./site
-    just build-frontend
+    just lint
     just test
     just test-backend
+    just export-openapi
     just generate-types
     just test-frontend-cov
+    just type-check-frontend
+    just docs
+    just build-frontend
+    just pre-commit
 
 # Build documentation
 docs:
@@ -81,7 +88,7 @@ serve-backend *ARGS='':
 
 # Serve backend API with debug logging
 serve-backend-debug *ARGS='':
-    cd web-interface/backend && LOG_LEVEL=debug uv run uvicorn app.main:app --reload --port 8000 {{ARGS}}
+    cd web-interface/backend && LOG_LEVEL=DEBUG uvicorn app.main:app --reload --port 8000 --log-level debug {{ARGS}} --use-colors
 
 # Serve frontend development server
 serve-frontend:
@@ -99,22 +106,46 @@ serve-web-debug *ARGS='':
     just serve-frontend & \
     wait
 
-# Generate TypeScript types from Pydantic models
-generate-types:
-    cd web-interface/backend && python scripts/generate_typescript_types.py
+# Export OpenAPI schema from backend
+export-openapi:
+    cd web-interface/backend && ./scripts/export_openapi_schema.py
+
+# Generate TypeScript types from OpenAPI schema
+generate-types: export-openapi
+    cd web-interface/frontend && npm run generate-api-types
 
 # Run backend tests
 test-backend *ARGS='':
     cd web-interface/backend && uv run pytest tests/ {{ARGS}}
 
-# Run frontend tests
+# Run frontend unit tests
 test-frontend:
-    cd web-interface/frontend && npm test
+    cd web-interface/frontend && npm test --silent
 
-# Run frontend tests with coverage
+# Run frontend integration tests
+test-frontend-integration:
+    cd web-interface/frontend && npm run test:integration
+
+# Run all frontend tests (unit and integration)
+test-frontend-all:
+    just test-frontend
+    just test-frontend-integration
+
+# Run frontend tests with coverage (unit and integration tests together)
 test-frontend-cov:
-    cd web-interface/frontend && npm test -- --coverage
+    mkdir -p web-interface/frontend/coverage/.tmp
+    cd web-interface/frontend && npm run test:coverage
 
 # Run frontend linting
 lint-frontend:
     cd web-interface/frontend && npm run lint
+    cd web-interface/frontend && npm run format:check
+    just type-check-frontend
+
+# Format frontend code
+format-frontend:
+    cd web-interface/frontend && npm run format
+
+# Run frontend type checking
+type-check-frontend:
+    cd web-interface/frontend && npm run type-check
