@@ -17,6 +17,7 @@ flowchart TD
 ## Type Safety & API Contract
 
 We ensure API contract compliance through:
+
 - Generated TypeScript types from OpenAPI schema
 - Automatic type generation in CI/CD pipeline
 - Type checking during development and builds
@@ -257,7 +258,7 @@ export default defineWorkspace([
       maxConcurrency: 1,
       isolate: true,
       sequence: {
-        shuffle: false
+        shuffle: false,
       },
       deps: {
         optimizer: {
@@ -272,6 +273,7 @@ export default defineWorkspace([
 ```
 
 Key features of the workspace configuration:
+
 - Separate configurations for unit and integration tests
 - Extended timeout for integration tests to handle async operations
 - Single test concurrency for integration tests to prevent race conditions

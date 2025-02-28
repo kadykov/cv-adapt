@@ -22,6 +22,8 @@
    - ✓ Full CRUD operations
    - ✓ API integration with OpenAPI types
    - ✓ React Query state management
+   - ✓ Job catalog feature completed
+   - ✓ Component test coverage
 
 2. **Backend**
    - API endpoint implementation
@@ -59,46 +61,16 @@
 ## In Progress
 
 1. **Frontend Implementation**
-   - CV Management Feature
-     - Component architecture design
-     - Backend integration planning
-     - CV editor implementation
-     - Language variant support
-     - Export system development
-   - Phase 3: Job Catalog Feature
-     - ✓ API Types & Functions
-       - API client implementation
-       - Error handling
-       - Response types
-     - ✓ Data Management
-       - React Query hooks
-       - Cache invalidation
-       - Language support
-     - ✓ Core UI Components
-       - ✓ JobCard component
-         - Responsive design
-         - Accessibility features
-         - Language badge
-       - ✓ JobList component
-         - Grid layout
-         - Language filtering
-         - Loading states
-       - ✓ JobDetail component
-         - Full information display
-         - Edit/Delete actions
-         - Loading states & error handling
-         - Navigation integration
-         - Comprehensive test coverage
-       - ✓ Test infrastructure
-         - MSW setup
-         - Integration tests
-         - Custom utilities
-     - ✓ Advanced UI Components
-       - JobForm component with validation
-         - Create/Edit modes
-         - Form validation
-         - API integration
-         - Error handling
+   - Detailed CV Management Feature
+     - ✓ Feature structure implemented
+     - ✓ Components implemented:
+       - ✓ DetailedCVList with language filtering
+       - ✓ DetailedCVForm with markdown support
+       - ✓ DetailedCVPreview with markdown rendering
+     - ✓ Integration with `/v1/api/user/detailed-cvs` endpoints
+     - ✓ Using HeadlessUI and DaisyUI components
+     - ✓ Unit tests for components
+     - Next: Integration with routing and pages
 
 2. **Core System**
    - Performance optimization
@@ -134,21 +106,22 @@
 ## Next Milestones
 
 1. **Short Term (1-2 weeks)**
-   - CV Editor Implementation
-     - Core editor functionality
-     - Language switching
-     - Template selection
-     - Preview system
+   - Detailed CV Management Integration
+     - Page components and routing
+     - Navigation integration
+     - Integration tests
+     - Error boundaries
+     - Accessibility enhancements
    - Performance Optimization
      - Bundle size monitoring
      - Loading state improvements
      - Cache strategy refinement
 
 2. **Medium Term (1-2 months)**
-   - Begin CV Management Feature
-     - API integration
-     - Core UI components
-     - Data management hooks
+   - CV Generation Integration
+     - Connect with detailed CVs
+     - Language-based selection
+     - Preview system
      - Testing infrastructure
 
 3. **Long Term**
