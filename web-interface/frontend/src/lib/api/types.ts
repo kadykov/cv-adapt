@@ -374,7 +374,7 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: Record<string, never>;
+      content: string;
       /**
        * Is Primary
        * @default false
@@ -396,7 +396,7 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: Record<string, never>;
+      content: string;
       /**
        * Is Primary
        * @default false
@@ -436,7 +436,7 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: Record<string, never>;
+      content: string;
       /** Detailed Cv Id */
       detailed_cv_id: number;
       /** Job Description Id */
@@ -450,7 +450,7 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: Record<string, never>;
+      content: string;
       /** Id */
       id: number;
       /**

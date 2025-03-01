@@ -53,11 +53,7 @@ describe('Detailed CV Operations Integration', () => {
       id: 1,
       user_id: 1,
       language_code: 'en',
-      content:
-        '# English CV\n\nThis is my English CV content.' as unknown as Record<
-          string,
-          never
-        >,
+      content: '# English CV\n\nThis is my English CV content.',
       is_primary: true,
       created_at: '2024-02-17T12:00:00Z',
       updated_at: null,
@@ -66,11 +62,7 @@ describe('Detailed CV Operations Integration', () => {
       id: 2,
       user_id: 1,
       language_code: 'fr',
-      content:
-        '# CV Français\n\nVoici le contenu de mon CV en français.' as unknown as Record<
-          string,
-          never
-        >,
+      content: '# CV Français\n\nVoici le contenu de mon CV en français.',
       is_primary: false,
       created_at: '2024-02-17T12:00:00Z',
       updated_at: null,
@@ -79,11 +71,7 @@ describe('Detailed CV Operations Integration', () => {
 
   const mockNewCV = {
     language_code: LanguageCode.GERMAN,
-    content:
-      '# Deutscher Lebenslauf\n\nDies ist mein Lebenslauf auf Deutsch.' as unknown as Record<
-        string,
-        never
-      >,
+    content: '# Deutscher Lebenslauf\n\nDies ist mein Lebenslauf auf Deutsch.',
     is_primary: false,
   };
 
@@ -286,10 +274,7 @@ describe('Detailed CV Operations Integration', () => {
     await user.click(screen.getByText('German (Deutsch)'));
 
     // Fill in content
-    await user.type(
-      screen.getByLabelText(/cv content/i),
-      mockNewCV.content as unknown as string,
-    );
+    await user.type(screen.getByLabelText(/cv content/i), mockNewCV.content);
 
     // Get the submit button before click
     const submitButton = screen.getByRole('button', { name: /create cv/i });
@@ -603,11 +588,7 @@ describe('Detailed CV Operations Integration', () => {
 
     const updatedCV = {
       ...mockDetailedCVs[0],
-      content:
-        '# Updated English CV\n\nThis is my updated English CV content.' as unknown as Record<
-          string,
-          never
-        >,
+      content: '# Updated English CV\n\nThis is my updated English CV content.',
       updated_at: '2024-02-17T13:00:00Z',
     };
 

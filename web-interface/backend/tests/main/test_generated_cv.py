@@ -30,9 +30,7 @@ def auth_headers(test_user: User) -> dict[str, str]:
 def test_detailed_cv(db: Session, test_user: User) -> DetailedCV:
     """Create a test detailed CV."""
     cv_service = DetailedCVService(db)
-    cv_data = DetailedCVCreate(
-        language_code="en", content={"test": "content"}, is_primary=True
-    )
+    cv_data = DetailedCVCreate(language_code="en", content="content", is_primary=True)
     return cv_service.create_cv(int(test_user.id), cv_data)
 
 
@@ -59,7 +57,7 @@ def test_generated_cv(
         detailed_cv_id=int(test_detailed_cv.id),
         job_description_id=int(test_job_description.id),
         language_code="en",
-        content={"test": "content"},
+        content="content",
     )
     return cv_service.create_generated_cv(int(test_user.id), cv_data)
 
@@ -76,7 +74,7 @@ def test_generate_and_save_cv(
         detailed_cv_id=int(test_detailed_cv.id),
         job_description_id=int(test_job_description.id),
         language_code="en",
-        content={"test": "content"},
+        content="content",
     )
     response = client.post(
         "/v1/api/generations", headers=auth_headers, json=cv_data.model_dump()
@@ -150,7 +148,7 @@ def test_generated_cv_operations_unauthorized(client: TestClient) -> None:
         detailed_cv_id=1,
         job_description_id=1,
         language_code="en",
-        content={"test": "content"},
+        content="content",
     ).model_dump()  # Convert to dict since we're sending as JSON
 
     # Test all endpoints

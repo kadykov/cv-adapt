@@ -28,7 +28,7 @@ export function mapFormToApiRequest(
   formData: DetailedCVFormData,
 ): DetailedCVCreate {
   // Cast the content string to Record<string, never> to match the OpenAPI schema
-  const content = formData.content as unknown as Record<string, never>;
+  const content = formData.content;
 
   return {
     language_code: formData.language_code,

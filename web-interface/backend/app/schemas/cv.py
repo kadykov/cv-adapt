@@ -1,7 +1,5 @@
 """CV-related schemas."""
 
-from typing import Dict
-
 from pydantic import BaseModel
 
 from .base import BaseResponseModel, TimestampedModel
@@ -11,7 +9,7 @@ class DetailedCVBase(BaseModel):
     """Base detailed CV schema."""
 
     language_code: str
-    content: Dict
+    content: str  # Content is a plain text that can optionally contain markdown
     is_primary: bool = False
 
 
@@ -24,7 +22,9 @@ class DetailedCVCreate(DetailedCVBase):
 class DetailedCVUpdate(BaseModel):
     """Schema for updating a detailed CV."""
 
-    content: Dict | None = None
+    content: str | None = (
+        None  # Content is a plain text that can optionally contain markdown
+    )
     is_primary: bool | None = None
 
 
@@ -65,7 +65,7 @@ class GeneratedCVBase(BaseModel):
     """Base generated CV schema."""
 
     language_code: str
-    content: Dict
+    content: str  # Content is a plain text that can optionally contain markdown
 
 
 class GeneratedCVCreate(GeneratedCVBase):

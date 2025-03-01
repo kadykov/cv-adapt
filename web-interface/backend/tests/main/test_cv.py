@@ -30,9 +30,7 @@ def auth_headers(test_user: User) -> dict[str, str]:
 def test_cv(db: Session, test_user: User) -> DetailedCV:
     """Create a test CV."""
     cv_service = DetailedCVService(db)
-    cv_data = DetailedCVCreate(
-        language_code="en", content={"test": "content"}, is_primary=True
-    )
+    cv_data = DetailedCVCreate(language_code="en", content="content", is_primary=True)
     return cv_service.create_cv(int(test_user.id), cv_data)
 
 
@@ -72,7 +70,7 @@ def test_get_nonexistent_cv(auth_headers: dict[str, str], client: TestClient) ->
 def test_create_cv(auth_headers: dict[str, str], client: TestClient) -> None:
     """Test creating new CV."""
     cv_data = DetailedCVCreate(
-        language_code="fr", content={"test": "content"}, is_primary=False
+        language_code="fr", content="content", is_primary=False
     ).model_dump()
     response = client.put(
         "/v1/api/user/detailed-cvs/fr", headers=auth_headers, json=cv_data
@@ -90,7 +88,7 @@ def test_update_cv(
     """Test updating existing CV."""
     update_data = DetailedCVCreate(
         language_code=str(test_cv.language_code),
-        content={"updated": "content"},
+        content="updated content",
         is_primary=True,
     ).model_dump()
     response = client.put(
@@ -127,7 +125,7 @@ def test_set_primary_cv(
     # First, set the existing CV to non-primary
     update_data = DetailedCVCreate(
         language_code=str(test_cv.language_code),
-        content=dict(test_cv.content),
+        content="content",
         is_primary=False,
     ).model_dump()
     client.put(
@@ -149,7 +147,7 @@ def test_set_primary_cv(
 def test_cv_operations_unauthorized(client: TestClient) -> None:
     """Test CV operations without authentication."""
     cv_data = DetailedCVCreate(
-        language_code="en", content={"test": "content"}, is_primary=True
+        language_code="en", content="content", is_primary=True
     ).model_dump()
 
     # Test all endpoints
@@ -166,7 +164,7 @@ def test_mismatched_language_code(
     """Test creating CV with mismatched language codes."""
     cv_data = DetailedCVCreate(
         language_code="fr",  # Mismatched with URL
-        content={"test": "content"},
+        content="content",
         is_primary=True,
     ).model_dump()
     response = client.put(
