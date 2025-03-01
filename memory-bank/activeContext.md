@@ -2,17 +2,26 @@
 
 ## Current Focus
 
-1. **Detailed CV Management Implementation**
+1. **Detailed CV Management Refinements**
    - ✓ Feature structure implemented
    - ✓ Following established frontend patterns
-   - ✓ Components implemented:
-     - ✓ DetailedCVList with language filtering
+   - Components implemented:
      - ✓ DetailedCVForm with markdown support
      - ✓ DetailedCVPreview with react-markdown
    - ✓ Using HeadlessUI and DaisyUI components
    - ✓ Integration with OpenAPI types
    - ✓ Unit tests for components
-   - Next: Integration with routing and pages
+   - Current: UI/UX Simplification
+     - ✓ Identified redundant UI elements
+     - ✓ Confirmed one-CV-per-language rule
+     - Implementation Changes:
+       - Remove language filtering (not needed per business rule)
+       - Use single create button with clear labeling
+       - Add available language detection
+     - Component Restructuring:
+       - Base hook usage instead of filtered queries
+       - Grid-based language organization
+       - Clearer user action paths
 
 2. **Job Catalog Feature**
    - ✓ All components implemented
@@ -142,6 +151,13 @@
    - Enum-based validation approach
    - Alignment with backend language codes
    - Type-safe language selection components
+
+2. **UI Simplification Strategy**
+   - Enforce business rules at UI level
+   - Remove redundant filtering
+   - Language-based organization
+   - Intuitive creation flow
+   - Single source of truth for language status
 
 2. **Component Architecture**
    - Continued feature-based organization

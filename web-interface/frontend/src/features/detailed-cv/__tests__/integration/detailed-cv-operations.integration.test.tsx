@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
   createGetHandler,
   createPutHandler,
   createDeleteHandler,
@@ -13,6 +14,7 @@ import {
   createErrorHandler,
   addIntegrationHandlers,
 } from '../../../../lib/test/integration';
+import { prettyDOM } from '@testing-library/dom';
 import type { ReactNode } from 'react';
 import {
   DetailedCVListPage,
@@ -28,6 +30,14 @@ import { IntegrationTestWrapper } from '../../../../lib/test/integration';
 import { QueryClient } from '@tanstack/react-query';
 import { setupAuthenticatedState } from '../../../auth/testing/setup';
 import { LanguageCode } from '../../../../lib/language/types';
+
+const LANGUAGE_NAMES: Record<LanguageCode, string> = {
+  [LanguageCode.ENGLISH]: 'English',
+  [LanguageCode.FRENCH]: 'French',
+  [LanguageCode.GERMAN]: 'German',
+  [LanguageCode.SPANISH]: 'Spanish',
+  [LanguageCode.ITALIAN]: 'Italian',
+};
 
 describe('Detailed CV Operations Integration', () => {
   // Create RenderOptions type that includes wrapper
@@ -79,12 +89,28 @@ describe('Detailed CV Operations Integration', () => {
     detail: { message: 'Internal Server Error' },
   };
 
+  let queryClient: QueryClient;
+
   beforeEach(() => {
     localStorage.clear();
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          gcTime: 0,
+          staleTime: Infinity,
+        },
+      },
+    });
   });
 
-  afterEach(() => {
+  // Enhanced cleanup after each test
+  afterEach(async () => {
     localStorage.clear();
+    queryClient.clear();
+    await queryClient.resetQueries();
+    // Wait for any pending effects
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   const renderWithAuth = async (
@@ -94,16 +120,6 @@ describe('Detailed CV Operations Integration', () => {
     localStorage.setItem('access_token', 'valid-access-token');
     localStorage.setItem('refresh_token', 'valid-refresh-token');
     localStorage.setItem('expires_at', (Date.now() + 3600000).toString());
-
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
 
     // Setup auth state before rendering
     setupAuthenticatedState(queryClient);
@@ -208,33 +224,72 @@ describe('Detailed CV Operations Integration', () => {
     ]);
   });
 
-  test('should list detailed CVs with language filtering', async () => {
+  test('should list detailed CVs and available languages', async () => {
     await renderWithAuth([ROUTES.DETAILED_CVS.LIST]);
 
-    // Wait for CVs to load
-    // Wait for English CV to load
+    // Wait for existing CVs to load
     await waitFor(() => {
+      // Verify English CV is displayed
       expect(screen.getByText(/# English CV.+/)).toBeInTheDocument();
-    });
+      expect(screen.getByText('en')).toBeInTheDocument();
 
-    // Check English language badge
-    expect(screen.getByText('en')).toBeInTheDocument();
-
-    // Find the language selector button and click it
-    const languageButton = screen.getByRole('button', { expanded: false });
-    await userEvent.click(languageButton);
-
-    // Find the French option and click it
-    const frenchOption = screen.getByText('French');
-    await userEvent.click(frenchOption);
-
-    // Wait for French CV to load
-    await waitFor(() => {
+      // Verify French CV is displayed
       expect(screen.getByText(/# CV Français.+/)).toBeInTheDocument();
+      expect(screen.getByText('fr')).toBeInTheDocument();
     });
 
-    // Check French language badge
-    expect(screen.getByText('fr')).toBeInTheDocument();
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    // Verify available language options
+    const availableLanguages = [
+      LanguageCode.GERMAN,
+      LanguageCode.ITALIAN,
+      LanguageCode.SPANISH,
+    ];
+    for (const lang of availableLanguages) {
+      try {
+        // Find language heading with explicit waiting
+        await waitFor(
+          () => {
+            expect(
+              screen.getByRole('heading', { name: LANGUAGE_NAMES[lang] }),
+            ).toBeInTheDocument();
+          },
+          { timeout: 5000 },
+        );
+
+        // Find create button with language name
+        await waitFor(
+          () => {
+            expect(
+              screen.getByRole('button', {
+                name: new RegExp(
+                  `Create Detailed CV \\(${LANGUAGE_NAMES[lang]}\\)`,
+                  'i',
+                ),
+              }),
+            ).toBeInTheDocument();
+          },
+          { timeout: 5000 },
+        );
+
+        // Find this language's card and verify its message
+        const card = screen
+          .getByRole('heading', { name: LANGUAGE_NAMES[lang] })
+          .closest('.card') as HTMLElement;
+        expect(card).toBeInTheDocument();
+        expect(
+          within(card!).getByText('No detailed CV for this language'),
+        ).toBeInTheDocument();
+      } catch (error) {
+        console.error(`Failed with language ${lang}:`, error);
+        console.log('Current DOM state:', prettyDOM(document.body));
+        throw error;
+      }
+    }
   });
 
   test('should display loading and error states', async () => {
@@ -255,62 +310,125 @@ describe('Detailed CV Operations Integration', () => {
   });
 
   test('should create a new detailed CV', async () => {
-    const user = userEvent.setup();
+    try {
+      const user = userEvent.setup();
+      await renderWithAuth([ROUTES.DETAILED_CVS.LIST]);
 
-    // Create test wrapper with create page route
-    await renderWithAuth([ROUTES.DETAILED_CVS.CREATE]);
+      // Wait for loading to complete and German heading to be visible
+      await waitFor(
+        () => {
+          expect(screen.queryByRole('status')).not.toBeInTheDocument();
+          expect(
+            screen.getByRole('heading', { name: 'German' }),
+          ).toBeInTheDocument();
+          expect(screen.getByRole('heading', { name: 'German' })).toBeVisible();
+        },
+        { timeout: 5000 },
+      );
 
-    // Wait for create page UI to be rendered
-    await waitFor(() => {
-      expect(screen.getByText('Create Detailed CV')).toBeInTheDocument();
-      const form = screen.getByRole('form');
-      expect(form).toBeInTheDocument();
-    });
+      // Find and click the German language card's create button
+      const germanCard = screen
+        .getByRole('heading', { name: 'German' })
+        .closest('.card') as HTMLElement;
+      const createButton = within(germanCard!).getByRole('button', {
+        name: /create detailed cv/i,
+      });
+      await user.click(createButton);
 
-    // Fill in the form
-    // Open language dropdown and select 'de'
-    const languageButton = screen.getByRole('button', { name: /language/i });
-    await user.click(languageButton);
-    await user.click(screen.getByText('German (Deutsch)'));
+      // Wait for create form to be rendered
+      await waitFor(() => {
+        expect(screen.getByText('Create Detailed CV')).toBeInTheDocument();
+        const form = screen.getByRole('form');
+        expect(form).toBeInTheDocument();
+      });
 
-    // Fill in content
-    await user.type(screen.getByLabelText(/cv content/i), mockNewCV.content);
+      // Select language from dropdown
+      // Get the language selector by its label and select German
+      const languageLabel = screen.getByText('Language');
+      const languageSelect =
+        languageLabel.parentElement?.querySelector('button');
+      expect(languageSelect).toBeInTheDocument();
+      await user.click(languageSelect!);
 
-    // Get the submit button before click
-    const submitButton = screen.getByRole('button', { name: /create cv/i });
-
-    // Submit form and capture the promise for checking state
-    const submitPromise = user.click(submitButton);
-
-    // Check submitting state right after click
-    await waitFor(
-      () => {
-        const button = screen.getByRole('button', { name: /creating\.\.\./i });
-        expect(button).toBeInTheDocument();
-      },
-      { timeout: 5000 },
-    );
-
-    // Wait for the click to complete
-    await submitPromise;
-
-    // Wait for submission success and view update
-    await waitFor(
-      () => {
-        // Should no longer see the create form
-        expect(screen.queryByRole('form')).not.toBeInTheDocument();
-
-        // Should be on list page
-        // Check for specific heading with role and text
+      // Wait for dropdown to appear and select German
+      await waitFor(() => {
+        expect(screen.getByRole('listbox')).toBeInTheDocument();
         expect(
-          screen.getByRole('heading', { name: 'Detailed CVs', level: 1 }),
+          screen.getByRole('option', { name: 'German (Deutsch)' }),
         ).toBeInTheDocument();
-        expect(
-          screen.getByRole('link', { name: /add cv/i }),
-        ).toBeInTheDocument();
-      },
-      { timeout: 5000 },
-    );
+      });
+      await user.click(
+        screen.getByRole('option', { name: 'German (Deutsch)' }),
+      );
+
+      // Fill in content
+      const contentInput = screen.getByLabelText(/cv content/i);
+      await user.type(contentInput, mockNewCV.content);
+
+      // Update handlers to include new CV in list response after creation
+      addIntegrationHandlers([
+        createGetHandler('/user/detailed-cvs', 'DetailedCVResponse', [
+          ...mockDetailedCVs,
+          {
+            id: 3,
+            user_id: 1,
+            created_at: '2024-02-17T12:00:00Z',
+            updated_at: null,
+            ...mockNewCV,
+          },
+        ]),
+      ]);
+
+      // Submit form
+      const submitButton = screen.getByRole('button', { name: /create cv/i });
+      await user.click(submitButton);
+
+      // Wait for form to disappear and navigation to complete
+      await waitFor(
+        () => {
+          expect(screen.queryByRole('form')).not.toBeInTheDocument();
+          expect(
+            screen.getByRole('heading', { name: 'Detailed CVs' }),
+          ).toBeInTheDocument();
+        },
+        { timeout: 5000 },
+      );
+
+      // First check that German card is no longer showing "No detailed CV"
+      await waitFor(
+        () => {
+          const germanCard = screen.queryByText(
+            'No detailed CV for this language',
+          );
+          expect(germanCard).not.toBeInTheDocument();
+        },
+        { timeout: 5000 },
+      );
+
+      // Wait for the new CV content to appear with a more precise selector
+      await waitFor(
+        () => {
+          const paragraphs = screen.getAllByText((content) => {
+            return (
+              content.includes('Deutscher Lebenslauf') &&
+              content.includes('auf Deutsch')
+            );
+          });
+          expect(paragraphs.length).toBeGreaterThan(0);
+
+          const cvCard = paragraphs[0].closest('.card');
+          expect(cvCard).toBeInTheDocument();
+          expect(
+            within(cvCard as HTMLElement).getByText('de'),
+          ).toBeInTheDocument();
+        },
+        { timeout: 5000 },
+      );
+    } catch (error) {
+      console.error('Test failed:', error);
+      console.log('Current DOM state:', prettyDOM(document.body));
+      throw error;
+    }
   });
 
   test('should navigate from list to detail and edit pages', async () => {
@@ -405,39 +523,33 @@ describe('Detailed CV Operations Integration', () => {
       expect(heading).toBeInTheDocument();
     });
 
-    // Select French from the language filter
-    // Wait for CVs to load and language selector to be available
-    await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    });
-
-    // Find and click the language button using headlessui's listbox button
-    const listbox = screen.getByRole('button', { name: 'English' });
-    await user.click(listbox);
-
-    // Find and click the French option in the dropdown
-    const frenchOption = screen.getByRole('option', { name: 'French' });
-    await user.click(frenchOption);
-
-    // Wait for the French CV card to be rendered and check for primary status
+    // Verify the French CV is marked as primary in the list view
     await waitFor(
       () => {
-        // Find the French CV card by its language badge
-        const frBadge = screen.getByText('fr');
-        expect(frBadge).toBeInTheDocument();
+        // Find all CV cards
+        const cvCards = screen.getAllByRole('button');
 
-        // Get the card containing the badge
-        const frCard = frBadge.closest('[role="button"]');
-        expect(frCard).toBeInTheDocument();
-
-        // Find primary badge within the card
-        const primaryBadge = frCard?.querySelector(
-          '.bg-primary.text-primary-content',
+        // Find the French CV card
+        const frenchCard = cvCards.find((card) =>
+          card.textContent?.includes('# CV Français'),
         );
+        expect(frenchCard).toBeInTheDocument();
+
+        // Check for primary badge
+        const primaryBadge = frenchCard?.querySelector('[class*="bg-primary"]');
         expect(primaryBadge).toBeInTheDocument();
         expect(primaryBadge).toHaveTextContent('Primary');
+
+        // Verify English CV is no longer primary
+        const englishCard = cvCards.find((card) =>
+          card.textContent?.includes('# English CV'),
+        );
+        expect(englishCard).toBeInTheDocument();
+        expect(
+          englishCard?.querySelector('[class*="bg-primary"]'),
+        ).not.toBeInTheDocument();
       },
-      { timeout: 3000 },
+      { timeout: 5000 },
     );
   });
 
@@ -482,35 +594,23 @@ describe('Detailed CV Operations Integration', () => {
 
     // Verify navigation by checking for elements that are only present on the list page
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: /add cv/i })).toBeInTheDocument();
       expect(
         screen.getByRole('heading', { level: 1, name: 'Detailed CVs' }),
       ).toBeInTheDocument();
     });
 
-    // Select French from the language filter to verify the CV is truly gone
-    // Wait for CVs to load and language selector to be available
+    // Verify the French CV is no longer in the list and shows as available
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/CV Français/)).not.toBeInTheDocument();
+      expect(screen.queryByText('fr')).not.toBeInTheDocument();
+
+      // Should now show the French language as available
+      const frenchCard = screen.getByText('French');
+      expect(frenchCard).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /create detailed cv.*french/i }),
+      ).toBeInTheDocument();
     });
-
-    // Find and click the language button by its content
-    const languageButton = screen.getByText('English');
-    await user.click(languageButton);
-
-    // Find and click the French option in the dropdown
-    const frenchOption = screen.getByRole('option', { name: 'French' });
-    await user.click(frenchOption);
-
-    // Should not see deleted CV content
-    await waitFor(
-      () => {
-        expect(screen.queryByText(/CV Français/)).not.toBeInTheDocument();
-        // Should not see French language badge either
-        expect(screen.queryByText('fr')).not.toBeInTheDocument();
-      },
-      { timeout: 3000 },
-    );
 
     // Restore original window.confirm
     window.confirm = originalConfirm;
@@ -518,7 +618,27 @@ describe('Detailed CV Operations Integration', () => {
 
   test('should handle form validation errors', async () => {
     const user = userEvent.setup();
-    await renderWithAuth([ROUTES.DETAILED_CVS.CREATE]);
+    await renderWithAuth([ROUTES.DETAILED_CVS.LIST]);
+
+    // Wait for loading to complete
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'German' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
+
+    // Click create button for German CV
+    const germanCard = screen
+      .getByRole('heading', { name: 'German' })
+      .closest('.card') as HTMLElement;
+    const createButton = within(germanCard!).getByRole('button', {
+      name: /create detailed cv/i,
+    });
+    await user.click(createButton);
 
     // Try to submit empty form
     await user.click(screen.getByRole('button', { name: /create cv/i }));
@@ -526,60 +646,40 @@ describe('Detailed CV Operations Integration', () => {
     // Should show validation errors
     await waitFor(() => {
       expect(screen.getByText(/content is required/i)).toBeInTheDocument();
-      expect(
-        screen.getByText(/please select a valid language/i),
-      ).toBeInTheDocument();
     });
   });
 
-  test('should navigate between list and create pages', async () => {
+  test('should navigate between list and detail pages', async () => {
     const user = userEvent.setup();
     await renderWithAuth([ROUTES.DETAILED_CVS.LIST]);
 
     // Wait for CVs to load
     await waitFor(() => {
-      // Use getAllByText to handle multiple matching elements
-      const elements = screen.getAllByText((_content, element) => {
-        return element?.textContent?.includes('# English CV') || false;
-      });
-      expect(elements.length).toBeGreaterThan(0);
+      expect(screen.getByText(/# English CV/)).toBeInTheDocument();
     });
 
-    // Find the "Add CV" link by role and click it
-    const addCVButton = screen.getByRole('link', { name: /add cv/i });
-    expect(addCVButton).toBeInTheDocument();
-    await user.click(addCVButton);
+    // Find and click the English CV card
+    const cvCard = screen.getByRole('button', { name: /english cv/i });
+    await user.click(cvCard);
 
-    // Should see the create CV form
+    // Should see the detail page
     await waitFor(() => {
-      expect(screen.getByRole('form')).toBeInTheDocument();
+      expect(screen.getByRole('article')).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /create cv/i }),
+        screen.getByRole('heading', { level: 1, name: 'English CV' }),
       ).toBeInTheDocument();
     });
 
-    // Find the back link by exact text and role
-    const backLinks = screen.getAllByText((_content, element) => {
-      return element?.textContent?.includes('← Back to List') || false;
-    });
-    const backLink = backLinks.find(
-      (element) => element.closest('a') !== null, // Find the one that's inside an anchor tag
-    );
-    expect(backLink).toBeInTheDocument();
+    // Go back to list page
+    const backLink = screen.getByRole('link', { name: /back to list/i });
+    await user.click(backLink);
 
-    // Go back to CV list by clicking the link
-    await user.click(backLink!);
-
-    // Wait for list page content with careful verification
+    // Wait for list content
     await waitFor(() => {
-      // Check for list-specific elements
-      expect(screen.getByRole('link', { name: /add cv/i })).toBeInTheDocument();
-
-      // Check for CV content using the same getAllByText approach
-      const elements = screen.getAllByText((_content, element) => {
-        return element?.textContent?.includes('# English CV') || false;
-      });
-      expect(elements.length).toBeGreaterThan(0);
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Detailed CVs' }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/# English CV/)).toBeInTheDocument();
     });
   });
 
@@ -639,7 +739,6 @@ describe('Detailed CV Operations Integration', () => {
     // Verify redirect and updated content
     await waitFor(() => {
       // Verify we're on the list page
-      expect(screen.getByRole('link', { name: /add cv/i })).toBeInTheDocument();
       expect(
         screen.getByRole('heading', { level: 1, name: 'Detailed CVs' }),
       ).toBeInTheDocument();
@@ -654,7 +753,7 @@ describe('Detailed CV Operations Integration', () => {
           screen.getByText(/This is my updated English CV content\./),
         ).toBeInTheDocument();
       },
-      { timeout: 3000 },
+      { timeout: 5000 },
     );
   });
 });

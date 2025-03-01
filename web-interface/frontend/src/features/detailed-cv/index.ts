@@ -14,7 +14,7 @@ export { DetailedCVPreview } from './components/DetailedCVPreview';
 export {
   useDetailedCVs,
   useDetailedCV,
-  useFilteredDetailedCVs,
+  getAvailableLanguages,
 } from './hooks/useDetailedCVs';
 export { useDetailedCVMutations } from './hooks/useDetailedCVMutations';
 

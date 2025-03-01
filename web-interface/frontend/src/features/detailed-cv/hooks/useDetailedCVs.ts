@@ -46,19 +46,11 @@ export function useDetailedCV(
 }
 
 /**
- * Hook for filtering detailed CVs by language
+ * Get available languages that don't have a CV yet
  */
-export function useFilteredDetailedCVs(language?: LanguageCode, options = {}) {
-  const { data: cvs = [], ...rest } = useDetailedCVs(options);
-
-  const filteredCVs = language
-    ? cvs.filter((cv) => cv.language_code === language)
-    : cvs;
-
-  return {
-    ...rest,
-    data: filteredCVs,
-  };
+export function getAvailableLanguages(cvs: DetailedCVResponse[]) {
+  const usedLanguages = new Set(cvs.map((cv) => cv.language_code));
+  return Object.values(LanguageCode).filter((code) => !usedLanguages.has(code));
 }
 
 /**
