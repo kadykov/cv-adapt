@@ -34,6 +34,9 @@ export function Layout() {
               <Link to={ROUTES.JOBS.LIST} className="btn btn-ghost">
                 Jobs
               </Link>
+              <Link to={ROUTES.DETAILED_CVS.LIST} className="btn btn-ghost">
+                Detailed CVs
+              </Link>
               <Button
                 type="button"
                 onClick={() => logout()}

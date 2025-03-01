@@ -5,15 +5,47 @@ import { getTestApiUrl } from '../url-helper';
 type Schema = components['schemas'];
 
 /**
+ * Default delays for different operation types (in milliseconds)
+ */
+const HANDLER_DELAYS = {
+  BASE: 100,
+  GET_LIST: 100, // Same as base for listing operations
+  GET_SINGLE: 100, // Same as base for getting single items
+  CREATE: 150, // 1.5x base for create operations
+  UPDATE: 150, // 1.5x base for update operations
+  DELETE: 120, // 1.2x base for delete operations
+  ERROR: 100, // Same as base for error responses
+} as const;
+
+type HandlerOperationType = keyof typeof HANDLER_DELAYS;
+
+/**
+ * Helper function to handle delays consistently across handlers
+ */
+async function applyHandlerDelay(
+  operationType: HandlerOperationType,
+  customDelay?: number,
+) {
+  const delay = customDelay ?? HANDLER_DELAYS[operationType];
+  await new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+/**
  * Creates an MSW handler for GET endpoints that returns schema-validated data
  */
 export function createGetHandler<T extends keyof Schema>(
   path: string,
   _schemaKey: T, // Used only for type inference
   responseData: Schema[T] | Schema[T][] | null,
-  options?: { status?: number },
+  options?: { status?: number; delay?: number },
 ) {
-  return http.get(getTestApiUrl(path), () => {
+  return http.get(getTestApiUrl(path), async () => {
+    // Apply delay based on whether it's a list or single item operation
+    const operationType = Array.isArray(responseData)
+      ? 'GET_LIST'
+      : 'GET_SINGLE';
+    await applyHandlerDelay(operationType, options?.delay);
+
     if (!responseData) {
       return new HttpResponse(null, { status: options?.status || 500 });
     }
@@ -35,9 +67,11 @@ export function createPostHandler<
   options?: {
     validateRequest?: (req: Schema[T]) => boolean;
     errorResponse?: { status: number; message: string };
+    delay?: number;
   },
 ) {
   return http.post(getTestApiUrl(path), async ({ request }) => {
+    await applyHandlerDelay('CREATE', options?.delay);
     const body = (await request.json()) as Schema[T];
 
     if (options?.validateRequest && !options.validateRequest(body)) {
@@ -53,6 +87,14 @@ export function createPostHandler<
 
     return HttpResponse.json(responseData);
   });
+}
+
+/**
+ * Base options interface for handlers
+ */
+interface HandlerOptions {
+  delay?: number;
+  status?: number;
 }
 
 /**
@@ -69,9 +111,11 @@ export function createPutHandler<
   options?: {
     validateRequest?: (req: Schema[T]) => boolean;
     errorResponse?: { status: number; message: string };
+    delay?: number;
   },
 ) {
   return http.put(getTestApiUrl(path), async ({ request }) => {
+    await applyHandlerDelay('UPDATE', options?.delay);
     const body = (await request.json()) as Schema[T];
 
     if (options?.validateRequest && !options.validateRequest(body)) {
@@ -90,10 +134,41 @@ export function createPutHandler<
 }
 
 /**
+ * Creates an MSW handler for PUT endpoints that have no request body but return a schema-validated response
+ */
+export function createEmptyPutHandler<R extends keyof Schema>(
+  path: string,
+  _responseSchemaKey: R, // Used only for type inference
+  responseData: Schema[R],
+  options?: HandlerOptions,
+) {
+  return http.put(getTestApiUrl(path), async () => {
+    await applyHandlerDelay('UPDATE', options?.delay);
+    return HttpResponse.json(responseData);
+  });
+}
+
+/**
  * Creates an MSW handler for DELETE endpoints
  */
-export function createDeleteHandler(path: string) {
-  return http.delete(getTestApiUrl(path), () => {
+export function createDeleteHandler(path: string, options?: HandlerOptions) {
+  return http.delete(getTestApiUrl(path), async () => {
+    await applyHandlerDelay('DELETE', options?.delay);
     return new HttpResponse(null, { status: 204 });
+  });
+}
+
+/**
+ * Creates an MSW handler for error responses that match the API error schema
+ */
+export function createErrorHandler(
+  path: string,
+  status: number,
+  error: { detail: { message: string } },
+  options?: HandlerOptions,
+) {
+  return http.get(getTestApiUrl(path), async () => {
+    await applyHandlerDelay('ERROR', options?.delay);
+    return HttpResponse.json(error, { status });
   });
 }

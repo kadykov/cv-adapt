@@ -3,6 +3,7 @@ import { screen, fireEvent } from '@testing-library/react';
 import { render } from '../../../../../lib/test/test-utils';
 import { DetailedCVPreview } from '..';
 import type { DetailedCVResponse } from '../../../../../lib/api/generated-types';
+import { LanguageCode } from '../../../../../lib/language/types';
 
 // Mock the hooks
 vi.mock('../../../hooks/useDetailedCVs', () => ({
@@ -11,9 +12,10 @@ vi.mock('../../../hooks/useDetailedCVs', () => ({
       id: 1,
       user_id: 1,
       language_code: 'en',
-      content: {
-        markdown: '# Test CV\n\nThis is a test CV content.',
-      } as unknown as Record<string, never>,
+      content: '# Test CV\n\nThis is a test CV content.' as unknown as Record<
+        string,
+        never
+      >,
       is_primary: false,
       created_at: '2024-02-17T12:00:00Z',
       updated_at: null,
@@ -67,7 +69,7 @@ describe('DetailedCVPreview', () => {
   it('renders the CV preview with markdown content', () => {
     render(
       <DetailedCVPreview
-        languageCode="en"
+        languageCode={LanguageCode.ENGLISH}
         onEdit={mockOnEdit}
         onBack={mockOnBack}
       />,
@@ -90,7 +92,7 @@ describe('DetailedCVPreview', () => {
   it('calls onEdit when edit button is clicked', () => {
     render(
       <DetailedCVPreview
-        languageCode="en"
+        languageCode={LanguageCode.ENGLISH}
         onEdit={mockOnEdit}
         onBack={mockOnBack}
       />,

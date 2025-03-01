@@ -13,8 +13,10 @@ export const detailedCVKeys = {
   list: (filters: { language?: LanguageCode } = {}) =>
     [...detailedCVKeys.lists(), filters] as const,
   details: () => [...detailedCVKeys.all, 'detail'] as const,
-  detail: (languageCode: string) =>
-    [...detailedCVKeys.details(), languageCode] as const,
+  detail: (languageCode: LanguageCode | undefined) =>
+    languageCode
+      ? ([...detailedCVKeys.details(), languageCode] as const)
+      : ([...detailedCVKeys.details(), 'undefined'] as const),
 };
 
 /**
@@ -31,7 +33,10 @@ export function useDetailedCVs(options = {}) {
 /**
  * Hook for fetching a specific detailed CV by language code
  */
-export function useDetailedCV(languageCode: string, options = {}) {
+export function useDetailedCV(
+  languageCode: LanguageCode | undefined,
+  options = {},
+) {
   return useQuery({
     queryKey: detailedCVKeys.detail(languageCode),
     queryFn: () => getDetailedCV(languageCode),

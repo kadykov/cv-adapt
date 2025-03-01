@@ -4,9 +4,10 @@ import { useDetailedCV } from '../../hooks/useDetailedCVs';
 import { useDetailedCVMutations } from '../../hooks/useDetailedCVMutations';
 import { Button } from '@headlessui/react';
 import ReactMarkdown from 'react-markdown';
+import { LanguageCode } from '../../../../lib/language/types';
 
 interface DetailedCVPreviewProps {
-  languageCode: string;
+  languageCode: LanguageCode;
   onEdit?: () => void;
   onBack?: () => void;
 }
@@ -65,11 +66,10 @@ export function DetailedCVPreview({
     : formatDistanceToNow(new Date(cv.created_at), { addSuffix: true });
 
   // Extract markdown content from the CV
+  // The content field is expected to be a string that can be rendered as Markdown
   const markdownContent =
-    typeof cv.content === 'object' &&
-    cv.content !== null &&
-    'markdown' in cv.content
-      ? String(cv.content.markdown)
+    typeof cv.content === 'string'
+      ? (cv.content as string)
       : 'No content available';
 
   const handleDelete = async () => {
@@ -87,6 +87,7 @@ export function DetailedCVPreview({
     if (!cv.is_primary) {
       try {
         await setPrimary.mutateAsync(languageCode);
+        onBack?.(); // Navigate back to list after successful update
       } catch (error) {
         console.error('Failed to set CV as primary:', error);
       }

@@ -100,7 +100,7 @@ export function DetailedCVForm({
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-6" noValidate role="form">
       {errors.root && (
         <div role="alert" className="text-sm text-error mb-4">
           {errors.root.message}

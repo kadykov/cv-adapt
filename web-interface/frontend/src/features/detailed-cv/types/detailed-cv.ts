@@ -15,37 +15,39 @@ export type { DetailedCVCreate, DetailedCVResponse };
  */
 export interface DetailedCVFormData {
   language_code: LanguageCode;
-  content: string;
+  content: string; // Plain text content that will be stored in the CV
   is_primary: boolean;
 }
 
 /**
  * Mapping function to convert form data to API request
+ * Following the OpenAPI schema, content is Record<string, never>
+ * But in practice, we're storing a string in it
  */
 export function mapFormToApiRequest(
   formData: DetailedCVFormData,
-): Omit<DetailedCVCreate, 'content'> & { content: { markdown: string } } {
+): DetailedCVCreate {
+  // Cast the content string to Record<string, never> to match the OpenAPI schema
+  const content = formData.content as unknown as Record<string, never>;
+
   return {
     language_code: formData.language_code,
-    content: { markdown: formData.content }, // Store markdown content in a structured way
+    content,
     is_primary: formData.is_primary,
   };
 }
 
 /**
  * Mapping function to convert API response to form data
+ * Following the OpenAPI schema, content is Record<string, never>
+ * But in practice, we're storing a string in it
  */
 export function mapApiToFormData(
   response: DetailedCVResponse,
 ): DetailedCVFormData {
   return {
     language_code: response.language_code as LanguageCode,
-    content:
-      typeof response.content === 'object' &&
-      response.content !== null &&
-      'markdown' in response.content
-        ? String(response.content.markdown)
-        : '',
+    content: response.content as unknown as string,
     is_primary: response.is_primary,
   };
 }

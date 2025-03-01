@@ -88,12 +88,12 @@ graph TD
            {languages.map(lang => (
              <Menu.Item key={lang}>
                {({ active }) => (
-                 <button
+                 <Button
                    className={active ? 'bg-primary-100' : ''}
                    onClick={() => setFilter(lang)}
                  >
                    {lang}
-                 </button>
+                 </Button>
                )}
              </Menu.Item>
            ))}

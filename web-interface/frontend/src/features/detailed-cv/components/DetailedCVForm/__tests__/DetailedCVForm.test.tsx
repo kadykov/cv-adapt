@@ -31,9 +31,10 @@ describe('DetailedCVForm', () => {
     id: 1,
     user_id: 1,
     language_code: 'en',
-    content: {
-      markdown: '# Test CV\n\nThis is a test CV content.',
-    } as unknown as Record<string, never>,
+    content: '# Test CV\n\nThis is a test CV content.' as unknown as Record<
+      string,
+      never
+    >,
     is_primary: false,
     created_at: '2024-02-17T12:00:00Z',
     updated_at: null,

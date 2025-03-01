@@ -13,11 +13,10 @@ export function DetailedCVCard({ cv, onClick }: DetailedCVCardProps) {
     : formatDistanceToNow(new Date(cv.created_at), { addSuffix: true });
 
   // Extract a preview of the content (first 100 characters)
+  // The content field is expected to be a string that can be rendered as Markdown
   const contentPreview =
-    typeof cv.content === 'object' &&
-    cv.content !== null &&
-    'markdown' in cv.content
-      ? String(cv.content.markdown).substring(0, 100) + '...'
+    typeof cv.content === 'string'
+      ? (cv.content as string).substring(0, 100) + '...'
       : 'No content preview available';
 
   return (

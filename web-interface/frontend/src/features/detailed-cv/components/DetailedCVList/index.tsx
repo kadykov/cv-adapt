@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Button,
   Listbox,
   ListboxButton,
   ListboxOptions,
@@ -59,9 +60,9 @@ export function DetailedCVList({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <button className="btn btn-primary" onClick={onCreateCV}>
+        <Button className="btn btn-primary" onClick={onCreateCV}>
           Create Detailed CV
-        </button>
+        </Button>
         <Listbox value={selectedLang} onChange={setSelectedLang}>
           <div className="relative w-48">
             <ListboxButton className="relative w-full cursor-default rounded-lg bg-base-200 py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-75 focus-visible:ring-offset-2">
@@ -138,12 +139,12 @@ export function DetailedCVList({
       ) : (
         <div className="text-center py-8">
           <p className="text-base-content/70">No detailed CVs found</p>
-          <button
+          <Button
             className="btn btn-outline btn-sm mt-4"
             onClick={() => onCreateCV?.()}
           >
             Create your first detailed CV
-          </button>
+          </Button>
         </div>
       )}
     </div>

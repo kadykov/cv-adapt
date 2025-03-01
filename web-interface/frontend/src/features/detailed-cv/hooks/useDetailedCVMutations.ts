@@ -9,6 +9,7 @@ import {
 } from '../api/detailedCVApi';
 import { detailedCVKeys } from './useDetailedCVs';
 import type { DetailedCVFormData } from '../types/detailed-cv';
+import { LanguageCode } from '../../../lib/language/types';
 
 /**
  * Hook for detailed CV mutations (create, update, delete, set primary)
@@ -22,7 +23,7 @@ export function useDetailedCVMutations() {
       languageCode,
       data,
     }: {
-      languageCode: string;
+      languageCode: LanguageCode;
       data: DetailedCVFormData;
     }) => upsertDetailedCV(languageCode, data),
     onSuccess: () => {
@@ -33,7 +34,7 @@ export function useDetailedCVMutations() {
 
   // Delete a detailed CV
   const deleteCV = useMutation({
-    mutationFn: (languageCode: string) => deleteDetailedCV(languageCode),
+    mutationFn: (languageCode: LanguageCode) => deleteDetailedCV(languageCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: detailedCVKeys.all });
     },
@@ -41,7 +42,7 @@ export function useDetailedCVMutations() {
 
   // Set a detailed CV as primary
   const setPrimary = useMutation({
-    mutationFn: (languageCode: string) => setPrimaryCV(languageCode),
+    mutationFn: (languageCode: LanguageCode) => setPrimaryCV(languageCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: detailedCVKeys.all });
     },

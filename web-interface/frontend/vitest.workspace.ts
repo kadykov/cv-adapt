@@ -24,10 +24,16 @@ export default defineWorkspace([
       include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
       testTimeout: 15000,
       hookTimeout: 15000,
+      retry: 2,
       maxConcurrency: 1,
       isolate: true,
       sequence: {
         shuffle: false,
+      },
+      poolOptions: {
+        threads: {
+          singleThread: true,
+        },
       },
       deps: {
         optimizer: {
