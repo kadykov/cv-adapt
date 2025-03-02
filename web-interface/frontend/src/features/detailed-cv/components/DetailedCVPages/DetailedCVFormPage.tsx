@@ -39,12 +39,17 @@ export function DetailedCVFormPage() {
     );
   }
 
-  if (error && (error as unknown as ApiError).status !== 404) {
-    return (
-      <div role="alert" className="alert alert-error">
-        <span>Failed to load CV data. Please try again.</span>
-      </div>
-    );
+  // Handle errors, but treat 404 as a valid "create new CV" state
+  if (error) {
+    const apiError = error as unknown as ApiError;
+    if (apiError?.status && apiError.status !== 404) {
+      // Only show error for non-404 API errors
+      return (
+        <div role="alert" className="alert alert-error">
+          <span>An unexpected error occurred. Please try again.</span>
+        </div>
+      );
+    }
   }
 
   const handleSuccess = () => {

@@ -161,12 +161,9 @@ describe('Detailed CV Operations Integration', () => {
         'DetailedCVResponse',
         mockDetailedCVs[1],
       ),
-      createGetHandler('/user/detailed-cvs/de', 'DetailedCVResponse', {
-        id: 3,
-        user_id: 1,
-        created_at: '2024-02-17T12:00:00Z',
-        updated_at: null,
-        ...mockNewCV,
+      // Return null for initial load to trigger create mode
+      createGetHandler('/user/detailed-cvs/de', 'DetailedCVResponse', null, {
+        status: 404,
       }),
       createPutHandler(
         '/user/detailed-cvs/de',
@@ -243,7 +240,7 @@ describe('Detailed CV Operations Integration', () => {
     ]);
 
     // Submit form
-    const submitButton = screen.getByRole('button', { name: /save changes/i });
+    const submitButton = screen.getByRole('button', { name: /create cv/i });
     await user.click(submitButton);
 
     // Verify redirect and update
@@ -266,6 +263,72 @@ describe('Detailed CV Operations Integration', () => {
       // Check for the new CV content
       const cvContent = screen.getByText((content) =>
         content.includes('Deutscher Lebenslauf'),
+      );
+      expect(cvContent).toBeInTheDocument();
+    });
+  });
+
+  test('should handle non-existent CV gracefully', async () => {
+    // Setup handler for 404 when CV doesn't exist
+    addIntegrationHandlers([
+      createGetHandler('/user/detailed-cvs/es', 'DetailedCVResponse', null, {
+        status: 404,
+      }),
+    ]);
+
+    const user = userEvent.setup();
+    await renderWithAuth([ROUTES.DETAILED_CVS.FORM('es')]);
+
+    // Verify empty form is shown without error
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.getByRole('form')).toBeInTheDocument();
+      expect(screen.getByText('Spanish')).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Failed to load CV data/i),
+      ).not.toBeInTheDocument();
+    });
+
+    // Add handlers for successful creation
+    const newSpanishCV = {
+      id: 4,
+      user_id: 1,
+      language_code: 'es',
+      content: '# CV en Español\n\nEste es mi CV en español.',
+      is_primary: false,
+      created_at: '2024-02-17T12:00:00Z',
+      updated_at: null,
+    };
+
+    addIntegrationHandlers([
+      createPutHandler(
+        '/user/detailed-cvs/es',
+        'DetailedCVCreate',
+        'DetailedCVResponse',
+        newSpanishCV,
+      ),
+      createGetHandler('/user/detailed-cvs', 'DetailedCVResponse', [
+        ...mockDetailedCVs,
+        newSpanishCV,
+      ]),
+    ]);
+
+    // Fill in content for new CV
+    const contentInput = screen.getByLabelText(/cv content/i);
+    await user.type(contentInput, newSpanishCV.content);
+
+    // Submit form
+    const submitButton = screen.getByRole('button', { name: /create cv/i });
+    await user.click(submitButton);
+
+    // Verify redirect and update
+    await waitFor(() => {
+      expect(screen.queryByRole('form')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Detailed CVs' }),
+      ).toBeInTheDocument();
+      const cvContent = screen.getByText((content) =>
+        content.includes('CV en Español'),
       );
       expect(cvContent).toBeInTheDocument();
     });
