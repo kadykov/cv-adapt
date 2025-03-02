@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '../../../../lib/components/Badge';
 import { useDetailedCV } from '../../hooks/useDetailedCVs';
 import { useDetailedCVMutations } from '../../hooks/useDetailedCVMutations';
-import { Button } from '@headlessui/react';
+import { Button, Dialog } from '@headlessui/react';
 import ReactMarkdown from 'react-markdown';
 import { LanguageCode } from '../../../../lib/language/types';
 
@@ -20,6 +21,7 @@ export function DetailedCVPreview({
   const { data: cv, isLoading, isError, error } = useDetailedCV(languageCode);
 
   const { deleteCV, setPrimary } = useDetailedCVMutations();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -73,13 +75,12 @@ export function DetailedCVPreview({
       : 'No content available';
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this CV?')) {
-      try {
-        await deleteCV.mutateAsync(languageCode);
-        onBack?.();
-      } catch (error) {
-        console.error('Failed to delete CV:', error);
-      }
+    try {
+      await deleteCV.mutateAsync(languageCode);
+      setIsDeleteDialogOpen(false);
+      onBack?.();
+    } catch (error) {
+      console.error('Failed to delete CV:', error);
     }
   };
 
@@ -133,13 +134,46 @@ export function DetailedCVPreview({
           </Button>
           <Button
             className="btn btn-outline btn-error"
-            onClick={handleDelete}
-            disabled={deleteCV.isPending}
+            onClick={() => setIsDeleteDialogOpen(true)}
             aria-label="Delete detailed CV"
           >
-            {deleteCV.isPending ? 'Deleting...' : 'Delete'}
+            Delete
           </Button>
         </div>
+
+        <Dialog
+          open={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          className="relative z-50"
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="w-full max-w-md rounded-lg bg-base-100 p-6">
+              <Dialog.Title className="text-lg font-bold">
+                Delete Detailed CV
+              </Dialog.Title>
+              <Dialog.Description className="py-4">
+                Are you sure you want to delete this CV? This action cannot be
+                undone.
+              </Dialog.Description>
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-error"
+                  onClick={handleDelete}
+                  disabled={deleteCV.isPending}
+                >
+                  {deleteCV.isPending ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
 
         {deleteCV.isError && (
           <div className="alert alert-error mt-4" role="alert">

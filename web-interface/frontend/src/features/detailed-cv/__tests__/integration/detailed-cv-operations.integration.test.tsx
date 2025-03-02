@@ -357,27 +357,45 @@ describe('Detailed CV Operations Integration', () => {
       ]),
     ]);
 
-    // Start on list page and click English CV to view it
+    // Start on list page and click English CV to view details
     await renderWithAuth([ROUTES.DETAILED_CVS.LIST]);
 
-    // Wait for CV content to be visible and click it
+    // Wait for CV content to be visible
+    let cvButton: HTMLElement | null = null;
     await waitFor(() => {
-      const cvContent = screen.getByText((content) =>
-        content.includes('English CV'),
-      );
-      expect(cvContent).toBeInTheDocument();
+      const cvElements = screen.getAllByText((content) => {
+        return content.toLowerCase().includes('english cv');
+      });
+      expect(cvElements[0]).toBeInTheDocument();
+      cvButton = cvElements[0].closest('[role="button"]');
+      expect(cvButton).not.toBeNull();
     });
 
-    const cvCard = screen
-      .getByText((content) => content.includes('English CV'))
-      .closest('[role="button"]');
-    await user.click(cvCard!);
+    // Click CV card to view details
+    await user.click(cvButton!);
+
+    // Verify detail page content
+    await waitFor(() => {
+      expect(screen.getByText('EN')).toBeInTheDocument(); // Language badge
+      expect(
+        screen.getByRole('button', { name: /edit detailed cv/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /delete detailed cv/i }),
+      ).toBeInTheDocument();
+      const detailCvElements = screen.getAllByText((content) => {
+        return content.toLowerCase().includes('english cv');
+      });
+      expect(detailCvElements.length).toBeGreaterThan(0);
+    });
+
+    // Click edit button
+    await user.click(screen.getByRole('button', { name: /edit detailed cv/i }));
 
     // Wait for form to load with existing content
     await waitFor(() => {
       expect(screen.getByRole('form')).toBeInTheDocument();
       expect(screen.getByText('English')).toBeInTheDocument(); // Language badge
-
       const contentInput = screen.getByLabelText(/cv content/i);
       expect(contentInput).toHaveValue(mockDetailedCVs[0].content);
     });
@@ -400,6 +418,86 @@ describe('Detailed CV Operations Integration', () => {
         content.includes('Updated English CV'),
       );
       expect(cvContent).toBeInTheDocument();
+    });
+  });
+
+  test('should delete an existing CV with confirmation', async () => {
+    const user = userEvent.setup();
+
+    // Start on detail page of French CV
+    await renderWithAuth([ROUTES.DETAILED_CVS.DETAIL('fr')]);
+
+    // Wait for CV content and delete button
+    await waitFor(() => {
+      expect(screen.getByText('FR')).toBeInTheDocument(); // Language badge
+      expect(
+        screen.getByRole('button', { name: /delete cv/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText((content) => content.includes('CV Français')),
+      ).toBeInTheDocument();
+    });
+
+    // Click delete button
+    await user.click(
+      screen.getByRole('button', { name: /delete detailed cv/i }),
+    );
+
+    // Verify confirmation dialog
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(
+        screen.getByText(/are you sure you want to delete this cv?/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /cancel/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^delete$/i }),
+      ).toBeInTheDocument();
+    });
+
+    // Setup handlers for successful delete
+    addIntegrationHandlers([
+      createGetHandler('/user/detailed-cvs', 'DetailedCVResponse', [
+        mockDetailedCVs[0], // Only English CV remains
+      ]),
+    ]);
+
+    // Click delete button in dialog
+    await user.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    // Verify redirect and list update
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Detailed CVs' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText((content) => content.includes('CV Français')),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  test('should cancel CV deletion', async () => {
+    const user = userEvent.setup();
+
+    // Start on detail page of French CV
+    await renderWithAuth([ROUTES.DETAILED_CVS.DETAIL('fr')]);
+
+    // Click delete button
+    await user.click(screen.getByRole('button', { name: /delete cv/i }));
+
+    // Click cancel in confirmation dialog
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+    // Verify dialog closes and CV still exists
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByText('FR')).toBeInTheDocument();
+      expect(
+        screen.getByText((content) => content.includes('CV Français')),
+      ).toBeInTheDocument();
     });
   });
 });

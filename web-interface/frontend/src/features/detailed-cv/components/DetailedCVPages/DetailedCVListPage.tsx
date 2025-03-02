@@ -7,7 +7,7 @@ export function DetailedCVListPage() {
   const navigate = useNavigate();
 
   const handleCVSelect = (languageCode: LanguageCode) => {
-    navigate(ROUTES.DETAILED_CVS.FORM(languageCode));
+    navigate(ROUTES.DETAILED_CVS.DETAIL(languageCode));
   };
 
   const handleCreateCVForLanguage = (languageCode: LanguageCode) => {

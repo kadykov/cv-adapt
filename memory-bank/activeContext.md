@@ -8,22 +8,29 @@
    - ✓ Base components implemented
    - ✓ OpenAPI integration complete
    - ✓ Initial UI/UX simplification
-   - Current: Form and Navigation Refinements
-     - Component Consolidation:
+   - ✓ Form and Navigation Refinements
+     - ✓ Integrate with DetailedCVDetailPage:
+       - List → Detail → Edit/Delete flow
+       - Create flow preserved for new CVs
+       - Delete confirmation using Headless UI
+     - ✓ Component Consolidation:
        - Merge create/edit into unified DetailedCVFormPage
        - Align with backend upsert pattern
        - Simplify routing architecture
-     - UX Improvements:
+     - ✓ UX Improvements:
        - Add language indicators in page titles
-       - Remove redundant language selection
+       - Improved navigation with breadcrumb pattern
        - Consistent form behavior
-     - Implementation Updates:
-       - New unified form route `/detailed-cvs/:languageCode/form`
+       - Accessible delete confirmation dialog
+     - ✓ Implementation Updates:
+       - New detail route `/detailed-cvs/:languageCode`
        - Language-aware page titles and badges
-       - Update card navigation logic
-     - Testing:
-       - Update integration tests for new routing
-       - Add tests for unified form behavior
+       - Updated card navigation logic
+       - Headless UI dialog for delete confirmation
+     - ✓ Testing:
+       - Updated integration tests for new flow
+       - Added delete confirmation tests
+       - Comprehensive test coverage
 
 2. **Job Catalog Feature**
    - ✓ All components implemented

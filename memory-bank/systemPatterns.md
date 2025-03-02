@@ -75,7 +75,23 @@
    - Co-located components
    - Clear separation of concerns
 
-3. **Form Page Pattern**
+3. **Detailed CV Management Pattern**
+   ```
+   List Page (DetailedCVListPage)
+     ↙               ↘
+   Detail Page    Create Form
+   (View/Delete)   (New CV)
+     ↓
+   Edit Form
+   ```
+   - Two distinct flows:
+     1. List → Detail → Edit/Delete (existing CVs)
+     2. List → Create Form (new CVs)
+   - Unified form component for create/edit
+   - Consistent language code handling
+   - Modal-based delete confirmation
+
+4. **Form Page Pattern**
    ```typescript
    // DetailedCVFormPage.tsx
    export function DetailedCVFormPage() {
@@ -100,7 +116,30 @@
    - Early loading states
    - Clean component hierarchy
 
-4. **Job Management Pattern**
+5. **Delete Confirmation Pattern**
+   ```typescript
+   // Using Headless UI Dialog
+   <Dialog
+     open={isDeleteDialogOpen}
+     onClose={handleClose}
+   >
+     <Dialog.Panel>
+       <Dialog.Title>Confirm Delete</Dialog.Title>
+       <Dialog.Description>
+         Confirmation message
+       </Dialog.Description>
+       <Button onClick={handleDelete}>Delete</Button>
+       <Button onClick={handleClose}>Cancel</Button>
+     </Dialog.Panel>
+   </Dialog>
+   ```
+   - Accessible dialog implementation
+   - Clear action buttons
+   - Keyboard navigation support
+   - Focus management
+   - Escape key handling
+
+6. **Job Management Pattern**
    ```
    features/job-catalog/
      components/             # UI Components
