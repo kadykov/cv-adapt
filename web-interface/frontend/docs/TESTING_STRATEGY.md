@@ -89,6 +89,54 @@ features/
 - Mutation state management
 - Cache behavior
 
+#### React Query Testing Patterns
+
+```typescript
+// 1. Create a mock module function
+const mockUseMutation = vi.fn();
+
+// 2. Mock the module
+vi.mock('./hooks/useMutation', () => ({
+  useMutation: () => mockUseMutation(),
+}));
+
+// 3. Create type-safe mock data
+const createMockMutation = (mutateAsync = vi.fn().mockResolvedValue({})) => ({
+  mutateAsync,
+  mutate: vi.fn(),
+  variables: undefined,
+  data: undefined,
+  error: null,
+  isError: false as const,
+  isPending: false as const,
+  isSuccess: false as const,
+  isIdle: true as const,
+  status: 'idle' as const,
+  reset: vi.fn(),
+  context: undefined,
+  isPaused: false,
+  submittedAt: 0,
+});
+
+// 4. Use in tests
+beforeEach(() => {
+  mockUseMutation.mockReturnValue(createMockMutation());
+});
+
+// 5. Override for specific tests
+const mockSpecificMutation = vi.fn().mockResolvedValue({ id: 1 });
+mockUseMutation.mockReturnValue(createMockMutation(mockSpecificMutation));
+```
+
+Key benefits:
+
+- Type-safe mutation mocks
+- Consistent state flags
+- Reusable mock creation
+- Easy per-test overrides
+- Complete type coverage
+- Centralized mock patterns
+
 #### Best Practices
 
 - Provider isolation

@@ -16,8 +16,7 @@ import {
 // Import detailed CV components
 import {
   DetailedCVListPage,
-  CreateDetailedCVPage,
-  EditDetailedCVPage,
+  DetailedCVFormPage,
   DetailedCVDetailPage,
 } from './features/detailed-cv/components/DetailedCVPages';
 
@@ -60,16 +59,12 @@ function App() {
                   element={<DetailedCVListPage />}
                 />
                 <Route
-                  path={ROUTES.DETAILED_CVS.CREATE}
-                  element={<CreateDetailedCVPage />}
+                  path={ROUTES.DETAILED_CVS.FORM(':languageCode')}
+                  element={<DetailedCVFormPage />}
                 />
                 <Route
                   path={ROUTES.DETAILED_CVS.DETAIL(':languageCode')}
                   element={<DetailedCVDetailPage />}
-                />
-                <Route
-                  path={ROUTES.DETAILED_CVS.EDIT(':languageCode')}
-                  element={<EditDetailedCVPage />}
                 />
               </Route>
             </Route>

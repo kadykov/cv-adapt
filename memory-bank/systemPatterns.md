@@ -55,7 +55,52 @@
    - Automatic synchronization across components
    - Token management integrated with query system
 
-2. **Job Management Pattern**
+2. **Unified Form Pattern**
+   ```
+   features/feature-name/
+     components/
+       DetailedCVPages/     # Organized page components
+         DetailedCVFormPage.tsx  # Unified form container
+         DetailedCVListPage.tsx  # List view
+         index.ts           # Public exports
+       DetailedCVForm/      # Form component
+         DetailedCVForm.tsx # Core form logic
+         __tests__/        # Component tests
+   ```
+   - Single form component for create/edit
+   - Required language code in props
+   - Page-level mode detection
+   - Centralized navigation
+   - Consistent error handling
+   - Co-located components
+   - Clear separation of concerns
+
+3. **Form Page Pattern**
+   ```typescript
+   // DetailedCVFormPage.tsx
+   export function DetailedCVFormPage() {
+     const { languageCode } = useParams<{ languageCode: LanguageCode }>();
+     const { data: cv, isLoading } = useDetailedCV(validLanguageCode);
+
+     // Early validations and returns
+     if (!validLanguageCode) return <Redirect />;
+     if (isLoading) return <Loader />;
+
+     return (
+       <DetailedCVForm
+         mode={cv ? 'edit' : 'create'}
+         languageCode={validLanguageCode}
+         initialData={cv}
+       />
+     );
+   }
+   ```
+   - URL-based mode detection
+   - Required language validation
+   - Early loading states
+   - Clean component hierarchy
+
+4. **Job Management Pattern**
    ```
    features/job-catalog/
      components/             # UI Components
@@ -76,7 +121,7 @@
    - Component-based architecture
    - Comprehensive testing
 
-2. **Language Management**
+5. **Language Management**
    ```
    lib/language/
      types.ts       # Language enums and interfaces
@@ -89,7 +134,7 @@
    - Type-safe language selection
    - Shared language utilities
 
-2. **Feature-Based Organization**
+6. **Feature-Based Organization**
    ```
    features/
      feature-name/
@@ -100,23 +145,16 @@
        __tests__/    # Tests organized by type
    ```
 
-2. **Data Flow Pattern**
+7. **Data Flow Pattern**
    ```
    API Schema → Generated Types → Service Layer → React Query → Components
    ```
 
-3. **Testing Pyramid**
+8. **Testing Pyramid**
    ```
    Integration Tests (Features)
          ↓
    Unit Tests (Components)
-   ```
-
-4. **API Contract Management**
-   ```
-   OpenAPI Schema → Generated Types → Integration Tests
-                                  ↓
-                        Type-Safe API Handlers
    ```
 
 ## API Integration Patterns
@@ -147,60 +185,6 @@
    - MSW for API mocking
    - React Query integration
 
-## Testing Infrastructure Patterns
-
-1. **Workspace Configuration**
-   ```
-   Testing Infrastructure
-         ↓
-   Base Config (vitest.config.ts) → Workspace Projects
-         ↓                              ↓
-   Shared Settings             Project-Specific Settings
-   ```
-   - Separate unit and integration test configs
-   - Extended timeouts for integration tests
-   - Single test concurrency for stability
-   - Environment-specific setup files
-   - Shared coverage configuration
-
-2. **Test File Organization**
-   ```
-   __tests__/
-     integration/      # Integration tests
-       feature1.test.ts
-       feature2.test.ts
-     unit/            # Unit tests
-       component.test.ts
-     common/          # Shared test utilities
-       helpers.ts
-   ```
-
-3. **Handler Management**
-   ```
-   Testing Infrastructure
-         ↓
-   URL Helper → Handler Generator → Integration Handlers
-         ↓                                ↓
-   URL Validation            Schema-Based Response Types
-   ```
-   - Centralized API URL management
-   - Type-safe request/response handling
-   - Reusable handler generation
-   - Consistent error simulation
-
-3. **Testing Utilities**
-   ```
-   Test Setup
-     ↓
-   Providers → Query Client → Auth State
-     ↓
-   Component Render
-   ```
-   - Common test wrapper components
-   - Shared utility functions
-   - Standard mock data patterns
-   - Route simulation helpers
-
 ## Component Patterns
 
 1. **Language-Aware Components**
@@ -211,89 +195,142 @@
      ↓
    Typed Language Selection
    ```
-   - Enum-based language selection
-   - Type-safe language code handling
-   - Centralized language validation
+   - Required language code props
+   - Type-safe language validation
+   - Early validation returns
 
 2. **Smart/Dumb Component Split**
    ```
-   Smart Component
+   Page Component (Smart)
      ↓
-   Data Fetching/State
-     ↓
-   Presentational Components
+   Form Component (Dumb)
    ```
-
-2. **Composition Pattern**
-   - Higher-order components for shared logic
-   - Component composition over inheritance
-   - Context providers for shared state
+   - Page handles data fetching/routing
+   - Form handles user input/validation
+   - Clear responsibility separation
 
 3. **Hook Patterns**
-   - Custom hooks for reusable logic
-   - Query hooks for data fetching
-   - Form hooks for validation
-
-## Extension Points
-
-1. **Custom Generators**
-   - Protocol-based implementation
-   - Component-specific generation
-   - Language-aware generation
-
-2. **Custom Renderers**
-   - Format-specific rendering
-   - Custom output formats
-   - Template overrides
-
-3. **Template Customization**
-   - Override default templates
-   - Language-specific variations
-   - Custom component templates
-
-4. **Frontend Extension Points**
-   - Custom form validators
-   - Component overrides
-   - API interceptors
-   - Test helpers
-
-## Performance Patterns
-
-1. **Frontend Optimization**
-   - React Query caching
-   - Code splitting by feature
-   - Lazy loading components
-   - Bundle size optimization
-
-2. **Backend Caching**
-   - Template caching
-   - Language context caching
-   - Resource pooling
-
-3. **Lazy Loading**
-   - Deferred template loading
-   - On-demand resource initialization
-   - Route-based code splitting
+   ```typescript
+   // Feature-specific hooks
+   function useDetailedCV(languageCode: LanguageCode | undefined) {
+     // Only fetch when language code is valid
+     return useQuery({
+       enabled: !!languageCode,
+       // ...
+     });
+   }
+   ```
+   - Conditional data fetching
+   - Type-safe parameters
+   - Consistent error handling
 
 ## Error Handling
 
-1. **Language Validation**
-   - Enum-based validation
-   - Type-safe language code checks
-   - Consistent error messages
-   - Cross-component validation rules
+1. **Frontend Error Pattern**
+   ```typescript
+   // Type-safe error handling
+   interface ApiError {
+     status: number;
+     message: string;
+   }
 
-2. **Validation Layer**
-   - Pydantic model validation
-   - Language validation
-   - Template validation
+   if (error && ((error as unknown) as ApiError).status !== 404) {
+     return <ErrorDisplay />;
+   }
+   ```
+   - Type-safe error casting
+   - Centralized error types
+   - Consistent error UI
+   - Status code handling
 
-2. **Generator Errors**
-   - Template rendering errors
-   - Context preparation errors
-   - Generation failures
+2. **Validation Pattern**
+   ```typescript
+   // Early validation returns
+   if (!validLanguageCode) {
+     navigate(ROUTES.LIST);
+     return null;
+   }
+   ```
+   - Early validation checks
+   - Type-safe validation
+   - Clear error paths
+   - Automatic navigation
 
-3. **Renderer Errors**
-   - Format conversion errors
-   - Output generation errors
-   - Resource access errors
+## Testing Patterns
+
+1. **React Query Mutation Testing Pattern**
+   ```typescript
+   // Create a mock module function
+   const mockUseMyMutation = vi.fn();
+
+   // Mock the module
+   vi.mock('./myHook', () => ({
+     useMyMutation: () => mockUseMyMutation()
+   }));
+
+   // Create type-safe mock data
+   const createMockMutation = (mutateAsync = vi.fn()) => ({
+     mutateAsync,
+     mutate: vi.fn(),
+     variables: undefined,
+     data: undefined,
+     error: null,
+     isError: false as const,
+     isPending: false as const,
+     isSuccess: false as const,
+     isIdle: true as const,
+     status: 'idle' as const,
+     // ... other required properties
+   });
+
+   // Use in tests
+   beforeEach(() => {
+     mockUseMyMutation.mockReturnValue({
+       mutation: createMockMutation()
+     });
+   });
+   ```
+   - Type-safe mutation mocks
+   - Reusable mock creation
+   - Easy override per test
+   - Consistent state flags
+   - Complete type coverage
+
+2. **Integration Test Pattern**
+   ```typescript
+   test('creates new CV with language', async () => {
+     // Setup
+     const handlers = [
+       createGetHandler('/api/cvs'),
+       createPutHandler('/api/cvs/de')
+     ];
+
+     // Render with routing
+     render(<App />, { handlers });
+
+     // Interact and verify
+     await user.click(screen.getByText('Create'));
+     expect(screen.getByText('Success')).toBeInTheDocument();
+   });
+   ```
+   - Complete feature testing
+   - API mock handlers
+   - Routing integration
+   - User interaction simulation
+
+2. **Unit Test Pattern**
+   ```typescript
+   test('form handles submission', () => {
+     render(
+       <DetailedCVForm
+         mode="create"
+         languageCode={LanguageCode.ENGLISH}
+       />
+     );
+     // Test form behavior
+   });
+   ```
+   - Isolated component testing
+   - Required props testing
+   - Clear test boundaries
+   - Comprehensive coverage

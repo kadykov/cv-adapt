@@ -20,7 +20,7 @@ export function DetailedCVDetailPage() {
   }
 
   const handleEdit = () => {
-    navigate(ROUTES.DETAILED_CVS.EDIT(languageCode));
+    navigate(ROUTES.DETAILED_CVS.FORM(languageCode));
   };
 
   const handleBack = () => {

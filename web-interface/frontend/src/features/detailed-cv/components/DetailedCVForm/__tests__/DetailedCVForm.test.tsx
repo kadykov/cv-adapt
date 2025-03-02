@@ -5,28 +5,34 @@ import { DetailedCVForm } from '../DetailedCVForm';
 import type { DetailedCVResponse } from '../../../../../lib/api/generated-types';
 import { LanguageCode } from '../../../../../lib/language/types';
 
-// Mock the useDetailedCVMutations hook
-vi.mock('../../../hooks/useDetailedCVMutations', () => ({
-  useDetailedCVMutations: () => ({
-    upsertCV: {
-      mutateAsync: vi.fn().mockResolvedValue({}),
-      isPending: false,
-      isError: false,
-      error: null,
-    },
-  }),
-}));
+// Create a mock module
+const mockUseDetailedCVMutations = vi.fn();
 
-// Mock the getLanguageOptions function
-vi.mock('../../../../../lib/language/config', () => ({
-  getLanguageOptions: () => [
-    { value: 'en', label: 'English' },
-    { value: 'fr', label: 'French' },
-    { value: 'de', label: 'German' },
-  ],
+// Mock the module
+vi.mock('../../../hooks/useDetailedCVMutations', () => ({
+  useDetailedCVMutations: () => mockUseDetailedCVMutations(),
 }));
 
 describe('DetailedCVForm', () => {
+  const createMockMutation = (mutateAsync = vi.fn().mockResolvedValue({})) => ({
+    mutateAsync,
+    mutate: vi.fn(),
+    variables: undefined,
+    data: undefined,
+    error: null,
+    isError: false as const,
+    isPending: false as const,
+    isSuccess: false as const,
+    isIdle: true as const,
+    failureCount: 0,
+    failureReason: null,
+    status: 'idle' as const,
+    reset: vi.fn(),
+    context: undefined,
+    isPaused: false,
+    submittedAt: 0,
+  });
+
   const mockCV = {
     id: 1,
     user_id: 1,
@@ -42,19 +48,25 @@ describe('DetailedCVForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set up default mock implementation
+    mockUseDetailedCVMutations.mockReturnValue({
+      upsertCV: createMockMutation(),
+      deleteCV: createMockMutation(),
+      setPrimary: createMockMutation(),
+    });
   });
 
   it('renders the form in create mode', () => {
     render(
       <DetailedCVForm
         mode="create"
+        languageCode={LanguageCode.ENGLISH}
         onSuccess={mockOnSuccess}
         onCancel={mockOnCancel}
       />,
     );
 
     // Check form elements
-    expect(screen.getByText('Language')).toBeInTheDocument();
     expect(screen.getByText('CV Content (Markdown)')).toBeInTheDocument();
     expect(screen.getByText('Set as primary CV')).toBeInTheDocument();
 
@@ -67,25 +79,27 @@ describe('DetailedCVForm', () => {
     render(
       <DetailedCVForm
         mode="edit"
+        languageCode={LanguageCode.ENGLISH}
         initialData={mockCV}
         onSuccess={mockOnSuccess}
         onCancel={mockOnCancel}
       />,
     );
 
-    // Language should be disabled in edit mode
-    const languageButton = screen.getByLabelText('Language');
-    expect(languageButton).toHaveAttribute('disabled');
-
     // Content should be pre-filled
     const textarea = screen.getByRole('textbox');
     expect(textarea).toHaveValue('# Test CV\n\nThis is a test CV content.');
+
+    // Primary switch should match initial data
+    const primarySwitch = screen.getByRole('switch');
+    expect(primarySwitch).not.toBeChecked();
   });
 
   it('calls onCancel when cancel button is clicked', () => {
     render(
       <DetailedCVForm
         mode="create"
+        languageCode={LanguageCode.ENGLISH}
         onSuccess={mockOnSuccess}
         onCancel={mockOnCancel}
       />,
@@ -111,6 +125,47 @@ describe('DetailedCVForm', () => {
     // Wait for validation errors
     await waitFor(() => {
       expect(screen.getByText('Content is required')).toBeInTheDocument();
+    });
+  });
+
+  it('submits the form with the correct language code', async () => {
+    const mockUpsertCV = vi.fn().mockResolvedValue({});
+
+    // Override the mock for this test
+    mockUseDetailedCVMutations.mockReturnValue({
+      upsertCV: createMockMutation(mockUpsertCV),
+      deleteCV: createMockMutation(),
+      setPrimary: createMockMutation(),
+    });
+
+    render(
+      <DetailedCVForm
+        mode="create"
+        languageCode={LanguageCode.GERMAN}
+        onSuccess={mockOnSuccess}
+        onCancel={mockOnCancel}
+      />,
+    );
+
+    // Fill in content
+    const textarea = screen.getByRole('textbox');
+    fireEvent.change(textarea, {
+      target: { value: '# New CV\n\nThis is new content.' },
+    });
+
+    // Submit form
+    fireEvent.click(screen.getByText('Create CV'));
+
+    // Check that upsertCV was called with the correct language code
+    await waitFor(() => {
+      expect(mockUpsertCV).toHaveBeenCalledWith({
+        languageCode: LanguageCode.GERMAN,
+        data: {
+          content: '# New CV\n\nThis is new content.',
+          language_code: LanguageCode.GERMAN,
+          is_primary: false,
+        },
+      });
     });
   });
 });

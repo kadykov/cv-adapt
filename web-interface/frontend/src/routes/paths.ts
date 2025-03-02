@@ -9,8 +9,7 @@ export const ROUTES = {
   },
   DETAILED_CVS: {
     LIST: '/detailed-cvs',
-    CREATE: '/detailed-cvs/new',
-    EDIT: (languageCode: string) => `/detailed-cvs/${languageCode}/edit`,
+    FORM: (languageCode: string) => `/detailed-cvs/${languageCode}/form`,
     DETAIL: (languageCode: string) => `/detailed-cvs/${languageCode}`,
   },
 } as const;

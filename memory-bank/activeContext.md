@@ -2,26 +2,28 @@
 
 ## Current Focus
 
-1. **Detailed CV Management Refinements**
+1. **Detailed CV Management Improvements**
    - ✓ Feature structure implemented
    - ✓ Following established frontend patterns
-   - Components implemented:
-     - ✓ DetailedCVForm with markdown support
-     - ✓ DetailedCVPreview with react-markdown
-   - ✓ Using HeadlessUI and DaisyUI components
-   - ✓ Integration with OpenAPI types
-   - ✓ Unit tests for components
-   - Current: UI/UX Simplification
-     - ✓ Identified redundant UI elements
-     - ✓ Confirmed one-CV-per-language rule
-     - Implementation Changes:
-       - Remove language filtering (not needed per business rule)
-       - Use single create button with clear labeling
-       - Add available language detection
-     - Component Restructuring:
-       - Base hook usage instead of filtered queries
-       - Grid-based language organization
-       - Clearer user action paths
+   - ✓ Base components implemented
+   - ✓ OpenAPI integration complete
+   - ✓ Initial UI/UX simplification
+   - Current: Form and Navigation Refinements
+     - Component Consolidation:
+       - Merge create/edit into unified DetailedCVFormPage
+       - Align with backend upsert pattern
+       - Simplify routing architecture
+     - UX Improvements:
+       - Add language indicators in page titles
+       - Remove redundant language selection
+       - Consistent form behavior
+     - Implementation Updates:
+       - New unified form route `/detailed-cvs/:languageCode/form`
+       - Language-aware page titles and badges
+       - Update card navigation logic
+     - Testing:
+       - Update integration tests for new routing
+       - Add tests for unified form behavior
 
 2. **Job Catalog Feature**
    - ✓ All components implemented
@@ -76,13 +78,14 @@
 
 ## Recent Changes
 
-1. **Detailed CV Management Implementation**
-   - Implemented API integration with OpenAPI types
-   - Created React Query hooks for data fetching and mutations
-   - Built UI components with HeadlessUI and DaisyUI
-   - Added markdown support for CV content
-   - Implemented unit tests for components
-   - Updated documentation
+1. **Detailed CV Management Refinements**
+   - Identified need for unified form approach
+   - Planned component consolidation strategy
+   - Designed improved navigation flow
+   - Created implementation plan for:
+     - Unified form component
+     - Language-aware routing
+     - Consistent UX patterns
 
 2. **Job Catalog Completion**
    - Feature fully implemented and tested

@@ -1,4 +1,3 @@
 export { DetailedCVListPage } from './DetailedCVListPage';
-export { CreateDetailedCVPage } from './CreateDetailedCVPage';
-export { EditDetailedCVPage } from './EditDetailedCVPage';
+export { DetailedCVFormPage } from './DetailedCVFormPage';
 export { DetailedCVDetailPage } from './DetailedCVDetailPage';

@@ -21,6 +21,8 @@ All core features from Phase 1-4 have been completed and consolidated:
   - DetailedCVPreview with markdown rendering ✓
   - API integration and React Query hooks ✓
   - Unit tests for components ✓
+  - Unified form handling for creation/editing ✓
+  - Improved type safety with required language codes ✓
 
 For details on completed phases, see [docs/archive/COMPLETED_PHASES.md](docs/archive/COMPLETED_PHASES.md).
 For testing strategy details, see [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md).
@@ -41,20 +43,40 @@ flowchart TD
 
 1. **Page Components**
 
-   - Create page components for detailed CV management
-   - Implement layout and container components
+   - Create page components for detailed CV management ✓
+   - Implement layout and container components ✓
    - Add navigation and breadcrumbs
+   - Unified form handling for consistent UX ✓
 
 2. **Routing**
 
-   - Add routes for detailed CV management
-   - Implement route protection
-   - Add route parameters for CV editing
+   - Add routes for detailed CV management ✓
+   - Implement route protection ✓
+   - Add route parameters for CV editing ✓
+   - Single route for create/edit operations ✓
 
 3. **Error Handling**
    - Implement error boundaries
    - Add fallback UI components
    - Improve error messaging
+   - Type-safe error handling ✓
+
+## Pattern Decisions
+
+### Form Page Pattern
+
+- Use unified form pages for create/edit operations
+- Handle mode differences through URL parameters and data presence
+- Consistent error handling and loading states
+- Required language code for type safety
+- Centralized navigation handling
+
+### Component Refinements
+
+- Co-locate related components
+- Remove redundant wrappers
+- Clear separation of page-level and form-level concerns
+- Type-safe props with required fields
 
 ## Upcoming Work
 
@@ -75,8 +97,8 @@ flowchart TD
    - Export dialog
 
 3. Language Support
-   - Multi-language CV support
-   - Language switching
+   - Multi-language CV support ✓
+   - Language switching ✓
    - Translation management
 
 ### Phase 5: Advanced Features
@@ -106,11 +128,15 @@ flowchart TD
 // Feature-based organization
 features/
   feature-name/
-    components/  // Feature-specific components
-    hooks/       // Custom hooks
-    utils/       // Helper functions
-    types.ts     // Type definitions
-    constants.ts // Feature constants
+    components/
+      ComponentName/        // Each component in its directory
+        index.tsx          // Component definition
+        __tests__/        // Component tests
+        types.ts         // Component-specific types
+    hooks/               // Custom hooks
+    utils/              // Helper functions
+    types.ts            // Feature types
+    constants.ts        // Feature constants
 ```
 
 ### 2. State Management
@@ -126,6 +152,7 @@ features/
 - DaisyUI for styling
 - Custom components for business logic
 - Composition over inheritance
+- Unified form handling patterns
 
 ## Development Guidelines
 
@@ -135,6 +162,7 @@ features/
 - Clear separation of concerns
 - Consistent file naming
 - Code co-location
+- Single responsibility components
 
 ### Type Safety
 
@@ -142,13 +170,14 @@ features/
 - OpenAPI type generation
 - Proper type imports
 - No any types
+- Required props for clarity
 
-### Performance Standards
+### Testing Standards
 
-- Bundle size monitoring
-- Code splitting
-- React Query caching
-- Lazy loading
+- Unit tests for components
+- Integration tests for features
+- Comprehensive mock setup
+- Type-safe test utilities
 
 ### Accessibility
 
@@ -160,23 +189,17 @@ features/
 
 ## Documentation Requirements
 
-### API Integration
-
-- OpenAPI schema usage
-- Type generation workflow
-- Response handling
-- Error management
-
 ### Component Documentation
 
 - Usage examples
 - Props documentation
 - State management
 - Integration points
+- Pattern decisions
 
-### Setup Instructions
+### Testing Documentation
 
-- Development setup
-- Testing environment
-- Build process
-- Deployment workflow
+- Test strategy
+- Mock patterns
+- Integration test setup
+- Error handling verification

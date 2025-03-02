@@ -1,16 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Field,
-  Label,
-  Description,
-  Button,
-  Listbox,
-  Switch,
-} from '@headlessui/react';
-import { ChevronUpDownIcon, CheckIcon } from '@heroicons/react/20/solid';
-import { getLanguageOptions } from '../../../../lib/language/config';
+import { Field, Label, Description, Button, Switch } from '@headlessui/react';
 import { useDetailedCVMutations } from '../../hooks/useDetailedCVMutations';
 import {
   detailedCVFormSchema,
@@ -24,7 +14,7 @@ import type { DetailedCVResponse } from '../../types/detailed-cv';
 
 interface DetailedCVFormProps {
   mode: 'create' | 'edit';
-  languageCode?: LanguageCode;
+  languageCode: LanguageCode;
   initialData?: DetailedCVResponse;
   onSuccess: () => void;
   onCancel: () => void;
@@ -38,16 +28,11 @@ export function DetailedCVForm({
   onCancel,
 }: DetailedCVFormProps) {
   const { upsertCV } = useDetailedCVMutations();
-  const languages = getLanguageOptions();
 
   // Convert API response to form data if editing
   const formInitialData = initialData
     ? mapApiToFormData(initialData)
     : undefined;
-
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode | null>(
-    languageCode || formInitialData?.language_code || null,
-  );
 
   const {
     register,
@@ -61,17 +46,13 @@ export function DetailedCVForm({
     mode: 'onChange',
     defaultValues: {
       content: formInitialData?.content || '',
-      language_code: selectedLanguage,
+      language_code: languageCode,
       is_primary: formInitialData?.is_primary || false,
     },
   });
 
   // Watch is_primary value for the switch
   const isPrimary = watch('is_primary');
-
-  useEffect(() => {
-    setValue('language_code', selectedLanguage);
-  }, [selectedLanguage, setValue]);
 
   const onSubmit = handleSubmit(async (formData: DetailedCVFormInput) => {
     // Reset any previous root errors
@@ -80,7 +61,7 @@ export function DetailedCVForm({
     // We know the data is valid at this point due to schema validation
     const validData: DetailedCVFormData = {
       content: formData.content,
-      language_code: formData.language_code!,
+      language_code: languageCode,
       is_primary: formData.is_primary,
     };
 
@@ -106,84 +87,6 @@ export function DetailedCVForm({
           {errors.root.message}
         </div>
       )}
-
-      <Field>
-        <Listbox value={selectedLanguage} onChange={setSelectedLanguage}>
-          {({ open }) => (
-            <div className="relative">
-              <Listbox.Label className="text-sm font-medium text-gray-700">
-                Language
-              </Listbox.Label>
-              <div className="relative mt-1">
-                <Listbox.Button
-                  aria-required="true"
-                  className="relative w-full select input input-bordered data-[hover]:input-primary data-[focus]:input-primary"
-                  disabled={mode === 'edit'} // Disable language selection in edit mode
-                >
-                  <span className="block truncate">
-                    {selectedLanguage
-                      ? languages.find((opt) => opt.value === selectedLanguage)
-                          ?.label
-                      : 'Select language'}
-                  </span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronUpDownIcon
-                      className="h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </Listbox.Button>
-                {open && mode !== 'edit' && (
-                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    {languages.map((option) => (
-                      <Listbox.Option
-                        key={option.value}
-                        value={option.value}
-                        className={({ active }) =>
-                          `relative select-none py-2 pl-10 pr-4 ${
-                            active
-                              ? 'bg-primary text-primary-content'
-                              : 'text-base-content'
-                          }`
-                        }
-                      >
-                        {({ selected, active }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
-                            >
-                              {option.label}
-                            </span>
-                            {selected && (
-                              <span
-                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                  active
-                                    ? 'text-primary-content'
-                                    : 'text-primary'
-                                }`}
-                              >
-                                <CheckIcon
-                                  className="h-5 w-5"
-                                  aria-hidden="true"
-                                />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Listbox.Option>
-                    ))}
-                  </Listbox.Options>
-                )}
-              </div>
-              {errors.language_code && (
-                <Description className="mt-1 text-sm text-error" role="alert">
-                  {errors.language_code.message}
-                </Description>
-              )}
-            </div>
-          )}
-        </Listbox>
-      </Field>
 
       <Field>
         <Label htmlFor="content" className="text-sm font-medium text-gray-700">
