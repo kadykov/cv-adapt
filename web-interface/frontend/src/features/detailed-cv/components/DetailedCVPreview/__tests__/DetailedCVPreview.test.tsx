@@ -40,9 +40,14 @@ vi.mock('../../../hooks/useDetailedCVMutations', () => ({
   }),
 }));
 
-// Mock window.confirm
-const originalConfirm = window.confirm;
-window.confirm = vi.fn().mockReturnValue(true);
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual: object = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock ReactMarkdown
 vi.mock('react-markdown', () => ({
@@ -51,8 +56,11 @@ vi.mock('react-markdown', () => ({
   ),
 }));
 
+// Mock window.confirm
+const originalConfirm = window.confirm;
+window.confirm = vi.fn().mockReturnValue(true);
+
 describe('DetailedCVPreview', () => {
-  const mockOnEdit = vi.fn();
   const mockOnBack = vi.fn();
 
   beforeEach(() => {
@@ -67,7 +75,6 @@ describe('DetailedCVPreview', () => {
     render(
       <DetailedCVPreview
         languageCode={LanguageCode.ENGLISH}
-        onEdit={mockOnEdit}
         onBack={mockOnBack}
       />,
     );
@@ -86,16 +93,15 @@ describe('DetailedCVPreview', () => {
     expect(screen.getByText('Set as Primary')).toBeInTheDocument();
   });
 
-  it('calls onEdit when edit button is clicked', () => {
+  it('navigates when edit button is clicked', async () => {
     render(
       <DetailedCVPreview
         languageCode={LanguageCode.ENGLISH}
-        onEdit={mockOnEdit}
         onBack={mockOnBack}
       />,
     );
 
     fireEvent.click(screen.getByText('Edit'));
-    expect(mockOnEdit).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalled();
   });
 });

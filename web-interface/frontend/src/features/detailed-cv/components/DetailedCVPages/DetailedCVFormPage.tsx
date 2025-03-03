@@ -11,16 +11,26 @@ type PageMode = 'create' | 'edit';
 
 export function DetailedCVFormPage() {
   const navigate = useNavigate();
-  const { languageCode, mode } = useParams<{ languageCode: string; mode: string }>();
+  const { languageCode, mode } = useParams<{
+    languageCode: string;
+    mode: string;
+  }>();
   const validLanguageCode =
     languageCode &&
-    Object.values(LanguageCode).includes(languageCode.toLowerCase() as LanguageCode)
+    Object.values(LanguageCode).includes(
+      languageCode.toLowerCase() as LanguageCode,
+    )
       ? (languageCode.toLowerCase() as LanguageCode)
       : undefined;
 
-  const validMode = mode && ['create', 'edit'].includes(mode) ? (mode as PageMode) : undefined;
+  const validMode =
+    mode && ['create', 'edit'].includes(mode) ? (mode as PageMode) : undefined;
 
-  const { data: cv, isLoading, error } = useDetailedCV(validLanguageCode, {
+  const {
+    data: cv,
+    isLoading,
+    error,
+  } = useDetailedCV(validLanguageCode, {
     enabled: validMode === 'edit',
   });
 

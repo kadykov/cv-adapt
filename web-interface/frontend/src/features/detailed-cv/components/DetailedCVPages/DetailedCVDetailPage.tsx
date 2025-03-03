@@ -102,10 +102,7 @@ export function DetailedCVDetailPage() {
           </DialogPanel>
         </div>
       </Dialog>
-      <DetailedCVPreview
-        languageCode={validLanguageCode}
-        onBack={handleBack}
-      />
+      <DetailedCVPreview languageCode={validLanguageCode} onBack={handleBack} />
     </div>
   );
 }

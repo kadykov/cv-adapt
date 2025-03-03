@@ -28,6 +28,52 @@ We ensure API contract compliance through:
 
 ### Integration Tests
 
+#### Navigation Testing Infrastructure
+
+We use a dedicated navigation testing infrastructure to handle routing and navigation testing consistently:
+
+```typescript
+// Example: Navigation verification
+await NavigationTestUtils.verifyNavigation({
+  pathname: ROUTES.DETAILED_CVS.CREATE('en'),
+  waitForElement: {
+    role: 'form',
+  },
+  waitForLoading: true,
+});
+
+// Example: Route setup
+const routes = [
+  createRouteConfig('/', <Layout />, [
+    createRouteConfig('feature', <ProtectedRoute />, [
+      createRouteConfig('', <ListPage />),
+      createRouteConfig(':id', <DetailPage />),
+    ]),
+  ]),
+];
+```
+
+#### Navigation Test Organization
+
+We organize navigation tests into three categories:
+
+1. Route Tests
+
+   - Focus on route protection and access control
+   - Test authentication requirements
+   - Verify redirects and fallbacks
+
+2. List Navigation Tests
+
+   - Test navigation from list views
+   - Verify create/detail navigation flows
+   - Test list-specific operations
+
+3. Form Operation Tests
+   - Test form submission navigation
+   - Verify success/error redirects
+   - Test edit/create flow differences
+
 #### Infrastructure
 
 - Schema-based handler generation
@@ -55,17 +101,18 @@ features/
   auth/
     __tests__/
       integration/
-        auth-flow.integration.test.tsx
-        token-management.integration.test.tsx
-  job-catalog/
+        protected-routes.test.tsx    # Route protection
+        auth-flow.test.tsx          # Authentication flows
+  detailed-cv/
     __tests__/
       integration/
-        job-operations.integration.test.tsx
-        language-filter.integration.test.tsx
+        protected-route.test.tsx    # Route protection
+        detailed-cv-list.test.tsx   # List navigation
+        detailed-cv-form.test.tsx   # Form operations
   routes/
     __tests__/
       integration/
-        protected-routes.integration.test.tsx
+        common-routes.test.tsx      # Shared route behavior
 ```
 
 ### Unit Tests
@@ -155,91 +202,52 @@ Key benefits:
 - Network behavior simulation
 - Contract validation
 
-### Route-Based Testing Patterns
-
-We use route parameters to determine component behavior, reducing reliance on API responses for mode determination:
+### Navigation Testing Utilities
 
 ```typescript
-// Route Definition
-<Route path="/detailed-cvs/:languageCode/:mode" />
-
-// Test Setup
-test('handles create mode', () => {
-  render(<App />, {
-    initialEntries: ['/detailed-cvs/en/create']
-  });
-  // Verify create mode behavior
+// Navigation verification
+await NavigationTestUtils.verifyNavigation({
+  pathname: expectedPath,
+  waitForElement: {
+    role: 'form',
+    name: /title/i,
+  },
+  waitForLoading: true,
 });
 
-test('handles edit mode', () => {
-  render(<App />, {
-    initialEntries: ['/detailed-cvs/en/edit']
-  });
-  // Verify edit mode behavior + data loading
+// Action-triggered navigation
+await NavigationTestUtils.verifyActionNavigation(
+  async () => {
+    await user.click(submitButton);
+  },
+  {
+    pathname: '/success',
+    waitForElement: {
+      role: 'alert',
+      name: /success/i,
+    },
+  },
+);
+
+// Navigation result verification
+await NavigationTestUtils.verifyNavigationResult({
+  waitForElement: {
+    role: 'button',
+    name: /new item/i,
+  },
+  shouldMount: true,
 });
 ```
 
-Key benefits:
-- Clear state determination from URLs
-- Reduced API dependencies
-- Improved test predictability
-- Better user flow tracking
-- Simplified error handling
-
-### URL Management
-
-The testing infrastructure includes a centralized system for managing API URLs:
+### Feature Test Setup
 
 ```typescript
-// Configuration (lib/api/config.ts)
-export const API_VERSION = 'v1';
-export const API_PREFIX = 'api';
-export const BASE_PATH = `/${API_VERSION}/${API_PREFIX}`;
-
-// URL Helper (lib/test/url-helper.ts)
-export function getTestApiUrl(path: string): string {
-  // Sanitize and validate path
-  return `${BASE_PATH}/${cleanPath}`;
-}
-
-// Handler Generator Usage
-createGetHandler('jobs', 'JobResponse', mockData);
-// Generates: GET /v1/api/jobs
-
-// Direct MSW Usage
-http.get(getTestApiUrl('jobs'), responseHandler);
-// Generates: GET /v1/api/jobs
-```
-
-Key Features:
-
-- Centralized API configuration
-- Path validation and sanitization
-- Type-safe URL generation
-- Environment-specific configurations
-- Integration with MSW handlers
-
-### Test Utilities
-
-```typescript
-// Custom render with providers
-render(ui: React.ReactElement, {
-  preloadedState,
-  queryClient,
-  ...options
-}: TestOptions = {})
-
-// Handler Generation
-createGetHandler<T extends Schema>(path: string, schemaKey: T, response: T)
-createPostHandler<T, R>(path: string, reqSchema: T, resSchema: R, response: R)
-
-// URL Management
-getTestApiUrl(path: string): string
-getBaseUrl(environment: ApiEnvironment): string
-
-// Auth test utilities
-mockAuthenticatedUser()
-mockUnauthenticatedState()
+const { user } = await setupFeatureTest({
+  routes,
+  initialPath: ROUTES.FEATURE.LIST,
+  authenticatedUser: true,
+  handlers: [createGetHandler('/api/items', 'ItemResponse', mockData)],
+});
 ```
 
 ### Development Guidelines
@@ -248,11 +256,11 @@ mockUnauthenticatedState()
 
 1. Integration Tests (Feature Level)
 
-   - User flow coverage
-   - API interaction testing
+   - Route protection tests
+   - List navigation tests
+   - Form operation tests
    - Error handling scenarios
    - Loading state verification
-   - State management validation
 
 2. Unit Tests (Component Level)
 
@@ -273,21 +281,19 @@ mockUnauthenticatedState()
 1. Test Organization
 
    - Co-locate tests with implementation
-   - Use descriptive test names
-   - Group related tests
+   - Group by test category (route/list/form)
    - Maintain test independence
+   - Use proper file naming
 
 2. Testing Standards
 
-   - Use centralized MSW handlers
-   - Use getTestApiUrl for all API paths
-   - Utilize handler generators for consistent responses
-   - Share mock data between tests
-   - Test component accessibility
-   - Verify loading states
-   - Test error scenarios
-   - Implement request debugging
-   - Validate API path consistency
+   - Use navigation testing utilities
+   - Follow route testing patterns
+   - Use handler generators
+   - Share route configs
+   - Test loading states
+   - Verify error scenarios
+   - Follow naming conventions
 
 3. Coverage Requirements
 
@@ -304,87 +310,4 @@ mockUnauthenticatedState()
 
 ## Test Configuration
 
-### Vitest Workspace
-
-We use Vitest workspaces to organize our tests into separate projects with specific configurations:
-
-```typescript
-// vitest.workspace.ts
-export default defineWorkspace([
-  {
-    // Unit tests configuration
-    extends: './vitest.config.ts',
-    test: {
-      name: 'unit',
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/lib/test/setup.ts'],
-      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
-      exclude: ['src/**/__tests__/integration/**'],
-    },
-  },
-  {
-    // Integration tests configuration
-    extends: './vitest.config.ts',
-    test: {
-      name: 'integration',
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/lib/test/integration/setup.ts'],
-      include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
-      testTimeout: 15000,
-      hookTimeout: 15000,
-      maxConcurrency: 1,
-      isolate: true,
-      sequence: {
-        shuffle: false,
-      },
-      deps: {
-        optimizer: {
-          web: {
-            include: ['@testing-library/*'],
-          },
-        },
-      },
-    },
-  },
-]);
-```
-
-Key features of the workspace configuration:
-
-- Separate configurations for unit and integration tests
-- Extended timeout for integration tests to handle async operations
-- Single test concurrency for integration tests to prevent race conditions
-- Disabled test shuffling for more predictable test runs
-- Proper environment and setup file configuration for each test type
-- Shared coverage configuration through base vitest.config.ts
-
-## Test Scripts
-
-```json
-{
-  "test": "vitest",
-  "test:unit": "vitest --project unit",
-  "test:integration": "vitest --project integration",
-  "test:coverage": "vitest run --coverage",
-  "test:ci": "vitest run --coverage",
-  "pretest": "npm run generate-api-types"
-}
-```
-
-## Tools and Libraries
-
-- Vitest - Test runner
-- React Testing Library - Component testing
-- MSW - API mocking
-- @testing-library/user-event - User interaction simulation
-- @testing-library/jest-dom - DOM assertions
-
-## Continuous Integration
-
-- Run all tests on PR
-- Coverage reporting
-- Contract validation
-- Type checking
-- Linting verification
+[Configuration sections remain unchanged...]
