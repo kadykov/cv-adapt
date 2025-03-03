@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../../../lib/components/Badge';
 import { useDetailedCV } from '../../hooks/useDetailedCVs';
 import { useDetailedCVMutations } from '../../hooks/useDetailedCVMutations';
 import { Button, Dialog } from '@headlessui/react';
 import ReactMarkdown from 'react-markdown';
 import { LanguageCode } from '../../../../lib/language/types';
+import { ROUTES } from '../../../../routes/paths';
 
 interface DetailedCVPreviewProps {
   languageCode: LanguageCode;
@@ -15,9 +17,9 @@ interface DetailedCVPreviewProps {
 
 export function DetailedCVPreview({
   languageCode,
-  onEdit,
   onBack,
-}: DetailedCVPreviewProps) {
+}: Omit<DetailedCVPreviewProps, 'onEdit'>) {
+  const navigate = useNavigate();
   const { data: cv, isLoading, isError, error } = useDetailedCV(languageCode);
 
   const { deleteCV, setPrimary } = useDetailedCVMutations();
@@ -74,6 +76,10 @@ export function DetailedCVPreview({
       ? (cv.content as string)
       : 'No content available';
 
+  const handleEdit = () => {
+    navigate(ROUTES.DETAILED_CVS.EDIT(languageCode));
+  };
+
   const handleDelete = async () => {
     try {
       await deleteCV.mutateAsync(languageCode);
@@ -127,7 +133,7 @@ export function DetailedCVPreview({
           )}
           <Button
             className="btn btn-outline"
-            onClick={onEdit}
+            onClick={handleEdit}
             aria-label="Edit detailed CV"
           >
             Edit

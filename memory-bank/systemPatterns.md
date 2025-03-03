@@ -93,26 +93,36 @@
 
 4. **Form Page Pattern**
    ```typescript
+   // Route setup
+   <Route path="/detailed-cvs/:languageCode/:mode" />
+
    // DetailedCVFormPage.tsx
    export function DetailedCVFormPage() {
-     const { languageCode } = useParams<{ languageCode: LanguageCode }>();
-     const { data: cv, isLoading } = useDetailedCV(validLanguageCode);
+     const { languageCode, mode } = useParams<{ languageCode: string; mode: string }>();
+     const validLanguageCode = validateLanguageCode(languageCode);
+     const validMode = validateMode(mode);
+
+     const { data: cv, isLoading } = useDetailedCV(validLanguageCode, {
+       enabled: validMode === 'edit' // Only fetch in edit mode
+     });
 
      // Early validations and returns
-     if (!validLanguageCode) return <Redirect />;
-     if (isLoading) return <Loader />;
+     if (!validLanguageCode || !validMode) return <Redirect />;
+     if (validMode === 'edit' && isLoading) return <Loader />;
 
      return (
        <DetailedCVForm
-         mode={cv ? 'edit' : 'create'}
+         mode={validMode}
          languageCode={validLanguageCode}
-         initialData={cv}
+         initialData={validMode === 'edit' ? cv : undefined}
        />
      );
    }
    ```
-   - URL-based mode detection
-   - Required language validation
+   - Route-based mode determination
+   - Explicit create/edit paths
+   - Conditional data fetching
+   - Required parameter validation
    - Early loading states
    - Clean component hierarchy
 

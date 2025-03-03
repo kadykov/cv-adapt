@@ -116,7 +116,11 @@ describe('Detailed CV Operations Integration', () => {
               element={<DetailedCVListPage />}
             />
             <Route
-              path={ROUTES.DETAILED_CVS.FORM(':languageCode')}
+              path={ROUTES.DETAILED_CVS.CREATE(':languageCode')}
+              element={<DetailedCVFormPage />}
+            />
+            <Route
+              path={ROUTES.DETAILED_CVS.EDIT(':languageCode')}
               element={<DetailedCVFormPage />}
             />
             <Route
@@ -211,6 +215,11 @@ describe('Detailed CV Operations Integration', () => {
     });
     await user.click(createButton);
 
+    // Check URL contains create route
+    await waitFor(() => {
+      expect(window.location.pathname).toContain('/create');
+    });
+
     // Wait for form to be rendered
     await waitFor(() => {
       expect(screen.getByRole('form')).toBeInTheDocument();
@@ -277,7 +286,7 @@ describe('Detailed CV Operations Integration', () => {
     ]);
 
     const user = userEvent.setup();
-    await renderWithAuth([ROUTES.DETAILED_CVS.FORM('es')]);
+    await renderWithAuth([ROUTES.DETAILED_CVS.CREATE('es')]);
 
     // Verify empty form is shown without error
     await waitFor(() => {
@@ -389,10 +398,14 @@ describe('Detailed CV Operations Integration', () => {
       expect(detailCvElements.length).toBeGreaterThan(0);
     });
 
-    // Click edit button
+    // Click edit button and verify navigation to edit route
     await user.click(screen.getByRole('button', { name: /edit detailed cv/i }));
 
-    // Wait for form to load with existing content
+    // Wait for form to load with existing content in edit mode
+    await waitFor(() => {
+      expect(window.location.pathname).toContain('/edit');
+    });
+
     await waitFor(() => {
       expect(screen.getByRole('form')).toBeInTheDocument();
       expect(screen.getByText('English')).toBeInTheDocument(); // Language badge
@@ -400,7 +413,7 @@ describe('Detailed CV Operations Integration', () => {
       expect(contentInput).toHaveValue(mockDetailedCVs[0].content);
     });
 
-    // Update content
+    // Update content in edit mode
     const contentInput = screen.getByLabelText(/cv content/i);
     await user.clear(contentInput);
     await user.type(contentInput, updatedCV.content);

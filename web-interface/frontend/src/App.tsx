@@ -59,7 +59,11 @@ function App() {
                   element={<DetailedCVListPage />}
                 />
                 <Route
-                  path={ROUTES.DETAILED_CVS.FORM(':languageCode')}
+                  path={ROUTES.DETAILED_CVS.CREATE(':languageCode')}
+                  element={<DetailedCVFormPage />}
+                />
+                <Route
+                  path={ROUTES.DETAILED_CVS.EDIT(':languageCode')}
                   element={<DetailedCVFormPage />}
                 />
                 <Route

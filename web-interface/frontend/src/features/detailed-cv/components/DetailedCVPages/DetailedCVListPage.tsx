@@ -11,7 +11,7 @@ export function DetailedCVListPage() {
   };
 
   const handleCreateCVForLanguage = (languageCode: LanguageCode) => {
-    navigate(ROUTES.DETAILED_CVS.FORM(languageCode));
+    navigate(ROUTES.DETAILED_CVS.CREATE(languageCode));
   };
 
   return (

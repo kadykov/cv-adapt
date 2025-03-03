@@ -34,10 +34,6 @@ export function DetailedCVDetailPage() {
 
   const validLanguageCode = languageCode.toLowerCase() as LanguageCode;
 
-  const handleEdit = () => {
-    navigate(ROUTES.DETAILED_CVS.FORM(languageCode));
-  };
-
   const handleBack = () => {
     navigate(ROUTES.DETAILED_CVS.LIST);
   };
@@ -108,7 +104,6 @@ export function DetailedCVDetailPage() {
       </Dialog>
       <DetailedCVPreview
         languageCode={validLanguageCode}
-        onEdit={handleEdit}
         onBack={handleBack}
       />
     </div>

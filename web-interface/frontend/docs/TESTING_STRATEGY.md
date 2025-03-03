@@ -155,6 +155,37 @@ Key benefits:
 - Network behavior simulation
 - Contract validation
 
+### Route-Based Testing Patterns
+
+We use route parameters to determine component behavior, reducing reliance on API responses for mode determination:
+
+```typescript
+// Route Definition
+<Route path="/detailed-cvs/:languageCode/:mode" />
+
+// Test Setup
+test('handles create mode', () => {
+  render(<App />, {
+    initialEntries: ['/detailed-cvs/en/create']
+  });
+  // Verify create mode behavior
+});
+
+test('handles edit mode', () => {
+  render(<App />, {
+    initialEntries: ['/detailed-cvs/en/edit']
+  });
+  // Verify edit mode behavior + data loading
+});
+```
+
+Key benefits:
+- Clear state determination from URLs
+- Reduced API dependencies
+- Improved test predictability
+- Better user flow tracking
+- Simplified error handling
+
 ### URL Management
 
 The testing infrastructure includes a centralized system for managing API URLs:
