@@ -5,6 +5,12 @@ import type { RequestHandler } from 'msw';
 import type { RouteObject } from 'react-router-dom';
 import type { UserEvent } from '@testing-library/user-event';
 
+export interface FormElementOptions {
+  testId?: string;
+  role?: 'form';
+  name?: RegExp | string;
+}
+
 export interface NavigationVerifyOptions {
   pathname?: string;
   waitForElement?: {
@@ -16,6 +22,8 @@ export interface NavigationVerifyOptions {
     name?: RegExp | string;
   };
   waitForLoading?: boolean;
+  waitForForm?: FormElementOptions;
+  waitForTimeout?: number; // Additional delay in ms to wait for navigation
 }
 
 export interface NavigationAssertOptions extends NavigationVerifyOptions {
@@ -27,10 +35,27 @@ export const NavigationTestUtils = {
    * Verify navigation has completed by checking URL and/or element presence
    */
   verifyNavigation: async (options: NavigationVerifyOptions) => {
-    await waitFor(async () => {
+    // Add configured delay to allow React Router to complete navigation
+    await new Promise((resolve) =>
+      setTimeout(resolve, options.waitForTimeout ?? 100),
+    );
+
+    await waitFor(() => {
       // Verify URL if provided
       if (options.pathname) {
         expect(window.location.pathname).toBe(options.pathname);
+      }
+
+      // Verify form presence if specified
+      if (options.waitForForm) {
+        const { testId, role, name } = options.waitForForm;
+        let form;
+        if (testId) {
+          form = screen.getByTestId(testId);
+        } else {
+          form = screen.getByRole(role || 'form', name ? { name } : undefined);
+        }
+        expect(form).toBeInTheDocument();
       }
 
       // Verify element presence if specified
@@ -57,6 +82,22 @@ export const NavigationTestUtils = {
   /**
    * Verify element mount/unmount state after navigation
    */
+  /**
+   * Verify form mount state and accessibility
+   */
+  verifyFormPresence: async (options: FormElementOptions) => {
+    await waitFor(() => {
+      const { testId, role, name } = options;
+      let form;
+      if (testId) {
+        form = screen.getByTestId(testId);
+      } else {
+        form = screen.getByRole(role || 'form', name ? { name } : undefined);
+      }
+      expect(form).toBeInTheDocument();
+    });
+  },
+
   verifyNavigationResult: async (options: NavigationAssertOptions) => {
     await waitFor(() => {
       if (!options.waitForElement) return;
@@ -93,8 +134,14 @@ export const NavigationTestUtils = {
   },
 };
 
+export interface NavigationHistory {
+  entries?: string[];
+  index?: number;
+}
+
 export interface RouteTestOptions {
   initialPath: string;
+  history?: NavigationHistory;
   authenticatedUser?: boolean;
   queryClient?: QueryClient;
   routes?: RouteObject[];

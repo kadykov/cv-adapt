@@ -55,10 +55,10 @@ export const mockAuthQuery = {
 vi.mock('../hooks/index', () => ({
   useAuthQuery: () => mockAuthQuery,
   useAuthState: () => ({
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
+    user: mockAuthQuery.data,
+    isAuthenticated: !!mockAuthQuery.data,
+    isLoading: mockAuthQuery.isLoading,
+    error: mockAuthQuery.error,
   }),
   useLoginMutation: () => mockLoginMutation,
   useRegisterMutation: () => mockRegisterMutation,

@@ -19,11 +19,18 @@ interface WrapperProps {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const TestWrapper: FC<WrapperProps & { initialEntries: string[] }> = ({
-  children,
-  initialEntries,
-}) => (
-  <IntegrationTestWrapper initialEntries={initialEntries}>
+const TestWrapper: FC<
+  WrapperProps & {
+    initialEntries: string[];
+    initialIndex: number;
+    queryClient: QueryClient;
+  }
+> = ({ children, initialEntries, initialIndex, queryClient }) => (
+  <IntegrationTestWrapper
+    initialEntries={initialEntries}
+    initialIndex={initialIndex}
+    queryClient={queryClient}
+  >
     {children}
   </IntegrationTestWrapper>
 );
@@ -77,9 +84,17 @@ export const setupRouteTest = async (
   const routeElements = <Routes>{options.routes?.map(renderRoute)}</Routes>;
 
   // Render with test wrapper
+  // Set up router history
+  const initialEntries = options.history?.entries ?? ['/', options.initialPath];
+  const initialIndex = options.history?.index ?? initialEntries.length - 1;
+
   const wrapper = render(routeElements, {
     wrapper: ({ children }: PropsWithChildren) => (
-      <TestWrapper initialEntries={[options.initialPath]}>
+      <TestWrapper
+        initialEntries={initialEntries}
+        initialIndex={initialIndex}
+        queryClient={queryClient}
+      >
         {children}
       </TestWrapper>
     ),

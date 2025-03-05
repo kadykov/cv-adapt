@@ -30,7 +30,64 @@ We ensure API contract compliance through:
 
 #### Navigation Testing Infrastructure
 
-We use a dedicated navigation testing infrastructure to handle routing and navigation testing consistently:
+We use a dedicated navigation testing infrastructure to handle routing and navigation testing consistently.
+
+#### Route Configuration Best Practices
+
+1. Route Order
+
+   - Place static routes before dynamic routes to prevent path conflicts
+   - Example order:
+     ```typescript
+     const routes = [
+       createRouteConfig('jobs', <JobListPage />),      // Static route first
+       createRouteConfig('jobs/new', <CreateJobPage />), // Then specific static routes
+       createRouteConfig('jobs/:id', <DetailPage />),    // Dynamic routes last
+     ]
+     ```
+
+2. History Management
+   - Keep initial entries minimal and focused on the tested route
+   - Use the correct initial index to ensure proper back/forward navigation
+   - Example:
+     ```typescript
+     const { user } = await setupFeatureTest({
+       routes,
+       initialPath: ROUTES.JOBS.CREATE,
+       history: {
+         entries: ['/jobs/new'], // Minimal entry list
+         index: 0, // Correct initial position
+       },
+     });
+     ```
+
+#### Navigation Verification Strategies
+
+1. Element-Based Verification
+
+   - Prefer checking for distinctive UI elements over pathname checks
+   - Use role-based queries when possible
+   - Example:
+     ```typescript
+     // More reliable than checking pathname
+     await waitFor(() => {
+       const addButton = screen.getByRole('link', { name: /add job/i });
+       expect(addButton).toBeInTheDocument();
+       expect(addButton.getAttribute('href')).toBe('/jobs/new');
+     });
+     ```
+
+2. Loading State Handling
+   - Wait for loading states to complete before verifying navigation
+   - Check for both presence and absence of loading indicators
+   - Example:
+     ```typescript
+     await waitFor(() => {
+       expect(screen.queryByRole('status')).not.toBeInTheDocument();
+     });
+     ```
+
+#### Basic Navigation Example
 
 ```typescript
 // Example: Navigation verification
@@ -101,18 +158,18 @@ features/
   auth/
     __tests__/
       integration/
-        protected-routes.test.tsx    # Route protection
-        auth-flow.test.tsx          # Authentication flows
+        protected-routes.integration.test.tsx    # Route protection
+        auth-flow.integration.test.tsx          # Authentication flows
   detailed-cv/
     __tests__/
       integration/
-        protected-route.test.tsx    # Route protection
-        detailed-cv-list.test.tsx   # List navigation
-        detailed-cv-form.test.tsx   # Form operations
+        protected-route.integration.test.tsx    # Route protection
+        detailed-cv-list.integration.test.tsx   # List navigation
+        detailed-cv-form.integration.test.tsx   # Form operations
   routes/
     __tests__/
       integration/
-        common-routes.test.tsx      # Shared route behavior
+        common-routes.integration.test.tsx      # Shared route behavior
 ```
 
 ### Unit Tests
@@ -201,6 +258,47 @@ Key benefits:
 - Error scenario simulation
 - Network behavior simulation
 - Contract validation
+
+#### Error Handling Best Practices
+
+1. Using Handler Error Options
+
+   ```typescript
+   // Prefer using built-in error options in handlers
+   createPutHandler('/api/resource/:id', 'RequestType', 'ResponseType', data, {
+     validateRequest: () => false, // Force validation failure
+     errorResponse: {
+       status: 500,
+       message: 'Server error message',
+     },
+   });
+   ```
+
+2. Form Error Handling
+
+   ```typescript
+   try {
+     await mutation.mutateAsync(data);
+   } catch (error) {
+     // Extract server error message if available
+     const errorMessage =
+       error instanceof Error ? error.message : 'Default error message';
+
+     setError('root', {
+       type: 'custom',
+       message: errorMessage,
+     });
+   }
+   ```
+
+3. Error Verification
+   ```typescript
+   // Verify error messages in tests
+   await waitFor(() => {
+     const errorMessage = screen.getByRole('alert');
+     expect(errorMessage).toHaveTextContent(/expected error/i);
+   });
+   ```
 
 ### Navigation Testing Utilities
 
@@ -310,4 +408,87 @@ const { user } = await setupFeatureTest({
 
 ## Test Configuration
 
-[Configuration sections remain unchanged...]
+### Vitest Workspace
+
+We use Vitest workspaces to organize our tests into separate projects with specific configurations:
+
+```typescript
+// vitest.workspace.ts
+export default defineWorkspace([
+  {
+    // Unit tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/setup.ts'],
+      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
+      exclude: ['src/**/__tests__/integration/**'],
+    },
+  },
+  {
+    // Integration tests configuration
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/lib/test/integration/setup.ts'],
+      include: ['src/**/__tests__/integration/*.integration.test.{ts,tsx}'],
+      testTimeout: 15000,
+      hookTimeout: 15000,
+      maxConcurrency: 1,
+      isolate: true,
+      sequence: {
+        shuffle: false,
+      },
+      deps: {
+        optimizer: {
+          web: {
+            include: ['@testing-library/*'],
+          },
+        },
+      },
+    },
+  },
+]);
+```
+
+Key features of the workspace configuration:
+
+- Separate configurations for unit and integration tests
+- Extended timeout for integration tests to handle async operations
+- Single test concurrency for integration tests to prevent race conditions
+- Disabled test shuffling for more predictable test runs
+- Proper environment and setup file configuration for each test type
+- Shared coverage configuration through base vitest.config.ts
+
+## Test Scripts
+
+```json
+{
+  "test": "vitest",
+  "test:unit": "vitest --project unit",
+  "test:integration": "vitest --project integration",
+  "test:coverage": "vitest run --coverage",
+  "test:ci": "vitest run --coverage",
+  "pretest": "npm run generate-api-types"
+}
+```
+
+## Tools and Libraries
+
+- Vitest - Test runner
+- React Testing Library - Component testing
+- MSW - API mocking
+- @testing-library/user-event - User interaction simulation
+- @testing-library/jest-dom - DOM assertions
+
+## Continuous Integration
+
+- Run all tests on PR
+- Coverage reporting
+- Contract validation
+- Type checking
+- Linting verification

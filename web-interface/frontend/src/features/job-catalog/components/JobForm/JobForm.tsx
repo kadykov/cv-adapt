@@ -81,15 +81,21 @@ export function JobForm({
       onSuccess();
     } catch (error) {
       console.error('Form submission failed:', error);
+      // Use server error message if available, or fallback to generic message
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to submit form. Please try again.';
+
       setError('root', {
         type: 'custom',
-        message: 'Failed to submit form. Please try again.',
+        message: errorMessage,
       });
     }
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-6" noValidate role="form">
       {errors.root && (
         <div role="alert" className="text-sm text-error mb-4">
           {errors.root.message}

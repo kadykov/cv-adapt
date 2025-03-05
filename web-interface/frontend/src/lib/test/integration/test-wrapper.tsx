@@ -1,16 +1,20 @@
 import { PropsWithChildren } from 'react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 interface IntegrationTestWrapperProps extends PropsWithChildren {
   initialEntries?: string[];
+  initialIndex?: number;
+  queryClient?: QueryClient;
 }
 
 export const IntegrationTestWrapper = ({
   children,
   initialEntries,
+  initialIndex,
+  queryClient,
 }: IntegrationTestWrapperProps) => {
-  const queryClient = new QueryClient({
+  const defaultQueryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
@@ -19,12 +23,16 @@ export const IntegrationTestWrapper = ({
     },
   });
 
-  const Router = initialEntries ? MemoryRouter : BrowserRouter;
-  const routerProps = initialEntries ? { initialEntries } : {};
+  const client = queryClient ?? defaultQueryClient;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router {...routerProps}>{children}</Router>
+    <QueryClientProvider client={client}>
+      <MemoryRouter
+        initialEntries={initialEntries ?? ['/']}
+        initialIndex={initialIndex ?? 0}
+      >
+        {children}
+      </MemoryRouter>
     </QueryClientProvider>
   );
 };
