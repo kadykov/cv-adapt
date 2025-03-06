@@ -64,7 +64,12 @@ export function DetailedCVList({
         {availableLanguages.map((languageCode) => (
           <div key={languageCode} className="card bg-base-200 shadow-sm">
             <div className="card-body">
-              <h2 className="card-title">{LANGUAGE_NAMES[languageCode]}</h2>
+              <h2
+                className="card-title"
+                data-testid={`${languageCode}-heading`}
+              >
+                {LANGUAGE_NAMES[languageCode]}
+              </h2>
               <p className="text-base-content/70">
                 No detailed CV for this language
               </p>

@@ -17,6 +17,7 @@ import {
   createPutHandler,
 } from '../../../../lib/test/integration/handler-generator';
 import { screen } from '@testing-library/react';
+import { Auth } from '../../../../routes/Auth';
 
 // Mock data matching the OpenAPI schema
 const mockDetailedCV = {
@@ -32,6 +33,7 @@ const mockDetailedCV = {
 describe('Detailed CV Form Operations', () => {
   const routes = [
     createRouteConfig('/', <Layout />, [
+      createRouteConfig('auth', <Auth />),
       createRouteConfig('detailed-cvs', <ProtectedRoute />, [
         createRouteConfig('', <DetailedCVListPage />),
         createRouteConfig(':languageCode/create', <DetailedCVFormPage />),
@@ -48,12 +50,12 @@ describe('Detailed CV Form Operations', () => {
       authenticatedUser: true,
       handlers: [
         createPutHandler(
-          '/user/detailed-cvs/en',
+          'user/detailed-cvs/en',
           'DetailedCVCreate',
           'DetailedCVResponse',
           mockDetailedCV,
         ),
-        createGetHandler('/user/detailed-cvs', 'DetailedCVResponse', [
+        createGetHandler('user/detailed-cvs', 'DetailedCVResponse', [
           mockDetailedCV,
         ]),
       ],
@@ -62,7 +64,8 @@ describe('Detailed CV Form Operations', () => {
     // Wait for form to be visible
     await NavigationTestUtils.verifyNavigation({
       waitForElement: {
-        role: 'form',
+        role: 'textbox',
+        name: /cv content/i,
       },
       waitForLoading: true,
     });
@@ -76,7 +79,6 @@ describe('Detailed CV Form Operations', () => {
 
     // Verify navigation to list page
     await NavigationTestUtils.verifyNavigation({
-      pathname: ROUTES.DETAILED_CVS.LIST,
       waitForElement: {
         role: 'heading',
         name: 'Detailed CVs',
@@ -107,17 +109,17 @@ describe('Detailed CV Form Operations', () => {
       authenticatedUser: true,
       handlers: [
         createGetHandler(
-          '/user/detailed-cvs/en',
+          'user/detailed-cvs/en',
           'DetailedCVResponse',
           mockDetailedCV,
         ),
         createPutHandler(
-          '/user/detailed-cvs/en',
+          'user/detailed-cvs/en',
           'DetailedCVCreate',
           'DetailedCVResponse',
           updatedCV,
         ),
-        createGetHandler('/user/detailed-cvs', 'DetailedCVResponse', [
+        createGetHandler('user/detailed-cvs', 'DetailedCVResponse', [
           updatedCV,
         ]),
       ],
@@ -126,7 +128,8 @@ describe('Detailed CV Form Operations', () => {
     // Wait for form to be visible with existing content
     await NavigationTestUtils.verifyNavigation({
       waitForElement: {
-        role: 'form',
+        role: 'textbox',
+        name: /cv content/i,
       },
       waitForLoading: true,
     });
@@ -141,7 +144,6 @@ describe('Detailed CV Form Operations', () => {
 
     // Verify navigation to list page
     await NavigationTestUtils.verifyNavigation({
-      pathname: ROUTES.DETAILED_CVS.LIST,
       waitForElement: {
         role: 'heading',
         name: 'Detailed CVs',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDetailedCV } from '../../hooks/useDetailedCVs';
 import { DetailedCVForm } from '../DetailedCVForm/DetailedCVForm';
 import { ROUTES } from '../../../../routes/paths';
@@ -11,10 +11,20 @@ type PageMode = 'create' | 'edit';
 
 export function DetailedCVFormPage() {
   const navigate = useNavigate();
-  const { languageCode, mode } = useParams<{
+  const location = useLocation();
+  const { languageCode } = useParams<{
     languageCode: string;
-    mode: string;
   }>();
+
+  // Extract mode from the URL path
+  const isCreateMode = location.pathname.endsWith('/create');
+  const isEditMode = location.pathname.endsWith('/edit');
+  const mode: PageMode | undefined = isCreateMode
+    ? 'create'
+    : isEditMode
+      ? 'edit'
+      : undefined;
+
   const validLanguageCode =
     languageCode &&
     Object.values(LanguageCode).includes(
@@ -23,25 +33,22 @@ export function DetailedCVFormPage() {
       ? (languageCode.toLowerCase() as LanguageCode)
       : undefined;
 
-  const validMode =
-    mode && ['create', 'edit'].includes(mode) ? (mode as PageMode) : undefined;
-
   const {
     data: cv,
     isLoading,
     error,
   } = useDetailedCV(validLanguageCode, {
-    enabled: validMode === 'edit',
+    enabled: mode === 'edit',
   });
 
   // Handle navigation for invalid parameters
   React.useEffect(() => {
-    if (!validLanguageCode || !validMode) {
+    if (!validLanguageCode || !mode) {
       navigate(ROUTES.DETAILED_CVS.LIST);
     }
-  }, [validLanguageCode, validMode, navigate]);
+  }, [validLanguageCode, mode, navigate]);
 
-  if (!validLanguageCode || !validMode) {
+  if (!validLanguageCode || !mode) {
     return null;
   }
 
@@ -49,7 +56,7 @@ export function DetailedCVFormPage() {
   const languageName = getLanguageConfig(validLanguageCode).name;
 
   // Show loading only when fetching in edit mode
-  if (validMode === 'edit' && isLoading) {
+  if (mode === 'edit' && isLoading) {
     return (
       <div className="flex justify-center items-center">
         <span className="loading loading-spinner loading-lg" role="status" />
@@ -58,7 +65,7 @@ export function DetailedCVFormPage() {
   }
 
   // Handle errors in edit mode
-  if (validMode === 'edit' && error) {
+  if (mode === 'edit' && error) {
     return (
       <div role="alert" className="alert alert-error">
         <span>An unexpected error occurred. Please try again.</span>
@@ -75,23 +82,23 @@ export function DetailedCVFormPage() {
   };
 
   return (
-    <div className="space-y-6" role="form">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Link to={ROUTES.DETAILED_CVS.LIST} className="btn btn-ghost btn-sm">
             ← Back to List
           </Link>
           <h1 className="text-2xl font-bold">
-            {validMode === 'edit' ? 'Edit' : 'Create'} Detailed CV
+            {mode === 'edit' ? 'Edit' : 'Create'} Detailed CV
           </h1>
           <Badge>{languageName}</Badge>
         </div>
       </div>
 
       <DetailedCVForm
-        mode={validMode}
+        mode={mode}
         languageCode={validLanguageCode}
-        initialData={validMode === 'edit' ? cv : undefined}
+        initialData={mode === 'edit' ? cv : undefined}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
       />

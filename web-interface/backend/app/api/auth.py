@@ -13,6 +13,7 @@ from ..services.user import UserService
 
 router = APIRouter(prefix="/v1/api/auth", tags=["auth"])
 
+
 @router.post(
     "/register",
     response_model=AuthResponse,
@@ -84,6 +85,7 @@ async def register(
         ),
     )
 
+
 @router.post("/login", response_model=AuthResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
@@ -137,6 +139,7 @@ async def login(
         ),
     )
 
+
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout() -> None:
     """
@@ -146,6 +149,7 @@ async def logout() -> None:
     Returns 204 No Content to indicate successful logout without a response body.
     """
     return None
+
 
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh_token(
