@@ -1,56 +1,57 @@
-import { http, HttpResponse } from 'msw';
-import type { components } from '../../../lib/api/types';
-import { getTestApiUrl } from '../../../lib/test/url-helper';
+import {
+  createFormPostHandler,
+  createPostHandler,
+  createGetHandler,
+  createEmptyResponseHandler,
+} from '../../../lib/test/integration/handler-generator';
+import { mockUser, mockAuthResponse } from './fixtures';
 
-type UserResponse = components['schemas']['UserResponse'];
-type AuthResponse = components['schemas']['AuthResponse'];
-
-const mockUser: UserResponse = {
-  id: 1,
-  email: 'test@example.com',
-  created_at: '2024-02-23T10:00:00Z',
-  personal_info: null,
-};
-
-const mockAuthResponse: AuthResponse = {
-  access_token: 'fake_token',
-  refresh_token: 'fake_refresh',
-  token_type: 'bearer',
-  user: mockUser,
-};
+export { mockUser, mockAuthResponse };
 
 export const authIntegrationHandlers = [
-  http.post(getTestApiUrl('auth/login'), async ({ request }) => {
-    const body = await request.text();
+  createFormPostHandler(
+    'auth/login',
+    'Body_login_v1_api_auth_login_post',
+    'AuthResponse',
+    mockAuthResponse,
+    {
+      transformRequest: (formData) => {
+        // Transform email to username as expected by the API
+        const email = formData.get('email');
+        const password = formData.get('password');
 
-    // Parse form data
-    const formData = new URLSearchParams(body);
-    const password = formData.get('password');
+        const transformed = new URLSearchParams({
+          username: email ?? '',
+          password: password ?? '',
+          grant_type: 'password',
+          scope: '',
+        });
 
-    if (password === 'wrongpassword') {
-      return HttpResponse.json(
-        { message: 'Invalid credentials' },
-        { status: 401 },
-      );
-    }
+        return transformed;
+      },
+      validateRequest: (transformedData) => {
+        const username = transformedData.get('username');
+        const password = transformedData.get('password');
+        const valid =
+          username === 'test@example.com' && password === 'password123';
 
-    return HttpResponse.json(mockAuthResponse);
-  }),
+        return valid;
+      },
+      errorResponse: {
+        status: 401,
+        message: 'Invalid credentials',
+      },
+    },
+  ),
 
-  http.post(getTestApiUrl('auth/refresh'), () => {
-    return HttpResponse.json(mockAuthResponse);
-  }),
+  createPostHandler(
+    'auth/refresh',
+    'Body_refresh_token_v1_api_auth_refresh_post',
+    'AuthResponse',
+    mockAuthResponse,
+  ),
 
-  http.post(getTestApiUrl('auth/logout'), () => {
-    return HttpResponse.json({ message: 'Logged out successfully' });
-  }),
+  createEmptyResponseHandler('post', 'auth/logout', { status: 204 }),
 
-  // Handle user profile fetch for token validation
-  http.get(getTestApiUrl('users/me'), ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new HttpResponse(null, { status: 401 });
-    }
-    return HttpResponse.json(mockUser);
-  }),
+  createGetHandler('users/me', 'UserResponse', mockUser),
 ];

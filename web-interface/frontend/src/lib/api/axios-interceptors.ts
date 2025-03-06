@@ -99,19 +99,12 @@ export const setupInterceptors = () => {
 if (import.meta.env.DEV) {
   axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-      console.log(
-        `[API Request] ${config.method?.toUpperCase()} ${config.url}`,
-      );
       return config;
     },
   );
 
   axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
-      console.log(
-        `[API Response] ${response.status} ${response.config.url}`,
-        response.data,
-      );
       return response;
     },
     (error: unknown) => {

@@ -56,6 +56,9 @@ export interface paths {
     /**
      * Logout
      * @description Logout user.
+     *     Since we're using JWT, we don't need to do anything server-side.
+     *     The client should clear the tokens from local storage.
+     *     Returns 204 No Content to indicate successful logout without a response body.
      */
     post: operations['logout_v1_api_auth_logout_post'];
     delete?: never;
@@ -665,15 +668,11 @@ export interface operations {
     requestBody?: never;
     responses: {
       /** @description Successful Response */
-      200: {
+      204: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': {
-            [key: string]: string;
-          };
-        };
+        content?: never;
       };
     };
   };

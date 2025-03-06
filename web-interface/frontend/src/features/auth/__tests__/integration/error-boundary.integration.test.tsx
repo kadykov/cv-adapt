@@ -1,41 +1,46 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TestErrorBoundary } from '../../../../test/utils/TestErrorBoundary';
-import { ProvidersWrapper } from '../../../../test/setup/providers';
+import { IntegrationTestWrapper } from '../../../../lib/test/integration/test-wrapper';
+import { AuthProvider } from '../../components/AuthProvider';
 
 describe('Auth Error Boundary Integration', () => {
   describe('Error Handling', () => {
-    it('should catch and display errors in component tree', () => {
+    test('should catch and display errors in component tree', () => {
       const ErrorComponent = () => {
         throw new Error('Simulated error in auth flow');
       };
 
       render(
-        <ProvidersWrapper>
-          <TestErrorBoundary>
-            <ErrorComponent />
-          </TestErrorBoundary>
-        </ProvidersWrapper>,
+        <IntegrationTestWrapper>
+          <AuthProvider>
+            <TestErrorBoundary>
+              <ErrorComponent />
+            </TestErrorBoundary>
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       expect(screen.getByText('Error Fallback')).toBeInTheDocument();
     });
 
-    it('should not affect other components when one fails', () => {
+    test('should not affect other components when one fails', () => {
       const WorkingComponent = () => <div>Working Component</div>;
       const ErrorComponent = () => {
         throw new Error('Simulated error');
       };
 
       render(
-        <ProvidersWrapper>
-          <div>
-            <WorkingComponent />
-            <TestErrorBoundary>
-              <ErrorComponent />
-            </TestErrorBoundary>
-          </div>
-        </ProvidersWrapper>,
+        <IntegrationTestWrapper>
+          <AuthProvider>
+            <div>
+              <WorkingComponent />
+              <TestErrorBoundary>
+                <ErrorComponent />
+              </TestErrorBoundary>
+            </div>
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       expect(screen.getByText('Working Component')).toBeInTheDocument();

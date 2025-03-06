@@ -348,6 +348,102 @@ const { user } = await setupFeatureTest({
 });
 ```
 
+### Integration Test Utils
+
+We've refactored our integration tests to use a new set of test utilities that provide a more consistent and maintainable approach to testing. These utilities are located in `src/lib/test/integration/` and include:
+
+#### Setup Navigation
+
+The `setupFeatureTest` function provides a standardized way to set up integration tests with routing and navigation:
+
+```typescript
+const { user } = await setupFeatureTest({
+  routes, // Route configuration using createRouteConfig
+  initialPath: '/auth', // Initial path to navigate to
+  authenticatedUser: false, // Whether to set up an authenticated user
+  handlers: [
+    // MSW handlers for API mocking
+    createGetHandler('users/me', 'UserResponse', mockUser),
+  ],
+});
+```
+
+#### Route Configuration
+
+The `createRouteConfig` function provides a type-safe way to define routes for testing:
+
+```typescript
+const routes = [
+  createRouteConfig('/', <Layout />, [
+    createRouteConfig('', <HomePage />),
+    createRouteConfig('auth', <Auth />),
+  ]),
+];
+```
+
+#### Handler Generators
+
+The handler generators provide a type-safe way to create MSW handlers for API mocking:
+
+```typescript
+// GET handler
+createGetHandler('users/me', 'UserResponse', mockUser);
+
+// POST handler with form data
+createFormPostHandler(
+  'auth/login',
+  'Body_login_v1_api_auth_login_post',
+  'AuthResponse',
+  mockTokens,
+  {
+    validateRequest: (formData) => {
+      const username = formData.get('username');
+      const password = formData.get('password');
+      return username === 'test@example.com' && password === 'password123';
+    },
+  },
+);
+
+// POST handler with JSON data
+createPostHandler(
+  'auth/refresh',
+  'Body_refresh_token_v1_api_auth_refresh_post',
+  'AuthResponse',
+  refreshedTokens,
+  {
+    validateRequest: (body) => {
+      return body.token === initialTokens.refresh_token;
+    },
+  },
+);
+
+// Empty response handler
+createEmptyResponseHandler('post', 'auth/logout', { status: 204 });
+```
+
+#### Test Wrapper
+
+The `IntegrationTestWrapper` component provides a standardized way to wrap components for testing:
+
+```typescript
+render(
+  <IntegrationTestWrapper queryClient={queryClient}>
+    <AuthProvider>
+      <TestComponent />
+    </AuthProvider>
+  </IntegrationTestWrapper>
+);
+```
+
+#### Benefits of the New Test Utils
+
+- **Consistency**: All tests use the same setup and configuration
+- **Type Safety**: All handlers and routes are type-safe
+- **Maintainability**: Changes to the testing infrastructure only need to be made in one place
+- **Readability**: Tests are more concise and easier to understand
+- **Reusability**: Common patterns are extracted into reusable functions
+- **Reliability**: Tests are more reliable and less prone to flakiness
+
 ### Development Guidelines
 
 #### Testing Requirements

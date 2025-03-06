@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { getTestApiUrl } from '../url-helper';
 
 type Schema = components['schemas'];
+type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
 /**
  * Default delays for different operation types (in milliseconds)
@@ -90,11 +91,41 @@ export function createPostHandler<
 }
 
 /**
- * Base options interface for handlers
+ * Creates an MSW handler for POST endpoints that expect form data and validate against schema
  */
-interface HandlerOptions {
-  delay?: number;
-  status?: number;
+export function createFormPostHandler<
+  T extends keyof Schema,
+  R extends keyof Schema,
+>(
+  path: string,
+  _requestSchemaKey: T, // Used only for type inference
+  _responseSchemaKey: R, // Used only for type inference
+  responseData: Schema[R],
+  options?: {
+    transformRequest?: (formData: URLSearchParams) => URLSearchParams;
+    validateRequest?: (transformedData: URLSearchParams) => boolean;
+    errorResponse?: { status: number; message: string };
+    delay?: number;
+  },
+) {
+  return http.post(getTestApiUrl(path), async ({ request }) => {
+    await applyHandlerDelay('CREATE', options?.delay);
+    const formData = new URLSearchParams(await request.text());
+    const transformedData = options?.transformRequest
+      ? options.transformRequest(formData)
+      : formData;
+    if (options?.validateRequest && !options.validateRequest(transformedData)) {
+      const error = options.errorResponse || {
+        status: 400,
+        message: 'Invalid request',
+      };
+      return new HttpResponse(null, {
+        status: error.status,
+        statusText: error.message,
+      });
+    }
+    return HttpResponse.json(responseData);
+  });
 }
 
 /**
@@ -134,27 +165,30 @@ export function createPutHandler<
 }
 
 /**
- * Creates an MSW handler for PUT endpoints that have no request body but return a schema-validated response
+ * Creates an MSW handler for endpoints that have no request/response body and return only a status code
  */
-export function createEmptyPutHandler<R extends keyof Schema>(
+export function createEmptyResponseHandler(
+  method: HttpMethod,
   path: string,
-  _responseSchemaKey: R, // Used only for type inference
-  responseData: Schema[R],
-  options?: HandlerOptions,
+  options?: { status?: number; delay?: number },
 ) {
-  return http.put(getTestApiUrl(path), async () => {
-    await applyHandlerDelay('UPDATE', options?.delay);
-    return HttpResponse.json(responseData);
+  const httpMethod = http[method];
+  return httpMethod(getTestApiUrl(path), async () => {
+    await applyHandlerDelay('BASE', options?.delay);
+    return new HttpResponse(null, { status: options?.status ?? 204 });
   });
 }
 
 /**
  * Creates an MSW handler for DELETE endpoints
  */
-export function createDeleteHandler(path: string, options?: HandlerOptions) {
-  return http.delete(getTestApiUrl(path), async () => {
-    await applyHandlerDelay('DELETE', options?.delay);
-    return new HttpResponse(null, { status: 204 });
+export function createDeleteHandler(
+  path: string,
+  options?: { status?: number; delay?: number },
+) {
+  return createEmptyResponseHandler('delete', path, {
+    status: 204,
+    ...options,
   });
 }
 
@@ -165,7 +199,7 @@ export function createErrorHandler(
   path: string,
   status: number,
   error: { detail: { message: string } },
-  options?: HandlerOptions,
+  options?: { status?: number; delay?: number },
 ) {
   return http.get(getTestApiUrl(path), async () => {
     await applyHandlerDelay('ERROR', options?.delay);

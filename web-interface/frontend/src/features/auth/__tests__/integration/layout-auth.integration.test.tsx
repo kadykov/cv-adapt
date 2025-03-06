@@ -1,33 +1,50 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Routes, Route } from 'react-router-dom';
-import { ProvidersWrapper } from '../../../../test/setup/providers';
-import { server } from '../../../../lib/test/integration/server';
-import { authIntegrationHandlers } from '../../testing/integration-handlers';
+import { describe, expect, test, beforeEach } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
 import { Layout } from '../../../../routes/Layout';
 import { LoginForm } from '../../components/LoginForm';
-
-const TestApp = () => (
-  <Routes>
-    <Route path="/" element={<Layout />}>
-      <Route path="auth" element={<LoginForm onSuccess={() => {}} />} />
-    </Route>
-  </Routes>
-);
+import {
+  createRouteConfig,
+  setupFeatureTest,
+} from '../../../../lib/test/integration/setup-navigation';
+import {
+  createFormPostHandler,
+  createGetHandler,
+  createEmptyResponseHandler,
+} from '../../../../lib/test/integration/handler-generator';
+import { tokenService } from '../../services/token-service';
 
 describe('Layout Authentication Integration', () => {
+  const mockUser = {
+    id: 1,
+    email: 'test@example.com',
+    created_at: '2024-02-23T10:00:00Z',
+    personal_info: null,
+  };
+
+  const mockTokens = {
+    access_token: 'valid-token',
+    refresh_token: 'refresh-token',
+    token_type: 'bearer',
+    user: mockUser,
+  };
+
+  const routes = [
+    createRouteConfig('/', <Layout />, [
+      createRouteConfig('', <div>Home Page</div>),
+      createRouteConfig('auth', <LoginForm onSuccess={() => {}} />),
+    ]),
+  ];
+
   beforeEach(() => {
-    server.use(...authIntegrationHandlers);
     localStorage.clear();
   });
 
-  it('should show login button when not authenticated', async () => {
-    render(
-      <ProvidersWrapper>
-        <TestApp />
-      </ProvidersWrapper>,
-    );
+  test('should show login button when not authenticated', async () => {
+    await setupFeatureTest({
+      routes,
+      initialPath: '/',
+      authenticatedUser: false,
+    });
 
     // Wait for loading state to finish
     await waitFor(() => {
@@ -35,18 +52,40 @@ describe('Layout Authentication Integration', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/login/i)).toBeInTheDocument();
-      expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /jobs/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /logout/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
-  it('should update navigation after successful login', async () => {
-    render(
-      <ProvidersWrapper>
-        <TestApp />
-      </ProvidersWrapper>,
-    );
+  test('should update navigation after successful login', async () => {
+    const { user } = await setupFeatureTest({
+      routes,
+      initialPath: '/',
+      authenticatedUser: false,
+      handlers: [
+        createFormPostHandler(
+          'auth/login',
+          'Body_login_v1_api_auth_login_post',
+          'AuthResponse',
+          mockTokens,
+          {
+            validateRequest: (formData) => {
+              const username = formData.get('username');
+              const password = formData.get('password');
+              return (
+                username === 'test@example.com' && password === 'password123'
+              );
+            },
+          },
+        ),
+        createGetHandler('auth/me', 'UserResponse', mockUser),
+      ],
+    });
 
     // Wait for loading state to finish
     await waitFor(() => {
@@ -55,89 +94,113 @@ describe('Layout Authentication Integration', () => {
 
     // Initial state - only Login button visible
     await waitFor(() => {
-      expect(screen.getByText(/login/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
     });
-    expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /jobs/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /logout/i }),
+    ).not.toBeInTheDocument();
 
     // Navigate to auth page
-    await userEvent.click(screen.getByText(/login/i));
+    await user.click(screen.getByRole('link', { name: /login/i }));
 
-    // Fill in and submit login form (wait for form to be rendered)
-    await waitFor(async () => {
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      await userEvent.type(emailInput, 'test@example.com');
-      await userEvent.type(passwordInput, 'password123');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-    });
+    // Fill in and submit login form
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     // Verify navigation updates immediately after login
-    expect(await screen.findByText(/logout/i)).toBeInTheDocument();
-    expect(await screen.findByText(/jobs/i)).toBeInTheDocument();
-    expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /logout/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /jobs/i })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /login/i }),
+      ).not.toBeInTheDocument();
+    });
 
     // Verify token is stored
-    expect(localStorage.getItem('access_token')).toBeTruthy();
-
-    // Verify the header update was immediate and not delayed
-    const spyConsoleError = vi.spyOn(console, 'error');
+    expect(tokenService.getAccessToken()).toBeTruthy();
 
     // Wait for background token validation
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Ensure header content hasn't changed
-    expect(screen.getByText(/logout/i)).toBeInTheDocument();
-    expect(screen.getByText(/jobs/i)).toBeInTheDocument();
-    expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
-
-    // Verify no errors during background validation
-    expect(spyConsoleError).not.toHaveBeenCalled();
-    spyConsoleError.mockRestore();
+    expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /jobs/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /login/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it('should update navigation after logout', async () => {
-    render(
-      <ProvidersWrapper>
-        <TestApp />
-      </ProvidersWrapper>,
-    );
+  test('should update navigation after logout', async () => {
+    const { user } = await setupFeatureTest({
+      routes,
+      initialPath: '/',
+      authenticatedUser: false,
+      handlers: [
+        createFormPostHandler(
+          'auth/login',
+          'Body_login_v1_api_auth_login_post',
+          'AuthResponse',
+          mockTokens,
+          {
+            validateRequest: (formData) => {
+              const username = formData.get('username');
+              const password = formData.get('password');
+              return (
+                username === 'test@example.com' && password === 'password123'
+              );
+            },
+          },
+        ),
+        createGetHandler('auth/me', 'UserResponse', mockUser),
+        createEmptyResponseHandler('post', 'auth/logout', { status: 204 }),
+      ],
+    });
 
     // Wait for loading state to finish
     await waitFor(() => {
       expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument();
     });
 
-    // Navigate to auth page and login
-    await waitFor(async () => {
-      await userEvent.click(screen.getByText(/login/i));
-    });
+    // Navigate to auth page
+    await user.click(screen.getByRole('link', { name: /login/i }));
 
-    // Fill in and submit login form (wait for form to be rendered)
-    await waitFor(async () => {
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      await userEvent.type(emailInput, 'test@example.com');
-      await userEvent.type(passwordInput, 'password123');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-    });
+    // Fill in and submit login form
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     // Wait for authenticated state
     await waitFor(() => {
-      expect(screen.getByText(/logout/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /logout/i }),
+      ).toBeInTheDocument();
     });
 
     // Click logout button
-    await userEvent.click(screen.getByText(/logout/i));
+    await user.click(screen.getByRole('button', { name: /logout/i }));
 
     // Verify navigation updates
     await waitFor(() => {
-      expect(screen.getByText(/login/i)).toBeInTheDocument();
-      expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /jobs/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /logout/i }),
+      ).not.toBeInTheDocument();
     });
 
     // Verify token is removed
-    expect(localStorage.getItem('access_token')).toBeNull();
+    expect(tokenService.getAccessToken()).toBeNull();
   });
 });

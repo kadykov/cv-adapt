@@ -14,8 +14,9 @@ export {
   createPostHandler,
   createPutHandler,
   createDeleteHandler,
-  createEmptyPutHandler,
+  createEmptyResponseHandler,
   createErrorHandler,
+  createFormPostHandler,
 } from './handler-generator';
 
 export { server, addIntegrationHandlers } from './server';
