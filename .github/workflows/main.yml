@@ -54,6 +54,7 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         if: github.event_name == 'pull_request'
+
   pre_commit:
     name: Pre-commit checks
     runs-on: ubuntu-latest
@@ -84,6 +85,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
+      - uses: typst-community/setup-typst@v4
       - run: uv sync --frozen --all-groups
       - name: Run linting checks
         run: |
