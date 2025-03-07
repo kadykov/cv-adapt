@@ -1,0 +1,121 @@
+// CV function definition
+#let cv(content) = {
+  // Page settings
+  set document(author: "{{ cv.personal_info.full_name }}", title: "{{ cv.title.text }}")
+  set page(margin: (x: 1.5cm, y: 1.5cm))
+  set text(font: "New Computer Modern", size: 10pt)
+
+  // Header with personal info
+  align(center)[
+    text(17pt)[{{ cv.personal_info.full_name }}]
+    {% if cv.personal_info.location -%}
+    v(0.2em)
+    text(style: "italic")[{{ cv.personal_info.location.value }}]
+    {%- endif %}
+    v(0.3em)
+    {% set contact_items = [] -%}
+    {% if cv.personal_info.email -%}
+      {% do contact_items.append('"' + cv.personal_info.email.value + '"') -%}
+    {% endif -%}
+    {% if cv.personal_info.phone -%}
+      {% do contact_items.append('"' + cv.personal_info.phone.value + '"') -%}
+    {% endif -%}
+    {% if cv.personal_info.linkedin -%}
+      {% do contact_items.append('"LinkedIn: ' + cv.personal_info.linkedin.url + '"') -%}
+    {% endif -%}
+    {% if cv.personal_info.github -%}
+      {% do contact_items.append('"GitHub: ' + cv.personal_info.github.url + '"') -%}
+    {% endif -%}
+    {{ contact_items|join(' + " • " + ') }}
+  ]
+
+  // Title
+  v(0.5em)
+  align(center)[text(13pt)[{{ cv.title.text }}]]
+
+  // Summary
+  {% if cv.summary -%}
+  v(1em)
+  text(11pt)[{{ config.section_labels.summary }}]
+  line(length: 100%)
+  [{{ cv.summary.text }}]
+  {%- endif %}
+
+  // Core Competences
+  {% if cv.core_competences -%}
+  v(1em)
+  text(11pt)[{{ config.section_labels.core_competences }}]
+  line(length: 100%)
+  list(
+    {% for comp in cv.core_competences -%}
+    [{{ comp.text }}]{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  )
+  {%- endif %}
+
+  // Experience
+  {% if cv.experiences -%}
+  v(1em)
+  text(11pt)[{{ config.section_labels.experience }}]
+  line(length: 100%)
+  {% for exp in cv.experiences -%}
+  box(width: 100%)[
+    grid(
+      columns: (auto, 1fr),
+      gutter: 1em,
+      [text(weight: "bold")[{{ exp.company.name }}]],
+      [align(right)[{{ exp.start_date.strftime('%B %Y') }} - {% if exp.end_date %}{{ exp.end_date.strftime('%B %Y') }}{% else %}Present{% endif %}]]
+    )
+    text(style: "italic")[{{ exp.position }}{% if exp.company.location %}, {{ exp.company.location }}{% endif %}]
+    v(0.3em)
+    [{{ exp.description }}]
+    {% if exp.technologies -%}
+    v(0.2em)
+    text(style: "italic")[Technologies: {{ exp.technologies|join(', ') }}]
+    {%- endif %}
+  ]
+  {% if not loop.last -%}v(1em){%- endif %}
+  {%- endfor %}
+  {%- endif %}
+
+  // Education
+  {% if cv.education -%}
+  v(1em)
+  text(11pt)[{{ config.section_labels.education }}]
+  line(length: 100%)
+  {% for edu in cv.education -%}
+  box(width: 100%)[
+    grid(
+      columns: (auto, 1fr),
+      gutter: 1em,
+      [text(weight: "bold")[{{ edu.university.name }}]],
+      [align(right)[{{ edu.start_date.strftime('%B %Y') }} - {% if edu.end_date %}{{ edu.end_date.strftime('%B %Y') }}{% else %}Present{% endif %}]]
+    )
+    text(style: "italic")[{{ edu.degree }}{% if edu.university.location %}, {{ edu.university.location }}{% endif %}]
+    {% if edu.description -%}
+    v(0.3em)
+    [{{ edu.description }}]
+    {%- endif %}
+  ]
+  {% if not loop.last -%}v(1em){%- endif %}
+  {%- endfor %}
+  {%- endif %}
+
+  // Skills
+  {% if cv.skills -%}
+  v(1em)
+  text(11pt)[{{ config.section_labels.skills }}]
+  line(length: 100%)
+  grid(
+    columns: (1fr),
+    gutter: 0.5em,
+    {% for group in cv.skills -%}
+    [text(weight: "bold")[{{ group.name }}]: {{ group.skills|map(attribute='text')|join(', ') }}]{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  )
+  {%- endif %}
+}
+
+// Create the CV
+cv(())
+}

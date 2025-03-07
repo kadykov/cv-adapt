@@ -63,6 +63,7 @@ class Jinja2Renderer(BaseRenderer, Generic[CVDTOType]):
                 autoescape=select_autoescape(),
                 trim_blocks=True,
                 lstrip_blocks=True,
+                extensions=["jinja2.ext.do"],
             )
         except Exception as e:
             raise RendererError(f"Failed to create Jinja2 environment: {e}")
