@@ -109,22 +109,11 @@
           "auth"
         ],
         "summary": "Logout",
-        "description": "Logout user.",
+        "description": "Logout user.\nSince we're using JWT, we don't need to do anything server-side.\nThe client should clear the tokens from local storage.\nReturns 204 No Content to indicate successful logout without a response body.",
         "operationId": "logout_v1_api_auth_logout_post",
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Logout V1 Api Auth Logout Post"
-                }
-              }
-            }
+          "204": {
+            "description": "Successful Response"
           }
         }
       }
@@ -1181,7 +1170,7 @@
             "title": "Language Code"
           },
           "content": {
-            "type": "object",
+            "type": "string",
             "title": "Content"
           },
           "is_primary": {
@@ -1222,7 +1211,7 @@
             "title": "Language Code"
           },
           "content": {
-            "type": "object",
+            "type": "string",
             "title": "Content"
           },
           "is_primary": {
@@ -1327,7 +1316,7 @@
             "title": "Language Code"
           },
           "content": {
-            "type": "object",
+            "type": "string",
             "title": "Content"
           },
           "detailed_cv_id": {
@@ -1356,7 +1345,7 @@
             "title": "Language Code"
           },
           "content": {
-            "type": "object",
+            "type": "string",
             "title": "Content"
           },
           "id": {

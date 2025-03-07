@@ -13,6 +13,12 @@ import {
   EditJobPage,
   JobDetailPage,
 } from './features/job-catalog/components/JobPages';
+// Import detailed CV components
+import {
+  DetailedCVListPage,
+  DetailedCVFormPage,
+  DetailedCVDetailPage,
+} from './features/detailed-cv/components/DetailedCVPages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +51,24 @@ function App() {
                 <Route
                   path={ROUTES.JOBS.EDIT(':id')}
                   element={<EditJobPage />}
+                />
+
+                {/* Detailed CV routes */}
+                <Route
+                  path={ROUTES.DETAILED_CVS.LIST}
+                  element={<DetailedCVListPage />}
+                />
+                <Route
+                  path={ROUTES.DETAILED_CVS.CREATE(':languageCode')}
+                  element={<DetailedCVFormPage />}
+                />
+                <Route
+                  path={ROUTES.DETAILED_CVS.EDIT(':languageCode')}
+                  element={<DetailedCVFormPage />}
+                />
+                <Route
+                  path={ROUTES.DETAILED_CVS.DETAIL(':languageCode')}
+                  element={<DetailedCVDetailPage />}
                 />
               </Route>
             </Route>

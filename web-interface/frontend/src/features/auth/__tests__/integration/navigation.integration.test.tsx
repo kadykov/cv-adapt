@@ -1,44 +1,53 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Routes, Route } from 'react-router-dom';
+import { describe, expect, test, beforeEach } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
 import { Layout } from '../../../../routes/Layout';
 import { Auth } from '../../../../routes/Auth';
-import { ProvidersWrapper } from '../../../../test/setup/providers';
-import { ROUTES } from '../../../../routes/paths';
-import { server } from '../../../../lib/test/integration/server';
-import { authIntegrationHandlers } from '../../testing/integration-handlers';
 
-// Helper function to setup tests with async user events
-const setupNavigationTest = () => {
-  return {
-    user: userEvent.setup({ delay: null }),
-    ...render(
-      <ProvidersWrapper>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path={ROUTES.AUTH} element={<Auth />} />
-            <Route path={ROUTES.HOME} element={<div>Home</div>} index />
-          </Route>
-        </Routes>
-      </ProvidersWrapper>,
-    ),
-  };
-};
+import {
+  createRouteConfig,
+  setupFeatureTest,
+} from '../../../../lib/test/integration/setup-navigation';
+import {
+  createFormPostHandler,
+  createGetHandler,
+  createEmptyResponseHandler,
+} from '../../../../lib/test/integration/handler-generator';
 
 describe('Navigation Integration', () => {
-  beforeAll(() => {
+  const mockUser = {
+    id: 1,
+    email: 'test@example.com',
+    created_at: '2024-02-23T10:00:00Z',
+    personal_info: null,
+  };
+
+  const mockTokens = {
+    access_token: 'valid-token',
+    refresh_token: 'refresh-token',
+    token_type: 'bearer',
+    user: mockUser,
+  };
+
+  const routes = [
+    createRouteConfig('/', <Layout />, [
+      createRouteConfig('', <div>Home</div>),
+      createRouteConfig('auth', <Auth />),
+    ]),
+  ];
+
+  beforeEach(() => {
+    localStorage.clear();
     // Set initial route to home
     window.history.pushState({}, '', '/');
   });
-  beforeEach(() => {
-    server.use(...authIntegrationHandlers);
-    localStorage.clear();
-  });
 
   describe('Navigation Bar Auth State', () => {
-    it('should show login form when navigating to auth route', async () => {
-      const { user } = setupNavigationTest();
+    test('should show login form when navigating to auth route', async () => {
+      const { user } = await setupFeatureTest({
+        routes,
+        initialPath: '/',
+        authenticatedUser: false,
+      });
 
       // Wait for loading state to finish
       await waitFor(() => {
@@ -46,7 +55,7 @@ describe('Navigation Integration', () => {
       });
 
       // Click login button
-      await user.click(screen.getByText(/login/i));
+      await user.click(screen.getByRole('link', { name: /login/i }));
 
       // Verify we're on the auth page
       expect(
@@ -56,8 +65,30 @@ describe('Navigation Integration', () => {
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     });
 
-    it('should show correct navigation items based on auth state', async () => {
-      const { user } = setupNavigationTest();
+    test('should show correct navigation items based on auth state', async () => {
+      const { user } = await setupFeatureTest({
+        routes,
+        initialPath: '/',
+        authenticatedUser: false,
+        handlers: [
+          createFormPostHandler(
+            'auth/login',
+            'Body_login_v1_api_auth_login_post',
+            'AuthResponse',
+            mockTokens,
+            {
+              validateRequest: (formData) => {
+                const username = formData.get('username');
+                const password = formData.get('password');
+                return (
+                  username === 'test@example.com' && password === 'password123'
+                );
+              },
+            },
+          ),
+          createGetHandler('auth/me', 'UserResponse', mockUser),
+        ],
+      });
 
       // Wait for loading state to finish
       await waitFor(() => {
@@ -66,13 +97,19 @@ describe('Navigation Integration', () => {
 
       // Initial state - unauthenticated
       await waitFor(() => {
-        expect(screen.getByText(/login/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('link', { name: /login/i }),
+        ).toBeInTheDocument();
       });
-      expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /logout/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /jobs/i }),
+      ).not.toBeInTheDocument();
 
       // Click login
-      await user.click(screen.getByText(/login/i));
+      await user.click(screen.getByRole('link', { name: /login/i }));
 
       // Fill in login form
       await user.type(screen.getByLabelText(/email/i), 'test@example.com');
@@ -82,15 +119,42 @@ describe('Navigation Integration', () => {
       // After successful login
       await waitFor(() => {
         // Login button should be hidden
-        expect(screen.queryByText(/login/i)).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('link', { name: /login/i }),
+        ).not.toBeInTheDocument();
         // Logout and Jobs buttons should appear
-        expect(screen.getByText(/logout/i)).toBeInTheDocument();
-        expect(screen.getByText(/jobs/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /logout/i }),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /jobs/i })).toBeInTheDocument();
       });
     });
 
-    it('should show login button after logout', async () => {
-      const { user } = setupNavigationTest();
+    test('should show login button after logout', async () => {
+      const { user } = await setupFeatureTest({
+        routes,
+        initialPath: '/',
+        authenticatedUser: false,
+        handlers: [
+          createFormPostHandler(
+            'auth/login',
+            'Body_login_v1_api_auth_login_post',
+            'AuthResponse',
+            mockTokens,
+            {
+              validateRequest: (formData) => {
+                const username = formData.get('username');
+                const password = formData.get('password');
+                return (
+                  username === 'test@example.com' && password === 'password123'
+                );
+              },
+            },
+          ),
+          createGetHandler('auth/me', 'UserResponse', mockUser),
+          createEmptyResponseHandler('post', 'auth/logout', { status: 204 }),
+        ],
+      });
 
       // Wait for loading state to finish
       await waitFor(() => {
@@ -98,24 +162,32 @@ describe('Navigation Integration', () => {
       });
 
       // First login
-      await user.click(screen.getByText(/login/i));
+      await user.click(screen.getByRole('link', { name: /login/i }));
       await user.type(screen.getByLabelText(/email/i), 'test@example.com');
       await user.type(screen.getByLabelText(/password/i), 'password123');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
       // Wait for auth state update
       await waitFor(() => {
-        expect(screen.getByText(/logout/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /logout/i }),
+        ).toBeInTheDocument();
       });
 
       // Click logout
-      await user.click(screen.getByText(/logout/i));
+      await user.click(screen.getByRole('button', { name: /logout/i }));
 
       // Verify navigation items reset
       await waitFor(() => {
-        expect(screen.getByText(/login/i)).toBeInTheDocument();
-        expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/jobs/i)).not.toBeInTheDocument();
+        expect(
+          screen.getByRole('link', { name: /login/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.queryByRole('button', { name: /logout/i }),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('link', { name: /jobs/i }),
+        ).not.toBeInTheDocument();
       });
     });
   });

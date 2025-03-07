@@ -7,6 +7,11 @@ export default mergeConfig(
     test: {
       reporters: ['dot'],
       watch: false,
+      poolOptions: {
+        threads: {
+          singleThread: true,
+        },
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
@@ -17,6 +22,7 @@ export default mergeConfig(
           'src/lib/test/**',
         ],
         all: true,
+        reportsDirectory: './coverage',
       },
     },
   }),

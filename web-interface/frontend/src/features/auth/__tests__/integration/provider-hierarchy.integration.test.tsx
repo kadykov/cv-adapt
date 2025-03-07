@@ -1,21 +1,13 @@
-import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
+import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ProvidersWrapper } from '../../../../test/setup/providers';
+import { QueryClient } from '@tanstack/react-query';
 import { TestErrorBoundary } from '../../../../test/utils/TestErrorBoundary';
 import { server } from '../../../../lib/test/integration/server';
 import { AUTH_QUERY_KEY } from '../../hooks/useAuthQuery';
-import { http, HttpResponse } from 'msw';
 import { Button } from '@headlessui/react';
-
-// Register MSW handlers for this test suite
-beforeAll(() => {
-  server.listen();
-});
-
-afterAll(() => {
-  server.close();
-});
+import { IntegrationTestWrapper } from '../../../../lib/test/integration/test-wrapper';
+import { AuthProvider } from '../../components/AuthProvider';
+import { createGetHandler } from '../../../../lib/test/integration/handler-generator';
 
 // Create a fresh QueryClient for each test
 function createTestQueryClient() {
@@ -36,19 +28,21 @@ describe('Auth Provider Hierarchy', () => {
     vi.clearAllMocks();
     localStorage.clear();
     queryClient = createTestQueryClient();
+    server.resetHandlers();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    server.resetHandlers();
     localStorage.clear();
   });
 
   describe('Context Dependencies', () => {
-    it('should allow using auth state with schema-validated responses', async () => {
+    test('should allow using auth state with schema-validated responses', async () => {
+      // Use the handler generator to create a handler for the /users/me endpoint
+      // that returns a 401 error
       server.use(
-        http.get('/api/auth/validate', () => {
-          return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        createGetHandler('users/me', 'UserResponse', null, {
+          status: 401,
         }),
       );
 
@@ -60,11 +54,11 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <QueryClientProvider client={queryClient}>
-          <ProvidersWrapper>
+        <IntegrationTestWrapper queryClient={queryClient}>
+          <AuthProvider>
             <TestComponent />
-          </ProvidersWrapper>
-        </QueryClientProvider>,
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       await waitFor(() => {
@@ -76,10 +70,12 @@ describe('Auth Provider Hierarchy', () => {
       });
     });
 
-    it('should allow using auth mutations with schema-validated requests', async () => {
+    test('should allow using auth mutations with schema-validated requests', async () => {
+      // Use the handler generator to create a handler for the /users/me endpoint
+      // that returns a 401 error
       server.use(
-        http.get('/api/auth/validate', () => {
-          return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        createGetHandler('users/me', 'UserResponse', null, {
+          status: 401,
         }),
       );
 
@@ -111,11 +107,11 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <QueryClientProvider client={queryClient}>
-          <ProvidersWrapper>
+        <IntegrationTestWrapper queryClient={queryClient}>
+          <AuthProvider>
             <TestComponent />
-          </ProvidersWrapper>
-        </QueryClientProvider>,
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       await waitFor(() => {
@@ -127,13 +123,15 @@ describe('Auth Provider Hierarchy', () => {
   });
 
   describe('Provider Initialization', () => {
-    it('should initialize all providers in correct order', async () => {
+    test('should initialize all providers in correct order', async () => {
       let queryClientInitialized = false;
       let authStateInitialized = false;
 
+      // Use the handler generator to create a handler for the /users/me endpoint
+      // that returns a 401 error
       server.use(
-        http.get('/api/auth/validate', () => {
-          return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        createGetHandler('users/me', 'UserResponse', null, {
+          status: 401,
         }),
       );
 
@@ -145,11 +143,11 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <QueryClientProvider client={queryClient}>
-          <ProvidersWrapper>
+        <IntegrationTestWrapper queryClient={queryClient}>
+          <AuthProvider>
             <TestComponent />
-          </ProvidersWrapper>
-        </QueryClientProvider>,
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       await waitFor(() => {
@@ -158,10 +156,12 @@ describe('Auth Provider Hierarchy', () => {
       });
     });
 
-    it('should handle initialization errors gracefully', async () => {
+    test('should handle initialization errors gracefully', async () => {
+      // Use the handler generator to create a handler for the /users/me endpoint
+      // that returns a 500 error
       server.use(
-        http.get('/api/auth/validate', () => {
-          return HttpResponse.error();
+        createGetHandler('users/me', 'UserResponse', null, {
+          status: 500,
         }),
       );
 
@@ -173,11 +173,11 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <QueryClientProvider client={queryClient}>
-          <ProvidersWrapper>
+        <IntegrationTestWrapper queryClient={queryClient}>
+          <AuthProvider>
             <TestComponent />
-          </ProvidersWrapper>
-        </QueryClientProvider>,
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       await waitFor(() => {
@@ -187,10 +187,12 @@ describe('Auth Provider Hierarchy', () => {
   });
 
   describe('Error Handling', () => {
-    it('should prevent provider errors from crashing the app', async () => {
+    test('should prevent provider errors from crashing the app', async () => {
+      // Use the handler generator to create a handler for the /users/me endpoint
+      // that returns a 401 error
       server.use(
-        http.get('/api/auth/validate', () => {
-          return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        createGetHandler('users/me', 'UserResponse', null, {
+          status: 401,
         }),
       );
 
@@ -201,13 +203,13 @@ describe('Auth Provider Hierarchy', () => {
       };
 
       render(
-        <QueryClientProvider client={queryClient}>
-          <ProvidersWrapper>
+        <IntegrationTestWrapper queryClient={queryClient}>
+          <AuthProvider>
             <TestErrorBoundary>
               <ErrorComponent />
             </TestErrorBoundary>
-          </ProvidersWrapper>
-        </QueryClientProvider>,
+          </AuthProvider>
+        </IntegrationTestWrapper>,
       );
 
       await waitFor(() => {

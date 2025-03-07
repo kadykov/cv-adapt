@@ -88,7 +88,7 @@ describe('JobForm', () => {
 
       // Check for error message
       const errorElement = await screen.findByRole('alert');
-      expect(errorElement).toHaveTextContent(/failed to submit form/i);
+      expect(errorElement).toHaveTextContent(/Failed to create job/i);
       expect(mockOnSuccess).not.toHaveBeenCalled();
       expect(mockCreateJob.mutateAsync).toHaveBeenCalledTimes(1);
     });

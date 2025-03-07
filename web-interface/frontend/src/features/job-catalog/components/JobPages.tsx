@@ -20,7 +20,9 @@ export function CreateJobPage() {
   return (
     <JobForm
       mode="create"
-      onSuccess={() => navigate(ROUTES.JOBS.LIST)}
+      onSuccess={() => {
+        navigate(ROUTES.JOBS.LIST);
+      }}
       onCancel={() => navigate(ROUTES.JOBS.LIST)}
     />
   );

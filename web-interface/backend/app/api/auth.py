@@ -140,12 +140,15 @@ async def login(
     )
 
 
-@router.post("/logout", status_code=status.HTTP_200_OK)
-async def logout() -> dict[str, str]:
-    """Logout user."""
-    # Since we're using JWT, we don't need to do anything server-side
-    # The client should clear the tokens from local storage
-    return {"status": "success"}
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout() -> None:
+    """
+    Logout user.
+    Since we're using JWT, we don't need to do anything server-side.
+    The client should clear the tokens from local storage.
+    Returns 204 No Content to indicate successful logout without a response body.
+    """
+    return None
 
 
 @router.post("/refresh", response_model=AuthResponse)

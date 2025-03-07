@@ -2,27 +2,49 @@
 
 ## Current Focus
 
-1. **Feature Consolidation**
-   - Remove redundant /features/jobs implementation
-   - Consolidate job management to job-catalog
-   - Update routing configuration
-   - Verify all references and dependencies
+1. **Detailed CV Management Improvements**
+   - ✓ Feature structure implemented
+   - ✓ Following established frontend patterns
+   - ✓ Base components implemented
+   - ✓ OpenAPI integration complete
+   - ✓ Initial UI/UX simplification
+   - ✓ Form and Navigation Refinements
+     - ✓ Integrate with DetailedCVDetailPage:
+       - List → Detail → Edit/Delete flow
+       - Create flow preserved for new CVs
+       - Delete confirmation using Headless UI
+     - ✓ Component Consolidation:
+       - Merge create/edit into unified DetailedCVFormPage
+       - Align with backend upsert pattern
+       - Simplify routing architecture
+     - ✓ Route-Based Mode Determination:
+       - `/detailed-cvs/:languageCode/create` for new CVs
+       - `/detailed-cvs/:languageCode/edit` for existing CVs
+       - Eliminated 404-based mode detection
+       - Improved data fetching efficiency
+     - ✓ UX Improvements:
+       - Add language indicators in page titles
+       - Improved navigation with breadcrumb pattern
+       - Consistent form behavior
+       - Accessible delete confirmation dialog
+     - ✓ Implementation Updates:
+       - Language-aware page titles and badges
+       - Updated card navigation logic
+       - Headless UI dialog for delete confirmation
+     - ✓ Testing:
+       - Updated integration tests for new flow
+       - Added route-based test patterns
+       - Added delete confirmation tests
+       - Comprehensive test coverage
 
-2. **Testing Completion**
-   - Complete job operations integration tests
-   - Implement form validation tests
-   - Add cache update verification
-   - Test modal interactions
-   - Document testing patterns
+2. **Job Catalog Feature**
+   - ✓ All components implemented
+   - ✓ Tests completed
+   - ✓ Feature consolidated
+   - ✓ Language filtering working
+   - ✓ Documentation updated
 
-3. **Type System Cleanup**
-   - ✓ Added generate-api-types to pretest script
-   - ✓ Removed duplicate API type definitions
-   - ✓ Type generation automated in test workflow
-   - ✓ Preserved frontend-specific type configs (language types)
-   - ✓ Ensured single source of truth from OpenAPI schema
-
-2. **Language System Improvements**
+3. **Language System Improvements**
    - Centralizing frontend language handling
      - Moving from simple validation to enum-based system
      - Aligning with backend LanguageCode standards
@@ -46,84 +68,41 @@
      - JobForm with validation
      - Action handling (edit/delete)
 
-2. **Feature Progress**
-   - Phase 2 Authentication Implementation
-     - ✓ Auth Components standardized
-     - ✓ Token Management System completed
-     - ✓ Auth API Layer implemented
-     - Current: Integration Tests development with OpenAPI focus
-       - Schema-based handler generation
-       - Integration test infrastructure setup
-       - Separation from unit test handlers
-     - Deferred: Password Reset flow
-   - Phase 3: Job Catalog feature in progress
-     - ✓ Data layer completed
-     - ✓ Core UI components delivered
-     - Advanced UI components in planning
-
-3. **Core Functionality**
-   - CV generation pipeline
-   - Component generation services
-   - Language context management
-
 ## Recent Changes
 
-1. **Documentation Restructuring**
-   - Separated completed phases into archive
-   - Created centralized testing strategy document
-   - Streamlined implementation plan
-   - Improved documentation maintainability
+1. **Detailed CV Form Improvements**
+   - Implemented route-based form mode determination
+   - Eliminated unnecessary API calls in create mode
+   - Updated integration tests for new routing pattern
+   - Added route-based test patterns documentation
+   - Improved error handling clarity
 
-2. **Authentication System Completion**
-   - Finished React Query-based auth state
-   - Completed centralized auth management
-   - Resolved synchronization issues
-   - Documented new architecture
-
-2. **Job Catalog Component Implementation**
-   - JobCard component created
-     - Responsive design with DaisyUI
-     - Accessibility features
-     - Language badge integration
-   - JobList component implemented
-     - Grid layout with responsive design
-     - Language filtering using Headless UI
-     - Loading and error states
-   - Test infrastructure enhanced
-     - MSW setup for API mocking
-     - Integration tests added
-     - Custom test utilities created
+2. **Route-Based Pattern Updates**
+   - Clearer intent through explicit URL paths
+   - Improved API efficiency with conditional data loading
+   - Enhanced test predictability and coverage
+   - Better support for analytics and user tracking
 
 3. **Testing Infrastructure**
    - ✓ Implemented Vitest workspace configuration
-     - Separate unit and integration test configs
-     - Enhanced stability for integration tests
-     - Proper test timeouts and concurrency
-     - Environment-specific setup files
    - ✓ Test organization improvements
-     - Clear separation of unit and integration tests
-     - Shared configuration through base config
-     - Workspace-based test execution
-   - Custom render utilities with providers
-   - Centralized MSW handlers in src/lib/test
-   - ✓ Centralized API URL management
-     - Created api-config.ts for URL configuration
-     - Enhanced url-helper.ts with validation
-     - Updated all test files to use helper
-     - Added comprehensive url-helper tests
-   - Mock data standardization
-   - Component test patterns established
+   - Updated test patterns for route-based components
+   - Enhanced integration test coverage
+   - Added URL validation testing
 
 ## Next Steps
 
-1. **CV Management Implementation**
-   - Design component architecture
-   - Plan backend integration
-   - Develop CV editor features
-   - Implement language support
-   - Create export system
+1. **Pattern Documentation**
+   - Document route-based form patterns
+   - Update test pattern documentation
+   - Add route validation guidelines
 
-2. **Documentation Updates**
+2. **CV Generation Integration**
+   - Connect detailed CVs with job applications
+   - Add CV preview before generation
+   - Implement language-based selection
+
+3. **Documentation Updates**
    - Component usage guidelines
    - Test pattern documentation
    - API integration examples
@@ -131,36 +110,25 @@
 
 ## Active Decisions
 
-1. **Language System Architecture**
-   - Centralized language type system
-   - Enum-based validation approach
-   - Alignment with backend language codes
-   - Type-safe language selection components
-
-2. **Component Architecture**
-   - Continued feature-based organization
-   - Shared components in lib directory
-   - Strong accessibility focus
-   - Comprehensive test coverage
+1. **Form Mode Determination**
+   - Route-based pattern instead of API response
+   - Clear separation of create/edit flows
+   - Explicit URLs for better user experience
+   - Improved error handling approach
 
 2. **Testing Strategy**
-   - Component-level unit tests
-   - Feature-level integration tests
+   - Route-based test patterns
+   - URL parameter validation
+   - Component mode verification
    - MSW for API simulation
    - Accessibility testing integration
 
 ## Current Issues
 
 1. **Frontend (Current Focus)**
-   - Auth system circular dependency discovered
-     - AuthProvider using useLoginMutation
-     - useLoginMutation using useAuth
-     - Needs architectural restructuring
-   - Integration test improvements completed
-     - ✓ Centralized API URL management
-     - ✓ Standardized handler creation
+   - Integration test improvements
+     - ✓ Route-based test patterns implemented
      - ✓ Enhanced test reliability
-     - ✓ Workspace-based test configuration
    - Next test improvements needed:
      - Provider hierarchy testing
      - Contract testing enhancements
@@ -170,13 +138,12 @@
 ## Current Considerations
 
 1. **Feature Completion**
-   - Job Catalog feature fully implemented
-   - Form components follow established patterns
-   - Comprehensive test coverage achieved
-   - Ready for integration into job management flows
+   - Feature pattern improvements
+   - Test coverage for edge cases
+   - Documentation updates
 
 2. **Developer Experience**
    - Component documentation
-   - Test maintainability
+   - Test pattern guidelines
    - Code organization
    - Review process improvements

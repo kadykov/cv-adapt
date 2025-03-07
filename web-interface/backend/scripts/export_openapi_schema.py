@@ -26,7 +26,8 @@ def export_schema() -> None:
     # Write schema to file
     schema_path = target_dir / "openapi.json"
     with open(schema_path, "w") as f:
-        json.dump(schema, f, indent=2)
+        json.dump(schema, f, indent=2, ensure_ascii=False)
+        f.write("\n")
 
     print(f"OpenAPI schema exported to {schema_path}")
 

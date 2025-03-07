@@ -1,0 +1,1 @@
+export { DetailedCVForm } from './DetailedCVForm';
