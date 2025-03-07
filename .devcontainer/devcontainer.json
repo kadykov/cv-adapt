@@ -28,7 +28,8 @@
         "astro-build.astro-vscode",
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint",
-        "rvest.vs-code-prettier-eslint"
+        "rvest.vs-code-prettier-eslint",
+        "matangover.mypy"
       ]
     }
   }

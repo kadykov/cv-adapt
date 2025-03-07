@@ -30,7 +30,18 @@ def auth_headers(test_user: User) -> dict[str, str]:
 def test_detailed_cv(db: Session, test_user: User) -> DetailedCV:
     """Create a test detailed CV."""
     cv_service = DetailedCVService(db)
-    cv_data = DetailedCVCreate(language_code="en", content="content", is_primary=True)
+    cv_data = DetailedCVCreate(
+        language_code="en",
+        content="""# Software Engineer
+
+## Experience
+- Senior Developer at Tech Corp
+- Software Engineer at StartUp Inc
+
+## Education
+- BS in Computer Science""",
+        is_primary=True,
+    )
     return cv_service.create_cv(int(test_user.id), cv_data)
 
 
@@ -39,7 +50,9 @@ def test_job_description(db: Session) -> JobDescription:
     """Create a test job description."""
     job_service = JobDescriptionService(db)
     job_data = JobDescriptionCreate(
-        title="Test Job", description="Test description", language_code="en"
+        title="Test Job",
+        description="Test job description requiring Python and TypeScript skills.",
+        language_code="en",
     )
     return job_service.create_job_description(job_data)
 
@@ -57,7 +70,17 @@ def test_generated_cv(
         detailed_cv_id=int(test_detailed_cv.id),
         job_description_id=int(test_job_description.id),
         language_code="en",
-        content="content",
+        content="""# Software Engineer
+
+## Summary
+Test summary
+
+## Experience
+- Senior Developer at Tech Corp
+- Software Engineer at StartUp Inc
+
+## Education
+- BS in Computer Science""",
     )
     return cv_service.create_generated_cv(int(test_user.id), cv_data)
 
@@ -74,7 +97,7 @@ def test_generate_and_save_cv(
         detailed_cv_id=int(test_detailed_cv.id),
         job_description_id=int(test_job_description.id),
         language_code="en",
-        content="content",
+        content="",  # Content will be generated
         status="draft",
         generation_parameters={
             "style": "professional",
@@ -83,15 +106,17 @@ def test_generate_and_save_cv(
         },
         version=1,
     )
+
     response = client.post(
         "/v1/api/generations", headers=auth_headers, json=cv_data.model_dump()
     )
     assert response.status_code == 200
     data = response.json()
+
+    # Verify response data
     assert data["detailed_cv_id"] == test_detailed_cv.id
     assert data["job_description_id"] == test_job_description.id
     assert data["language_code"] == "en"
-    assert data["content"] == cv_data.content
     assert data["status"] == "draft"
     assert data["generation_parameters"] == {
         "style": "professional",
@@ -99,6 +124,10 @@ def test_generate_and_save_cv(
         "tone": "confident",
     }
     assert data["version"] == 1
+
+    # Content should be in markdown format
+    assert "# " in data["content"]  # Should contain markdown headers
+    assert data["content"].strip()  # Should not be empty
 
 
 def test_get_user_generations(
