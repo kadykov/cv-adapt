@@ -133,5 +133,24 @@ class GeneratedCVService(BaseDBService[GeneratedCV]):
             "job_description_id": cv_data.job_description_id,
             "language_code": cv_data.language_code,
             "content": cv_data.content,
+            "status": cv_data.status,
+            "generation_parameters": cv_data.generation_parameters,
+            "version": cv_data.version,
         }
         return self.create(**data)
+
+    def update_generated_cv(
+        self,
+        cv: GeneratedCV,
+        status: str | None = None,
+        generation_parameters: Dict[str, Any] | None = None,
+    ) -> GeneratedCV:
+        """Update generated CV status or parameters."""
+        update_data: Dict[str, Any] = {}
+        if status is not None:
+            update_data["status"] = status
+        if generation_parameters is not None:
+            update_data["generation_parameters"] = generation_parameters
+        if update_data:
+            return self.update(cv, **update_data)
+        return cv

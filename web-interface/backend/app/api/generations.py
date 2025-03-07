@@ -17,6 +17,7 @@ from ..models.models import User
 from ..schemas.cv import (
     GeneratedCVCreate,
     GeneratedCVResponse,
+    GeneratedCVUpdate,
 )
 from ..services.cv import GeneratedCVService
 
@@ -187,6 +188,33 @@ async def get_user_generations(
     generated_cv_service = GeneratedCVService(db)
     cvs = generated_cv_service.get_by_user(int(current_user.id))
     return [GeneratedCVResponse.model_validate(cv) for cv in cvs]
+
+
+@router.patch("/{cv_id}", response_model=GeneratedCVResponse)
+async def update_generated_cv(
+    cv_id: int,
+    cv_data: GeneratedCVUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> GeneratedCVResponse:
+    """Update a generated CV's status or parameters."""
+    generated_cv_service = GeneratedCVService(db)
+    cv = generated_cv_service.get(cv_id)
+    if not cv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Generated CV not found",
+        )
+    # Check if CV belongs to current user
+    if cv.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+    updated_cv = generated_cv_service.update_generated_cv(
+        cv, status=cv_data.status, generation_parameters=cv_data.generation_parameters
+    )
+    return GeneratedCVResponse.model_validate(updated_cv)
 
 
 @router.get("/{cv_id}", response_model=GeneratedCVResponse)

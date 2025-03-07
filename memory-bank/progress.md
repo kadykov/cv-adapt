@@ -24,6 +24,19 @@
    - Language context management
    - Template system
    - Multiple renderer support
+   - Storage implementation progress:
+     - ✓ Enhanced GeneratedCV model
+       - Status tracking (draft/approved/rejected)
+       - Generation parameters storage
+       - Version tracking system
+     - ✓ API endpoint improvements
+       - CRUD operations with new fields
+       - Status update endpoint
+       - Parameters update endpoint
+     - ✓ Test coverage
+       - Model tests for new fields
+       - API endpoint tests
+       - Status transition tests
 
 2. **Job Management**
    - ✓ Job listing implementation
@@ -83,6 +96,10 @@
      - Next: Integration with routing and pages
 
 2. **Core System**
+   - Service Layer Integration
+     - Generation service refactoring
+     - Repository pattern implementation
+     - Unified generation interface
    - Performance optimization
    - Template caching
    - Error handling improvements

@@ -975,6 +975,62 @@
       }
     },
     "/v1/api/generations/{cv_id}": {
+      "patch": {
+        "tags": [
+          "generations"
+        ],
+        "summary": "Update Generated Cv",
+        "description": "Update a generated CV's status or parameters.",
+        "operationId": "update_generated_cv_v1_api_generations__cv_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cv_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cv Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratedCVUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedCVResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "generations"
@@ -1319,6 +1375,27 @@
             "type": "string",
             "title": "Content"
           },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "draft"
+          },
+          "generation_parameters": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Parameters"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
           "detailed_cv_id": {
             "type": "integer",
             "title": "Detailed Cv Id"
@@ -1340,6 +1417,23 @@
       },
       "GeneratedCVResponse": {
         "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
           "language_code": {
             "type": "string",
             "title": "Language Code"
@@ -1348,14 +1442,30 @@
             "type": "string",
             "title": "Content"
           },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "draft"
+          },
+          "generation_parameters": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Parameters"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
           "id": {
             "type": "integer",
             "title": "Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
           },
           "user_id": {
             "type": "integer",
@@ -1372,16 +1482,45 @@
         },
         "type": "object",
         "required": [
+          "created_at",
           "language_code",
           "content",
           "id",
-          "created_at",
           "user_id",
           "detailed_cv_id",
           "job_description_id"
         ],
         "title": "GeneratedCVResponse",
         "description": "Schema for generated CV responses."
+      },
+      "GeneratedCVUpdate": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "generation_parameters": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Parameters"
+          }
+        },
+        "type": "object",
+        "title": "GeneratedCVUpdate",
+        "description": "Schema for updating a generated CV."
       },
       "HTTPValidationError": {
         "properties": {

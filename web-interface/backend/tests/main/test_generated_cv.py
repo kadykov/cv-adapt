@@ -75,6 +75,13 @@ def test_generate_and_save_cv(
         job_description_id=int(test_job_description.id),
         language_code="en",
         content="content",
+        status="draft",
+        generation_parameters={
+            "style": "professional",
+            "focus_areas": ["python", "backend"],
+            "tone": "confident",
+        },
+        version=1,
     )
     response = client.post(
         "/v1/api/generations", headers=auth_headers, json=cv_data.model_dump()
@@ -85,6 +92,13 @@ def test_generate_and_save_cv(
     assert data["job_description_id"] == test_job_description.id
     assert data["language_code"] == "en"
     assert data["content"] == cv_data.content
+    assert data["status"] == "draft"
+    assert data["generation_parameters"] == {
+        "style": "professional",
+        "focus_areas": ["python", "backend"],
+        "tone": "confident",
+    }
+    assert data["version"] == 1
 
 
 def test_get_user_generations(
@@ -98,6 +112,47 @@ def test_get_user_generations(
     assert data[0]["detailed_cv_id"] == test_generated_cv.detailed_cv_id
     assert data[0]["job_description_id"] == test_generated_cv.job_description_id
     assert data[0]["content"] == test_generated_cv.content
+    assert "status" in data[0]
+    assert "version" in data[0]
+    assert "generation_parameters" in data[0]
+
+
+def test_update_generated_cv_status(
+    test_generated_cv: GeneratedCV, auth_headers: dict[str, str], client: TestClient
+) -> None:
+    """Test updating the status of a generated CV."""
+    update_data = {"status": "approved"}
+    response = client.patch(
+        f"/v1/api/generations/{test_generated_cv.id}",
+        headers=auth_headers,
+        json=update_data,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "approved"
+    assert data["id"] == test_generated_cv.id
+
+
+def test_update_generation_parameters(
+    test_generated_cv: GeneratedCV, auth_headers: dict[str, str], client: TestClient
+) -> None:
+    """Test updating generation parameters of a generated CV."""
+    update_data = {
+        "generation_parameters": {
+            "style": "casual",
+            "focus_areas": ["frontend"],
+            "tone": "friendly",
+        }
+    }
+    response = client.patch(
+        f"/v1/api/generations/{test_generated_cv.id}",
+        headers=auth_headers,
+        json=update_data,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["generation_parameters"] == update_data["generation_parameters"]
+    assert data["id"] == test_generated_cv.id
 
 
 def test_get_generated_cv(
@@ -149,9 +204,15 @@ def test_generated_cv_operations_unauthorized(client: TestClient) -> None:
         job_description_id=1,
         language_code="en",
         content="content",
+        status="draft",
+        generation_parameters={"style": "professional"},
+        version=1,
     ).model_dump()  # Convert to dict since we're sending as JSON
+
+    update_data = {"status": "approved"}
 
     # Test all endpoints
     assert client.get("/v1/api/generations").status_code == 401
     assert client.get("/v1/api/generations/1").status_code == 401
     assert client.post("/v1/api/generations", json=cv_data).status_code == 401
+    assert client.patch("/v1/api/generations/1", json=update_data).status_code == 401

@@ -91,7 +91,7 @@ def test_job_description_creation(session: Session) -> None:
 
 
 def test_generated_cv_creation(session: Session) -> None:
-    """Test creating a generated CV."""
+    """Test creating a generated CV with all fields."""
     # Create required related objects
     user = User(email="test@example.com", hashed_password="hashedpass")
     session.add(user)
@@ -113,13 +113,20 @@ def test_generated_cv_creation(session: Session) -> None:
     session.add(job)
     session.flush()
 
-    # Create generated CV
+    # Create generated CV with all new fields
     generated = GeneratedCV(
         user_id=user.id,
         detailed_cv_id=cv.id,
         job_description_id=job.id,
         language_code="en",
         content={"title": "Tailored Software Engineer"},
+        status="draft",
+        generation_parameters={
+            "style": "professional",
+            "focus_areas": ["python", "backend"],
+            "tone": "confident",
+        },
+        version=1,
     )
     session.add(generated)
     session.commit()
@@ -132,6 +139,118 @@ def test_generated_cv_creation(session: Session) -> None:
     assert generated.language_code == "en"
     assert generated.content["title"] == "Tailored Software Engineer"
     assert generated.created_at is not None
+    assert generated.updated_at is not None
+    assert generated.status == "draft"
+    assert generated.generation_parameters == {
+        "style": "professional",
+        "focus_areas": ["python", "backend"],
+        "tone": "confident",
+    }
+    assert generated.version == 1
+
+
+def test_generated_cv_status_update(session: Session) -> None:
+    """Test updating the status of a generated CV."""
+    # Create a CV with initial draft status
+    user = User(email="test@example.com", hashed_password="hashedpass")
+    session.add(user)
+    session.flush()
+
+    cv = DetailedCV(
+        user_id=user.id,
+        language_code="en",
+        content={"title": "CV"},
+    )
+    session.add(cv)
+    session.flush()
+
+    job = JobDescription(
+        title="Job",
+        description="Description",
+        language_code="en",
+    )
+    session.add(job)
+    session.flush()
+
+    generated = GeneratedCV(
+        user_id=user.id,
+        detailed_cv_id=cv.id,
+        job_description_id=job.id,
+        language_code="en",
+        content={"title": "Generated CV"},
+        status="draft",
+    )
+    session.add(generated)
+    session.commit()
+    initial_updated_at = generated.updated_at
+
+    # Update status to approved
+    setattr(generated, "status", "approved")
+    session.commit()
+    session.refresh(generated)
+
+    assert generated.status == "approved"
+    assert generated.updated_at > initial_updated_at
+
+
+def test_generated_cv_versioning(session: Session) -> None:
+    """Test version tracking for generated CVs."""
+    # Create required related objects
+    user = User(email="test@example.com", hashed_password="hashedpass")
+    session.add(user)
+    session.flush()
+
+    cv = DetailedCV(
+        user_id=user.id,
+        language_code="en",
+        content={"title": "Original CV"},
+    )
+    session.add(cv)
+    session.flush()
+
+    job = JobDescription(
+        title="Job",
+        description="Description",
+        language_code="en",
+    )
+    session.add(job)
+    session.flush()
+
+    # Create first version
+    v1 = GeneratedCV(
+        user_id=user.id,
+        detailed_cv_id=cv.id,
+        job_description_id=job.id,
+        language_code="en",
+        content={"title": "Version 1"},
+        version=1,
+    )
+    session.add(v1)
+    session.commit()
+
+    # Create second version
+    v2 = GeneratedCV(
+        user_id=user.id,
+        detailed_cv_id=cv.id,
+        job_description_id=job.id,
+        language_code="en",
+        content={"title": "Version 2"},
+        version=2,
+    )
+    session.add(v2)
+    session.commit()
+
+    # Query all versions
+    versions = (
+        session.query(GeneratedCV)
+        .filter_by(user_id=user.id, detailed_cv_id=cv.id, job_description_id=job.id)
+        .order_by(GeneratedCV.version)
+        .all()
+    )
+
+    assert len(versions) == 2
+    assert [v.version for v in versions] == [1, 2]
+    assert [v.content["title"] for v in versions] == ["Version 1", "Version 2"]
 
 
 def test_user_detailed_cv_relationship(session: Session) -> None:

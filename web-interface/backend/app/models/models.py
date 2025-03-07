@@ -87,7 +87,20 @@ class GeneratedCV(Base):
     language_code = Column(String)
     # Store the entire generated CV as JSON matching CVDTO structure
     content = Column(JSON)
+
+    # Status tracking
+    status = Column(String, default="draft")  # draft, approved, rejected
+
+    # Generation metadata
+    generation_parameters = Column(
+        JSON, nullable=True
+    )  # Parameters used for generation, including LLM guidance
+    version = Column(Integer, default=1)  # Version number
+
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
 
     # Relationships
     user = relationship("User", back_populates="generated_cvs")
@@ -112,3 +125,12 @@ Index("ix_job_descriptions_language", JobDescription.language_code)
 # Index for generated CV lookup
 Index("ix_generated_cvs_user", GeneratedCV.user_id)
 Index("ix_generated_cvs_detailed_cv", GeneratedCV.detailed_cv_id)
+Index("ix_generated_cvs_job_description", GeneratedCV.job_description_id)
+Index("ix_generated_cvs_language", GeneratedCV.language_code)
+Index("ix_generated_cvs_status", GeneratedCV.status)
+Index(
+    "ix_generated_cvs_user_job_version",
+    GeneratedCV.user_id,
+    GeneratedCV.job_description_id,
+    GeneratedCV.version,
+)

@@ -1,5 +1,7 @@
 """CV-related schemas."""
 
+from typing import Any, Dict
+
 from pydantic import BaseModel
 
 from .base import BaseResponseModel, TimestampedModel
@@ -66,6 +68,9 @@ class GeneratedCVBase(BaseModel):
 
     language_code: str
     content: str  # Content is a plain text that can optionally contain markdown
+    status: str = "draft"  # draft, approved, rejected
+    generation_parameters: Dict[str, Any] | None = None
+    version: int = 1
 
 
 class GeneratedCVCreate(GeneratedCVBase):
@@ -75,7 +80,14 @@ class GeneratedCVCreate(GeneratedCVBase):
     job_description_id: int
 
 
-class GeneratedCVResponse(BaseResponseModel, GeneratedCVBase):
+class GeneratedCVUpdate(BaseModel):
+    """Schema for updating a generated CV."""
+
+    status: str | None = None
+    generation_parameters: Dict[str, Any] | None = None
+
+
+class GeneratedCVResponse(BaseResponseModel, GeneratedCVBase, TimestampedModel):
     """Schema for generated CV responses."""
 
     user_id: int

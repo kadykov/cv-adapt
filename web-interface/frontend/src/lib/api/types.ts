@@ -312,7 +312,11 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch?: never;
+    /**
+     * Update Generated Cv
+     * @description Update a generated CV's status or parameters.
+     */
+    patch: operations['update_generated_cv_v1_api_generations__cv_id__patch'];
     trace?: never;
   };
 }
@@ -440,6 +444,18 @@ export interface components {
       language_code: string;
       /** Content */
       content: string;
+      /**
+       * Status
+       * @default draft
+       */
+      status: string;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never> | null;
+      /**
+       * Version
+       * @default 1
+       */
+      version: number;
       /** Detailed Cv Id */
       detailed_cv_id: number;
       /** Job Description Id */
@@ -450,23 +466,47 @@ export interface components {
      * @description Schema for generated CV responses.
      */
     GeneratedCVResponse: {
-      /** Language Code */
-      language_code: string;
-      /** Content */
-      content: string;
-      /** Id */
-      id: number;
       /**
        * Created At
        * Format: date-time
        */
       created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Language Code */
+      language_code: string;
+      /** Content */
+      content: string;
+      /**
+       * Status
+       * @default draft
+       */
+      status: string;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never> | null;
+      /**
+       * Version
+       * @default 1
+       */
+      version: number;
+      /** Id */
+      id: number;
       /** User Id */
       user_id: number;
       /** Detailed Cv Id */
       detailed_cv_id: number;
       /** Job Description Id */
       job_description_id: number;
+    };
+    /**
+     * GeneratedCVUpdate
+     * @description Schema for updating a generated CV.
+     */
+    GeneratedCVUpdate: {
+      /** Status */
+      status?: string | null;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never> | null;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1274,6 +1314,41 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GeneratedCVResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  update_generated_cv_v1_api_generations__cv_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeneratedCVUpdate'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

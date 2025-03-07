@@ -2,7 +2,18 @@
 
 ## Current Focus
 
-1. **Detailed CV Management Improvements**
+1. **CV Generation Integration**
+   - Storage Model Implementation:
+     - ✓ Enhanced GeneratedCV with status tracking, parameters, versioning
+     - ✓ Added update capabilities for status and parameters
+     - ✓ Implemented test coverage for new features
+     - ✓ Added PATCH endpoint for updates
+     - Next: Service Layer Integration
+       - Refactor generation services
+       - Create unified generation interface
+       - Implement CV repository pattern
+
+2. **Detailed CV Management Improvements**
    - ✓ Feature structure implemented
    - ✓ Following established frontend patterns
    - ✓ Base components implemented
@@ -92,17 +103,23 @@
 
 ## Next Steps
 
-1. **Pattern Documentation**
+1. **Service Layer Integration**
+   - Update generation services for stored entities
+   - Create unified generation service interface
+   - Implement CV repository pattern
+   - Add retrieval/update functionality
+
+2. **Pattern Documentation**
    - Document route-based form patterns
    - Update test pattern documentation
    - Add route validation guidelines
 
-2. **CV Generation Integration**
+3. **CV Generation Integration**
    - Connect detailed CVs with job applications
    - Add CV preview before generation
    - Implement language-based selection
 
-3. **Documentation Updates**
+4. **Documentation Updates**
    - Component usage guidelines
    - Test pattern documentation
    - API integration examples
