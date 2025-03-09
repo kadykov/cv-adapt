@@ -137,13 +137,19 @@ def test_get_user_generations(
     response = client.get("/v1/api/generations", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["detailed_cv_id"] == test_generated_cv.detailed_cv_id
-    assert data[0]["job_description_id"] == test_generated_cv.job_description_id
-    assert data[0]["content"] == test_generated_cv.content
-    assert "status" in data[0]
-    assert "version" in data[0]
-    assert "generation_parameters" in data[0]
+
+    # Check pagination data
+    assert data["total"] >= 1
+    assert len(data["items"]) >= 1
+
+    # Find our test CV in the items
+    generated_cv = next(cv for cv in data["items"] if cv["id"] == test_generated_cv.id)
+    assert generated_cv["detailed_cv_id"] == test_generated_cv.detailed_cv_id
+    assert generated_cv["job_description_id"] == test_generated_cv.job_description_id
+    assert generated_cv["content"] == test_generated_cv.content
+    assert "status" in generated_cv
+    assert "version" in generated_cv
+    assert "generation_parameters" in generated_cv
 
 
 def test_update_generated_cv_status(

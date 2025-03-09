@@ -1,20 +1,32 @@
 """API endpoints for CV generation."""
 
 import sys
-from typing import Annotated, Dict, List
+from datetime import datetime
+from typing import Annotated, Dict, List, Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
-from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
-from cv_adapter.dto.cv import ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
+from cv_adapter.dto.cv import CVDTO, ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import Language
+from cv_adapter.renderers.json_renderer import JSONRenderer
+from cv_adapter.renderers.markdown import MarkdownRenderer
+from cv_adapter.renderers.pdf import PDFRenderer
+from cv_adapter.renderers.yaml_renderer import YAMLRenderer
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_language
 from ..logger import logger
 from ..models.models import User
+from ..schemas.common import (
+    DateRange,
+    GeneratedCVFilters,
+    PaginatedResponse,
+    PaginationParams,
+)
 from ..schemas.cv import (
     GeneratedCVCreate,
     GeneratedCVResponse,
@@ -22,7 +34,9 @@ from ..schemas.cv import (
 )
 from ..services.generation.protocols import (
     GenerationError,
-    ValidationError,
+)
+from ..services.generation.protocols import (
+    ValidationError as GenerationValidationError,
 )
 from ..services.generation.service import CVGenerationServiceImpl
 from ..services.repositories import EntityNotFoundError
@@ -31,6 +45,14 @@ from ..services.repositories import EntityNotFoundError
 cv_adapter = AsyncCVAdapterApplication(
     ai_model="test" if "pytest" in sys.modules else "openai:gpt-4"
 )
+
+# Initialize renderers
+renderers = {
+    "markdown": MarkdownRenderer(),
+    "json": JSONRenderer(),
+    "yaml": YAMLRenderer(),
+    "pdf": PDFRenderer(),
+}
 
 
 # Initialize service factory to be used by all routes
@@ -197,7 +219,7 @@ async def generate_and_save_cv(
         )
     except EntityNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except ValidationError as e:
+    except GenerationValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except GenerationError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -206,15 +228,52 @@ async def generate_and_save_cv(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("", response_model=list[GeneratedCVResponse])
+@router.get("", response_model=PaginatedResponse[GeneratedCVResponse])
 async def get_user_generations(
     current_user: Annotated[User, Depends(get_current_user)],
     service: CVGenerationServiceImpl = Depends(get_generation_service),
-) -> list[GeneratedCVResponse]:
-    """Get all generated CVs for current user."""
+    offset: int = 0,
+    limit: int = 10,
+    status: str | None = None,
+    language_code: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+) -> PaginatedResponse[GeneratedCVResponse]:
+    """Get all generated CVs for current user with filtering and pagination."""
     try:
-        user_cvs = service.repository.get_user_generated_cvs(int(current_user.id))
-        return [GeneratedCVResponse.model_validate(cv) for cv in user_cvs]
+        # Prepare filters
+        date_range = None
+        if start_date or end_date:
+            date_range = DateRange(start=start_date, end=end_date)
+
+        filters = GeneratedCVFilters(
+            status=status,
+            language_code=language_code,
+            created_at=date_range,
+        )
+
+        pagination = PaginationParams(offset=offset, limit=limit)
+
+        # Get CVs with filtering and pagination
+        cvs, total = service.repository.get_user_generated_cvs(
+            int(current_user.id),
+            filters=filters,
+            pagination=pagination,
+        )
+
+        # Convert to response models
+        cv_responses = [GeneratedCVResponse.model_validate(cv) for cv in cvs]
+
+        return PaginatedResponse.create(
+            items=cv_responses,
+            total=total,
+            offset=offset,
+            limit=limit,
+        )
+
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching user generations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -253,7 +312,7 @@ async def update_generated_cv(
 
     except EntityNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except ValidationError as e:
+    except GenerationValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except GenerationError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -281,7 +340,7 @@ async def get_generated_cv(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied",
-            )
+            ) from None
 
         return GeneratedCVResponse.model_validate(cv)
 
@@ -292,3 +351,82 @@ async def get_generated_cv(
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{cv_id}/export")
+async def export_generated_cv(
+    cv_id: int,
+    format: Literal["markdown", "json", "yaml", "pdf"],
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: CVGenerationServiceImpl = Depends(get_generation_service),
+) -> StreamingResponse:
+    """Export a generated CV in the specified format."""
+    try:
+        # Get CV and check ownership
+        cv = service.repository.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(
+                f"Generated CV with id {cv_id} not found"
+            ) from None
+
+        if cv.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied",
+            ) from None
+
+        # Get renderer for requested format
+        try:
+            renderer = renderers[format]
+        except KeyError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Format '{format}' is not supported",
+            ) from e
+
+        # Convert stored JSON to CVDTO and generate content
+        try:
+            cv_dto = CVDTO.model_validate(cv.content)
+            export_content = renderer.render_to_string(cv_dto)
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid CV data format: {str(e)}",
+            ) from e
+
+        # Set appropriate content type and filename
+        content_types = {
+            "markdown": "text/markdown",
+            "json": "application/json",
+            "yaml": "application/x-yaml",
+            "pdf": "application/pdf",
+        }
+        extensions = {
+            "markdown": "md",
+            "json": "json",
+            "yaml": "yaml",
+            "pdf": "pdf",
+        }
+
+        filename = f"cv_{cv_id}.{extensions[format]}"
+        content_type = content_types[format]
+
+        # Create streaming response
+        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+
+        return StreamingResponse(
+            iter([export_content]),
+            headers=headers,
+            media_type=content_type,
+        )
+
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting CV: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e

@@ -280,7 +280,7 @@ export interface paths {
     };
     /**
      * Get User Generations
-     * @description Get all generated CVs for current user.
+     * @description Get all generated CVs for current user with filtering and pagination.
      */
     get: operations['get_user_generations_v1_api_generations_get'];
     put?: never;
@@ -317,6 +317,26 @@ export interface paths {
      * @description Update a generated CV's status or parameters.
      */
     patch: operations['update_generated_cv_v1_api_generations__cv_id__patch'];
+    trace?: never;
+  };
+  '/v1/api/generations/{cv_id}/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Generated Cv
+     * @description Export a generated CV in the specified format.
+     */
+    get: operations['export_generated_cv_v1_api_generations__cv_id__export_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
 }
@@ -555,6 +575,19 @@ export interface components {
       title?: string | null;
       /** Description */
       description?: string | null;
+    };
+    /** PaginatedResponse[GeneratedCVResponse] */
+    PaginatedResponse_GeneratedCVResponse_: {
+      /** Items */
+      items: components['schemas']['GeneratedCVResponse'][];
+      /** Total */
+      total: number;
+      /** Offset */
+      offset: number;
+      /** Limit */
+      limit: number;
+      /** Has More */
+      has_more: boolean;
     };
     /** PersonalInfo */
     PersonalInfo: {
@@ -1253,7 +1286,14 @@ export interface operations {
   };
   get_user_generations_v1_api_generations_get: {
     parameters: {
-      query?: never;
+      query?: {
+        offset?: number;
+        limit?: number;
+        status?: string | null;
+        language_code?: string | null;
+        start_date?: string | null;
+        end_date?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -1266,7 +1306,16 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['GeneratedCVResponse'][];
+          'application/json': components['schemas']['PaginatedResponse_GeneratedCVResponse_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
         };
       };
     };
@@ -1357,6 +1406,39 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['GeneratedCVResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  export_generated_cv_v1_api_generations__cv_id__export_get: {
+    parameters: {
+      query: {
+        format: 'markdown' | 'json' | 'yaml' | 'pdf';
+      };
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */

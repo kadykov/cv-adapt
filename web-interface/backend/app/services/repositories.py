@@ -1,10 +1,12 @@
 """Repository pattern implementations for CV-related operations."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from ..models.models import DetailedCV, GeneratedCV, JobDescription
+from ..schemas.common import GeneratedCVFilters, PaginationParams
 from ..schemas.cv import GeneratedCVCreate
 from .cv import DetailedCVService, GeneratedCVService, JobDescriptionService
 
@@ -46,9 +48,61 @@ class CVRepository:
             cv, generation_parameters=parameters
         )
 
-    def get_user_generated_cvs(self, user_id: int) -> List[GeneratedCV]:
-        """Get all generated CVs for a user."""
-        return self._generated_cv_service.get_by_user(user_id)
+    def get_user_generated_cvs(
+        self,
+        user_id: int,
+        filters: Optional[GeneratedCVFilters] = None,
+        pagination: Optional[PaginationParams] = None,
+    ) -> Tuple[List[GeneratedCV], int]:
+        """Get all generated CVs for a user with filtering and pagination."""
+        # Start with base query
+        query = select(GeneratedCV).where(GeneratedCV.user_id == user_id)
+        count_query = (
+            select(func.count())
+            .select_from(GeneratedCV)
+            .where(GeneratedCV.user_id == user_id)
+        )
+
+        # Apply filters if provided
+        if filters:
+            filter_conditions = []
+
+            if filters.status:
+                filter_conditions.append(GeneratedCV.status == filters.status)
+
+            if filters.language_code:
+                filter_conditions.append(
+                    GeneratedCV.language_code == filters.language_code
+                )
+
+            if filters.created_at:
+                if filters.created_at.start:
+                    filter_conditions.append(
+                        GeneratedCV.created_at >= filters.created_at.start
+                    )
+                if filters.created_at.end:
+                    filter_conditions.append(
+                        GeneratedCV.created_at <= filters.created_at.end
+                    )
+
+            if filter_conditions:
+                combined_filter = and_(*filter_conditions)
+                query = query.where(combined_filter)
+                count_query = count_query.where(combined_filter)
+
+        # Get total count before pagination
+        total = self.db.scalar(count_query) or 0
+
+        # Apply pagination if provided
+        if pagination:
+            query = query.offset(pagination.offset).limit(pagination.limit)
+
+        # Order by most recent first
+        query = query.order_by(GeneratedCV.created_at.desc())
+
+        # Execute query and convert results to list
+        results = list(self.db.execute(query).scalars().all())
+        return results, total
 
     def get_generated_cv(self, cv_id: int) -> Optional[GeneratedCV]:
         """Get a specific generated CV."""

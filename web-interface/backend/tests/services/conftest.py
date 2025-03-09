@@ -1,5 +1,7 @@
 """Service layer test fixtures."""
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from app.core.security import create_access_token
 from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
@@ -114,8 +116,41 @@ def test_generated_cv_data(
 @pytest.fixture
 def test_generated_cv(db: Session, test_generated_cv_data: dict) -> GeneratedCV:
     """Create a test generated CV."""
-    generated_cv = GeneratedCV(**test_generated_cv_data)
+    cv_data = test_generated_cv_data.copy()
+    cv_data["created_at"] = datetime.now(UTC)
+    generated_cv = GeneratedCV(**cv_data)
     db.add(generated_cv)
     db.commit()
     db.refresh(generated_cv)
     return generated_cv
+
+
+@pytest.fixture
+def test_generated_cvs(db: Session, test_generated_cv_data: dict) -> list[GeneratedCV]:
+    """Create multiple test generated CVs with different statuses and dates."""
+    base_date = datetime.now(UTC) - timedelta(days=3)  # Use a shorter time range
+    cvs = []
+
+    # Create CVs with different statuses and dates
+    statuses = ["draft", "approved", "rejected"]
+    languages = ["en", "fr", "de"]
+
+    for i, (status, lang) in enumerate(zip(statuses * 2, languages * 2)):
+        cv_data = test_generated_cv_data.copy()
+        cv_data["status"] = status
+        cv_data["language_code"] = lang
+        cv_data["created_at"] = base_date + timedelta(days=i)
+        cv_data["content"] = f"Test CV content {i + 1}"
+
+        cv = GeneratedCV(**cv_data)
+        db.add(cv)
+        cvs.append(cv)
+
+    db.commit()
+    for cv in cvs:
+        db.refresh(cv)
+
+    # Sort by raw timestamp value
+    from operator import attrgetter
+
+    return sorted(cvs, key=attrgetter("created_at"), reverse=True)
