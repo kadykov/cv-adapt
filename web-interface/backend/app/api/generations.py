@@ -4,7 +4,8 @@ import sys
 from datetime import datetime
 from typing import Annotated, Dict, List, Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi import status as http_status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
@@ -31,6 +32,7 @@ from ..schemas.cv import (
     GeneratedCVCreate,
     GeneratedCVResponse,
     GeneratedCVUpdate,
+    GenerationStatusResponse,
 )
 from ..services.generation.protocols import (
     GenerationError,
@@ -295,7 +297,7 @@ async def update_generated_cv(
         # Check if CV belongs to current user
         if cv.user_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied",
             )
 
@@ -323,6 +325,39 @@ async def update_generated_cv(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{cv_id}/generation-status", response_model=GenerationStatusResponse)
+async def check_generation_status(
+    cv_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: CVGenerationServiceImpl = Depends(get_generation_service),
+) -> GenerationStatusResponse:
+    """Check the status of a CV generation process."""
+    try:
+        cv = service.repository.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+
+        # Check if CV belongs to current user
+        if cv.user_id != current_user.id:
+            raise HTTPException(
+                status_code=http_status.HTTP_403_FORBIDDEN,
+                detail="Access denied",
+            )
+
+        # Get generation status
+        status, error = await service.get_generation_status(cv_id)
+
+        return GenerationStatusResponse(cv_id=cv_id, status=status, error=error)
+
+    except EntityNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking generation status: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{cv_id}", response_model=GeneratedCVResponse)
 async def get_generated_cv(
     cv_id: int,
@@ -338,7 +373,7 @@ async def get_generated_cv(
         # Check if CV belongs to current user
         if cv.user_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied",
             ) from None
 
@@ -371,7 +406,7 @@ async def export_generated_cv(
 
         if cv.user_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied",
             ) from None
 
@@ -380,7 +415,7 @@ async def export_generated_cv(
             renderer = renderers[format]
         except KeyError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Format '{format}' is not supported",
             ) from e
 
@@ -390,7 +425,7 @@ async def export_generated_cv(
             export_content = renderer.render_to_string(cv_dto)
         except ValidationError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid CV data format: {str(e)}",
             ) from e
 
@@ -427,6 +462,6 @@ async def export_generated_cv(
     except Exception as e:
         logger.error(f"Error exporting CV: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         ) from e

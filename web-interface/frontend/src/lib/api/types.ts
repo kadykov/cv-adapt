@@ -319,6 +319,26 @@ export interface paths {
     patch: operations['update_generated_cv_v1_api_generations__cv_id__patch'];
     trace?: never;
   };
+  '/v1/api/generations/{cv_id}/generation-status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check Generation Status
+     * @description Check the status of a CV generation process.
+     */
+    get: operations['check_generation_status_v1_api_generations__cv_id__generation_status_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/api/generations/{cv_id}/export': {
     parameters: {
       query?: never;
@@ -527,6 +547,27 @@ export interface components {
       status?: string | null;
       /** Generation Parameters */
       generation_parameters?: Record<string, never> | null;
+    };
+    /**
+     * GenerationStatus
+     * @description CV generation status.
+     * @enum {string}
+     */
+    GenerationStatus: 'generating' | 'completed' | 'failed';
+    /**
+     * GenerationStatusResponse
+     * @description Generation status response.
+     */
+    GenerationStatusResponse: {
+      /** Cv Id */
+      cv_id: number;
+      /** @description Current generation status */
+      status: components['schemas']['GenerationStatus'];
+      /**
+       * Error
+       * @description Error message if generation failed
+       */
+      error?: string | null;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1406,6 +1447,37 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['GeneratedCVResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  check_generation_status_v1_api_generations__cv_id__generation_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GenerationStatusResponse'];
         };
       };
       /** @description Validation Error */

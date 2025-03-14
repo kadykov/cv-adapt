@@ -3,7 +3,12 @@
 import pytest
 from app.core.security import create_access_token
 from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
-from app.schemas.cv import DetailedCVCreate, GeneratedCVCreate, JobDescriptionCreate
+from app.schemas.cv import (
+    DetailedCVCreate,
+    GeneratedCVCreate,
+    GenerationStatus,
+    JobDescriptionCreate,
+)
 from app.schemas.user import UserCreate
 from app.services.cv import DetailedCVService, GeneratedCVService, JobDescriptionService
 from app.services.user import UserService
@@ -232,6 +237,74 @@ def test_get_other_user_generated_cv(
     assert response.status_code == 403
 
 
+def test_check_generation_status(
+    test_generated_cv: GeneratedCV,
+    auth_headers: dict[str, str],
+    client: TestClient,
+    db: Session,
+) -> None:
+    """Test checking generation status endpoint."""
+    # Initial state should be default
+    response = client.get(
+        f"/v1/api/generations/{test_generated_cv.id}/generation-status",
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["cv_id"] == test_generated_cv.id
+    assert data["status"] == GenerationStatus.COMPLETED.value
+    assert data["error"] is None
+
+    # Update to failed state
+    setattr(test_generated_cv, "generation_status", GenerationStatus.FAILED.value)
+    setattr(test_generated_cv, "error_message", "Test error")
+    db.commit()
+
+    # Check updated status
+    response = client.get(
+        f"/v1/api/generations/{test_generated_cv.id}/generation-status",
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == GenerationStatus.FAILED.value
+    assert data["error"] == "Test error"
+
+
+def test_check_generation_status_not_found(
+    auth_headers: dict[str, str],
+    client: TestClient,
+) -> None:
+    """Test getting status of non-existent CV."""
+    response = client.get(
+        "/v1/api/generations/999/generation-status",
+        headers=auth_headers,
+    )
+    assert response.status_code == 404
+
+
+def test_check_other_user_generation_status(
+    test_generated_cv: GeneratedCV,
+    db: Session,
+    client: TestClient,
+) -> None:
+    """Test getting generation status of another user's CV."""
+    # Create another user
+    user_service = UserService(db)
+    other_user = user_service.create_user(
+        UserCreate(email="other@example.com", password="testpassword")
+    )
+    other_user_token = create_access_token(int(other_user.id))
+    headers = {"Authorization": f"Bearer {other_user_token}"}
+
+    # Try to access first user's CV status
+    response = client.get(
+        f"/v1/api/generations/{test_generated_cv.id}/generation-status",
+        headers=headers,
+    )
+    assert response.status_code == 403
+
+
 def test_generated_cv_operations_unauthorized(client: TestClient) -> None:
     """Test generated CV operations without authentication."""
     cv_data = GeneratedCVCreate(
@@ -249,5 +322,6 @@ def test_generated_cv_operations_unauthorized(client: TestClient) -> None:
     # Test all endpoints
     assert client.get("/v1/api/generations").status_code == 401
     assert client.get("/v1/api/generations/1").status_code == 401
+    assert client.get("/v1/api/generations/1/generation-status").status_code == 401
     assert client.post("/v1/api/generations", json=cv_data).status_code == 401
     assert client.patch("/v1/api/generations/1", json=update_data).status_code == 401

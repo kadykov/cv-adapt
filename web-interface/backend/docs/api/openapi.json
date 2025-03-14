@@ -1172,6 +1172,54 @@
         }
       }
     },
+    "/v1/api/generations/{cv_id}/generation-status": {
+      "get": {
+        "tags": [
+          "generations"
+        ],
+        "summary": "Check Generation Status",
+        "description": "Check the status of a CV generation process.",
+        "operationId": "check_generation_status_v1_api_generations__cv_id__generation_status_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cv_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cv Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/api/generations/{cv_id}/export": {
       "get": {
         "tags": [
@@ -1676,6 +1724,47 @@
         "type": "object",
         "title": "GeneratedCVUpdate",
         "description": "Schema for updating a generated CV."
+      },
+      "GenerationStatus": {
+        "type": "string",
+        "enum": [
+          "generating",
+          "completed",
+          "failed"
+        ],
+        "title": "GenerationStatus",
+        "description": "CV generation status."
+      },
+      "GenerationStatusResponse": {
+        "properties": {
+          "cv_id": {
+            "type": "integer",
+            "title": "Cv Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GenerationStatus",
+            "description": "Current generation status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if generation failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cv_id",
+          "status"
+        ],
+        "title": "GenerationStatusResponse",
+        "description": "Generation status response."
       },
       "HTTPValidationError": {
         "properties": {

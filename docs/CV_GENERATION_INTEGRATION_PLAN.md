@@ -71,62 +71,45 @@ This document outlines the integration plan for the CV generation feature with t
   - Language handling ✓
   - Format localization ✓
 
-### Phase 2: API Integration ⬜
+### Phase 2: API Integration ✓
 
 #### Authentication Integration ✓
 - [x] Protect generation endpoints
   - JWT validation ✓
   - Role-based access ✓
-  - Rate limiting (to be implemented)
+  - Rate limiting (planned for later)
 - [x] Implement user context in requests
   - User identification ✓
   - Permission scoping ✓
-  - Audit logging (to be implemented)
+  - Audit logging (planned for later)
 - [x] Add permission verification
   - Resource ownership ✓
   - Action authorization ✓
   - Scope validation ✓
 
-#### Endpoint Refactoring ⬜
-- [ ] Update endpoints to use stored data
-  - Query optimization
-  - Response formatting
-  - Error handling
-- [ ] Create endpoints for full generation lifecycle
-  - Initiate generation
-  - Check status
-  - Retrieve results
-  - Update/regenerate
-- [ ] Implement versioning endpoints
-  - Version creation
-  - History retrieval
-  - Diff generation
-- [ ] Add export endpoints
-  - Format selection
-  - Download handling
-  - Async generation
+#### Essential Backend Features ✓
+- [x] Add generation status checking endpoint
+  - Check if generation is in progress ✓
+  - Return error messages ✓
+  - Support frontend polling ✓
+  - Proper error handling ✓
 
-#### Multi-language Support ⬜
-- [ ] Preserve language context
-  - Context propagation
-  - Metadata handling
-  - Format adaptation
-- [ ] Implement language selection logic
-  - Matching algorithm
-  - Fallback rules
-  - Priority handling
-- [ ] Support language fallback
-  - Default selection
-  - Content mapping
-  - Quality indicators
+#### Features for Later Releases
+These features are not planned for the initial release:
+- CV versioning and regeneration endpoints
+- Complex status transitions
+- Multi-language fallback system
+- Rate limiting implementation
+- Audit logging system
 
-### Phase 3: Frontend Implementation ⬜
+### Phase 3: Frontend Implementation
 
-#### CV Generation Flow UI ⬜
+#### CV Generation Flow UI
 - [ ] Create generation wizard
   - Step progression
   - Data validation
   - Progress indication
+  - Generation status polling
 - [ ] Implement job/CV selection
   - Filtering interface
   - Preview cards
@@ -136,7 +119,7 @@ This document outlines the integration plan for the CV generation feature with t
   - Template selection
   - Notes input
 
-#### Preview & Editing ⬜
+#### Preview & Editing
 - [ ] Create preview components
   - PDF preview
   - HTML preview
@@ -144,22 +127,16 @@ This document outlines the integration plan for the CV generation feature with t
 - [ ] Implement competency review/editing
   - Inline editing
   - Batch updates
-  - History tracking
 - [ ] Add full CV review/editing
   - Section organization
   - Content validation
   - Format controls
-- [ ] Design version comparison
-  - Side-by-side view
-  - Diff highlighting
-  - Merge controls
 
-#### Document Management ⬜
+#### Document Management
 - [ ] Implement CV listing
   - Grid/list views
   - Sort/filter controls
-  - Bulk actions
-- [ ] Add status indicators and filtering
+- [ ] Add status indicators
   - Visual status badges
   - Filter controls
   - Quick actions
@@ -172,32 +149,22 @@ This document outlines the integration plan for the CV generation feature with t
   - Download handling
   - Format options
 
-## Decisions and Considerations
+## Future Features and Considerations
 
-### Versioning Strategy
-- To be discussed:
-  - Version numbering scheme
-  - Storage efficiency
-  - Diff generation
-  - Rollback capability
+The following features are planned for future releases:
 
-### Approval Workflow
-- To be discussed:
-  - Approval roles
-  - State transitions
-  - Notification system
-  - Review process
+### Version Control
+- Multiple versions of CVs
+- History tracking
+- Diff views
+- Rollback capabilities
 
-### Regeneration Approach
-- To be discussed:
-  - Section vs full regeneration
-  - Content preservation
-  - Change tracking
-  - Merge strategy
+### Enhanced Language Support
+- Language fallback system
+- Translation quality checks
+- Priority rules for translations
 
-### Language Matching
-- To be discussed:
-  - Match priority rules
-  - Fallback cascade
-  - Quality thresholds
-  - Translation handling
+### Audit and Security
+- Rate limiting
+- Detailed audit logging
+- Enhanced approval workflows

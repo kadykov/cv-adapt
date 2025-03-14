@@ -1,6 +1,6 @@
 """Implementation of CV generation service."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,7 @@ from cv_adapter.renderers.markdown import MarkdownRenderer
 
 from ...logger import logger
 from ...models.models import DetailedCV, JobDescription
-from ...schemas.cv import GeneratedCVCreate, GeneratedCVResponse
+from ...schemas.cv import GeneratedCVCreate, GeneratedCVResponse, GenerationStatus
 from ..repositories import CVRepository, EntityNotFoundError
 from .protocols import GenerationError, ValidationError
 
@@ -21,6 +21,7 @@ class CVGenerationServiceImpl:
     """Concrete implementation of CV generation service."""
 
     def __init__(self, db: Session, adapter: AsyncCVAdapterApplication):
+        self.db = db
         self.repository = CVRepository(db)
         self.adapter = adapter
         self.renderer = MarkdownRenderer()
@@ -65,6 +66,36 @@ class CVGenerationServiceImpl:
             logger.error(f"Error generating CV: {str(e)}", exc_info=True)
             raise GenerationError(str(e))
 
+    async def get_generation_status(
+        self, cv_id: int
+    ) -> Tuple[GenerationStatus, Optional[str]]:
+        """Get the generation status of a CV."""
+        cv = self.repository.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+
+        # Convert to Python types to avoid SQLAlchemy Column type issues
+        gen_status = str(cv.generation_status or "completed")
+        err_msg = str(cv.error_message) if cv.error_message else None
+
+        return GenerationStatus(gen_status), err_msg
+
+    async def update_generation_status(
+        self,
+        cv_id: int,
+        status: GenerationStatus,
+        error_message: Optional[str] = None,
+    ) -> None:
+        """Update the generation status of a CV."""
+        cv = self.repository.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+
+        # Use setattr to avoid SQLAlchemy typing issues
+        setattr(cv, "generation_status", status.value)
+        setattr(cv, "error_message", error_message)
+        self.db.commit()
+
     async def generate_and_store_cv(
         self,
         user_id: int,
@@ -86,6 +117,25 @@ class CVGenerationServiceImpl:
                 f"Job description with id {job_description_id} not found"
             )
 
+        # Create CV record with generating status
+        cv_data = GeneratedCVCreate(
+            detailed_cv_id=detailed_cv_id,
+            job_description_id=job_description_id,
+            language_code=language_code,
+            content="",  # Will be filled after generation
+            status="draft",
+            generation_parameters=generation_parameters or {},
+            version=1,
+        )
+        # Create and validate CV
+        stored_cv = self.repository.save_generated_cv(user_id, cv_data)
+        if not stored_cv:
+            raise GenerationError("Failed to create CV record")
+
+        await self.update_generation_status(
+            int(stored_cv.id), GenerationStatus.GENERATING
+        )
+
         try:
             # Generate CV content
             generated_cv = await self._generate_cv_content(
@@ -98,23 +148,25 @@ class CVGenerationServiceImpl:
             # Convert CV DTO to markdown
             cv_content = self.renderer.render_to_string(generated_cv)
 
-            # Prepare data for storage
-            cv_data = GeneratedCVCreate(
-                detailed_cv_id=detailed_cv_id,
-                job_description_id=job_description_id,
-                language_code=language_code,
-                content=cv_content,
-                status="draft",
-                generation_parameters=generation_parameters or {},
-                version=1,  # Initial version
-            )
+            # Update CV content and status
+            # Get fresh instance after generation
+            cv_id = int(stored_cv.id)
+            refreshed_cv = self.repository.get_generated_cv(cv_id)
+            if not refreshed_cv:
+                raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-            # Store the generated CV
-            stored_cv = self.repository.save_generated_cv(user_id, cv_data)
-            return GeneratedCVResponse.model_validate(stored_cv)
+            # Update content and status
+            setattr(refreshed_cv, "content", cv_content)
+            await self.update_generation_status(cv_id, GenerationStatus.COMPLETED)
+            self.db.commit()
+
+            return GeneratedCVResponse.model_validate(refreshed_cv)
 
         except Exception as e:
             logger.error(f"Error in generate_and_store_cv: {str(e)}", exc_info=True)
+            await self.update_generation_status(
+                int(stored_cv.id), GenerationStatus.FAILED, str(e)
+            )
             raise GenerationError(str(e))
 
     async def update_cv_status(

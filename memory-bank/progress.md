@@ -48,6 +48,11 @@
    - ✓ Full test coverage
    - ✓ Language context support
    - ✓ Error propagation refinement
+   - ✓ Generation status tracking
+     - Generation states (generating, completed, failed)
+     - Error message handling
+     - Status checking endpoint
+     - Full test coverage
 
 ## In Progress
 

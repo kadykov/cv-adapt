@@ -1,10 +1,27 @@
 """CV-related schemas."""
 
-from typing import Any, Dict
+from enum import Enum
+from typing import Any, Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .base import BaseResponseModel, TimestampedModel
+
+
+class GenerationStatus(str, Enum):
+    """CV generation status."""
+
+    GENERATING = "generating"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class GenerationStatusResponse(BaseModel):
+    """Generation status response."""
+
+    cv_id: int
+    status: GenerationStatus = Field(description="Current generation status")
+    error: Optional[str] = Field(None, description="Error message if generation failed")
 
 
 class DetailedCVBase(BaseModel):

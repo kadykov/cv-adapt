@@ -90,6 +90,10 @@ class GeneratedCV(Base):
 
     # Status tracking
     status = Column(String, default="draft")  # draft, approved, rejected
+    generation_status = Column(
+        String, default="completed"
+    )  # generating, completed, failed
+    error_message = Column(String, nullable=True)  # Error message if generation failed
 
     # Generation metadata
     generation_parameters = Column(
@@ -128,6 +132,7 @@ Index("ix_generated_cvs_detailed_cv", GeneratedCV.detailed_cv_id)
 Index("ix_generated_cvs_job_description", GeneratedCV.job_description_id)
 Index("ix_generated_cvs_language", GeneratedCV.language_code)
 Index("ix_generated_cvs_status", GeneratedCV.status)
+Index("ix_generated_cvs_generation_status", GeneratedCV.generation_status)
 Index(
     "ix_generated_cvs_user_job_version",
     GeneratedCV.user_id,
