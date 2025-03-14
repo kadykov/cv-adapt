@@ -96,6 +96,11 @@ class GeneratedCV(Base):
         JSON, nullable=True
     )  # Parameters used for generation, including LLM guidance
     version = Column(Integer, default=1)  # Version number
+    based_on_id = Column(
+        Integer,
+        ForeignKey("generated_cvs.id", ondelete="SET NULL"),
+        nullable=True,
+    )  # Reference to the original CV if this is a regeneration
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(
@@ -106,6 +111,12 @@ class GeneratedCV(Base):
     user = relationship("User", back_populates="generated_cvs")
     detailed_cv = relationship("DetailedCV", back_populates="generated_cvs")
     job_description = relationship("JobDescription", back_populates="generated_cvs")
+    based_on = relationship(
+        "GeneratedCV",
+        remote_side=[id],
+        backref="regenerations",
+        uselist=False,
+    )
 
 
 # Create indexes

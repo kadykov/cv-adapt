@@ -1,11 +1,39 @@
 """Common schemas used across the application."""
 
 from datetime import datetime
-from typing import Generic, List, Optional, TypeVar
+from enum import Enum
+from typing import Dict, Generic, List, Optional, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 T = TypeVar("T")
+
+
+class ErrorCode(str, Enum):
+    """Standard error codes for API responses."""
+
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    NOT_FOUND = "NOT_FOUND"
+    PERMISSION_DENIED = "PERMISSION_DENIED"
+    GENERATION_ERROR = "GENERATION_ERROR"
+    INVALID_STATE = "INVALID_STATE"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+
+
+class ErrorDetail(BaseModel):
+    """Detailed error information."""
+
+    code: ErrorCode
+    message: str
+    field: Optional[str] = None
+    details: Optional[Dict] = None
+
+
+class ErrorResponse(BaseModel):
+    """Standard error response format."""
+
+    status_code: int = Field(..., description="HTTP status code")
+    error: ErrorDetail
 
 
 class PaginationParams(BaseModel):
@@ -25,9 +53,13 @@ class DateRange(BaseModel):
 class GeneratedCVFilters(BaseModel):
     """Filters for generated CVs."""
 
-    status: Optional[str] = None
+    status: Optional[List[str]] = None  # Support multiple status values
     language_code: Optional[str] = None
+    job_description_id: Optional[int] = None
+    detailed_cv_id: Optional[int] = None
     created_at: Optional[DateRange] = None
+    updated_at: Optional[DateRange] = None
+    search_query: Optional[str] = None  # For searching in CV content or metadata
 
 
 class PaginatedResponse(BaseModel, Generic[T]):

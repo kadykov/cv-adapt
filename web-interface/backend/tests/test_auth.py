@@ -55,7 +55,9 @@ def test_register_duplicate_email(client: TestClient) -> None:
         },
     )
     assert response.status_code == 400
-    assert "Email already registered" in response.json()["detail"]["message"]
+    data = response.json()
+    assert "error" in data
+    assert data["error"]["message"] == "Email already registered"
 
 
 def test_login(client: TestClient) -> None:
@@ -94,7 +96,9 @@ def test_login_invalid_credentials(client: TestClient) -> None:
         },
     )
     assert response.status_code == 401
-    assert "Incorrect email or password" in response.json()["detail"]["message"]
+    data = response.json()
+    assert "error" in data
+    assert "Incorrect email or password" in data["error"]["message"]
 
 
 def test_refresh_token(client: TestClient) -> None:
@@ -132,4 +136,6 @@ def test_refresh_invalid_token(client: TestClient) -> None:
     """Test refresh with invalid token."""
     response = client.post("/v1/api/auth/refresh", json={"token": "invalid_token"})
     assert response.status_code == 401
-    assert "Invalid refresh token" in response.json()["detail"]["message"]
+    data = response.json()
+    assert "error" in data
+    assert "Invalid refresh token" in data["error"]["message"]

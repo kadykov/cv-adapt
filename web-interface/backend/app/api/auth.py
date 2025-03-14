@@ -1,3 +1,5 @@
+"""Authentication API endpoints."""
+
 from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
@@ -6,6 +8,10 @@ from sqlalchemy.orm import Session
 
 from .. import auth_logger
 from ..core.database import get_db
+from ..core.errors import (
+    handle_authentication_error,
+    handle_http_error,
+)
 from ..core.security import create_access_token, create_refresh_token, verify_token
 from ..schemas.auth import AuthResponse
 from ..schemas.user import UserCreate, UserResponse
@@ -23,9 +29,9 @@ router = APIRouter(prefix="/v1/api/auth", tags=["auth"])
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": {
+                        "error": {
+                            "code": "VALIDATION_ERROR",
                             "message": "Email already registered",
-                            "code": "EMAIL_EXISTS",
                             "field": "email",
                         }
                     }
@@ -47,13 +53,13 @@ async def register(
         auth_logger.warning(
             f"Registration failed - email already exists: {user_data.email}"
         )
+        error_response = handle_http_error(
+            status.HTTP_400_BAD_REQUEST,
+            "Email already registered",
+        )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "message": "Email already registered",
-                "code": "EMAIL_EXISTS",
-                "field": "email",
-            },
+            status_code=error_response.status_code,
+            detail=error_response.error.model_dump(),
         )
 
     try:
@@ -63,9 +69,13 @@ async def register(
         auth_logger.error(
             f"Registration failed for {user_data.email}: {str(e)}", exc_info=True
         )
+        error_response = handle_http_error(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Registration failed",
+        )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": "Registration failed", "code": "REGISTRATION_ERROR"},
+            status_code=error_response.status_code,
+            detail=error_response.error.model_dump(),
         )
 
     # Create tokens
@@ -100,13 +110,13 @@ async def login(
             auth_logger.warning(
                 f"Login failed - invalid credentials for: {form_data.username}"
             )
+            error_response = handle_authentication_error(
+                message="Incorrect email or password",
+                field="password",
+            )
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={
-                    "message": "Incorrect email or password",
-                    "code": "INVALID_CREDENTIALS",
-                    "field": "password",
-                },
+                status_code=error_response.status_code,
+                detail=error_response.error.model_dump(),
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -121,9 +131,13 @@ async def login(
         auth_logger.error(
             f"Login failed for {form_data.username}: {str(e)}", exc_info=True
         )
+        error_response = handle_http_error(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Login failed",
+        )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": "Login failed", "code": "LOGIN_ERROR"},
+            status_code=error_response.status_code,
+            detail=error_response.error.model_dump(),
         )
 
     return AuthResponse(
@@ -158,25 +172,25 @@ async def refresh_token(
     """Refresh access token using refresh token."""
     payload = verify_token(token, expected_type="refresh")
     if not payload:
+        error_response = handle_authentication_error(
+            message="Invalid refresh token",
+            field="token",
+        )
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "message": "Invalid refresh token",
-                "code": "INVALID_REFRESH_TOKEN",
-                "field": "token",
-            },
+            status_code=error_response.status_code,
+            detail=error_response.error.model_dump(),
         )
 
     user_service = UserService(db)
     user = user_service.get(payload["sub"])
     if not user:
+        error_response = handle_authentication_error(
+            message="User not found",
+            field="token",
+        )
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "message": "User not found",
-                "code": "USER_NOT_FOUND",
-                "field": "token",
-            },
+            status_code=error_response.status_code,
+            detail=error_response.error.model_dump(),
         )
 
     # Create new tokens

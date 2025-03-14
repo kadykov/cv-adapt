@@ -2,9 +2,10 @@
 
 import sys
 from datetime import datetime
-from typing import Annotated, Dict, List, Literal
+from typing import Annotated, Any, Dict, List, Literal, cast
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi.params import Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
@@ -19,6 +20,11 @@ from cv_adapter.renderers.yaml_renderer import YAMLRenderer
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_language
+from ..core.errors import (
+    handle_not_found_error,
+    handle_permission_error,
+    handle_validation_error,
+)
 from ..logger import logger
 from ..models.models import User
 from ..schemas.common import (
@@ -29,17 +35,11 @@ from ..schemas.common import (
 )
 from ..schemas.cv import (
     GeneratedCVCreate,
+    GeneratedCVRegenerateRequest,
     GeneratedCVResponse,
     GeneratedCVUpdate,
 )
-from ..services.generation.protocols import (
-    GenerationError,
-)
-from ..services.generation.protocols import (
-    ValidationError as GenerationValidationError,
-)
 from ..services.generation.service import CVGenerationServiceImpl
-from ..services.repositories import EntityNotFoundError
 
 # Initialize Async CV Adapter with configurable AI model
 cv_adapter = AsyncCVAdapterApplication(
@@ -105,22 +105,15 @@ async def generate_competences(
         f"Request data: CV length={len(data.cv_text)}, "
         f"Job desc length={len(data.job_description)}"
     )
-    try:
-        competences = await service.generate_competences(
-            cv_text=data.cv_text,
-            job_description=data.job_description,
-            notes=data.notes,
-            language=language,
-        )
-        result = {"competences": [comp.text for comp in competences]}
-        logger.debug(f"Generated {len(competences)} competences: {result}")
-        return result
-    except GenerationError as e:
-        logger.error(f"Generation error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    competences = await service.generate_competences(
+        cv_text=data.cv_text,
+        job_description=data.job_description,
+        notes=data.notes,
+        language=language,
+    )
+    result = {"competences": [comp.text for comp in competences]}
+    logger.debug(f"Generated {len(competences)} competences: {result}")
+    return result
 
 
 @router.post("/cv")
@@ -138,68 +131,64 @@ async def generate_cv(
     )
     logger.debug(f"Approved competences: {request.approved_competences}")
 
-    try:
-        # Convert request data to DTOs
-        email = ContactDTO(
-            value=request.personal_info.email.value,
-            type=request.personal_info.email.type,
-            icon=request.personal_info.email.icon,
-            url=request.personal_info.email.url,
+    # Convert request data to DTOs
+    email = ContactDTO(
+        value=request.personal_info.email.value,
+        type=request.personal_info.email.type,
+        icon=request.personal_info.email.icon,
+        url=request.personal_info.email.url,
+    )
+    phone = (
+        ContactDTO(
+            value=request.personal_info.phone.value,
+            type=request.personal_info.phone.type,
+            icon=request.personal_info.phone.icon,
+            url=request.personal_info.phone.url,
         )
-        phone = (
-            ContactDTO(
-                value=request.personal_info.phone.value,
-                type=request.personal_info.phone.type,
-                icon=request.personal_info.phone.icon,
-                url=request.personal_info.phone.url,
-            )
-            if request.personal_info.phone
-            else None
+        if request.personal_info.phone
+        else None
+    )
+    location = (
+        ContactDTO(
+            value=request.personal_info.location.value,
+            type=request.personal_info.location.type,
+            icon=request.personal_info.location.icon,
+            url=request.personal_info.location.url,
         )
-        location = (
-            ContactDTO(
-                value=request.personal_info.location.value,
-                type=request.personal_info.location.type,
-                icon=request.personal_info.location.icon,
-                url=request.personal_info.location.url,
-            )
-            if request.personal_info.location
-            else None
-        )
+        if request.personal_info.location
+        else None
+    )
 
-        personal_info = PersonalInfoDTO(
-            full_name=request.personal_info.full_name,
-            email=email,
-            phone=phone,
-            location=location,
-        )
+    personal_info = PersonalInfoDTO(
+        full_name=request.personal_info.full_name,
+        email=email,
+        phone=phone,
+        location=location,
+    )
 
-        # Convert approved competences to CoreCompetenceDTO
-        core_competences = [
-            CoreCompetenceDTO(text=comp) for comp in request.approved_competences
-        ]
+    # Convert approved competences to CoreCompetenceDTO
+    core_competences = [
+        CoreCompetenceDTO(text=comp) for comp in request.approved_competences
+    ]
 
-        # Generate CV using service
-        cv = await service.generate_cv(
-            cv_text=request.cv_text,
-            job_description=request.job_description,
-            personal_info=personal_info,
-            competences=core_competences,
-            notes=request.notes,
-            language=language,
-        )
+    # Generate CV using service
+    cv = await service.generate_cv(
+        cv_text=request.cv_text,
+        job_description=request.job_description,
+        personal_info=personal_info,
+        competences=core_competences,
+        notes=request.notes,
+        language=language,
+    )
 
-        logger.debug("CV generation successful")
-        logger.debug(f"Generated CV title: {cv.title.text}")
-        logger.debug(f"Generated CV summary length: {len(cv.summary.text)}")
-        logger.debug(f"Number of experiences: {len(cv.experiences)}")
-        logger.debug(f"Number of education entries: {len(cv.education)}")
-        logger.debug(f"Number of skills: {len(cv.skills)}")
+    logger.debug("CV generation successful")
+    logger.debug(f"Generated CV title: {cv.title.text}")
+    logger.debug(f"Generated CV summary length: {len(cv.summary.text)}")
+    logger.debug(f"Number of experiences: {len(cv.experiences)}")
+    logger.debug(f"Number of education entries: {len(cv.education)}")
+    logger.debug(f"Number of skills: {len(cv.skills)}")
 
-        return Response(content=cv.model_dump_json(), media_type="application/json")
-    except Exception as e:
-        logger.error(f"Generation error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    return Response(content=cv.model_dump_json(), media_type="application/json")
 
 
 @router.post("", response_model=GeneratedCVResponse)
@@ -209,23 +198,13 @@ async def generate_and_save_cv(
     service: CVGenerationServiceImpl = Depends(get_generation_service),
 ) -> GeneratedCVResponse:
     """Generate and save a new CV for job application."""
-    try:
-        return await service.generate_and_store_cv(
-            user_id=int(current_user.id),
-            detailed_cv_id=cv_data.detailed_cv_id,
-            job_description_id=cv_data.job_description_id,
-            language_code=cv_data.language_code,
-            generation_parameters=cv_data.generation_parameters,
-        )
-    except EntityNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except GenerationValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except GenerationError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    return await service.generate_and_store_cv(
+        user_id=int(current_user.id),
+        detailed_cv_id=cv_data.detailed_cv_id,
+        job_description_id=cv_data.job_description_id,
+        language_code=cv_data.language_code,
+        generation_parameters=cv_data.generation_parameters,
+    )
 
 
 @router.get("", response_model=PaginatedResponse[GeneratedCVResponse])
@@ -234,49 +213,54 @@ async def get_user_generations(
     service: CVGenerationServiceImpl = Depends(get_generation_service),
     offset: int = 0,
     limit: int = 10,
-    status: str | None = None,
+    status: Annotated[list[str], Query()] = [],  # Allow multiple status values
     language_code: str | None = None,
+    job_description_id: int | None = None,
+    detailed_cv_id: int | None = None,
     start_date: datetime | None = None,
     end_date: datetime | None = None,
+    start_update_date: datetime | None = None,
+    end_update_date: datetime | None = None,
+    search: str | None = None,
 ) -> PaginatedResponse[GeneratedCVResponse]:
     """Get all generated CVs for current user with filtering and pagination."""
-    try:
-        # Prepare filters
-        date_range = None
-        if start_date or end_date:
-            date_range = DateRange(start=start_date, end=end_date)
+    # Prepare date ranges
+    created_range = None
+    if start_date or end_date:
+        created_range = DateRange(start=start_date, end=end_date)
 
-        filters = GeneratedCVFilters(
-            status=status,
-            language_code=language_code,
-            created_at=date_range,
-        )
+    updated_range = None
+    if start_update_date or end_update_date:
+        updated_range = DateRange(start=start_update_date, end=end_update_date)
 
-        pagination = PaginationParams(offset=offset, limit=limit)
+    filters = GeneratedCVFilters(
+        status=status,
+        language_code=language_code,
+        job_description_id=job_description_id,
+        detailed_cv_id=detailed_cv_id,
+        created_at=created_range,
+        updated_at=updated_range,
+        search_query=search,
+    )
 
-        # Get CVs with filtering and pagination
-        cvs, total = service.repository.get_user_generated_cvs(
-            int(current_user.id),
-            filters=filters,
-            pagination=pagination,
-        )
+    pagination = PaginationParams(offset=offset, limit=limit)
 
-        # Convert to response models
-        cv_responses = [GeneratedCVResponse.model_validate(cv) for cv in cvs]
+    # Get CVs with filtering and pagination
+    cvs, total = service.repository.get_user_generated_cvs(
+        int(current_user.id),
+        filters=filters,
+        pagination=pagination,
+    )
 
-        return PaginatedResponse.create(
-            items=cv_responses,
-            total=total,
-            offset=offset,
-            limit=limit,
-        )
+    # Convert to response models
+    cv_responses = [GeneratedCVResponse.model_validate(cv) for cv in cvs]
 
-    except ValueError as e:
-        logger.error(f"Validation error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error fetching user generations: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    return PaginatedResponse.create(
+        items=cv_responses,
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
 
 
 @router.patch("/{cv_id}", response_model=GeneratedCVResponse)
@@ -287,40 +271,30 @@ async def update_generated_cv(
     service: CVGenerationServiceImpl = Depends(get_generation_service),
 ) -> GeneratedCVResponse:
     """Update a generated CV's status or parameters."""
-    try:
-        cv = service.repository.get_generated_cv(cv_id)
-        if not cv:
-            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+    cv = service.repository.get_generated_cv(cv_id)
+    if not cv:
+        error = handle_not_found_error(f"Generated CV with id {cv_id} not found")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
 
-        # Check if CV belongs to current user
-        if cv.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied",
-            )
+    # Check if CV belongs to current user
+    if cv.user_id != current_user.id:
+        error = handle_permission_error("Access denied")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
 
-        if cv_data.status is not None:
-            return await service.update_cv_status(cv_id, cv_data.status)
+    if cv_data.status is not None:
+        return await service.update_cv_status(cv_id, cv_data.status)
 
-        if cv_data.generation_parameters is not None:
-            return await service.update_generation_parameters(
-                cv_id, cv_data.generation_parameters
-            )
+    if cv_data.generation_parameters is not None:
+        return await service.update_generation_parameters(
+            cv_id, cv_data.generation_parameters
+        )
 
-        # No updates provided
-        return GeneratedCVResponse.model_validate(cv)
-
-    except EntityNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except GenerationValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except GenerationError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    # No updates provided
+    return GeneratedCVResponse.model_validate(cv)
 
 
 @router.get("/{cv_id}", response_model=GeneratedCVResponse)
@@ -330,27 +304,21 @@ async def get_generated_cv(
     service: CVGenerationServiceImpl = Depends(get_generation_service),
 ) -> GeneratedCVResponse:
     """Get a specific generated CV."""
-    try:
-        cv = service.repository.get_generated_cv(cv_id)
-        if not cv:
-            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+    cv = service.repository.get_generated_cv(cv_id)
+    if not cv:
+        error = handle_not_found_error(f"Generated CV with id {cv_id} not found")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
 
-        # Check if CV belongs to current user
-        if cv.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied",
-            ) from None
+    # Check if CV belongs to current user
+    if cv.user_id != current_user.id:
+        error = handle_permission_error("Access denied")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
 
-        return GeneratedCVResponse.model_validate(cv)
-
-    except EntityNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    return GeneratedCVResponse.model_validate(cv)
 
 
 @router.get("/{cv_id}/export")
@@ -361,72 +329,99 @@ async def export_generated_cv(
     service: CVGenerationServiceImpl = Depends(get_generation_service),
 ) -> StreamingResponse:
     """Export a generated CV in the specified format."""
+    # First check existence and permissions
     try:
-        # Get CV and check ownership
         cv = service.repository.get_generated_cv(cv_id)
+
         if not cv:
-            raise EntityNotFoundError(
-                f"Generated CV with id {cv_id} not found"
-            ) from None
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Generated CV with id {cv_id} not found",
+            )
 
         if cv.user_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied",
-            ) from None
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            )
 
-        # Get renderer for requested format
+        # Then validate the format
         try:
             renderer = renderers[format]
-        except KeyError as e:
+        except KeyError:
+            error = handle_validation_error(ValidationError("Invalid format"))
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Format '{format}' is not supported",
-            ) from e
-
-        # Convert stored JSON to CVDTO and generate content
-        try:
-            cv_dto = CVDTO.model_validate(cv.content)
-            export_content = renderer.render_to_string(cv_dto)
-        except ValidationError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid CV data format: {str(e)}",
-            ) from e
-
-        # Set appropriate content type and filename
-        content_types = {
-            "markdown": "text/markdown",
-            "json": "application/json",
-            "yaml": "application/x-yaml",
-            "pdf": "application/pdf",
-        }
-        extensions = {
-            "markdown": "md",
-            "json": "json",
-            "yaml": "yaml",
-            "pdf": "pdf",
-        }
-
-        filename = f"cv_{cv_id}.{extensions[format]}"
-        content_type = content_types[format]
-
-        # Create streaming response
-        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-
-        return StreamingResponse(
-            iter([export_content]),
-            headers=headers,
-            media_type=content_type,
+                status_code=error.status_code, detail=error.error.model_dump()
+            )
+    except ValueError as e:
+        # Handle case where cv_id is invalid (not an integer)
+        logger.info(f"Invalid CV ID format: {cv_id}. Error: {str(e)}")
+        error = handle_not_found_error("Invalid CV ID")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
         )
 
-    except EntityNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error exporting CV: {str(e)}", exc_info=True)
+    # Convert stored JSON to CVDTO and generate content
+    cv_dto = CVDTO.model_validate(cv.content)
+    export_content = renderer.render_to_string(cv_dto)
+
+    # Set appropriate content type and filename
+    content_types = {
+        "markdown": "text/markdown",
+        "json": "application/json",
+        "yaml": "application/x-yaml",
+        "pdf": "application/pdf",
+    }
+    extensions = {
+        "markdown": "md",
+        "json": "json",
+        "yaml": "yaml",
+        "pdf": "pdf",
+    }
+
+    filename = f"cv_{cv_id}.{extensions[format]}"
+    content_type = content_types[format]
+
+    # Create streaming response
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+
+    return StreamingResponse(
+        iter([export_content]),
+        headers=headers,
+        media_type=content_type,
+    )
+
+
+@router.post("/{cv_id}/regenerate", response_model=GeneratedCVResponse)
+async def regenerate_cv(
+    cv_id: int,
+    regenerate_request: GeneratedCVRegenerateRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: CVGenerationServiceImpl = Depends(get_generation_service),
+) -> GeneratedCVResponse:
+    """Regenerate a CV with optional modifications."""
+    # Check if CV exists and belongs to user
+    cv = service.repository.get_generated_cv(cv_id)
+    if not cv:
+        error = handle_not_found_error(f"Generated CV with id {cv_id} not found")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
-        ) from e
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
+
+    if cv.user_id != current_user.id:
+        error = handle_permission_error("Access denied")
+        raise HTTPException(
+            status_code=error.status_code, detail=error.error.model_dump()
+        )
+
+    # Extract regenerate parameters from request
+    params: Dict[str, Any] | None = None
+    if regenerate_request.generation_parameters is not None:
+        params = cast(Dict[str, Any], regenerate_request.generation_parameters)
+
+    return await service.regenerate_cv(
+        cv_id=cv_id,
+        generation_parameters=params,
+        keep_content=regenerate_request.keep_content,
+        sections_to_keep=regenerate_request.sections_to_keep,
+        notes=regenerate_request.notes,
+    )

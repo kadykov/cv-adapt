@@ -216,4 +216,6 @@ def test_export_cv_wrong_user(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert "Access denied" in response.json()["detail"]
+    json_response = response.json()
+    assert json_response["error"]["code"] == "PERMISSION_DENIED"
+    assert json_response["error"]["message"] == "Access denied"

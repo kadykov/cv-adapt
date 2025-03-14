@@ -1,8 +1,8 @@
 """CV-related schemas."""
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .base import BaseResponseModel, TimestampedModel
 
@@ -93,3 +93,24 @@ class GeneratedCVResponse(BaseResponseModel, GeneratedCVBase, TimestampedModel):
     user_id: int
     detailed_cv_id: int
     job_description_id: int
+    based_on_id: int | None = None  # ID of the CV this was regenerated from
+
+
+class GeneratedCVRegenerateRequest(BaseModel):
+    """Schema for regenerating an existing CV."""
+
+    generation_parameters: Dict[str, Any] | None = Field(
+        default=None, description="New generation parameters to use"
+    )
+    keep_content: bool = Field(
+        default=False,
+        description="Whether to preserve parts of the existing content",
+    )
+    sections_to_keep: List[str] | None = Field(
+        default=None,
+        description="List of section names to preserve from the original CV",
+    )
+    notes: str | None = Field(
+        default=None,
+        description="Additional notes for regeneration",
+    )

@@ -19,7 +19,7 @@ install:
 
 # Run tests
 test *ARGS='./tests':
-    uv run pytest {{ARGS}}
+    uv run pytest {{ARGS}} --no-header
 
 # Run tests with coverage
 test-cov:
@@ -116,7 +116,7 @@ generate-types: export-openapi
 
 # Run backend tests
 test-backend *ARGS='':
-    cd web-interface/backend && uv run pytest tests/ {{ARGS}}
+    cd web-interface/backend && uv run pytest tests/ {{ARGS}} --no-header
 
 # Run frontend unit tests
 test-frontend:

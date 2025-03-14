@@ -141,14 +141,14 @@ def test_get_user_generated_cvs_with_status_filter(
     repository = CVRepository(db)
     user_id = get_id(test_user.id)
 
-    filters = GeneratedCVFilters(status="approved")
+    filters = GeneratedCVFilters(status=["approved"])
     cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
 
     # Ensure we have a list of GeneratedCV objects
     assert isinstance(cvs_list, list)
     assert len(cvs_list) > 0
     assert all(isinstance(cv, GeneratedCV) for cv in cvs_list)
-    assert all(cv.status == "approved" for cv in cvs_list)
+    assert all(cv.status in ["approved"] for cv in cvs_list)
     assert total == len([cv for cv in test_generated_cvs if cv.status == "approved"])
 
 
@@ -223,19 +223,24 @@ def test_get_user_generated_cvs_with_combined_filters(
     start_date = end_date - timedelta(days=5)
 
     filters = GeneratedCVFilters(
-        status="draft",
+        status=["draft"],
         language_code="en",
         created_at=DateRange(start=start_date, end=end_date),
     )
     cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
 
-    # Ensure we have a list of GeneratedCV objects with correct filters
+    # Basic CV object validation
     assert isinstance(cvs_list, list)
+    assert len(cvs_list) > 0
     assert all(isinstance(cv, GeneratedCV) for cv in cvs_list)
-    assert all(cv.status == "draft" and cv.language_code == "en" for cv in cvs_list)
 
+    # Status and language filter validation
+    assert all(cv.status in ["draft"] for cv in cvs_list)
+    assert all(cv.language_code == "en" for cv in cvs_list)
+
+    # Date range validation
     filtered_cvs = [cv for cv in cvs_list if get_datetime(cv.created_at) is not None]
-    assert len(filtered_cvs) > 0
+    assert filtered_cvs, "No CVs found in specified date range"
     assert all(
         start_date <= ensure_utc(cv.created_at) <= end_date for cv in filtered_cvs
     )

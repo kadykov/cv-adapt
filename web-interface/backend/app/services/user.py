@@ -3,8 +3,10 @@
 from typing import Optional
 
 import bcrypt
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from ..core.errors import handle_authentication_error
 from ..models.models import User
 from ..schemas.user import UserCreate, UserUpdate
 from .base import BaseDBService
@@ -52,13 +54,25 @@ class UserService(BaseDBService[User]):
 
         if not user:
             auth_logger.warning(f"Authentication failed - user not found: {email}")
-            return None
+            error_response = handle_authentication_error(
+                message="Incorrect email or password", field="email"
+            )
+            raise HTTPException(
+                status_code=error_response.status_code,
+                detail=error_response.error.model_dump(),
+            )
 
         if not self.verify_password(password, str(user.hashed_password)):
             auth_logger.warning(
                 f"Authentication failed - invalid password for user: {email}"
             )
-            return None
+            error_response = handle_authentication_error(
+                message="Incorrect email or password", field="password"
+            )
+            raise HTTPException(
+                status_code=error_response.status_code,
+                detail=error_response.error.model_dump(),
+            )
 
         auth_logger.info(f"Authentication successful for user: {email}")
         return user

@@ -4,8 +4,8 @@ from typing import Any, Dict
 from unittest.mock import AsyncMock as AsyncMockType
 
 import pytest
+from app.core.exceptions import GenerationError, ValidationError
 from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
-from app.services.generation.protocols import GenerationError, ValidationError
 from app.services.generation.service import CVGenerationServiceImpl
 from app.services.repositories import EntityNotFoundError
 from sqlalchemy.orm import Session
@@ -263,4 +263,61 @@ async def test_update_generation_parameters_invalid(
         await generation_service.update_generation_parameters(
             cv_id=cv_id,
             parameters="not a dict",  # type: ignore
+        )
+
+
+@pytest.mark.asyncio
+async def test_regenerate_cv(
+    generation_service: CVGenerationServiceImpl,
+    mock_cv_adapter: AsyncMockType,
+    mock_cv_dto: CVDTO,
+    test_generated_cv: GeneratedCV,
+    test_detailed_cv: DetailedCV,
+    test_job_description: JobDescription,
+) -> None:
+    """Test CV regeneration."""
+    mock_cv_adapter.generate_core_competences.return_value = [
+        CoreCompetenceDTO(text="test competence")
+    ]
+    mock_cv_adapter.generate_cv_with_competences.return_value = mock_cv_dto
+
+    cv_id = get_id(test_generated_cv.id)
+    new_params = {"test": "params"}
+
+    result = await generation_service.regenerate_cv(
+        cv_id=cv_id,
+        generation_parameters=new_params,
+        keep_content=True,
+        sections_to_keep=["summary", "experiences"],
+    )
+
+    assert result.detailed_cv_id == get_id(test_detailed_cv.id)
+    assert result.job_description_id == get_id(test_job_description.id)
+    assert result.language_code == test_generated_cv.language_code
+    assert result.generation_parameters == new_params
+    assert result.status == "draft"
+    assert result.version == get_id(test_generated_cv.version) + 1
+
+
+@pytest.mark.asyncio
+async def test_regenerate_cv_not_found(
+    generation_service: CVGenerationServiceImpl,
+) -> None:
+    """Test regenerating non-existent CV."""
+    with pytest.raises(EntityNotFoundError):
+        await generation_service.regenerate_cv(cv_id=999)
+
+
+@pytest.mark.asyncio
+async def test_regenerate_cv_invalid_sections(
+    generation_service: CVGenerationServiceImpl,
+    test_generated_cv: GeneratedCV,
+) -> None:
+    """Test regenerating CV with invalid sections to keep."""
+    cv_id = get_id(test_generated_cv.id)
+    with pytest.raises(ValidationError):
+        await generation_service.regenerate_cv(
+            cv_id=cv_id,
+            keep_content=True,
+            sections_to_keep=["invalid_section"],
         )

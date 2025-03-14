@@ -9,6 +9,7 @@ The service layer tests are organized into three main categories:
    - Uses raw model data and handles string content
    - Focuses on CRUD operations and error cases
    - Handles proper SQLAlchemy column type conversion
+   - Ensures type-safe datetime handling with UTC awareness
 
 2. **Generation Service Tests** (`test_generation_service.py`)
    - Tests CV generation business logic
@@ -103,6 +104,13 @@ async def test_generate_cv_error():
    - Check error message clarity
 
 3. **Type Safety**
-   - Ensure proper SQLAlchemy column handling
-   - Verify DTO type consistency
-   - Test language context typing
+   - Ensure proper SQLAlchemy column type conversion
+   - Verify UTC datetime handling
+   - Handle timezone-aware comparisons
+   - Type-safe filtering operations
+
+4. **Data Filtering**
+   - Test pagination with proper type handling
+   - Verify date range filtering with timezone support
+   - Support combined filtering operations
+   - Handle nullable column comparisons

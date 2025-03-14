@@ -1,9 +1,10 @@
 """Repository pattern implementations for CV-related operations."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from sqlalchemy import and_, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 
 from ..models.models import DetailedCV, GeneratedCV, JobDescription
 from ..schemas.common import GeneratedCVFilters, PaginationParams
@@ -48,6 +49,53 @@ class CVRepository:
             cv, generation_parameters=parameters
         )
 
+    def _build_filter_conditions(
+        self, filters: GeneratedCVFilters
+    ) -> List[Union[ColumnElement[bool], BooleanClauseList]]:
+        """Build SQLAlchemy filter conditions from filter parameters."""
+        conditions: List[Union[ColumnElement[bool], BooleanClauseList]] = []
+
+        if filters.status:
+            conditions.append(GeneratedCV.status.in_(filters.status))
+
+        if filters.language_code:
+            conditions.append(GeneratedCV.language_code == filters.language_code)
+
+        if filters.job_description_id:
+            conditions.append(
+                GeneratedCV.job_description_id == filters.job_description_id
+            )
+
+        if filters.detailed_cv_id:
+            conditions.append(GeneratedCV.detailed_cv_id == filters.detailed_cv_id)
+
+        if filters.created_at:
+            if filters.created_at.start:
+                conditions.append(GeneratedCV.created_at >= filters.created_at.start)
+            if filters.created_at.end:
+                conditions.append(GeneratedCV.created_at <= filters.created_at.end)
+
+        if filters.updated_at:
+            if filters.updated_at.start:
+                conditions.append(GeneratedCV.updated_at >= filters.updated_at.start)
+            if filters.updated_at.end:
+                conditions.append(GeneratedCV.updated_at <= filters.updated_at.end)
+
+        if filters.search_query:
+            # Search in CV content and metadata using case-insensitive search
+            search_query = f"%{filters.search_query}%"
+            conditions.append(
+                or_(
+                    GeneratedCV.content.ilike(search_query),
+                    func.json_extract(
+                        GeneratedCV.generation_parameters, "$.notes"
+                    ).ilike(search_query),
+                    GeneratedCV.status.ilike(search_query),
+                )
+            )
+
+        return conditions
+
     def get_user_generated_cvs(
         self,
         user_id: int,
@@ -55,8 +103,17 @@ class CVRepository:
         pagination: Optional[PaginationParams] = None,
     ) -> Tuple[List[GeneratedCV], int]:
         """Get all generated CVs for a user with filtering and pagination."""
-        # Start with base query
-        query = select(GeneratedCV).where(GeneratedCV.user_id == user_id)
+        # Start with base query with eager loading of related entities
+        query = (
+            select(GeneratedCV)
+            .where(GeneratedCV.user_id == user_id)
+            .options(
+                joinedload(GeneratedCV.detailed_cv),
+                joinedload(GeneratedCV.job_description),
+            )
+        )
+
+        # Initialize count query
         count_query = (
             select(func.count())
             .select_from(GeneratedCV)
@@ -65,28 +122,9 @@ class CVRepository:
 
         # Apply filters if provided
         if filters:
-            filter_conditions = []
-
-            if filters.status:
-                filter_conditions.append(GeneratedCV.status == filters.status)
-
-            if filters.language_code:
-                filter_conditions.append(
-                    GeneratedCV.language_code == filters.language_code
-                )
-
-            if filters.created_at:
-                if filters.created_at.start:
-                    filter_conditions.append(
-                        GeneratedCV.created_at >= filters.created_at.start
-                    )
-                if filters.created_at.end:
-                    filter_conditions.append(
-                        GeneratedCV.created_at <= filters.created_at.end
-                    )
-
-            if filter_conditions:
-                combined_filter = and_(*filter_conditions)
+            conditions = self._build_filter_conditions(filters)
+            if conditions:
+                combined_filter = and_(*conditions)
                 query = query.where(combined_filter)
                 count_query = count_query.where(combined_filter)
 
@@ -101,7 +139,7 @@ class CVRepository:
         query = query.order_by(GeneratedCV.created_at.desc())
 
         # Execute query and convert results to list
-        results = list(self.db.execute(query).scalars().all())
+        results = list(self.db.execute(query).unique().scalars().all())
         return results, total
 
     def get_generated_cv(self, cv_id: int) -> Optional[GeneratedCV]:

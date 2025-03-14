@@ -101,15 +101,3 @@ class CVGenerationService(Protocol):
             ValidationError: If parameters invalid
         """
         ...
-
-
-class GenerationError(Exception):
-    """Base exception for generation-related errors."""
-
-    pass
-
-
-class ValidationError(Exception):
-    """Exception raised when data validation fails."""
-
-    pass

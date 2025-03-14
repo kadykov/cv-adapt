@@ -11,6 +11,8 @@ This document outlines the integration plan for the CV generation feature with t
 - Generated CVs are stored persistently ✓
 - Integration with job positions and Detailed CVs completed ✓
 - Language support implemented with proper context handling ✓
+- Type-safe datetime handling implemented ✓
+- SQLAlchemy column type safety improvements added ✓
 
 ## Implementation Phases
 
@@ -23,7 +25,7 @@ This document outlines the integration plan for the CV generation feature with t
   - Detailed CV reference ✓
   - Generated CV data ✓
   - Status (draft, approved, rejected) ✓
-  - Creation/update timestamps ✓
+  - Creation/update timestamps with UTC awareness ✓
   - Generation parameters used ✓
   - Version tracking ✓
 - [x] Implement relationships with users, Detailed CVs, and job positions
@@ -40,18 +42,23 @@ This document outlines the integration plan for the CV generation feature with t
   - Create endpoints for status/parameter updates ✓
   - Add PATCH endpoint for modifications ✓
   - Implement proper error handling ✓
+  - Add type-safe request handling ✓
 - [x] Generation Service Integration
   - Refactor generation services for stored entities ✓
   - Add persistence operations ✓
   - Implement error handling ✓
+  - Add type safety improvements ✓
 - [x] Create unified generation service interface
   - Define protocol/abstract base ✓
   - Standardize error types ✓
   - Add transaction support ✓
+  - Implement type-safe interfaces ✓
 - [x] Implement CV repository pattern
   - CRUD operations ✓
   - Query optimizations ✓
   - Content handling strategy ✓
+  - Type-safe datetime operations ✓
+  - SQLAlchemy column type handling ✓
 
 #### Generation Pipeline Refactoring ✓
 - [x] Update async workflow for model integration
@@ -71,57 +78,73 @@ This document outlines the integration plan for the CV generation feature with t
   - Language handling ✓
   - Format localization ✓
 
-### Phase 2: API Integration ⬜
+### Phase 2: API Integration
 
 #### Authentication Integration ✓
 - [x] Protect generation endpoints
   - JWT validation ✓
   - Role-based access ✓
-  - Rate limiting (to be implemented)
+  - Rate limiting (future enhancement)
 - [x] Implement user context in requests
   - User identification ✓
   - Permission scoping ✓
-  - Audit logging (to be implemented)
+  - Audit logging (future enhancement)
 - [x] Add permission verification
   - Resource ownership ✓
   - Action authorization ✓
   - Scope validation ✓
 
-#### Endpoint Refactoring ⬜
-- [ ] Update endpoints to use stored data
-  - Query optimization
-  - Response formatting
-  - Error handling
-- [ ] Create endpoints for full generation lifecycle
-  - Initiate generation
-  - Check status
-  - Retrieve results
-  - Update/regenerate
-- [ ] Implement versioning endpoints
-  - Version creation
-  - History retrieval
-  - Diff generation
-- [ ] Add export endpoints
-  - Format selection
-  - Download handling
-  - Async generation
+#### Endpoint Refactoring (Current Focus)
 
-#### Multi-language Support ⬜
-- [ ] Preserve language context
-  - Context propagation
-  - Metadata handling
-  - Format adaptation
-- [ ] Implement language selection logic
-  - Matching algorithm
-  - Fallback rules
-  - Priority handling
-- [ ] Support language fallback
-  - Default selection
-  - Content mapping
-  - Quality indicators
+##### Error Categorization & Consistent Responses ✓
+- [x] Create standardized error response structure
+  - Define error response schema in `app/schemas/common.py` ✓
+  - Create error utility functions in `app/core/errors.py` ✓
+  - Update exception handlers in FastAPI app configuration ✓
+  - Refactor existing endpoints to use new error utilities ✓
+  - Add tests for error scenarios ✓
+  - Add protection against sensitive information exposure ✓
 
-### Phase 3: Frontend Implementation ⬜
+##### Enhanced Filtered Listing ✓
+- [x] Extend filtering capabilities
+  - Update `GeneratedCVFilters` model in `app/schemas/common.py` ✓
+  - Add job description filtering ✓
+  - Support multiple status filtering ✓
+  - Improve date range filtering ✓
+  - Enhance repository query builder ✓
+  - Add tests for new filtering options ✓
+  - Add content search capability ✓
 
+##### Regeneration Support ✓
+- [x] Create regeneration endpoint
+  - Add POST endpoint for regenerating existing CVs ✓
+  - Support parameter modifications during regeneration ✓
+  - Implement basic history tracking with based_on_id ✓
+  - Add validation for regeneration parameters ✓
+  - Write comprehensive tests ✓
+  - Support section preservation during regeneration ✓
+
+##### Status Management
+- [ ] Implement status transition rules
+  - Define allowed transitions (draft → approved/rejected)
+  - Add validation in service layer
+  - Improve error messages for invalid transitions
+  - Add status transition tests
+
+##### Export Enhancements
+- [ ] Improve export functionality
+  - Add error handling for rendering failures
+  - Ensure consistent error responses
+  - Enhance filename generation with metadata
+  - Add tests for export edge cases
+
+#### Multi-language Support (Future Enhancement)
+- Preserve language context
+- Language selection logic improvements
+- Language fallback support
+[To be detailed in future updates]
+
+### Phase 3: Frontend Implementation (Future Enhancement)
 #### CV Generation Flow UI ⬜
 - [ ] Create generation wizard
   - Step progression
@@ -174,30 +197,21 @@ This document outlines the integration plan for the CV generation feature with t
 
 ## Decisions and Considerations
 
-### Versioning Strategy
-- To be discussed:
-  - Version numbering scheme
-  - Storage efficiency
-  - Diff generation
-  - Rollback capability
+### Regeneration Strategy
+- Simple regeneration creating new entries
+- Basic link to original CV for reference
+- No complex versioning in initial implementation
+- Possibility for future versioning enhancements
 
-### Approval Workflow
-- To be discussed:
-  - Approval roles
-  - State transitions
-  - Notification system
-  - Review process
+### Status Transitions
+- Simple validation rules for status changes
+- Current allowed transitions: draft → approved/rejected
+- Validation at service layer
+- Potential for future workflow enhancements
 
-### Regeneration Approach
-- To be discussed:
-  - Section vs full regeneration
-  - Content preservation
-  - Change tracking
-  - Merge strategy
-
-### Language Matching
-- To be discussed:
-  - Match priority rules
-  - Fallback cascade
-  - Quality thresholds
-  - Translation handling
+### Error Handling
+- Standardized error response format
+- Consistent HTTP status codes
+- Enhanced validation with helpful messages
+- Type-safe datetime operations ✓
+- SQLAlchemy column type safety ✓
