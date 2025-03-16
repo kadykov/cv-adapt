@@ -96,6 +96,8 @@ jobs:
         run: uv run pytest tests --cov=cv_adapter --cov-report=xml
 
       - name: Run backend API tests
+        env:
+          TESTING: "1"
         run: |
           cd web-interface/backend
           uv run pytest tests/ --cov=app --cov-report=xml
