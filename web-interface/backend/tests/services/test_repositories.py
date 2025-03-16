@@ -1,18 +1,18 @@
 """Tests for CV repository implementation."""
 
 from datetime import UTC, datetime, timedelta
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import pytest
-from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
+from app.models.sqlmodels import DetailedCV, GeneratedCV, JobDescription, User
 from app.schemas.common import DateRange, GeneratedCVFilters, PaginationParams
 from app.schemas.cv import GeneratedCVCreate
 from app.services.repositories import CVRepository, EntityNotFoundError
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 
 def get_id(value: Optional[Any]) -> int:
-    """Get integer ID from SQLAlchemy Column or default to 1."""
+    """Get integer ID from SQLModel field or default to 1."""
     if value is None:
         return 1
     return int(value)
@@ -28,43 +28,51 @@ def test_save_generated_cv(
     repository = CVRepository(db)
 
     # Get the IDs first
-    detailed_cv_id = get_id(test_detailed_cv.id)
-    job_description_id = get_id(test_job_description.id)
-    user_id = get_id(test_user.id)
+    assert test_detailed_cv.id is not None, "DetailedCV ID must be set"
+    assert test_job_description.id is not None, "JobDescription ID must be set"
+    assert test_user.id is not None, "User ID must be set"
 
     cv_data = GeneratedCVCreate(
-        detailed_cv_id=detailed_cv_id,  # Now it's a plain int
-        job_description_id=job_description_id,  # Now it's a plain int
+        detailed_cv_id=test_detailed_cv.id,
+        job_description_id=test_job_description.id,
         language_code="en",
-        content="Test CV content",  # Content should be string
+        content={
+            "content": "Test CV content",
+            "sections": {"title": "Test CV", "experience": []},
+        },
         status="draft",
         generation_parameters={"param": "value"},
-        version=1,
     )
 
-    cv = repository.save_generated_cv(user_id, cv_data)
+    cv = repository.save_generated_cv(test_user.id, cv_data)
 
     assert cv.user_id == test_user.id
     assert cv.detailed_cv_id == test_detailed_cv.id
     assert cv.job_description_id == test_job_description.id
     assert cv.language_code == "en"
-    assert cv.content == "Test CV content"
+    assert cv.content == {
+        "content": "Test CV content",
+        "sections": {"title": "Test CV", "experience": []},
+    }
     assert cv.status == "draft"
     assert cv.generation_parameters == {"param": "value"}
-    assert cv.version == 1
 
 
 def test_update_status(db: Session, test_generated_cv: GeneratedCV) -> None:
     """Test updating CV status."""
     repository = CVRepository(db)
-    cv_id = get_id(test_generated_cv.id)
+    assert test_generated_cv.id is not None, "GeneratedCV ID must be set"
 
-    updated_cv = repository.update_status(cv_id, "approved")
+    updated_cv = repository.update_status(test_generated_cv.id, "approved")
 
+    assert isinstance(updated_cv, GeneratedCV)
     assert updated_cv.status == "approved"
     # Other fields should remain unchanged
     assert updated_cv.content == test_generated_cv.content
-    assert updated_cv.version == test_generated_cv.version
+
+    # Test with non-existent CV
+    with pytest.raises(EntityNotFoundError):
+        repository.update_status(999, "approved")
 
 
 def test_update_status_not_found(db: Session) -> None:
@@ -78,10 +86,10 @@ def test_update_status_not_found(db: Session) -> None:
 def test_update_parameters(db: Session, test_generated_cv: GeneratedCV) -> None:
     """Test updating generation parameters."""
     repository = CVRepository(db)
-    cv_id = get_id(test_generated_cv.id)
+    assert test_generated_cv.id is not None, "GeneratedCV ID must be set"
 
     new_params: Dict[str, Any] = {"new": "params"}
-    updated_cv = repository.update_parameters(cv_id, new_params)
+    updated_cv = repository.update_parameters(test_generated_cv.id, new_params)
 
     assert updated_cv.generation_parameters == new_params
     # Other fields should remain unchanged
@@ -102,12 +110,12 @@ def test_get_user_generated_cvs_with_pagination(
 ) -> None:
     """Test getting generated CVs with pagination."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
     # Test first page
     pagination = PaginationParams(offset=0, limit=2)
     cvs_page_1, total = repository.get_user_generated_cvs(
-        user_id, pagination=pagination
+        test_user.id, pagination=pagination
     )
 
     # Ensure we have a list of GeneratedCV objects
@@ -119,7 +127,7 @@ def test_get_user_generated_cvs_with_pagination(
     # Test second page
     pagination = PaginationParams(offset=2, limit=2)
     cvs_page_2, total_2 = repository.get_user_generated_cvs(
-        user_id, pagination=pagination
+        test_user.id, pagination=pagination
     )
 
     # Ensure we have a list of GeneratedCV objects
@@ -139,10 +147,10 @@ def test_get_user_generated_cvs_with_status_filter(
 ) -> None:
     """Test filtering generated CVs by status."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
     filters = GeneratedCVFilters(status="approved")
-    cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
+    cvs_list, total = repository.get_user_generated_cvs(test_user.id, filters=filters)
 
     # Ensure we have a list of GeneratedCV objects
     assert isinstance(cvs_list, list)
@@ -157,10 +165,10 @@ def test_get_user_generated_cvs_with_language_filter(
 ) -> None:
     """Test filtering generated CVs by language."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
     filters = GeneratedCVFilters(language_code="fr")
-    cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
+    cvs_list, total = repository.get_user_generated_cvs(test_user.id, filters=filters)
 
     # Ensure we have a list of GeneratedCV objects
     assert isinstance(cvs_list, list)
@@ -175,14 +183,14 @@ def test_get_user_generated_cvs_with_date_filter(
 ) -> None:
     """Test filtering generated CVs by date range."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
-    # Set date range for last 5 days
+    # Set date range for last 5 days (ensure both are UTC)
     end_date = datetime.now(UTC)
-    start_date = end_date - timedelta(days=5)
+    start_date = datetime.now(UTC) - timedelta(days=5)
 
     filters = GeneratedCVFilters(created_at=DateRange(start=start_date, end=end_date))
-    cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
+    cvs_list, total = repository.get_user_generated_cvs(test_user.id, filters=filters)
 
     # Ensure we have a list of GeneratedCV objects
     assert isinstance(cvs_list, list)
@@ -190,34 +198,12 @@ def test_get_user_generated_cvs_with_date_filter(
     assert all(isinstance(cv, GeneratedCV) for cv in cvs_list)
 
 
-# Helper functions for datetime handling
-def get_datetime(dt: Any) -> datetime | None:
-    """Get datetime from SQLAlchemy Column, Mapped value, or raw datetime."""
-    if isinstance(dt, datetime):
-        return dt
-    try:
-        value = getattr(dt, "value", None)  # Try direct value access first
-        if value is None:
-            value = getattr(dt, "scalar", lambda: dt)()  # Try scalar() next
-        return value if isinstance(value, datetime) else None
-    except (AttributeError, TypeError):
-        return None
-
-
-def ensure_utc(dt: Any) -> datetime:
-    """Convert any datetime value to UTC or raise ValueError."""
-    dt_value = get_datetime(dt)
-    if dt_value is None:
-        raise ValueError("Cannot convert None to UTC")
-    return dt_value.replace(tzinfo=UTC) if dt_value.tzinfo is None else dt_value
-
-
 def test_get_user_generated_cvs_with_combined_filters(
     db: Session, test_generated_cvs: list[GeneratedCV], test_user: User
 ) -> None:
     """Test filtering generated CVs with multiple filters."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
     end_date = datetime.now(UTC)
     start_date = end_date - timedelta(days=5)
@@ -227,26 +213,30 @@ def test_get_user_generated_cvs_with_combined_filters(
         language_code="en",
         created_at=DateRange(start=start_date, end=end_date),
     )
-    cvs_list, total = repository.get_user_generated_cvs(user_id, filters=filters)
+    cvs_list, total = repository.get_user_generated_cvs(test_user.id, filters=filters)
 
     # Ensure we have a list of GeneratedCV objects with correct filters
     assert isinstance(cvs_list, list)
     assert all(isinstance(cv, GeneratedCV) for cv in cvs_list)
     assert all(cv.status == "draft" and cv.language_code == "en" for cv in cvs_list)
 
-    filtered_cvs = [cv for cv in cvs_list if get_datetime(cv.created_at) is not None]
-    assert len(filtered_cvs) > 0
-    assert all(
-        start_date <= ensure_utc(cv.created_at) <= end_date for cv in filtered_cvs
-    )
+    # Convert timestamps to UTC for comparison
+    for cv in cvs_list:
+        if cv.created_at is not None:
+            created_at_utc = (
+                cv.created_at.astimezone(UTC)
+                if cv.created_at.tzinfo
+                else cv.created_at.replace(tzinfo=UTC)
+            )
+            assert start_date <= created_at_utc <= end_date
 
 
 def test_get_generated_cv(db: Session, test_generated_cv: GeneratedCV) -> None:
     """Test getting a specific generated CV."""
     repository = CVRepository(db)
-    cv_id = get_id(test_generated_cv.id)
+    assert test_generated_cv.id is not None, "GeneratedCV ID must be set"
 
-    cv = repository.get_generated_cv(cv_id)
+    cv = repository.get_generated_cv(test_generated_cv.id)
 
     assert cv is not None
     assert cv.id == test_generated_cv.id
@@ -265,9 +255,9 @@ def test_get_generated_cv_not_found(db: Session) -> None:
 def test_get_detailed_cv(db: Session, test_detailed_cv: DetailedCV) -> None:
     """Test getting a specific detailed CV."""
     repository = CVRepository(db)
-    cv_id = get_id(test_detailed_cv.id)
+    assert test_detailed_cv.id is not None, "DetailedCV ID must be set"
 
-    cv = repository.get_detailed_cv(cv_id)
+    cv = repository.get_detailed_cv(test_detailed_cv.id)
 
     assert cv is not None
     assert cv.id == test_detailed_cv.id
@@ -286,9 +276,9 @@ def test_get_detailed_cv_not_found(db: Session) -> None:
 def test_get_job_description(db: Session, test_job_description: JobDescription) -> None:
     """Test getting a specific job description."""
     repository = CVRepository(db)
-    job_id = get_id(test_job_description.id)
+    assert test_job_description.id is not None, "JobDescription ID must be set"
 
-    job = repository.get_job_description(job_id)
+    job = repository.get_job_description(test_job_description.id)
 
     assert job is not None
     assert job.id == test_job_description.id
@@ -309,16 +299,11 @@ def test_get_detailed_cv_by_language(
 ) -> None:
     """Test getting a detailed CV by user and language."""
     repository = CVRepository(db)
-    user_id = get_id(test_user.id)
+    assert test_user.id is not None, "User ID must be set"
 
-    # We know language_code is a string column, so we can cast it safely
-    lang_code = (
-        cast(str, test_detailed_cv.language_code)
-        if test_detailed_cv.language_code
-        else "en"
+    cv = repository.get_detailed_cv_by_language(
+        test_user.id, test_detailed_cv.language_code
     )
-
-    cv = repository.get_detailed_cv_by_language(user_id, lang_code)
 
     assert cv is not None
     assert cv.id == test_detailed_cv.id

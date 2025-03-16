@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.database import Base, engine
+from app.core.database import engine
 from app.core.deps import get_db
+from app.models.sqlmodels import SQLModel
 
 router = APIRouter(prefix="/test", tags=["test"])
 
@@ -15,7 +16,7 @@ async def reset_database(db: Session = Depends(get_db)) -> dict:
     This endpoint is only available in test environments.
     """
     # Drop all tables
-    Base.metadata.drop_all(bind=engine)
+    SQLModel.metadata.drop_all(bind=engine)
     # Recreate all tables
-    Base.metadata.create_all(bind=engine)
+    SQLModel.metadata.create_all(bind=engine)
     return {"message": "Database reset successfully"}

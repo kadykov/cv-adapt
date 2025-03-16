@@ -97,7 +97,11 @@ describe('Auth Provider Hierarchy', () => {
             </Button>
             <Button
               onClick={() =>
-                register({ email: 'test@example.com', password: 'password123' })
+                register({
+                  email: 'test@example.com',
+                  password: 'password123',
+                  personal_info: {},
+                })
               }
             >
               Register

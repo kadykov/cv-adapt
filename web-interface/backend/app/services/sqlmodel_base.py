@@ -1,4 +1,4 @@
-"""Base database service."""
+"""Base database service for SQLModel."""
 
 from typing import Any, Generic, Optional, Sequence, Type, TypeVar
 
@@ -8,8 +8,8 @@ from sqlmodel import Session, SQLModel, select
 ModelType = TypeVar("ModelType", bound=SQLModel)
 
 
-class BaseDBService(Generic[ModelType]):
-    """Base class for database services."""
+class SQLModelService(Generic[ModelType]):
+    """Base class for database services using SQLModel."""
 
     def __init__(self, db: Session, model: Type[ModelType]):
         """Initialize service with database session and model."""
@@ -50,9 +50,9 @@ class BaseDBService(Generic[ModelType]):
     def delete(self, id: int) -> bool:
         """Delete model instance by ID."""
         statement = select(self.model).where(self.model.id == id)  # type: ignore
-        db_obj = self.db.exec(statement).first()
-        if db_obj:
-            self.db.delete(db_obj)
+        obj = self.db.exec(statement).first()
+        if obj:
+            self.db.delete(obj)
             self.db.commit()
             return True
         return False

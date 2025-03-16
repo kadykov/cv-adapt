@@ -4,11 +4,11 @@ from typing import Any, Dict
 from unittest.mock import AsyncMock as AsyncMockType
 
 import pytest
-from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
+from app.models.sqlmodels import DetailedCV, GeneratedCV, JobDescription, User
+from app.services.generation.generation_service import CVGenerationServiceImpl
 from app.services.generation.protocols import GenerationError, ValidationError
-from app.services.generation.service import CVGenerationServiceImpl
 from app.services.repositories import EntityNotFoundError
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from cv_adapter.dto.cv import CVDTO, ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import Language
@@ -199,7 +199,13 @@ async def test_generate_and_store_cv(
     assert result.language_code == "en"
     assert result.generation_parameters == {"test": "params"}
     assert result.status == "draft"
-    assert result.version == 1
+    assert isinstance(result.content, dict)
+    assert "title" in result.content
+    assert "summary" in result.content
+    assert "experiences" in result.content
+    assert "education" in result.content
+    assert "core_competences" in result.content
+    assert "language" in result.content and result.content["language"]["code"] == "en"
 
 
 @pytest.mark.asyncio

@@ -2,14 +2,14 @@
 
 import pytest
 from app.core.security import create_access_token
-from app.models.models import JobDescription, User
+from app.models.sqlmodels import JobDescription, User
 from app.schemas.cv import JobDescriptionCreate
 from app.schemas.user import UserCreate
-from app.services.cv import JobDescriptionService
+from app.services.job import JobDescriptionSQLModelService
 from app.services.user import UserService
 from fastapi import status
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 TEST_USER_EMAIL = "test@example.com"
 TEST_USER_PASSWORD = "test_password"
@@ -18,7 +18,7 @@ TEST_USER_PASSWORD = "test_password"
 @pytest.fixture
 def test_job(db: Session) -> JobDescription:
     """Create a test job description."""
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     job_data = JobDescriptionCreate(
         title="Test Job", description="Test description", language_code="en"
     )
@@ -30,14 +30,16 @@ def test_user(db: Session) -> User:
     """Create a test user."""
     user_service = UserService(db)
     user_data = UserCreate(email=TEST_USER_EMAIL, password=TEST_USER_PASSWORD)
-    return user_service.create_user(user_data)
+    user = user_service.create_user(user_data)
+    assert user.id is not None, "User ID must be set after creation"
+    return user
 
 
 @pytest.fixture
 def auth_headers(test_user: User) -> dict[str, str]:
     """Create auth headers with a valid test token."""
-    token = create_access_token(int(test_user.id))
-    return {"Authorization": f"Bearer {token}"}
+    assert test_user.id is not None, "User ID must be set"
+    return {"Authorization": f"Bearer {create_access_token(test_user.id)}"}
 
 
 def test_get_jobs(
@@ -87,6 +89,7 @@ def test_get_job_by_id(
     auth_headers: dict[str, str],
 ) -> None:
     """Test getting job description by ID."""
+    assert test_job.id is not None, "Job ID must be set"
     response = client.get(f"/v1/api/jobs/{test_job.id}", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
@@ -103,6 +106,8 @@ def test_get_nonexistent_job(client: TestClient, auth_headers: dict[str, str]) -
 
 def test_missing_auth(client: TestClient, test_job: JobDescription) -> None:
     """Test accessing endpoints without any authentication."""
+    assert test_job.id is not None, "Job ID must be set"
+
     # Test GET /jobs
     response = client.get("/v1/api/jobs")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -131,6 +136,7 @@ def test_missing_auth(client: TestClient, test_job: JobDescription) -> None:
 
 def test_invalid_token(client: TestClient, test_job: JobDescription) -> None:
     """Test accessing endpoints with invalid token."""
+    assert test_job.id is not None, "Job ID must be set"
     invalid_headers = {"Authorization": "Bearer invalid_token"}
 
     # Test GET /jobs
@@ -175,6 +181,7 @@ def test_update_job(
     auth_headers: dict[str, str],
 ) -> None:
     """Test updating job description."""
+    assert test_job.id is not None, "Job ID must be set"
     update_data = {"title": "Updated Job", "description": "Updated description"}
     response = client.put(
         f"/v1/api/jobs/{test_job.id}", json=update_data, headers=auth_headers
@@ -202,6 +209,7 @@ def test_delete_job(
     auth_headers: dict[str, str],
 ) -> None:
     """Test deleting job description."""
+    assert test_job.id is not None, "Job ID must be set"
     response = client.delete(f"/v1/api/jobs/{test_job.id}", headers=auth_headers)
     assert response.status_code == 204
 
@@ -225,6 +233,8 @@ def test_partial_update_job(
     auth_headers: dict[str, str],
 ) -> None:
     """Test partially updating job description."""
+    assert test_job.id is not None, "Job ID must be set"
+
     # Update only title
     response = client.put(
         f"/v1/api/jobs/{test_job.id}", json={"title": "New Title"}, headers=auth_headers

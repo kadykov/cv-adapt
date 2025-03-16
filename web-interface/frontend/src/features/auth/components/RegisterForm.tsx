@@ -43,6 +43,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     const variables: RegisterRequest = {
       email: data.email,
       password: data.password,
+      personal_info: {},
     };
     registerUser(variables, {
       onSuccess: () => {

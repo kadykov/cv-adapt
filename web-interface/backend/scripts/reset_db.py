@@ -6,12 +6,14 @@ import sys
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
+from sqlmodel import SQLModel
 
 # Add backend directory to Python path for imports
 backend_dir = Path(__file__).parent.parent
 sys.path.append(str(backend_dir))
 
-from app.core.database import Base  # noqa: E402
+# Import after adding to path to ensure models are registered with SQLModel
+from app.models import sqlmodels  # noqa: E402,F401  # Required to register models
 
 # Default configuration - matches docker-compose.yml
 DEFAULT_DB_USER = "postgres"
@@ -39,11 +41,11 @@ def reset_database() -> None:
         engine = create_engine(get_db_url())
 
         print("Dropping all tables...")
-        Base.metadata.drop_all(engine)
+        SQLModel.metadata.drop_all(engine)
         print("Tables dropped successfully!")
 
         print("Creating all tables...")
-        Base.metadata.create_all(engine)
+        SQLModel.metadata.create_all(engine)
         print("Tables created successfully!")
 
         # Verify database connection

@@ -1,12 +1,14 @@
 """Tests for user profile endpoints"""
 
+from typing import cast
+
 import pytest
 from app.core.security import create_access_token
-from app.models.models import User
+from app.models.sqlmodels import User
 from app.schemas.user import UserCreate
 from app.services.user import UserService
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 
 @pytest.fixture
@@ -14,13 +16,16 @@ def test_user(db: Session) -> User:
     """Create a test user."""
     user_service = UserService(db)
     user_data = UserCreate(email="test@example.com", password="testpassword")
-    return user_service.create_user(user_data)
+    user = user_service.create_user(user_data)
+    assert user.id is not None, "User ID must be set after creation"
+    return user
 
 
 @pytest.fixture
 def auth_headers(test_user: User) -> dict[str, str]:
     """Create authentication headers with JWT token."""
-    access_token = create_access_token(int(test_user.id))
+    assert test_user.id is not None, "User ID must be set"
+    access_token = create_access_token(cast(int, test_user.id))
     return {"Authorization": f"Bearer {access_token}"}
 
 

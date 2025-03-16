@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
+from app.models.sqlmodels import DetailedCV, GeneratedCV, JobDescription, User
 from fastapi import status
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 if TYPE_CHECKING:
-    from app.models.models import DetailedCV, GeneratedCV, JobDescription, User
-    from sqlalchemy.orm import Session
+    from app.models.sqlmodels import DetailedCV, GeneratedCV, JobDescription, User
+    from sqlmodel import Session
 
 
 @pytest.fixture

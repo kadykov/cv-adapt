@@ -1,13 +1,12 @@
-"""Database service layer."""
+"""Service package initialization."""
 
-from .base import BaseDBService
-from .cv import DetailedCVService, GeneratedCVService, JobDescriptionService
+from .cv import DetailedCVService, GeneratedCVService
+from .job import JobDescriptionSQLModelService
 from .user import UserService
 
 __all__ = [
-    "BaseDBService",
-    "UserService",
     "DetailedCVService",
-    "JobDescriptionService",
     "GeneratedCVService",
+    "JobDescriptionSQLModelService",
+    "UserService",
 ]

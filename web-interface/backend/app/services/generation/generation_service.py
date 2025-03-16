@@ -1,17 +1,18 @@
-"""Implementation of CV generation service."""
+"""Implementation of CV generation service using SQLModel."""
 
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import CVDTO, CoreCompetenceDTO, PersonalInfoDTO
 from cv_adapter.dto.language import Language
 from cv_adapter.models.context import language_context
+from cv_adapter.renderers.json_renderer import JSONRenderer
 from cv_adapter.renderers.markdown import MarkdownRenderer
 
 from ...logger import logger
-from ...models.models import DetailedCV, JobDescription
+from ...models.sqlmodels import DetailedCV, GeneratedCV, JobDescription
 from ...schemas.cv import GeneratedCVCreate, GeneratedCVResponse, GenerationStatus
 from ..repositories import CVRepository, EntityNotFoundError
 from .protocols import GenerationError, ValidationError
@@ -20,11 +21,14 @@ from .protocols import GenerationError, ValidationError
 class CVGenerationServiceImpl:
     """Concrete implementation of CV generation service."""
 
-    def __init__(self, db: Session, adapter: AsyncCVAdapterApplication):
+    def __init__(
+        self, db: Session, adapter: Optional[AsyncCVAdapterApplication] = None
+    ):
         self.db = db
         self.repository = CVRepository(db)
         self.adapter = adapter
-        self.renderer = MarkdownRenderer()
+        self.json_renderer = JSONRenderer()
+        self.markdown_renderer = MarkdownRenderer()
 
     async def generate_competences(
         self,
@@ -34,6 +38,9 @@ class CVGenerationServiceImpl:
         language: Language = Language(code="en"),
     ) -> List[CoreCompetenceDTO]:
         """Generate core competences from CV and job description."""
+        if not self.adapter:
+            raise GenerationError("CV adapter not initialized")
+
         try:
             with language_context(language):
                 return await self.adapter.generate_core_competences(
@@ -53,6 +60,9 @@ class CVGenerationServiceImpl:
         language: Language = Language(code="en"),
     ) -> CVDTO:
         """Generate a complete CV using core competences."""
+        if not self.adapter:
+            raise GenerationError("CV adapter not initialized")
+
         try:
             with language_context(language):
                 return await self.adapter.generate_cv_with_competences(
@@ -74,7 +84,7 @@ class CVGenerationServiceImpl:
         if not cv:
             raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-        # Convert to Python types to avoid SQLAlchemy Column type issues
+        # Convert to Python types to avoid SQLModel type issues
         gen_status = str(cv.generation_status or "completed")
         err_msg = str(cv.error_message) if cv.error_message else None
 
@@ -91,9 +101,8 @@ class CVGenerationServiceImpl:
         if not cv:
             raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-        # Use setattr to avoid SQLAlchemy typing issues
-        setattr(cv, "generation_status", status.value)
-        setattr(cv, "error_message", error_message)
+        cv.generation_status = status.value
+        cv.error_message = error_message
         self.db.commit()
 
     async def generate_and_store_cv(
@@ -102,9 +111,10 @@ class CVGenerationServiceImpl:
         detailed_cv_id: int,
         job_description_id: int,
         language_code: str,
-        generation_parameters: Optional[Dict] = None,
+        generation_parameters: Optional[Dict[str, Any]] = None,
         notes: Optional[str] = None,
-    ) -> GeneratedCVResponse:
+        initial_cv_id: Optional[int] = None,
+    ) -> GeneratedCV:
         """Generate and save a CV to the database."""
         # Fetch required data
         detailed_cv = self.repository.get_detailed_cv(detailed_cv_id)
@@ -117,24 +127,30 @@ class CVGenerationServiceImpl:
                 f"Job description with id {job_description_id} not found"
             )
 
-        # Create CV record with generating status
-        cv_data = GeneratedCVCreate(
-            detailed_cv_id=detailed_cv_id,
-            job_description_id=job_description_id,
-            language_code=language_code,
-            content="",  # Will be filled after generation
-            status="draft",
-            generation_parameters=generation_parameters or {},
-            version=1,
-        )
-        # Create and validate CV
-        stored_cv = self.repository.save_generated_cv(user_id, cv_data)
-        if not stored_cv:
-            raise GenerationError("Failed to create CV record")
-
-        await self.update_generation_status(
-            int(stored_cv.id), GenerationStatus.GENERATING
-        )
+        # Get existing CV or create new one
+        if initial_cv_id:
+            stored_cv = self.repository.get_generated_cv(initial_cv_id)
+            if not stored_cv:
+                raise EntityNotFoundError(
+                    f"Generated CV with id {initial_cv_id} not found"
+                )
+            cv_id = initial_cv_id
+        else:
+            # Create CV record with generating status
+            cv_data = GeneratedCVCreate(
+                detailed_cv_id=detailed_cv_id,
+                job_description_id=job_description_id,
+                language_code=language_code,
+                content={},  # Empty dict, will be filled after generation
+                status="draft",
+                generation_parameters=generation_parameters or {},
+            )
+            # Create and validate CV
+            stored_cv = self.create_generated_cv(user_id, cv_data)
+            if not stored_cv or stored_cv.id is None:
+                raise GenerationError("Failed to create CV record")
+            cv_id = stored_cv.id
+        await self.update_generation_status(cv_id, GenerationStatus.GENERATING)
 
         try:
             # Generate CV content
@@ -145,28 +161,21 @@ class CVGenerationServiceImpl:
                 notes=notes,
             )
 
-            # Convert CV DTO to markdown
-            cv_content = self.renderer.render_to_string(generated_cv)
-
-            # Update CV content and status
             # Get fresh instance after generation
-            cv_id = int(stored_cv.id)
             refreshed_cv = self.repository.get_generated_cv(cv_id)
             if not refreshed_cv:
                 raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-            # Update content and status
-            setattr(refreshed_cv, "content", cv_content)
+            # Store JSON-serializable version in database
+            refreshed_cv.content = generated_cv.model_dump(mode="json")
             await self.update_generation_status(cv_id, GenerationStatus.COMPLETED)
             self.db.commit()
 
-            return GeneratedCVResponse.model_validate(refreshed_cv)
+            return refreshed_cv
 
         except Exception as e:
             logger.error(f"Error in generate_and_store_cv: {str(e)}", exc_info=True)
-            await self.update_generation_status(
-                int(stored_cv.id), GenerationStatus.FAILED, str(e)
-            )
+            await self.update_generation_status(cv_id, GenerationStatus.FAILED, str(e))
             raise GenerationError(str(e))
 
     async def update_cv_status(
@@ -179,11 +188,15 @@ class CVGenerationServiceImpl:
             if status not in ["draft", "approved", "rejected"]:
                 raise ValidationError(f"Invalid status: {status}")
 
-            updated_cv = self.repository.update_status(cv_id, status)
-            if not updated_cv:
+            cv = self.repository.get_generated_cv(cv_id)
+            if not cv:
                 raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-            return GeneratedCVResponse.model_validate(updated_cv)
+            cv.status = status
+            self.db.commit()
+            self.db.refresh(cv)
+
+            return GeneratedCVResponse.model_validate(cv)
 
         except EntityNotFoundError:
             raise
@@ -196,7 +209,7 @@ class CVGenerationServiceImpl:
     async def update_generation_parameters(
         self,
         cv_id: int,
-        parameters: Dict,
+        parameters: Dict[str, Any],
     ) -> GeneratedCVResponse:
         """Update generation parameters for a CV."""
         try:
@@ -204,11 +217,15 @@ class CVGenerationServiceImpl:
             if not isinstance(parameters, dict):
                 raise ValidationError("Generation parameters must be a dictionary")
 
-            updated_cv = self.repository.update_parameters(cv_id, parameters)
-            if not updated_cv:
+            cv = self.repository.get_generated_cv(cv_id)
+            if not cv:
                 raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
 
-            return GeneratedCVResponse.model_validate(updated_cv)
+            cv.generation_parameters = parameters
+            self.db.commit()
+            self.db.refresh(cv)
+
+            return GeneratedCVResponse.model_validate(cv)
 
         except EntityNotFoundError:
             raise
@@ -229,9 +246,8 @@ class CVGenerationServiceImpl:
     ) -> CVDTO:
         """Helper method to generate CV content from detailed CV and job description."""
         try:
-            # The content is markdown text
-            cv_text = str(detailed_cv.content)
-            description = str(job.description) if job.description is not None else ""
+            cv_text = str(detailed_cv.content or "").strip()
+            description = str(job.description or "").strip()
 
             # Create basic personal info
             personal_info = PersonalInfoDTO(full_name="")
@@ -257,3 +273,17 @@ class CVGenerationServiceImpl:
         except Exception as e:
             logger.error(f"Error in _generate_cv_content: {str(e)}", exc_info=True)
             raise GenerationError(str(e))
+
+    def create_generated_cv(
+        self, user_id: int, cv_data: GeneratedCVCreate
+    ) -> GeneratedCV:
+        """Create a new generated CV."""
+        cv = GeneratedCV(user_id=user_id, **cv_data.model_dump())
+        self.db.add(cv)
+        self.db.commit()
+        self.db.refresh(cv)
+        return cv
+
+    def get(self, cv_id: int) -> Optional[GeneratedCV]:
+        """Get a generated CV by ID."""
+        return self.repository.get_generated_cv(cv_id)

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from fastapi import status as http_status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from cv_adapter.core.async_application import AsyncCVAdapterApplication
 from cv_adapter.dto.cv import CVDTO, ContactDTO, CoreCompetenceDTO, PersonalInfoDTO
@@ -21,7 +21,7 @@ from cv_adapter.renderers.yaml_renderer import YAMLRenderer
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_language
 from ..logger import logger
-from ..models.models import User
+from ..models.sqlmodels import User
 from ..schemas.common import (
     DateRange,
     GeneratedCVFilters,
@@ -30,17 +30,18 @@ from ..schemas.common import (
 )
 from ..schemas.cv import (
     GeneratedCVCreate,
+    GeneratedCVDirectResponse,
     GeneratedCVResponse,
     GeneratedCVUpdate,
     GenerationStatusResponse,
 )
+from ..services.generation.generation_service import CVGenerationServiceImpl
 from ..services.generation.protocols import (
     GenerationError,
 )
 from ..services.generation.protocols import (
     ValidationError as GenerationValidationError,
 )
-from ..services.generation.service import CVGenerationServiceImpl
 from ..services.repositories import EntityNotFoundError
 
 # Initialize Async CV Adapter with configurable AI model
@@ -55,6 +56,12 @@ renderers = {
     "yaml": YAMLRenderer(),
     "pdf": PDFRenderer(),
 }
+
+
+def get_user_id(user: User) -> int:
+    """Safely get user ID, ensuring it exists."""
+    assert user.id is not None, "User ID must be set"
+    return user.id
 
 
 # Initialize service factory to be used by all routes
@@ -204,21 +211,47 @@ async def generate_cv(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("", response_model=GeneratedCVResponse)
+@router.post("", response_model=GeneratedCVDirectResponse)
 async def generate_and_save_cv(
     cv_data: GeneratedCVCreate,
     current_user: Annotated[User, Depends(get_current_user)],
     service: CVGenerationServiceImpl = Depends(get_generation_service),
-) -> GeneratedCVResponse:
+) -> GeneratedCVDirectResponse:
     """Generate and save a new CV for job application."""
     try:
-        return await service.generate_and_store_cv(
-            user_id=int(current_user.id),
+        user_id = get_user_id(current_user)
+        # Get generated CV and CVDTO
+        stored_cv = await service.generate_and_store_cv(
+            user_id=user_id,
             detailed_cv_id=cv_data.detailed_cv_id,
             job_description_id=cv_data.job_description_id,
             language_code=cv_data.language_code,
             generation_parameters=cv_data.generation_parameters,
         )
+
+        # Convert to direct response with CVDTO
+        # Create the response with reconstructed CVDTO
+        try:
+            cv_dto = CVDTO.model_validate(stored_cv.content)
+            response = GeneratedCVDirectResponse(
+                id=stored_cv.id,
+                user_id=stored_cv.user_id,
+                detailed_cv_id=stored_cv.detailed_cv_id,
+                job_description_id=stored_cv.job_description_id,
+                language_code=stored_cv.language_code,
+                status=stored_cv.status,
+                generation_status=stored_cv.generation_status,
+                error_message=stored_cv.error_message,
+                generation_parameters=stored_cv.generation_parameters,
+                created_at=stored_cv.created_at,
+                cv_content=cv_dto,
+            )
+            return response
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Invalid CV data format: {str(e)}",
+            ) from e
     except EntityNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except GenerationValidationError as e:
@@ -257,8 +290,9 @@ async def get_user_generations(
         pagination = PaginationParams(offset=offset, limit=limit)
 
         # Get CVs with filtering and pagination
+        user_id = get_user_id(current_user)
         cvs, total = service.repository.get_user_generated_cvs(
-            int(current_user.id),
+            user_id,
             filters=filters,
             pagination=pagination,
         )
@@ -419,7 +453,7 @@ async def export_generated_cv(
                 detail=f"Format '{format}' is not supported",
             ) from e
 
-        # Convert stored JSON to CVDTO and generate content
+        # Convert stored content to CVDTO and generate output
         try:
             cv_dto = CVDTO.model_validate(cv.content)
             export_content = renderer.render_to_string(cv_dto)

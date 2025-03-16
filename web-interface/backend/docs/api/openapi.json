@@ -927,7 +927,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GeneratedCVResponse"
+                  "$ref": "#/components/schemas/GeneratedCVDirectResponse"
                 }
               }
             }
@@ -1382,6 +1382,106 @@
         ],
         "title": "Body_refresh_token_v1_api_auth_refresh_post"
       },
+      "CVDTO": {
+        "properties": {
+          "personal_info": {
+            "$ref": "#/components/schemas/PersonalInfoDTO"
+          },
+          "title": {
+            "$ref": "#/components/schemas/TitleDTO"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SummaryDTO"
+          },
+          "core_competences": {
+            "items": {
+              "$ref": "#/components/schemas/CoreCompetenceDTO"
+            },
+            "type": "array",
+            "title": "Core Competences"
+          },
+          "experiences": {
+            "items": {
+              "$ref": "#/components/schemas/ExperienceDTO"
+            },
+            "type": "array",
+            "title": "Experiences"
+          },
+          "education": {
+            "items": {
+              "$ref": "#/components/schemas/EducationDTO"
+            },
+            "type": "array",
+            "title": "Education"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillGroupDTO"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "language": {
+            "$ref": "#/components/schemas/Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "personal_info",
+          "title",
+          "summary",
+          "core_competences",
+          "experiences",
+          "education",
+          "skills",
+          "language"
+        ],
+        "title": "CVDTO"
+      },
+      "ContactDTO": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "e.g., 'Email', 'Phone', 'Location'"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon",
+            "description": "e.g., 'email', 'phone', 'linkedin'"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "Optional URL for the contact (e.g., mailto:, tel:, https://)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "type"
+        ],
+        "title": "ContactDTO",
+        "description": "Represents a single contact method with optional metadata."
+      },
       "ContactRequest": {
         "properties": {
           "value": {
@@ -1422,6 +1522,19 @@
         ],
         "title": "ContactRequest"
       },
+      "CoreCompetenceDTO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CoreCompetenceDTO"
+      },
       "DetailedCVCreate": {
         "properties": {
           "language_code": {
@@ -1430,7 +1543,8 @@
           },
           "content": {
             "type": "string",
-            "title": "Content"
+            "title": "Content",
+            "default": ""
           },
           "is_primary": {
             "type": "boolean",
@@ -1440,14 +1554,31 @@
         },
         "type": "object",
         "required": [
-          "language_code",
-          "content"
+          "language_code"
         ],
         "title": "DetailedCVCreate",
         "description": "Schema for creating a detailed CV."
       },
       "DetailedCVResponse": {
         "properties": {
+          "language_code": {
+            "type": "string",
+            "title": "Language Code"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "default": ""
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1465,23 +1596,6 @@
             ],
             "title": "Updated At"
           },
-          "language_code": {
-            "type": "string",
-            "title": "Language Code"
-          },
-          "content": {
-            "type": "string",
-            "title": "Content"
-          },
-          "is_primary": {
-            "type": "boolean",
-            "title": "Is Primary",
-            "default": false
-          },
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
           "user_id": {
             "type": "integer",
             "title": "User Id"
@@ -1489,14 +1603,100 @@
         },
         "type": "object",
         "required": [
-          "created_at",
           "language_code",
-          "content",
           "id",
+          "created_at",
           "user_id"
         ],
         "title": "DetailedCVResponse",
         "description": "Schema for detailed CV responses."
+      },
+      "EducationDTO": {
+        "properties": {
+          "university": {
+            "$ref": "#/components/schemas/InstitutionDTO"
+          },
+          "degree": {
+            "type": "string",
+            "title": "Degree"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "university",
+          "degree",
+          "start_date"
+        ],
+        "title": "EducationDTO"
+      },
+      "ExperienceDTO": {
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/InstitutionDTO"
+          },
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "technologies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Technologies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "position",
+          "start_date"
+        ],
+        "title": "ExperienceDTO"
       },
       "GenerateCVRequest": {
         "properties": {
@@ -1575,7 +1775,7 @@
             "title": "Language Code"
           },
           "content": {
-            "type": "string",
+            "type": "object",
             "title": "Content"
           },
           "status": {
@@ -1583,21 +1783,25 @@
             "title": "Status",
             "default": "draft"
           },
-          "generation_parameters": {
+          "generation_status": {
+            "type": "string",
+            "title": "Generation Status",
+            "default": "completed"
+          },
+          "error_message": {
             "anyOf": [
               {
-                "type": "object"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Generation Parameters"
+            "title": "Error Message"
           },
-          "version": {
-            "type": "integer",
-            "title": "Version",
-            "default": 1
+          "generation_parameters": {
+            "type": "object",
+            "title": "Generation Parameters"
           },
           "detailed_cv_id": {
             "type": "integer",
@@ -1611,15 +1815,18 @@
         "type": "object",
         "required": [
           "language_code",
-          "content",
           "detailed_cv_id",
           "job_description_id"
         ],
         "title": "GeneratedCVCreate",
         "description": "Schema for creating a generated CV."
       },
-      "GeneratedCVResponse": {
+      "GeneratedCVDirectResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1637,12 +1844,79 @@
             ],
             "title": "Updated At"
           },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "detailed_cv_id": {
+            "type": "integer",
+            "title": "Detailed Cv Id"
+          },
+          "job_description_id": {
+            "type": "integer",
+            "title": "Job Description Id"
+          },
+          "language_code": {
+            "type": "string",
+            "title": "Language Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "generation_status": {
+            "type": "string",
+            "title": "Generation Status"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "generation_parameters": {
+            "type": "object",
+            "title": "Generation Parameters"
+          },
+          "cv_content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CVDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "user_id",
+          "detailed_cv_id",
+          "job_description_id",
+          "language_code",
+          "status",
+          "generation_status",
+          "generation_parameters"
+        ],
+        "title": "GeneratedCVDirectResponse",
+        "description": "Schema for direct generated CV responses with embedded CVDTO."
+      },
+      "GeneratedCVResponse": {
+        "properties": {
           "language_code": {
             "type": "string",
             "title": "Language Code"
           },
           "content": {
-            "type": "string",
+            "type": "object",
             "title": "Content"
           },
           "status": {
@@ -1650,25 +1924,46 @@
             "title": "Status",
             "default": "draft"
           },
-          "generation_parameters": {
+          "generation_status": {
+            "type": "string",
+            "title": "Generation Status",
+            "default": "completed"
+          },
+          "error_message": {
             "anyOf": [
               {
-                "type": "object"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Generation Parameters"
+            "title": "Error Message"
           },
-          "version": {
-            "type": "integer",
-            "title": "Version",
-            "default": 1
+          "generation_parameters": {
+            "type": "object",
+            "title": "Generation Parameters"
           },
           "id": {
             "type": "integer",
             "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
           },
           "user_id": {
             "type": "integer",
@@ -1685,10 +1980,9 @@
         },
         "type": "object",
         "required": [
-          "created_at",
           "language_code",
-          "content",
           "id",
+          "created_at",
           "user_id",
           "detailed_cv_id",
           "job_description_id"
@@ -1779,6 +2073,41 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "InstitutionDTO": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "InstitutionDTO"
+      },
       "JobDescriptionCreate": {
         "properties": {
           "title": {
@@ -1805,6 +2134,22 @@
       },
       "JobDescriptionResponse": {
         "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "language_code": {
+            "type": "string",
+            "title": "Language Code"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1821,31 +2166,15 @@
               }
             ],
             "title": "Updated At"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "language_code": {
-            "type": "string",
-            "title": "Language Code"
-          },
-          "id": {
-            "type": "integer",
-            "title": "Id"
           }
         },
         "type": "object",
         "required": [
-          "created_at",
           "title",
           "description",
           "language_code",
-          "id"
+          "id",
+          "created_at"
         ],
         "title": "JobDescriptionResponse",
         "description": "Schema for job description responses."
@@ -1878,6 +2207,31 @@
         "type": "object",
         "title": "JobDescriptionUpdate",
         "description": "Schema for updating a job description."
+      },
+      "Language": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/LanguageCode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Language",
+        "description": "Core language identity."
+      },
+      "LanguageCode": {
+        "type": "string",
+        "enum": [
+          "en",
+          "fr",
+          "de",
+          "es",
+          "it"
+        ],
+        "title": "LanguageCode",
+        "description": "Standardized language codes."
       },
       "PaginatedResponse_GeneratedCVResponse_": {
         "properties": {
@@ -1952,12 +2306,141 @@
         ],
         "title": "PersonalInfo"
       },
+      "PersonalInfoDTO": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "linkedin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "github": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name"
+        ],
+        "title": "PersonalInfoDTO",
+        "description": "Personal information with flexible contact handling."
+      },
+      "SkillDTO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SkillDTO"
+      },
+      "SkillGroupDTO": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillDTO"
+            },
+            "type": "array",
+            "title": "Skills"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "skills"
+        ],
+        "title": "SkillGroupDTO"
+      },
+      "SummaryDTO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SummaryDTO"
+      },
+      "TitleDTO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TitleDTO"
+      },
       "UserCreate": {
         "properties": {
           "email": {
             "type": "string",
             "format": "email",
             "title": "Email"
+          },
+          "personal_info": {
+            "type": "object",
+            "title": "Personal Info",
+            "default": {}
           },
           "password": {
             "type": "string",
@@ -1974,19 +2457,13 @@
       },
       "UserResponse": {
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
           "id": {
             "type": "integer",
             "title": "Id"
           },
-          "created_at": {
+          "email": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Email"
           },
           "personal_info": {
             "anyOf": [
@@ -1998,16 +2475,21 @@
               }
             ],
             "title": "Personal Info"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
-          "email",
           "id",
+          "email",
           "created_at"
         ],
         "title": "UserResponse",
-        "description": "Schema for user responses."
+        "description": "Schema for user responses in API endpoints."
       },
       "UserUpdate": {
         "properties": {

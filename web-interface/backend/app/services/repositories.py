@@ -1,14 +1,14 @@
 """Repository pattern implementations for CV-related operations."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from sqlalchemy import and_, func, select
-from sqlalchemy.orm import Session
+from sqlmodel import Session, and_, desc, func, select
 
-from ..models.models import DetailedCV, GeneratedCV, JobDescription
+from ..models.sqlmodels import DetailedCV, GeneratedCV, JobDescription
 from ..schemas.common import GeneratedCVFilters, PaginationParams
 from ..schemas.cv import GeneratedCVCreate
-from .cv import DetailedCVService, GeneratedCVService, JobDescriptionService
+from .cv import DetailedCVService
+from .job import JobDescriptionSQLModelService
 
 
 class EntityNotFoundError(Exception):
@@ -18,35 +18,12 @@ class EntityNotFoundError(Exception):
 
 
 class CVRepository:
-    """Repository for CV-related database operations."""
+    """Repository for accessing CV-related data in the database."""
 
     def __init__(self, db: Session):
         self.db = db
-        self._generated_cv_service = GeneratedCVService(db)
         self._detailed_cv_service = DetailedCVService(db)
-        self._job_description_service = JobDescriptionService(db)
-
-    def save_generated_cv(
-        self, user_id: int, cv_data: GeneratedCVCreate
-    ) -> GeneratedCV:
-        """Save a generated CV to the database."""
-        return self._generated_cv_service.create_generated_cv(user_id, cv_data)
-
-    def update_status(self, cv_id: int, status: str) -> GeneratedCV:
-        """Update CV status."""
-        cv = self._generated_cv_service.get(cv_id)
-        if not cv:
-            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
-        return self._generated_cv_service.update_generated_cv(cv, status=status)
-
-    def update_parameters(self, cv_id: int, parameters: Dict[str, Any]) -> GeneratedCV:
-        """Update generation parameters."""
-        cv = self._generated_cv_service.get(cv_id)
-        if not cv:
-            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
-        return self._generated_cv_service.update_generated_cv(
-            cv, generation_parameters=parameters
-        )
+        self._job_description_service = JobDescriptionSQLModelService(db)
 
     def get_user_generated_cvs(
         self,
@@ -98,15 +75,16 @@ class CVRepository:
             query = query.offset(pagination.offset).limit(pagination.limit)
 
         # Order by most recent first
-        query = query.order_by(GeneratedCV.created_at.desc())
+        query = query.order_by(desc(GeneratedCV.created_at))
 
         # Execute query and convert results to list
-        results = list(self.db.execute(query).scalars().all())
+        results = list(self.db.exec(query).all())
         return results, total
 
     def get_generated_cv(self, cv_id: int) -> Optional[GeneratedCV]:
         """Get a specific generated CV."""
-        return self._generated_cv_service.get(cv_id)
+        stmt = select(GeneratedCV).where(GeneratedCV.id == cv_id)
+        return self.db.exec(stmt).first()
 
     def get_detailed_cv(self, cv_id: int) -> Optional[DetailedCV]:
         """Get a specific detailed CV."""
@@ -120,6 +98,52 @@ class CVRepository:
         self, user_id: int, language_code: str
     ) -> Optional[DetailedCV]:
         """Get a detailed CV by user and language."""
-        return self._detailed_cv_service.get_by_user_and_language(
-            user_id, language_code
+        stmt = select(DetailedCV).where(
+            and_(
+                DetailedCV.user_id == user_id, DetailedCV.language_code == language_code
+            )
         )
+        return self.db.exec(stmt).first()
+
+    def save_generated_cv(
+        self, user_id: int, cv_data: GeneratedCVCreate
+    ) -> GeneratedCV:
+        """Save a new generated CV."""
+        generated_cv = GeneratedCV(
+            user_id=user_id,
+            detailed_cv_id=cv_data.detailed_cv_id,
+            job_description_id=cv_data.job_description_id,
+            language_code=cv_data.language_code,
+            content=cv_data.content,
+            status=cv_data.status or "draft",
+            generation_status="completed",
+            generation_parameters=cv_data.generation_parameters or {},
+        )
+        self.db.add(generated_cv)
+        self.db.commit()
+        self.db.refresh(generated_cv)
+        return generated_cv
+
+    def update_status(self, cv_id: int, status: str) -> GeneratedCV:
+        """Update the status of a generated CV."""
+        cv = self.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+
+        cv.status = status
+        self.db.add(cv)
+        self.db.commit()
+        self.db.refresh(cv)
+        return cv
+
+    def update_parameters(self, cv_id: int, parameters: dict) -> GeneratedCV:
+        """Update generation parameters of a generated CV."""
+        cv = self.get_generated_cv(cv_id)
+        if not cv:
+            raise EntityNotFoundError(f"Generated CV with id {cv_id} not found")
+
+        cv.generation_parameters = parameters
+        self.db.add(cv)
+        self.db.commit()
+        self.db.refresh(cv)
+        return cv
