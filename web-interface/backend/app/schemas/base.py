@@ -2,22 +2,35 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from sqlmodel import SQLModel
 
 
-class TimestampedModel(BaseModel):
+class TimestampedModel(SQLModel):
     """Base model that includes created/updated timestamps."""
 
     created_at: datetime
     updated_at: datetime | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 
-class BaseResponseModel(BaseModel):
+class BaseResponseModel(SQLModel):
     """Base model for API responses."""
 
     id: int
     created_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
+
+
+class BaseGenModel(SQLModel):
+    """Base model for generation responses with timestamps."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime | None = None
+
+    class Config:
+        from_attributes = True

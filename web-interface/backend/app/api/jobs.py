@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from cv_adapter.dto.language import Language
 
@@ -11,7 +11,7 @@ from ..schemas.cv import (
     JobDescriptionResponse,
     JobDescriptionUpdate,
 )
-from ..services.cv import JobDescriptionService
+from ..services.job import JobDescriptionSQLModelService
 from ..services.user import UserService
 
 router = APIRouter(prefix="/v1/api/jobs", tags=["jobs"])
@@ -50,7 +50,7 @@ async def get_jobs(
             detail="Could not validate credentials",
         )
 
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     jobs = job_service.get_by_language(language.code)
     return [JobDescriptionResponse.model_validate(job) for job in jobs]
 
@@ -94,7 +94,7 @@ async def get_job(
             detail="Could not validate credentials",
         )
 
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     job = job_service.get(job_id)
     if not job:
         raise HTTPException(
@@ -137,7 +137,7 @@ async def create_job(
             detail="Could not validate credentials",
         )
 
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     job = job_service.create_job_description(job_data)
     return JobDescriptionResponse.model_validate(job)
 
@@ -182,7 +182,7 @@ async def update_job(
             detail="Could not validate credentials",
         )
 
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     job = job_service.get(job_id)
     if not job:
         raise HTTPException(
@@ -232,11 +232,11 @@ async def delete_job(
             detail="Could not validate credentials",
         )
 
-    job_service = JobDescriptionService(db)
+    job_service = JobDescriptionSQLModelService(db)
     job = job_service.get(job_id)
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Job description not found",
         )
-    job_service.delete(int(job.id))
+    job_service.delete(job.id)

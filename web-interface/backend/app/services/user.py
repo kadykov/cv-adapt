@@ -3,14 +3,14 @@
 from typing import Optional
 
 import bcrypt
-from sqlalchemy.orm import Session
+from sqlmodel import Session, select
 
-from ..models.models import User
+from ..models.sqlmodels import User
 from ..schemas.user import UserCreate, UserUpdate
-from .base import BaseDBService
+from .sqlmodel_base import SQLModelService
 
 
-class UserService(BaseDBService[User]):
+class UserService(SQLModelService[User]):
     """Service for handling user database operations."""
 
     def __init__(self, db: Session):
@@ -19,7 +19,8 @@ class UserService(BaseDBService[User]):
 
     def get_by_email(self, email: str) -> Optional[User]:
         """Get user by email."""
-        return self.db.query(User).filter(User.email == email).first()
+        statement = select(User).where(User.email == email)
+        return self.db.exec(statement).first()
 
     def create_user(self, user_data: UserCreate) -> User:
         """Create new user with hashed password."""

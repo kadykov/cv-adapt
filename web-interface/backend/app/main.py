@@ -1,16 +1,32 @@
 import os
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import auth, cvs, generations, jobs, users
+from .core.database import create_db_and_tables
 from .logger import setup_logging_middleware
 
 # Only import test router if we're in a test environment
 if os.environ.get("TESTING") == "1":
     from .api import test
 
-app = FastAPI(title="CV Adapter Web Interface")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Handle application startup and shutdown events."""
+    # Run startup code (create tables)
+    create_db_and_tables()
+    yield
+    # Run shutdown code (if any)
+
+
+app = FastAPI(
+    title="CV Adapter Web Interface",
+    lifespan=lifespan,
+)
 
 # Setup logging middleware first
 setup_logging_middleware(app)

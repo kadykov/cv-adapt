@@ -1,19 +1,22 @@
-from typing import Annotated, Any
+"""Dependency injection utilities."""
+
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
 from jose import JWTError
+from sqlmodel import Session
 
 from cv_adapter.dto.language import ENGLISH, Language, LanguageCode
 
 from ..core.database import get_db
 from ..core.security import decode_access_token
 from ..logger import auth_logger, logger
-from ..models.models import User
+from ..models.sqlmodels import User
 from ..services.user import UserService
 
 
 async def get_current_user(
-    db: Annotated[Any, Depends(get_db)], token: dict = Depends(decode_access_token)
+    db: Annotated[Session, Depends(get_db)], token: dict = Depends(decode_access_token)
 ) -> User:
     """Get current user from JWT token."""
     try:

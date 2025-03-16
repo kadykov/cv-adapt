@@ -280,7 +280,7 @@ export interface paths {
     };
     /**
      * Get User Generations
-     * @description Get all generated CVs for current user.
+     * @description Get all generated CVs for current user with filtering and pagination.
      */
     get: operations['get_user_generations_v1_api_generations_get'];
     put?: never;
@@ -307,6 +307,50 @@ export interface paths {
      * @description Get a specific generated CV.
      */
     get: operations['get_generated_cv_v1_api_generations__cv_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Generated Cv
+     * @description Update a generated CV's status or parameters.
+     */
+    patch: operations['update_generated_cv_v1_api_generations__cv_id__patch'];
+    trace?: never;
+  };
+  '/v1/api/generations/{cv_id}/generation-status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check Generation Status
+     * @description Check the status of a CV generation process.
+     */
+    get: operations['check_generation_status_v1_api_generations__cv_id__generation_status_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/api/generations/{cv_id}/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Generated Cv
+     * @description Export a generated CV in the specified format.
+     */
+    get: operations['export_generated_cv_v1_api_generations__cv_id__export_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -358,6 +402,44 @@ export interface components {
       /** Token */
       token: string;
     };
+    /** CVDTO */
+    CVDTO: {
+      personal_info: components['schemas']['PersonalInfoDTO'];
+      title: components['schemas']['TitleDTO'];
+      summary: components['schemas']['SummaryDTO'];
+      /** Core Competences */
+      core_competences: components['schemas']['CoreCompetenceDTO'][];
+      /** Experiences */
+      experiences: components['schemas']['ExperienceDTO'][];
+      /** Education */
+      education: components['schemas']['EducationDTO'][];
+      /** Skills */
+      skills: components['schemas']['SkillGroupDTO'][];
+      language: components['schemas']['Language'];
+    };
+    /**
+     * ContactDTO
+     * @description Represents a single contact method with optional metadata.
+     */
+    ContactDTO: {
+      /** Value */
+      value: string;
+      /**
+       * Type
+       * @description e.g., 'Email', 'Phone', 'Location'
+       */
+      type: string;
+      /**
+       * Icon
+       * @description e.g., 'email', 'phone', 'linkedin'
+       */
+      icon?: string | null;
+      /**
+       * Url
+       * @description Optional URL for the contact (e.g., mailto:, tel:, https://)
+       */
+      url?: string | null;
+    };
     /** ContactRequest */
     ContactRequest: {
       /** Value */
@@ -369,6 +451,11 @@ export interface components {
       /** Url */
       url?: string | null;
     };
+    /** CoreCompetenceDTO */
+    CoreCompetenceDTO: {
+      /** Text */
+      text: string;
+    };
     /**
      * DetailedCVCreate
      * @description Schema for creating a detailed CV.
@@ -376,7 +463,10 @@ export interface components {
     DetailedCVCreate: {
       /** Language Code */
       language_code: string;
-      /** Content */
+      /**
+       * Content
+       * @default
+       */
       content: string;
       /**
        * Is Primary
@@ -389,16 +479,12 @@ export interface components {
      * @description Schema for detailed CV responses.
      */
     DetailedCVResponse: {
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Updated At */
-      updated_at?: string | null;
       /** Language Code */
       language_code: string;
-      /** Content */
+      /**
+       * Content
+       * @default
+       */
       content: string;
       /**
        * Is Primary
@@ -407,8 +493,53 @@ export interface components {
       is_primary: boolean;
       /** Id */
       id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
       /** User Id */
       user_id: number;
+    };
+    /** EducationDTO */
+    EducationDTO: {
+      university: components['schemas']['InstitutionDTO'];
+      /** Degree */
+      degree: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /** End Date */
+      end_date?: string | null;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
+    };
+    /** ExperienceDTO */
+    ExperienceDTO: {
+      company: components['schemas']['InstitutionDTO'];
+      /** Position */
+      position: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /** End Date */
+      end_date?: string | null;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
+      /** Technologies */
+      technologies?: string[];
     };
     /** GenerateCVRequest */
     GenerateCVRequest: {
@@ -439,11 +570,57 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: string;
+      content?: Record<string, never>;
+      /**
+       * Status
+       * @default draft
+       */
+      status: string;
+      /**
+       * Generation Status
+       * @default completed
+       */
+      generation_status: string;
+      /** Error Message */
+      error_message?: string | null;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never>;
       /** Detailed Cv Id */
       detailed_cv_id: number;
       /** Job Description Id */
       job_description_id: number;
+    };
+    /**
+     * GeneratedCVDirectResponse
+     * @description Schema for direct generated CV responses with embedded CVDTO.
+     */
+    GeneratedCVDirectResponse: {
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** User Id */
+      user_id: number;
+      /** Detailed Cv Id */
+      detailed_cv_id: number;
+      /** Job Description Id */
+      job_description_id: number;
+      /** Language Code */
+      language_code: string;
+      /** Status */
+      status: string;
+      /** Generation Status */
+      generation_status: string;
+      /** Error Message */
+      error_message?: string | null;
+      /** Generation Parameters */
+      generation_parameters: Record<string, never>;
+      cv_content?: components['schemas']['CVDTO'] | null;
     };
     /**
      * GeneratedCVResponse
@@ -453,7 +630,21 @@ export interface components {
       /** Language Code */
       language_code: string;
       /** Content */
-      content: string;
+      content?: Record<string, never>;
+      /**
+       * Status
+       * @default draft
+       */
+      status: string;
+      /**
+       * Generation Status
+       * @default completed
+       */
+      generation_status: string;
+      /** Error Message */
+      error_message?: string | null;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never>;
       /** Id */
       id: number;
       /**
@@ -461,6 +652,8 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
       /** User Id */
       user_id: number;
       /** Detailed Cv Id */
@@ -468,10 +661,50 @@ export interface components {
       /** Job Description Id */
       job_description_id: number;
     };
+    /**
+     * GeneratedCVUpdate
+     * @description Schema for updating a generated CV.
+     */
+    GeneratedCVUpdate: {
+      /** Status */
+      status?: string | null;
+      /** Generation Parameters */
+      generation_parameters?: Record<string, never> | null;
+    };
+    /**
+     * GenerationStatus
+     * @description CV generation status.
+     * @enum {string}
+     */
+    GenerationStatus: 'generating' | 'completed' | 'failed';
+    /**
+     * GenerationStatusResponse
+     * @description Generation status response.
+     */
+    GenerationStatusResponse: {
+      /** Cv Id */
+      cv_id: number;
+      /** @description Current generation status */
+      status: components['schemas']['GenerationStatus'];
+      /**
+       * Error
+       * @description Error message if generation failed
+       */
+      error?: string | null;
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
       detail?: components['schemas']['ValidationError'][];
+    };
+    /** InstitutionDTO */
+    InstitutionDTO: {
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      /** Location */
+      location?: string | null;
     };
     /**
      * JobDescriptionCreate
@@ -490,13 +723,6 @@ export interface components {
      * @description Schema for job description responses.
      */
     JobDescriptionResponse: {
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Updated At */
-      updated_at?: string | null;
       /** Title */
       title: string;
       /** Description */
@@ -505,6 +731,13 @@ export interface components {
       language_code: string;
       /** Id */
       id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
     };
     /**
      * JobDescriptionUpdate
@@ -516,6 +749,32 @@ export interface components {
       /** Description */
       description?: string | null;
     };
+    /**
+     * Language
+     * @description Core language identity.
+     */
+    Language: {
+      code: components['schemas']['LanguageCode'];
+    };
+    /**
+     * LanguageCode
+     * @description Standardized language codes.
+     * @enum {string}
+     */
+    LanguageCode: 'en' | 'fr' | 'de' | 'es' | 'it';
+    /** PaginatedResponse[GeneratedCVResponse] */
+    PaginatedResponse_GeneratedCVResponse_: {
+      /** Items */
+      items: components['schemas']['GeneratedCVResponse'][];
+      /** Total */
+      total: number;
+      /** Offset */
+      offset: number;
+      /** Limit */
+      limit: number;
+      /** Has More */
+      has_more: boolean;
+    };
     /** PersonalInfo */
     PersonalInfo: {
       /** Full Name */
@@ -523,6 +782,41 @@ export interface components {
       email: components['schemas']['ContactRequest'];
       phone?: components['schemas']['ContactRequest'] | null;
       location?: components['schemas']['ContactRequest'] | null;
+    };
+    /**
+     * PersonalInfoDTO
+     * @description Personal information with flexible contact handling.
+     */
+    PersonalInfoDTO: {
+      /** Full Name */
+      full_name: string;
+      email?: components['schemas']['ContactDTO'] | null;
+      phone?: components['schemas']['ContactDTO'] | null;
+      location?: components['schemas']['ContactDTO'] | null;
+      linkedin?: components['schemas']['ContactDTO'] | null;
+      github?: components['schemas']['ContactDTO'] | null;
+    };
+    /** SkillDTO */
+    SkillDTO: {
+      /** Text */
+      text: string;
+    };
+    /** SkillGroupDTO */
+    SkillGroupDTO: {
+      /** Name */
+      name: string;
+      /** Skills */
+      skills: components['schemas']['SkillDTO'][];
+    };
+    /** SummaryDTO */
+    SummaryDTO: {
+      /** Text */
+      text: string;
+    };
+    /** TitleDTO */
+    TitleDTO: {
+      /** Text */
+      text: string;
     };
     /**
      * UserCreate
@@ -534,28 +828,30 @@ export interface components {
        * Format: email
        */
       email: string;
+      /**
+       * Personal Info
+       * @default {}
+       */
+      personal_info: Record<string, never>;
       /** Password */
       password: string;
     };
     /**
      * UserResponse
-     * @description Schema for user responses.
+     * @description Schema for user responses in API endpoints.
      */
     UserResponse: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
       /** Id */
       id: number;
+      /** Email */
+      email: string;
+      /** Personal Info */
+      personal_info?: Record<string, never> | null;
       /**
        * Created At
        * Format: date-time
        */
       created_at: string;
-      /** Personal Info */
-      personal_info?: Record<string, never> | null;
     };
     /**
      * UserUpdate
@@ -1213,7 +1509,14 @@ export interface operations {
   };
   get_user_generations_v1_api_generations_get: {
     parameters: {
-      query?: never;
+      query?: {
+        offset?: number;
+        limit?: number;
+        status?: string | null;
+        language_code?: string | null;
+        start_date?: string | null;
+        end_date?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -1226,7 +1529,16 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['GeneratedCVResponse'][];
+          'application/json': components['schemas']['PaginatedResponse_GeneratedCVResponse_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
         };
       };
     };
@@ -1250,7 +1562,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['GeneratedCVResponse'];
+          'application/json': components['schemas']['GeneratedCVDirectResponse'];
         };
       };
       /** @description Validation Error */
@@ -1282,6 +1594,105 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['GeneratedCVResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  update_generated_cv_v1_api_generations__cv_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeneratedCVUpdate'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GeneratedCVResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  check_generation_status_v1_api_generations__cv_id__generation_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GenerationStatusResponse'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  export_generated_cv_v1_api_generations__cv_id__export_get: {
+    parameters: {
+      query: {
+        format: 'markdown' | 'json' | 'yaml' | 'pdf';
+      };
+      header?: never;
+      path: {
+        cv_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */

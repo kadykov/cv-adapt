@@ -6,9 +6,16 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from sqlmodel import SQLModel
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from app.models.models import Base
+# Import models to register them with SQLModel
+from app.models.sqlmodels import (  # noqa: F401
+    DetailedCV,
+    GeneratedCV,
+    JobDescription,
+    User,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -21,7 +28,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 
 def run_migrations_offline() -> None:

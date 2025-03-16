@@ -74,6 +74,6 @@ backend = [
     "pydantic[email]>=2.10.6",
     "python-jose[cryptography]>=3.3.0",
     "python-multipart>=0.0.20",
-    "sqlalchemy[asyncio]>=2.0.37",
+    "sqlmodel>=0.0.24",
     "uvicorn>=0.34.0",
 ]

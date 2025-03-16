@@ -1,8 +1,9 @@
 """Authentication system tests."""
 
+from app.models.sqlmodels import User
 from app.services.user import UserService
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 
 def test_register(client: TestClient, db: Session) -> None:
@@ -25,13 +26,14 @@ def test_register(client: TestClient, db: Session) -> None:
     user_service = UserService(db)
     user = user_service.get_by_email("test@example.com")
     assert user is not None
+    assert isinstance(user, User)
 
     # Check bcrypt hash format ($2b$...)
     assert user.hashed_password.startswith("$2")
 
     # Verify password validation works
-    assert user_service.verify_password("testpassword", str(user.hashed_password))
-    assert not user_service.verify_password("wrongpassword", str(user.hashed_password))
+    assert user_service.verify_password("testpassword", user.hashed_password)
+    assert not user_service.verify_password("wrongpassword", user.hashed_password)
 
 
 def test_register_duplicate_email(client: TestClient) -> None:

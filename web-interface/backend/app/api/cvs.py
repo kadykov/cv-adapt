@@ -1,11 +1,13 @@
+"""CV-related endpoints."""
+
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from ..core.database import get_db
 from ..core.deps import get_current_user
-from ..models.models import User
+from ..models.sqlmodels import User
 from ..schemas.cv import (
     DetailedCVCreate,
     DetailedCVResponse,
@@ -23,7 +25,7 @@ async def get_user_detailed_cvs(
 ) -> List[DetailedCVResponse]:
     """Get all user's detailed CVs."""
     cv_service = DetailedCVService(db)
-    cvs = cv_service.get_user_cvs(int(current_user.id))
+    cvs = cv_service.get_user_cvs(current_user.id)
     return [DetailedCVResponse.model_validate(cv) for cv in cvs]
 
 
@@ -35,7 +37,7 @@ async def get_user_detailed_cv(
 ) -> DetailedCVResponse:
     """Get user's detailed CV by language."""
     cv_service = DetailedCVService(db)
-    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    cv = cv_service.get_by_user_and_language(current_user.id, language_code)
     if not cv:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -59,9 +61,7 @@ async def upsert_user_detailed_cv(
         )
 
     cv_service = DetailedCVService(db)
-    existing_cv = cv_service.get_by_user_and_language(
-        int(current_user.id), language_code
-    )
+    existing_cv = cv_service.get_by_user_and_language(current_user.id, language_code)
 
     if existing_cv:
         # Update existing CV
@@ -72,7 +72,7 @@ async def upsert_user_detailed_cv(
         return DetailedCVResponse.model_validate(cv)
 
     # Create new CV
-    cv = cv_service.create_cv(int(current_user.id), cv_data)
+    cv = cv_service.create_cv(current_user.id, cv_data)
     return DetailedCVResponse.model_validate(cv)
 
 
@@ -84,13 +84,13 @@ async def delete_user_detailed_cv(
 ) -> None:
     """Delete user's detailed CV by language."""
     cv_service = DetailedCVService(db)
-    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    cv = cv_service.get_by_user_and_language(current_user.id, language_code)
     if not cv:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No CV found for language: {language_code}",
         )
-    cv_service.delete(int(cv.id))
+    cv_service.delete(cv.id)
 
 
 @router.put("/{language_code}/primary", response_model=DetailedCVResponse)
@@ -101,7 +101,7 @@ async def set_primary_cv(
 ) -> DetailedCVResponse:
     """Set a CV as primary."""
     cv_service = DetailedCVService(db)
-    cv = cv_service.get_by_user_and_language(int(current_user.id), language_code)
+    cv = cv_service.get_by_user_and_language(current_user.id, language_code)
     if not cv:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

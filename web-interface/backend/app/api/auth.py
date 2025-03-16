@@ -1,8 +1,10 @@
+"""Authentication endpoints."""
+
 from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from .. import auth_logger
 from ..core.database import get_db

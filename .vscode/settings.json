@@ -7,5 +7,6 @@
   "spellright.language": [],
   "spellright.documentTypes": [
     "latex"
-  ]
+  ],
+  "mypy.runUsingActiveInterpreter": true
 }

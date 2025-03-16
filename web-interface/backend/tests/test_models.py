@@ -1,87 +1,78 @@
 """Test database models and relationships."""
 
-from typing import Generator
+from datetime import UTC, datetime
 
 import pytest
-from app.models.models import Base, DetailedCV, GeneratedCV, JobDescription, User
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
-
-# Setup in-memory test database
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+from app.models.sqlmodels import DetailedCV, GeneratedCV, JobDescription, User
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
 
 
 @pytest.fixture
-def session() -> Generator[Session, None, None]:
-    """Create a new database session for tests."""
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+def test_user(db: Session) -> User:
+    """Create a test user."""
+    user = User(
+        email="test@example.com",
+        hashed_password="hashedpass",
+        personal_info={"name": "Test User"},
     )
-    SessionLocal = sessionmaker(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
-        Base.metadata.drop_all(bind=engine)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
-def test_user_creation(session: Session) -> None:
+def test_user_creation(db: Session) -> None:
     """Test creating a user."""
     user = User(
         email="test@example.com",
         hashed_password="hashedpass",
         personal_info={"name": "Test User"},
     )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
+    info = user.personal_info
+    assert isinstance(info, dict)
     assert user.id is not None
     assert user.email == "test@example.com"
-    assert user.personal_info["name"] == "Test User"
+    assert info.get("name") == "Test User"
     assert user.created_at is not None
 
 
-def test_detailed_cv_creation(session: Session) -> None:
+def test_detailed_cv_creation(db: Session, test_user: User) -> None:
     """Test creating a detailed CV."""
-    # Create user first
-    user = User(email="test@example.com", hashed_password="hashedpass")
-    session.add(user)
-    session.flush()
-
+    content = "# Software Engineer\n\n## Experience\n- Experience 1\n- Experience 2"
     cv = DetailedCV(
-        user_id=user.id,
+        user_id=test_user.id,
         language_code="en",
-        content={"title": "Software Engineer", "experiences": []},
+        content=content,
         is_primary=True,
     )
-    session.add(cv)
-    session.commit()
-    session.refresh(cv)
+    db.add(cv)
+    db.commit()
+    db.refresh(cv)
 
     assert cv.id is not None
-    assert cv.user_id == user.id
+    assert cv.user_id == test_user.id
     assert cv.language_code == "en"
-    assert cv.content["title"] == "Software Engineer"
+    assert isinstance(cv.content, str)
+    assert "Software Engineer" in cv.content
     assert cv.created_at is not None
     assert cv.updated_at is not None
 
 
-def test_job_description_creation(session: Session) -> None:
+def test_job_description_creation(db: Session) -> None:
     """Test creating a job description."""
     job = JobDescription(
         title="Senior Developer",
         description="Looking for a senior developer...",
         language_code="en",
     )
-    session.add(job)
-    session.commit()
-    session.refresh(job)
+    db.add(job)
+    db.commit()
+    db.refresh(job)
 
     assert job.id is not None
     assert job.title == "Senior Developer"
@@ -90,130 +81,171 @@ def test_job_description_creation(session: Session) -> None:
     assert job.updated_at is not None
 
 
-def test_generated_cv_creation(session: Session) -> None:
-    """Test creating a generated CV."""
-    # Create required related objects
-    user = User(email="test@example.com", hashed_password="hashedpass")
-    session.add(user)
-    session.flush()
-
-    cv = DetailedCV(
-        user_id=user.id,
-        language_code="en",
-        content={"title": "Software Engineer", "experiences": []},
-    )
-    session.add(cv)
-    session.flush()
-
-    job = JobDescription(
-        title="Senior Developer",
-        description="Looking for a senior developer...",
-        language_code="en",
-    )
-    session.add(job)
-    session.flush()
-
-    # Create generated CV
+def test_generated_cv_creation(
+    db: Session,
+    test_user: User,
+    test_detailed_cv: DetailedCV,
+    test_job_description: JobDescription,
+) -> None:
+    """Test creating a generated CV with all fields."""
+    content = {
+        "content": "# Tailored Software Engineer",
+        "sections": {
+            "title": "Tailored Software Engineer",
+            "experience": ["Senior Developer", "Software Engineer"],
+        },
+    }
+    generation_params = {
+        "style": "professional",
+        "focus_areas": ["python", "backend"],
+        "tone": "confident",
+    }
     generated = GeneratedCV(
-        user_id=user.id,
-        detailed_cv_id=cv.id,
-        job_description_id=job.id,
+        user_id=test_user.id,
+        detailed_cv_id=test_detailed_cv.id,
+        job_description_id=test_job_description.id,
         language_code="en",
-        content={"title": "Tailored Software Engineer"},
+        content=content,
+        status="draft",
+        generation_parameters=generation_params,
+        created_at=datetime.now(UTC),
     )
-    session.add(generated)
-    session.commit()
-    session.refresh(generated)
+    db.add(generated)
+    db.commit()
+    db.refresh(generated)
 
     assert generated.id is not None
-    assert generated.user_id == user.id
-    assert generated.detailed_cv_id == cv.id
-    assert generated.job_description_id == job.id
+    assert generated.user_id == test_user.id
+    assert generated.detailed_cv_id == test_detailed_cv.id
+    assert generated.job_description_id == test_job_description.id
     assert generated.language_code == "en"
-    assert generated.content["title"] == "Tailored Software Engineer"
+    assert isinstance(generated.content, dict)
+    assert "content" in generated.content
+    assert "sections" in generated.content
+    assert generated.content["sections"]["title"] == "Tailored Software Engineer"
+    assert generated.content["content"] == "# Tailored Software Engineer"
     assert generated.created_at is not None
+    assert generated.updated_at is not None
+    assert generated.status == "draft"
+    assert generated.generation_parameters == generation_params
 
 
-def test_user_detailed_cv_relationship(session: Session) -> None:
-    """Test relationship between user and detailed CVs."""
-    user = User(email="test@example.com", hashed_password="hashedpass")
-    session.add(user)
-    session.flush()
-
-    cv1 = DetailedCV(
-        user_id=user.id,
+def test_generated_cv_status_update(
+    db: Session,
+    test_user: User,
+    test_detailed_cv: DetailedCV,
+    test_job_description: JobDescription,
+) -> None:
+    """Test updating the status of a generated CV."""
+    content = {
+        "content": "# Generated CV",
+        "sections": {"title": "Generated CV", "experience": []},
+    }
+    generated = GeneratedCV(
+        user_id=test_user.id,
+        detailed_cv_id=test_detailed_cv.id,
+        job_description_id=test_job_description.id,
         language_code="en",
-        content={"title": "English CV"},
+        content=content,
+        status="draft",
+    )
+    db.add(generated)
+    db.commit()
+    initial_updated_at = generated.updated_at
+
+    # Update status to approved
+    generated.status = "approved"
+    db.add(generated)
+    db.commit()
+    db.refresh(generated)
+
+    assert generated.status == "approved"
+    assert generated.updated_at > initial_updated_at
+
+
+def test_user_detailed_cv_relationship(db: Session, test_user: User) -> None:
+    """Test relationship between user and detailed CVs."""
+    cv1 = DetailedCV(
+        user_id=test_user.id,
+        language_code="en",
+        content="# English CV\n\nTest content",
         is_primary=True,
     )
     cv2 = DetailedCV(
-        user_id=user.id, language_code="fr", content={"title": "French CV"}
+        user_id=test_user.id,
+        language_code="fr",
+        content="# French CV\n\nTest content",
     )
-    session.add_all([cv1, cv2])
-    session.commit()
+    db.add(cv1)
+    db.add(cv2)
+    db.commit()
 
     # Test relationship from user to CVs
-    assert len(user.detailed_cvs) == 2
-    assert any(cv.language_code == "en" for cv in user.detailed_cvs)
-    assert any(cv.language_code == "fr" for cv in user.detailed_cvs)
+    assert len(test_user.detailed_cvs) == 2
+    assert any(cv.language_code == "en" for cv in test_user.detailed_cvs)
+    assert any(cv.language_code == "fr" for cv in test_user.detailed_cvs)
 
     # Test relationship from CV to user
-    assert cv1.user.id == user.id
-    assert cv2.user.id == user.id
+    assert cv1.user.id == test_user.id
+    assert cv2.user.id == test_user.id
 
 
-def test_unique_language_per_user_constraint(session: Session) -> None:
+def test_unique_language_per_user_constraint(db: Session, test_user: User) -> None:
     """Test that a user cannot have multiple CVs with same language."""
-    user = User(email="test@example.com", hashed_password="hashedpass")
-    session.add(user)
-    session.flush()
-
     cv1 = DetailedCV(
-        user_id=user.id, language_code="en", content={"title": "English CV"}
+        user_id=test_user.id,
+        language_code="en",
+        content="# English CV\n\nTest content",
     )
-    session.add(cv1)
-    session.commit()
+    db.add(cv1)
+    db.commit()
 
     # Try to add another CV with same language
     cv2 = DetailedCV(
-        user_id=user.id, language_code="en", content={"title": "Another English CV"}
-    )
-    session.add(cv2)
-    with pytest.raises(Exception):  # SQLite will raise IntegrityError
-        session.commit()
-
-
-def test_cascading_delete(session: Session) -> None:
-    """Test that deleting a user cascades to related objects."""
-    # Create user and related objects
-    user = User(email="test@example.com", hashed_password="hashedpass")
-    session.add(user)
-    session.flush()
-
-    cv = DetailedCV(user_id=user.id, language_code="en", content={"title": "CV"})
-    session.add(cv)
-    session.flush()
-
-    job = JobDescription(title="Job", description="Description", language_code="en")
-    session.add(job)
-    session.flush()
-
-    generated = GeneratedCV(
-        user_id=user.id,
-        detailed_cv_id=cv.id,
-        job_description_id=job.id,
+        user_id=test_user.id,
         language_code="en",
-        content={"title": "Generated"},
+        content="# Another English CV\n\nTest content",
     )
-    session.add(generated)
-    session.commit()
+    db.add(cv2)
+    with pytest.raises(IntegrityError):
+        db.commit()
+
+
+def test_cascading_delete(
+    db: Session,
+    test_user: User,
+    test_detailed_cv: DetailedCV,
+    test_job_description: JobDescription,
+) -> None:
+    """Test that deleting a user cascades to related objects."""
+    generated = GeneratedCV(
+        user_id=test_user.id,
+        detailed_cv_id=test_detailed_cv.id,
+        job_description_id=test_job_description.id,
+        language_code="en",
+        content={
+            "content": "# Generated",
+            "sections": {"title": "Generated", "experience": []},
+        },
+    )
+    db.add(generated)
+    db.commit()
 
     # Delete user and verify cascade
-    session.delete(user)
-    session.commit()
+    db.delete(test_user)
+    db.commit()
 
     # Check that related objects were deleted
-    assert session.query(DetailedCV).filter_by(user_id=user.id).count() == 0
-    assert session.query(GeneratedCV).filter_by(user_id=user.id).count() == 0
+    detailed_cvs = db.exec(
+        select(DetailedCV).where(DetailedCV.user_id == test_user.id)
+    ).all()
+    assert len(detailed_cvs) == 0
+
+    generated_cvs = db.exec(
+        select(GeneratedCV).where(GeneratedCV.user_id == test_user.id)
+    ).all()
+    assert len(generated_cvs) == 0
+
     # Job description should remain as it's not dependent on user
-    assert session.query(JobDescription).count() == 1
+    jobs = db.exec(select(JobDescription)).all()
+    assert len(jobs) == 1

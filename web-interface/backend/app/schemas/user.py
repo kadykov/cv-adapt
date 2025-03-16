@@ -1,31 +1,49 @@
 """User schemas."""
 
-from typing import Dict
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr
+from sqlmodel import SQLModel
 
-from .base import BaseResponseModel
 
-
-class UserBase(BaseModel):
+class UserBase(SQLModel):
     """Base user schema."""
 
-    email: EmailStr
+    email: str
+    personal_info: Dict[str, Any] = {}
 
 
 class UserCreate(UserBase):
     """Schema for creating a new user."""
 
+    email: EmailStr  # Override with stricter validation
     password: str
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(SQLModel):
     """Schema for updating a user's personal info."""
 
     personal_info: Dict
 
 
-class UserResponse(BaseResponseModel, UserBase):
-    """Schema for user responses."""
+class UserRead(UserBase):
+    """Schema for reading user data."""
 
-    personal_info: Dict | None = None
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserResponse(SQLModel):
+    """Schema for user responses in API endpoints."""
+
+    id: int
+    email: str
+    personal_info: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
