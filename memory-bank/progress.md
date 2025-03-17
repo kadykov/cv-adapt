@@ -56,13 +56,20 @@
 
 ## In Progress
 
-1. **Frontend Implementation**
-   - Generated CV Management Feature
-     - CV generation form
-     - Preview system
-     - Status management UI
-     - Integration with backend API
-     - Error handling integration
+1. **CV Generation Frontend Implementation**
+   - ✓ Feature structure and foundation:
+     - ✓ Directory setup and organization
+     - ✓ API client functions implementation
+     - ✓ Core React Query hooks implemented:
+       - ✓ List/detail hooks (useGeneratedCVs, useGeneratedCV)
+       - ✓ Generation mutations (useGeneratedCVMutations)
+       - ✓ Status tracking (useGenerationStatus)
+   - Next UI Components:
+     - [ ] CV Generation Wizard
+     - [ ] Job/CV Selection Interface
+     - [ ] Generation Options Form
+     - [ ] Status Management UI
+   - Following plan in web-interface/frontend/docs/features/cv-generation-plan.md
 
 2. **Core System**
    - Performance optimization
@@ -98,20 +105,22 @@
 
 ## Next Milestones
 
-1. **Short Term (1-2 weeks)**
-   - Complete frontend CV generation integration
-   - Implement preview system
-   - Add error boundaries
-   - Enhance accessibility
+1. **Short Term (2-3 weeks)**
+   - Complete CV Generation Wizard implementation
+   - Integrate preview and status tracking
+   - Add core document management features
+   - Implement error boundaries with Headless UI
 
-2. **Medium Term (1-2 months)**
-   - Rate limiting implementation
-   - Audit logging system
-   - Performance optimizations
-   - Job-specific adaptation improvements
+2. **Medium Term (3-4 weeks)**
+   - Polish UI/UX for generation flow
+   - Add export functionality
+   - Complete PDF preview integration
+   - Enhance component reusability
 
-3. **Long Term**
-   - Additional output formats
-   - Advanced AI features
-   - Integration capabilities
-   - System-wide performance optimization
+3. **Long Term (After Frontend Launch)**
+   - Advanced features from CV_GENERATION_INTEGRATION_PLAN.md:
+     - CV versioning and regeneration flow
+     - Complex status transitions
+     - Multi-language fallback system
+     - Rate limiting implementation
+     - Audit logging system

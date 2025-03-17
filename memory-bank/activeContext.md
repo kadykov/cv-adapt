@@ -2,16 +2,27 @@
 
 ## Current Focus
 
-1. **CV Generation Integration**
+1. **CV Generation Frontend Implementation**
+   - Following detailed plan in web-interface/frontend/docs/features/cv-generation-plan.md
+   - Current focus on Phase 3 of CV Generation Integration
+   - Starting with foundation setup and basic UI components
+   - Key priorities:
+     - ✓ Feature directory structure setup
+     - ✓ API client functions implementation
+     - ✓ React Query hooks implementation:
+       - ✓ useGeneratedCVs for listing
+       - ✓ useGeneratedCV for single item
+       - ✓ useGeneratedCVMutations for operations
+       - ✓ useGenerationStatus for progress tracking
+     - [ ] Basic wizard flow implementation
+
+2. **CV Generation Backend Integration**
    - Storage Model Implementation:
      - ✓ Enhanced GeneratedCV with status tracking, parameters, versioning
      - ✓ Added update capabilities for status and parameters
      - ✓ Implemented test coverage for new features
      - ✓ Added PATCH endpoint for updates
-     - Next: Service Layer Integration
-       - Refactor generation services
-       - Create unified generation interface
-       - Implement CV repository pattern
+     - ✓ Service Layer Integration completed
 
 2. **Detailed CV Management Improvements**
    - ✓ Feature structure implemented
