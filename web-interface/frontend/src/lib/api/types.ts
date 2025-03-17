@@ -243,6 +243,8 @@ export interface paths {
     /**
      * Generate Competences
      * @description Generate core competences from CV and job description.
+     *
+     *     Requires authentication.
      */
     post: operations['generate_competences_v1_api_generations_competences_post'];
     delete?: never;
@@ -263,6 +265,8 @@ export interface paths {
     /**
      * Generate Cv
      * @description Generate a complete CV using core competences.
+     *
+     *     Requires authentication.
      */
     post: operations['generate_cv_v1_api_generations_cv_post'];
     delete?: never;
@@ -455,6 +459,14 @@ export interface components {
     CoreCompetenceDTO: {
       /** Text */
       text: string;
+    };
+    /**
+     * CoreCompetencesResponse
+     * @description Schema for competences generation response.
+     */
+    CoreCompetencesResponse: {
+      /** Core Competences */
+      core_competences: string[];
     };
     /**
      * DetailedCVCreate
@@ -1456,9 +1468,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': {
-            [key: string]: string[];
-          };
+          'application/json': components['schemas']['CoreCompetencesResponse'];
         };
       };
       /** @description Validation Error */
@@ -1493,7 +1503,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['CVDTO'];
         };
       };
       /** @description Validation Error */

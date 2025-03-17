@@ -791,8 +791,13 @@
           "generations"
         ],
         "summary": "Generate Competences",
-        "description": "Generate core competences from CV and job description.",
+        "description": "Generate core competences from CV and job description.\n\nRequires authentication.",
         "operationId": "generate_competences_v1_api_generations_competences_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "language_code",
@@ -821,14 +826,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "title": "Response Generate Competences V1 Api Generations Competences Post"
+                  "$ref": "#/components/schemas/CoreCompetencesResponse"
                 }
               }
             }
@@ -852,8 +850,13 @@
           "generations"
         ],
         "summary": "Generate Cv",
-        "description": "Generate a complete CV using core competences.",
+        "description": "Generate a complete CV using core competences.\n\nRequires authentication.",
         "operationId": "generate_cv_v1_api_generations_cv_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "language_code",
@@ -881,7 +884,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CVDTO"
+                }
               }
             }
           },
@@ -1534,6 +1539,23 @@
           "text"
         ],
         "title": "CoreCompetenceDTO"
+      },
+      "CoreCompetencesResponse": {
+        "properties": {
+          "core_competences": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Core Competences"
+          }
+        },
+        "type": "object",
+        "required": [
+          "core_competences"
+        ],
+        "title": "CoreCompetencesResponse",
+        "description": "Schema for competences generation response."
       },
       "DetailedCVCreate": {
         "properties": {

@@ -34,6 +34,7 @@ from ..schemas.cv import (
     GeneratedCVResponse,
     GeneratedCVUpdate,
     GenerationStatusResponse,
+    CoreCompetencesResponse
 )
 from ..services.generation.generation_service import CVGenerationServiceImpl
 from ..services.generation.protocols import (
@@ -79,20 +80,17 @@ class GenerateCompetencesRequest(BaseModel):
     job_description: str
     notes: str | None = None
 
-
 class ContactRequest(BaseModel):
     value: str
     type: str
     icon: str | None = None
     url: str | None = None
 
-
 class PersonalInfo(BaseModel):
     full_name: str
     email: ContactRequest
     phone: ContactRequest | None = None
     location: ContactRequest | None = None
-
 
 class GenerateCVRequest(BaseModel):
     cv_text: str
@@ -101,15 +99,18 @@ class GenerateCVRequest(BaseModel):
     approved_competences: List[str]
     notes: str | None = None
 
-
-@router.post("/competences")
+@router.post("/competences", response_model=CoreCompetencesResponse)
 async def generate_competences(
+    current_user: Annotated[User, Depends(get_current_user)],
     data: GenerateCompetencesRequest = Body(...),
     language: Language = Depends(get_language),
     service: CVGenerationServiceImpl = Depends(get_generation_service),
-) -> Dict[str, List[str]]:
-    """Generate core competences from CV and job description."""
-    logger.debug(f"Generating competences with language: {language.code}")
+) -> CoreCompetencesResponse:
+    """Generate core competences from CV and job description.
+
+    Requires authentication.
+    """
+    logger.debug(f"Generating competences for user {current_user.id} with language: {language.code}")
     logger.debug(
         f"Request data: CV length={len(data.cv_text)}, "
         f"Job desc length={len(data.job_description)}"
@@ -121,9 +122,11 @@ async def generate_competences(
             notes=data.notes,
             language=language,
         )
-        result = {"competences": [comp.text for comp in competences]}
-        logger.debug(f"Generated {len(competences)} competences: {result}")
-        return result
+        response = CoreCompetencesResponse(
+            core_competences=[comp.text for comp in competences]
+        )
+        logger.debug(f"Generated {len(competences)} competences")
+        return response
     except GenerationError as e:
         logger.error(f"Generation error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -131,16 +134,18 @@ async def generate_competences(
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/cv")
+@router.post("/cv", response_model=CVDTO)
 async def generate_cv(
     request: GenerateCVRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
     language: Language = Depends(get_language),
     service: CVGenerationServiceImpl = Depends(get_generation_service),
-    response: Response = None,  # type: ignore[assignment]
-) -> Response:
-    """Generate a complete CV using core competences."""
-    logger.debug(f"Generating CV with language: {language.code}")
+) -> CVDTO:
+    """Generate a complete CV using core competences.
+
+    Requires authentication.
+    """
+    logger.debug(f"Generating CV for user {current_user.id} with language: {language.code}")
     logger.debug(
         f"Request data: CV length={len(request.cv_text)}, "
         f"Job desc length={len(request.job_description)}"
@@ -205,9 +210,12 @@ async def generate_cv(
         logger.debug(f"Number of education entries: {len(cv.education)}")
         logger.debug(f"Number of skills: {len(cv.skills)}")
 
-        return Response(content=cv.model_dump_json(), media_type="application/json")
-    except Exception as e:
+        return cv
+    except GenerationError as e:
         logger.error(f"Generation error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
