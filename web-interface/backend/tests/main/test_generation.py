@@ -24,7 +24,7 @@ client = TestClient(app)
 
 
 @pytest.mark.asyncio
-async def test_language_context_verification() -> None:
+async def test_language_context_verification(auth_headers: dict[str, str]) -> None:
     """Test that language context is correctly set during competence generation."""
     test_request = {
         "cv_text": "Example CV",
@@ -52,14 +52,15 @@ async def test_language_context_verification() -> None:
             "/v1/api/generations/competences",
             json=test_request,
             params={"language_code": "fr"},
+            headers=auth_headers,
         )
         assert response.status_code == 200
         mock_generate.assert_called_once()
-        assert response.json() == {"competences": ["Test competence"]}
+        assert response.json() == {"core_competences": ["Test competence"]}
 
 
 @pytest.mark.asyncio
-async def test_language_dependency() -> None:
+async def test_language_dependency(auth_headers: dict[str, str]) -> None:
     """Test that the language dependency correctly handles language specification."""
     test_request = {
         "cv_text": "Example CV",
@@ -78,10 +79,11 @@ async def test_language_dependency() -> None:
         response = client.post(
             "/v1/api/generations/competences",
             json=test_request,
+            headers=auth_headers,
         )
         assert response.status_code == 200
         mock_generate.assert_called_once()
-        assert response.json() == {"competences": ["Test competence"]}
+        assert response.json() == {"core_competences": ["Test competence"]}
 
     # Test explicit language specification (FRENCH)
     with (
@@ -95,23 +97,25 @@ async def test_language_dependency() -> None:
             "/v1/api/generations/competences",
             json=test_request,
             params={"language_code": "fr"},
+            headers=auth_headers,
         )
         assert response.status_code == 200
         mock_generate.assert_called_once()
-        assert response.json() == {"competences": ["Test competence"]}
+        assert response.json() == {"core_competences": ["Test competence"]}
 
     # Test validation error for invalid language code
     response = client.post(
         "/v1/api/generations/competences",
         json=test_request,
         params={"language_code": "xx"},
+        headers=auth_headers,
     )
     assert response.status_code == 422
     assert "language_code" in response.json()["detail"][0]["loc"]
 
 
 @pytest.mark.asyncio
-async def test_generate_competences_success() -> None:
+async def test_generate_competences_success(auth_headers: dict[str, str]) -> None:
     # Test data
     test_request = {
         "cv_text": "Example CV",
@@ -133,11 +137,12 @@ async def test_generate_competences_success() -> None:
         response = client.post(
             "/v1/api/generations/competences",
             json=test_request,
+            headers=auth_headers,
         )
 
         # Check response
         assert response.status_code == 200
-        assert response.json() == {"competences": ["Test competence"]}
+        assert response.json() == {"core_competences": ["Test competence"]}
 
         # Verify generate was called with correct arguments
         mock_generate.assert_called_once_with(
@@ -148,7 +153,9 @@ async def test_generate_competences_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_generate_cv_with_competences_success() -> None:
+async def test_generate_cv_with_competences_success(
+    auth_headers: dict[str, str],
+) -> None:
     """Test successful CV generation with competences."""
     test_request = {
         "cv_text": "Example CV",
@@ -213,6 +220,7 @@ async def test_generate_cv_with_competences_success() -> None:
         response = client.post(
             "/v1/api/generations/cv",
             json=test_request,
+            headers=auth_headers,
         )
 
         # Check response
@@ -238,7 +246,7 @@ async def test_generate_cv_with_competences_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_generate_cv_minimal_info() -> None:
+async def test_generate_cv_minimal_info(auth_headers: dict[str, str]) -> None:
     """Test CV generation with minimal required information."""
     test_request = {
         "cv_text": "Example CV",
@@ -279,6 +287,7 @@ async def test_generate_cv_minimal_info() -> None:
         response = client.post(
             "/v1/api/generations/cv",
             json=test_request,
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -293,7 +302,7 @@ async def test_generate_cv_minimal_info() -> None:
 
 
 @pytest.mark.asyncio
-async def test_generate_cv_language_context() -> None:
+async def test_generate_cv_language_context(auth_headers: dict[str, str]) -> None:
     """Test that language context is correctly set during CV generation."""
     test_request = {
         "cv_text": "Example CV",
@@ -338,6 +347,7 @@ async def test_generate_cv_language_context() -> None:
             "/v1/api/generations/cv",
             json=test_request,
             params={"language_code": "fr"},
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -345,7 +355,7 @@ async def test_generate_cv_language_context() -> None:
 
 
 @pytest.mark.asyncio
-async def test_generate_cv_error_handling() -> None:
+async def test_generate_cv_error_handling(auth_headers: dict[str, str]) -> None:
     """Test error handling in CV generation endpoint."""
     test_request = {
         "cv_text": "Example CV",
@@ -365,6 +375,7 @@ async def test_generate_cv_error_handling() -> None:
         response = client.post(
             "/v1/api/generations/cv",
             json=test_request,
+            headers=auth_headers,
         )
 
         assert response.status_code == 500

@@ -4,15 +4,20 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from sqlmodel import Field, SQLModel
+
 from cv_adapter.dto.cv import CVDTO
+
 from .base import BaseGenModel
+
 
 class CoreCompetencesResponse(SQLModel):
     """Schema for competences generation response."""
+
     core_competences: List[str]
 
     class Config:
         from_attributes = True
+
 
 class GenerationStatus(str, Enum):
     """CV generation status."""
@@ -20,6 +25,7 @@ class GenerationStatus(str, Enum):
     GENERATING = "generating"
     COMPLETED = "completed"
     FAILED = "failed"
+
 
 class GenerationStatusResponse(SQLModel):
     """Generation status response."""
@@ -31,6 +37,7 @@ class GenerationStatusResponse(SQLModel):
     class Config:
         from_attributes = True
 
+
 class DetailedCVBase(SQLModel):
     """Base detailed CV schema."""
 
@@ -38,11 +45,13 @@ class DetailedCVBase(SQLModel):
     content: str = Field(default="")  # Raw markdown content
     is_primary: bool = Field(default=False)
 
+
 class DetailedCVCreate(DetailedCVBase):
     """Schema for creating a detailed CV."""
 
     class Config:
         from_attributes = True
+
 
 class DetailedCVUpdate(SQLModel):
     """Schema for updating a detailed CV."""
@@ -53,6 +62,7 @@ class DetailedCVUpdate(SQLModel):
     class Config:
         from_attributes = True
 
+
 class DetailedCVResponse(BaseGenModel, DetailedCVBase):
     """Schema for detailed CV responses."""
 
@@ -61,6 +71,7 @@ class DetailedCVResponse(BaseGenModel, DetailedCVBase):
     class Config:
         from_attributes = True
 
+
 class JobDescriptionBase(SQLModel):
     """Base job description schema."""
 
@@ -68,11 +79,13 @@ class JobDescriptionBase(SQLModel):
     description: str
     language_code: str
 
+
 class JobDescriptionCreate(JobDescriptionBase):
     """Schema for creating a job description."""
 
     class Config:
         from_attributes = True
+
 
 class JobDescriptionUpdate(SQLModel):
     """Schema for updating a job description."""
@@ -83,11 +96,13 @@ class JobDescriptionUpdate(SQLModel):
     class Config:
         from_attributes = True
 
+
 class JobDescriptionResponse(BaseGenModel, JobDescriptionBase):
     """Schema for job description responses."""
 
     class Config:
         from_attributes = True
+
 
 class GeneratedCVBase(SQLModel):
     """Base generated CV schema."""
@@ -99,6 +114,7 @@ class GeneratedCVBase(SQLModel):
     error_message: Optional[str] = None
     generation_parameters: Dict[str, Any] = Field(default_factory=dict)
 
+
 class GeneratedCVCreate(GeneratedCVBase):
     """Schema for creating a generated CV."""
 
@@ -108,6 +124,7 @@ class GeneratedCVCreate(GeneratedCVBase):
     class Config:
         from_attributes = True
 
+
 class GeneratedCVUpdate(SQLModel):
     """Schema for updating a generated CV."""
 
@@ -116,6 +133,7 @@ class GeneratedCVUpdate(SQLModel):
 
     class Config:
         from_attributes = True
+
 
 class GeneratedCVDirectResponse(BaseGenModel):
     """Schema for direct generated CV responses with embedded CVDTO."""
@@ -133,6 +151,7 @@ class GeneratedCVDirectResponse(BaseGenModel):
 
     class Config:
         from_attributes = True
+
 
 class GeneratedCVResponse(BaseGenModel, GeneratedCVBase):
     """Schema for generated CV responses."""

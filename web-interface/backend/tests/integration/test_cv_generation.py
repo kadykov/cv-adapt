@@ -40,28 +40,34 @@ async def test_complete_cv_generation_flow(
     test_cv_data: dict,
     test_personal_info: dict,
     json_renderer: JSONRenderer,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test the complete flow of CV generation with the test AI model."""
     # 1. Generate competences
     competences_response = client.post(
         "/v1/api/generations/competences",
         json=test_cv_data,
+        headers=auth_headers,
     )
     assert competences_response.status_code == 200
     competences_result = competences_response.json()
 
     # Validate competences response
-    assert "competences" in competences_result
-    assert len(competences_result["competences"]) >= 1  # At least one competence
+    assert "core_competences" in competences_result
+    assert len(competences_result["core_competences"]) >= 1  # At least one competence
 
     # 2. Generate CV with the competences
     cv_request = {
         **test_cv_data,
         "personal_info": test_personal_info,
-        "approved_competences": competences_result["competences"],
+        "approved_competences": competences_result["core_competences"],
     }
 
-    cv_response = client.post("/v1/api/generations/cv", json=cv_request)
+    cv_response = client.post(
+        "/v1/api/generations/cv",
+        json=cv_request,
+        headers=auth_headers,
+    )
     assert cv_response.status_code == 200
     cv_result = cv_response.json()
 
@@ -78,7 +84,7 @@ async def test_complete_cv_generation_flow(
 
 
 @pytest.mark.asyncio
-async def test_contact_validation() -> None:
+async def test_contact_validation(auth_headers: dict[str, str]) -> None:
     """Test validation of contact information in CV generation."""
     base_request = {
         "cv_text": "Test CV",
@@ -94,7 +100,11 @@ async def test_contact_validation() -> None:
             "email": {"value": "test@example.com"},  # Missing type
         },
     }
-    response = client.post("/v1/api/generations/cv", json=invalid_email)
+    response = client.post(
+        "/v1/api/generations/cv",
+        json=invalid_email,
+        headers=auth_headers,
+    )
     assert response.status_code == 422
     assert "type" in response.text.lower()
 
@@ -106,7 +116,11 @@ async def test_contact_validation() -> None:
             "email": {"type": "Email"},  # Missing value
         },
     }
-    response = client.post("/v1/api/generations/cv", json=invalid_email_2)
+    response = client.post(
+        "/v1/api/generations/cv",
+        json=invalid_email_2,
+        headers=auth_headers,
+    )
     assert response.status_code == 422
     assert "value" in response.text.lower()
 
@@ -116,6 +130,7 @@ async def test_multilanguage_generation(
     test_cv_data: dict,
     test_personal_info: dict,
     json_renderer: JSONRenderer,
+    auth_headers: dict[str, str],
 ) -> None:
     """Test CV generation in different languages."""
     # Generate competences in French
@@ -123,9 +138,10 @@ async def test_multilanguage_generation(
         "/v1/api/generations/competences",
         json=test_cv_data,
         params={"language_code": "fr"},
+        headers=auth_headers,
     )
     assert competences_response.status_code == 200
-    competences = competences_response.json()["competences"]
+    competences = competences_response.json()["core_competences"]
 
     # Generate CV in French
     cv_request = {
@@ -137,6 +153,7 @@ async def test_multilanguage_generation(
         "/v1/api/generations/cv",
         json=cv_request,
         params={"language_code": "fr"},
+        headers=auth_headers,
     )
     assert cv_response.status_code == 200
     cv_result = cv_response.json()
@@ -149,12 +166,16 @@ async def test_multilanguage_generation(
 
 
 @pytest.mark.asyncio
-async def test_invalid_language_code(test_cv_data: dict) -> None:
+async def test_invalid_language_code(
+    test_cv_data: dict,
+    auth_headers: dict[str, str],
+) -> None:
     """Test handling of invalid language codes."""
     response = client.post(
         "/v1/api/generations/competences",
         json=test_cv_data,
         params={"language_code": "invalid"},
+        headers=auth_headers,
     )
     assert response.status_code == 422
     assert "language_code" in response.json()["detail"][0]["loc"]

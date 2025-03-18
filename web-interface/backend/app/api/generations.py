@@ -2,9 +2,9 @@
 
 import sys
 from datetime import datetime
-from typing import Annotated, Dict, List, Literal
+from typing import Annotated, List, Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi import status as http_status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
@@ -29,12 +29,12 @@ from ..schemas.common import (
     PaginationParams,
 )
 from ..schemas.cv import (
+    CoreCompetencesResponse,
     GeneratedCVCreate,
     GeneratedCVDirectResponse,
     GeneratedCVResponse,
     GeneratedCVUpdate,
     GenerationStatusResponse,
-    CoreCompetencesResponse
 )
 from ..services.generation.generation_service import CVGenerationServiceImpl
 from ..services.generation.protocols import (
@@ -80,11 +80,13 @@ class GenerateCompetencesRequest(BaseModel):
     job_description: str
     notes: str | None = None
 
+
 class ContactRequest(BaseModel):
     value: str
     type: str
     icon: str | None = None
     url: str | None = None
+
 
 class PersonalInfo(BaseModel):
     full_name: str
@@ -92,12 +94,14 @@ class PersonalInfo(BaseModel):
     phone: ContactRequest | None = None
     location: ContactRequest | None = None
 
+
 class GenerateCVRequest(BaseModel):
     cv_text: str
     job_description: str
     personal_info: PersonalInfo
     approved_competences: List[str]
     notes: str | None = None
+
 
 @router.post("/competences", response_model=CoreCompetencesResponse)
 async def generate_competences(
@@ -110,7 +114,9 @@ async def generate_competences(
 
     Requires authentication.
     """
-    logger.debug(f"Generating competences for user {current_user.id} with language: {language.code}")
+    logger.debug(
+        f"Generating competences for {current_user.id = } with {language.code = }"
+    )
     logger.debug(
         f"Request data: CV length={len(data.cv_text)}, "
         f"Job desc length={len(data.job_description)}"
@@ -134,6 +140,7 @@ async def generate_competences(
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/cv", response_model=CVDTO)
 async def generate_cv(
     request: GenerateCVRequest,
@@ -145,7 +152,9 @@ async def generate_cv(
 
     Requires authentication.
     """
-    logger.debug(f"Generating CV for user {current_user.id} with language: {language.code}")
+    logger.debug(
+        f"Generating CV for user {current_user.id} with language: {language.code}"
+    )
     logger.debug(
         f"Request data: CV length={len(request.cv_text)}, "
         f"Job desc length={len(request.job_description)}"
