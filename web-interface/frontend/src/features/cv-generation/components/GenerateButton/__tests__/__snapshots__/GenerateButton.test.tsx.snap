@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GenerateButton > rendering > renders with default props 1`] = `
+<button
+  aria-disabled="false"
+  aria-label="Generate CV for job 123"
+  class="btn btn-primary gap-2"
+  data-headlessui-state=""
+  type="button"
+>
+  <svg
+    aria-hidden="true"
+    class="w-5 h-5"
+    data-icon="heroicons:document"
+    data-testid="generate-cv-icon"
+  />
+  <span>
+    Generate CV
+  </span>
+</button>
+`;

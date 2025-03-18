@@ -5,14 +5,11 @@ import {
   updateGeneratedCV,
   deleteGeneratedCV,
 } from '../api/cvGenerationApi';
-import type {
-  GeneratedCVCreate,
-  GeneratedCVResponse,
-  GenerateCVRequest,
-  GenerateCompetencesRequest,
-} from '../../../lib/api/generated-types';
+import type { components } from '../../../lib/api/types';
 import { GENERATED_CV_QUERY_KEY } from './useGeneratedCV';
 import { GENERATED_CVS_QUERY_KEY } from './useGeneratedCVs';
+
+type Schema = components['schemas'];
 
 export function useGeneratedCVMutations() {
   const queryClient = useQueryClient();
@@ -24,22 +21,18 @@ export function useGeneratedCVMutations() {
   };
 
   const generateMutation = useMutation({
-    mutationFn: (data: GenerateCVRequest) => generateCV(data),
+    mutationFn: (data: Schema['GenerateCVRequest']) => generateCV(data),
     onSuccess: () => {
       invalidateQueries();
     },
   });
 
   const generateCompetencesMutation = useMutation({
-    mutationFn: (data: GenerateCompetencesRequest) => generateCompetences(data),
-    onSuccess: (updatedCV: GeneratedCVResponse) => {
-      // Update CV in cache immediately
-      queryClient.setQueryData(
-        [...GENERATED_CV_QUERY_KEY, updatedCV.id],
-        updatedCV,
-      );
-      // Invalidate lists that might include this CV
+    mutationFn: (data: Schema['GenerateCompetencesRequest']) => generateCompetences(data),
+    onSuccess: (competences: Schema['CoreCompetencesResponse']) => {
+      // Just invalidate lists as this is a separate entity
       queryClient.invalidateQueries({ queryKey: GENERATED_CVS_QUERY_KEY });
+      return competences;
     },
   });
 
@@ -49,9 +42,9 @@ export function useGeneratedCVMutations() {
       data,
     }: {
       id: number;
-      data: Partial<GeneratedCVCreate>;
+      data: Schema['GeneratedCVUpdate'];
     }) => updateGeneratedCV(id, data),
-    onSuccess: (updatedCV: GeneratedCVResponse) => {
+    onSuccess: (updatedCV: Schema['GeneratedCVResponse']) => {
       // Update CV in cache immediately
       queryClient.setQueryData(
         [...GENERATED_CV_QUERY_KEY, updatedCV.id],

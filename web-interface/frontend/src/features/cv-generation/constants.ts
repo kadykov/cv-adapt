@@ -1,8 +1,9 @@
 // API endpoints
 export const CV_GENERATION_API = {
-  BASE: '/v1/api/generated-cvs',
-  GENERATE: '/v1/api/generated-cvs/generate',
-  COMPETENCES: '/v1/api/generated-cvs/competences',
+  BASE: '/v1/api/generations',
+  GENERATE: '/v1/api/generations/cv',
+  COMPETENCES: '/v1/api/generations/competences',
+  STATUS: '/v1/api/generations/:id/generation-status',
 } as const;
 
 // Generation status

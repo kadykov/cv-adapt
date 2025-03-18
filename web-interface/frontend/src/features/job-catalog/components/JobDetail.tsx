@@ -5,6 +5,10 @@ import { Badge } from '../../../lib/components/Badge';
 import { useJob } from '../hooks/useJob';
 import { useJobMutations } from '../hooks/useJobMutations';
 import { Button } from '@headlessui/react';
+import { GenerateButton } from '../../../features/cv-generation/components/GenerateButton';
+import type { components } from '../../../lib/api/types';
+
+type Schema = components['schemas'];
 
 interface JobDetailProps {
   id: number;
@@ -113,6 +117,10 @@ export function JobDetail({ id, onEdit }: JobDetailProps) {
                 >
                   Delete
                 </Button>
+                <GenerateButton
+                  jobId={id}
+                  languageCode={job.language_code as Schema['LanguageCode']}
+                />
                 {onEdit && (
                   <Button
                     className="btn btn-primary"

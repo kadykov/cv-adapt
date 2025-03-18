@@ -170,7 +170,25 @@
    - Component-based architecture
    - Comprehensive testing
 
-5. **Language Management**
+7. **Icon Pattern**
+   ```typescript
+   // Using Iconify for consistent icon management
+   import { Icon } from '@iconify/react';
+
+   <Icon
+     icon="heroicons:document"
+     className="w-5 h-5"
+     aria-hidden="true"
+     data-testid="icon-name"
+   />
+   ```
+   - Centralized icon management using Iconify
+   - Consistent icon sizing with Tailwind classes
+   - Proper accessibility attributes
+   - Testing support with data-testid
+   - Access to extensive icon libraries
+
+8. **Language Management**
    ```
    lib/language/
      types.ts       # Language enums and interfaces
@@ -183,7 +201,7 @@
    - Type-safe language selection
    - Shared language utilities
 
-6. **Feature-Based Organization**
+9. **Feature-Based Organization**
    ```
    features/
      feature-name/
@@ -194,17 +212,17 @@
        __tests__/    # Tests organized by type
    ```
 
-7. **Data Flow Pattern**
-   ```
-   API Schema → Generated Types → Service Layer → React Query → Components
-   ```
+10. **Data Flow Pattern**
+    ```
+    API Schema → Generated Types → Service Layer → React Query → Components
+    ```
 
-8. **Testing Pyramid**
-   ```
-   Integration Tests (Features)
-         ↓
-   Unit Tests (Components)
-   ```
+11. **Testing Pyramid**
+    ```
+    Integration Tests (Features)
+          ↓
+    Unit Tests (Components)
+    ```
 
 ## API Integration Patterns
 
@@ -367,7 +385,7 @@
    - Routing integration
    - User interaction simulation
 
-2. **Unit Test Pattern**
+3. **Unit Test Pattern**
    ```typescript
    test('form handles submission', () => {
      render(

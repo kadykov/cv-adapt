@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosResponse } from 'axios';
+import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { tokenService } from '../../features/auth/services/token-service';
 
 export class ApiError extends Error {
@@ -56,9 +56,9 @@ axiosInstance.interceptors.response.use(
 
 // Type-safe request methods
 export const client = {
-  get: <T>(path: string) =>
-    axiosInstance.get<T>(path).then((response) => response.data),
-  post: <T>(path: string, data: unknown, config = {}) =>
+  get: <T>(path: string, config?: AxiosRequestConfig) =>
+    axiosInstance.get<T>(path, config).then((response) => response.data),
+  post: <T>(path: string, data: unknown, config?: AxiosRequestConfig) =>
     axiosInstance.post<T>(path, data, config).then((response) => response.data),
   postForm: <T>(path: string, data: Record<string, string>) => {
     const formData = new URLSearchParams();
@@ -73,8 +73,10 @@ export const client = {
       })
       .then((response) => response.data);
   },
-  put: <T>(path: string, data: unknown) =>
-    axiosInstance.put<T>(path, data).then((response) => response.data),
-  delete: <T>(path: string) =>
-    axiosInstance.delete<T>(path).then((response) => response.data),
+  put: <T>(path: string, data: unknown, config?: AxiosRequestConfig) =>
+    axiosInstance.put<T>(path, data, config).then((response) => response.data),
+  patch: <T>(path: string, data: unknown, config?: AxiosRequestConfig) =>
+    axiosInstance.patch<T>(path, data, config).then((response) => response.data),
+  delete: <T>(path: string, config?: AxiosRequestConfig) =>
+    axiosInstance.delete<T>(path, config).then((response) => response.data),
 };

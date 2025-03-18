@@ -79,7 +79,21 @@
 
 ## Recently Completed
 
-1. **Service Layer Improvements**
+1. **CV Generation Authentication & Testing**
+   - ✓ Added authentication to generation endpoints
+     - `/generations/competences`
+     - `/generations/cv`
+   - ✓ Updated test infrastructure:
+     - Fixed schema types in fixtures
+     - Corrected API endpoint paths in handlers
+     - Proper error response formats
+     - Authentication-aware integration tests
+   - ✓ OpenAPI schema consistency:
+     - Using `CoreCompetencesResponse` type
+     - Using `CVDTO` from generated types
+     - Proper error response types
+
+2. **Service Layer Improvements**
    - ✓ Type safety enhancements
    - ✓ Error propagation refinement
    - ✓ Markdown rendering integration
@@ -97,6 +111,8 @@
 1. **Frontend (Current Focus)**
    - Auth state synchronization refinements needed
    - Migration priorities identified and tracked
+   - Need to verify type checking after recent changes
+   - Review other features for endpoint path consistency
 
 2. **Core System**
    - Performance optimization opportunities identified

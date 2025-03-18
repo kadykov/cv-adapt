@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, expect, vi } from 'vitest';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import { server } from './server';
 import '../../features/auth/testing/setup';
+
+// Add Jest-DOM matchers
+expect.extend(matchers);
 
 // Custom error handler to suppress expected test errors
 const isExpectedError = (message: string): boolean => {
@@ -14,6 +18,13 @@ const isExpectedError = (message: string): boolean => {
     'Form submission failed',
     'Login failed',
     'Token validation failed',
+    'Failed to generate CV',
+    'Failed to generate competences',
+    'React does not recognize',
+    'Invalid DOM property',
+    'Not implemented:',
+    'Please upgrade to at least react-dom',
+    'test was not wrapped in act',
   ];
   return expectedPatterns.some((pattern) => message.includes(pattern));
 };
@@ -46,12 +57,50 @@ process.stderr.write = function (
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'warn' });
+
+  // Mock window.matchMedia
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+
+  // Mock IntersectionObserver
+  Object.defineProperty(window, 'IntersectionObserver', {
+    writable: true,
+    value: class IntersectionObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    },
+  });
+
+  // Mock ResizeObserver
+  Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: class ResizeObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    },
+  });
 });
 
 afterAll(() => {
   server.close();
+  console.error = originalConsoleError;
+  process.stderr.write = originalStderrWrite;
 });
 
 afterEach(() => {
   server.resetHandlers();
+  vi.clearAllMocks();
 });
