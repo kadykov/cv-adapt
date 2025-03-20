@@ -119,8 +119,8 @@ test-backend *ARGS='':
     cd web-interface/backend && uv run pytest tests/ {{ARGS}}
 
 # Run frontend unit tests
-test-frontend:
-    cd web-interface/frontend && npm test --silent
+test-frontend *ARGS='':
+    cd web-interface/frontend && npm test {{ARGS}}
 
 # Run frontend integration tests
 test-frontend-integration:
