@@ -4,6 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import { GenerateButton } from '../GenerateButton';
 import { CVGenerationErrorBoundary } from '../../CVGenerationErrorBoundary';
 import { renderWithRouter } from '../../../../../lib/test/render-utils';
+import { LanguageCode } from '@/lib/language/types';
 
 /**
  * GenerateButton Component Tests
@@ -12,6 +13,7 @@ import { renderWithRouter } from '../../../../../lib/test/render-utils';
  * - Component behavior tests (rendering, click handling)
  * - Accessibility compliance
  * - Error boundary functionality
+ * - Language code validation
  *
  * Note: Navigation logic is tested at the integration level
  * in generation-flow.integration.test.tsx
@@ -41,6 +43,7 @@ describe('GenerateButton', () => {
   const defaultProps = {
     jobId: 123,
     onClick: vi.fn(),
+    language: LanguageCode.ENGLISH,
   };
 
   beforeEach(() => {
@@ -64,7 +67,7 @@ describe('GenerateButton', () => {
     test('renders with custom className', () => {
       const customClass = 'custom-button btn-secondary';
       renderWithRouter(
-        <GenerateButton {...defaultProps} className={customClass} />
+        <GenerateButton {...defaultProps} className={customClass} />,
       );
 
       const button = screen.getByRole('button', { name: /generate cv/i });
@@ -77,6 +80,30 @@ describe('GenerateButton', () => {
       const button = screen.getByRole('button', { name: /generate cv/i });
       expect(button).toBeDisabled();
       expect(button).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    test.each(Object.values(LanguageCode))(
+      'renders with valid language code: %s',
+      (language) => {
+        renderWithRouter(
+          <GenerateButton {...defaultProps} language={language} />,
+        );
+        expect(screen.getByRole('button')).toBeInTheDocument();
+      },
+    );
+
+    test('handles invalid language code', () => {
+      const consoleError = vi.spyOn(console, 'error');
+      const invalidLanguage = 'invalid' as LanguageCode;
+
+      renderWithRouter(
+        <GenerateButton {...defaultProps} language={invalidLanguage} />,
+      );
+
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      expect(consoleError).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid language code'),
+      );
     });
   });
 
@@ -109,7 +136,7 @@ describe('GenerateButton', () => {
       const button = screen.getByRole('button');
       expect(button).toHaveAttribute(
         'aria-label',
-        `Generate CV for job ${defaultProps.jobId}`
+        `Generate CV for job ${defaultProps.jobId}`,
       );
       expect(button).toHaveAttribute('type', 'button');
     });
@@ -133,12 +160,11 @@ describe('GenerateButton', () => {
       renderWithRouter(
         <CVGenerationErrorBoundary>
           <ThrowError />
-        </CVGenerationErrorBoundary>
+        </CVGenerationErrorBoundary>,
       );
 
       expect(screen.getByRole('alert')).toBeInTheDocument();
       expect(screen.getByText(/failed to render/i)).toBeInTheDocument();
-
     });
 
     test('recovers from error state', async () => {
@@ -156,7 +182,7 @@ describe('GenerateButton', () => {
       renderWithRouter(
         <CVGenerationErrorBoundary>
           <ToggleError />
-        </CVGenerationErrorBoundary>
+        </CVGenerationErrorBoundary>,
       );
 
       // Verify initial error state
@@ -175,7 +201,6 @@ describe('GenerateButton', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         expect(screen.getByText('Recovered content')).toBeInTheDocument();
       });
-
     });
   });
 });
