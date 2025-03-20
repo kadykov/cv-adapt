@@ -58,6 +58,7 @@ const isExpectedError = (message: string): boolean => {
     'Simulated error',
     'Test Error',
     'The above error occurred in the <ErrorComponent> component',
+    '[LanguageAdapter]: Failed to handle API language',
   ];
   return expectedPatterns.some((pattern) => message.includes(pattern));
 };
