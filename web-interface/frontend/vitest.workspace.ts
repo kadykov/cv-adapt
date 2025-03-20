@@ -9,7 +9,10 @@ export default defineWorkspace([
       globals: true,
       environment: 'jsdom',
       setupFiles: ['./src/lib/test/setup.ts'],
-      include: ['src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}'],
+      include: [
+        'src/**/__tests__/*.{test,spec}.{js,jsx,ts,tsx}',
+        'src/**/__tests__/unit/**/*.{test,spec}.{js,jsx,ts,tsx}',
+      ],
       exclude: ['src/**/__tests__/integration/**'],
     },
   },
