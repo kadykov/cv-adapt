@@ -123,13 +123,13 @@ test-frontend *ARGS='':
     cd web-interface/frontend && npm test {{ARGS}}
 
 # Run frontend integration tests
-test-frontend-integration:
-    cd web-interface/frontend && npm run test:integration
+test-frontend-integration *ARGS='':
+    cd web-interface/frontend && npm run test:integration {{ARGS}}
 
 # Run all frontend tests (unit and integration)
-test-frontend-all:
-    just test-frontend
-    just test-frontend-integration
+test-frontend-all *ARGS='':
+    just test-frontend {{ARGS}}
+    just test-frontend-integration {{ARGS}}
 
 # Run frontend tests with coverage (unit and integration tests together)
 test-frontend-cov:
