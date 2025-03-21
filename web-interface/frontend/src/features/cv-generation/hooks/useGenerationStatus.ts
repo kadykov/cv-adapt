@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { getGeneratedCV } from '../api/cvGenerationApi';
 import type { components } from '../../../lib/api/types';
 import { GENERATION_STATUS, STATUS_POLLING_INTERVAL } from '../constants';
@@ -14,11 +14,6 @@ export const generationKeys = {
   statusById: (cvId: number) => [...generationKeys.status(), cvId] as const,
 };
 
-type UseGenerationStatusResult = UseQueryResult<GeneratedCV> & {
-  isOpen: boolean;
-  closeModal: () => void;
-};
-
 /**
  * Hook to track CV generation status with auto polling
  * @param cvId - ID of the CV to track
@@ -27,24 +22,17 @@ type UseGenerationStatusResult = UseQueryResult<GeneratedCV> & {
 export function useGenerationStatus(
   cvId: number,
   onComplete?: (data: GeneratedCV) => void,
-): UseGenerationStatusResult {
-  const [isOpen, setIsOpen] = useState(true);
+): UseQueryResult<GeneratedCV> {
+  const lastSeenId = useRef<number | undefined>(undefined);
+  const lastSeenStatus = useRef<string | undefined>(undefined);
 
-  const query = useQuery<GeneratedCV>({
+  return useQuery({
     queryKey: generationKeys.statusById(cvId),
     queryFn: () => getGeneratedCV(cvId),
     enabled: !!cvId,
-    // Only poll while generating
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (!data) return STATUS_POLLING_INTERVAL;
-      if (
-        data.generation_status === GENERATION_STATUS.COMPLETED &&
-        onComplete
-      ) {
-        onComplete(data);
-      }
-      return data.generation_status === GENERATION_STATUS.GENERATING
+      return data?.generation_status === GENERATION_STATUS.GENERATING
         ? STATUS_POLLING_INTERVAL
         : false;
     },
@@ -55,11 +43,23 @@ export function useGenerationStatus(
       }
       return failureCount < 3;
     },
-  });
+    select: (data: GeneratedCV) => {
+      // Check if we should trigger the callback
+      if (
+        data.generation_status === GENERATION_STATUS.COMPLETED &&
+        onComplete &&
+        (lastSeenId.current !== cvId ||
+         lastSeenStatus.current !== GENERATION_STATUS.COMPLETED)
+      ) {
+        // Wait for next tick to avoid React state updates during render
+        queueMicrotask(() => onComplete(data));
+      }
 
-  return {
-    ...query,
-    isOpen,
-    closeModal: () => setIsOpen(false)
-  };
+      // Update last seen values
+      lastSeenId.current = cvId;
+      lastSeenStatus.current = data.generation_status;
+
+      return data;
+    },
+  });
 }
