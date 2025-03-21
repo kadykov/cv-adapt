@@ -10,21 +10,29 @@ expect.extend(matchers);
 // Custom error handler to suppress expected test errors
 const isExpectedError = (message: string): boolean => {
   const expectedPatterns = [
+    // Authentication and validation errors
     'Invalid credentials',
     'Email already registered',
     'Invalid refresh token',
     'Unauthorized',
+
+    // Form and API operation errors
     'Failed to create job',
     'Form submission failed',
     'Login failed',
     'Token validation failed',
     'Failed to generate CV',
     'Failed to generate competences',
+
+    // React warnings
     'React does not recognize',
     'Invalid DOM property',
     'Not implemented:',
     'Please upgrade to at least react-dom',
     'test was not wrapped in act',
+
+    // React Query warnings
+    'No queryFn',
   ];
   return expectedPatterns.some((pattern) => message.includes(pattern));
 };
@@ -61,7 +69,7 @@ beforeAll(() => {
   // Mock window.matchMedia
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,

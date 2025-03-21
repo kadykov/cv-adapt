@@ -17,7 +17,7 @@ export const mockCompetencesResponse: Schema['CoreCompetencesResponse'] = {
     'TypeScript',
     'Frontend Development',
     'UI/UX Design',
-  ]
+  ],
 };
 
 // For easier test usage, export competences array directly
@@ -31,57 +31,54 @@ export const mockCV: Schema['CVDTO'] = {
       value: 'john@example.com',
       type: 'email',
       icon: 'email',
-      url: 'mailto:john@example.com'
+      url: 'mailto:john@example.com',
     },
     phone: {
       value: '+1234567890',
       type: 'phone',
       icon: 'phone',
-      url: 'tel:+1234567890'
-    }
+      url: 'tel:+1234567890',
+    },
   },
   title: { text: 'Senior Frontend Developer' },
   summary: { text: 'Experienced frontend developer...' },
   core_competences: [
     { text: 'React.js' },
     { text: 'TypeScript' },
-    { text: 'Frontend Development' }
+    { text: 'Frontend Development' },
   ],
   experiences: [
     {
       company: {
         name: 'Tech Corp',
-        location: 'New York'
+        location: 'New York',
       },
       position: 'Senior Frontend Developer',
       start_date: '2020-01-01',
       end_date: null,
       description: 'Leading frontend development...',
-      technologies: ['React', 'TypeScript']
-    }
+      technologies: ['React', 'TypeScript'],
+    },
   ],
   education: [
     {
       university: {
         name: 'University of Technology',
-        location: 'Boston'
+        location: 'Boston',
       },
       degree: 'Bachelor of Computer Science',
       start_date: '2015-09-01',
       end_date: '2019-06-01',
-      description: 'Computer Science major...'
-    }
+      description: 'Computer Science major...',
+    },
   ],
   skills: [
     {
       name: 'Frontend',
-      skills: [
-        { text: 'React.js' },
-        { text: 'TypeScript' }
-      ]
-    }
+      skills: [{ text: 'React.js' }, { text: 'TypeScript' }],
+    },
   ],
-  language: { code: 'en' }
+  language: { code: 'en' },
 };
 
 export const mockGeneratedCV: Schema['GeneratedCVResponse'] = {

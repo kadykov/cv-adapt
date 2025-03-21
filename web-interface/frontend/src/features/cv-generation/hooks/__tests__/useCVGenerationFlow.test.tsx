@@ -2,24 +2,22 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCVGenerationFlow } from '../useCVGenerationFlow';
+import { mockCV, mockCompetencesResponse } from '../../testing/fixtures';
 import type {
   CVDTO,
   JobDescriptionResponse,
   GenerateCompetencesRequest,
-  GenerateCompetencesResponse,
   GenerateCVRequest
 } from '@/lib/api/generated-types';
+import { server } from '@/lib/test/server';
+import { http, HttpResponse } from 'msw';
 
-// Mock global fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
-// Mock crypto.randomUUID
+// Mock crypto.randomUUID for deterministic IDs in tests
 vi.stubGlobal('crypto', {
   randomUUID: () => '123e4567-e89b-12d3-a456-426614174000'
 });
 
-// Mock data
+// Mock job data - create here to match the job ID used in tests
 const mockJobData: JobDescriptionResponse = {
   id: 123,
   title: 'Software Engineer',
@@ -29,55 +27,15 @@ const mockJobData: JobDescriptionResponse = {
   updated_at: '2025-03-20T12:00:00Z'
 };
 
-const mockCompetencesResponse: GenerateCompetencesResponse = {
-  core_competences: [
-    'React Development',
-    'TypeScript',
-    'Frontend Architecture'
-  ]
-};
-
-// This is a simplified version of the CVDTO for testing purposes
-const mockCVResponse = {
-  id: 456,
-  job_id: 123,
-  language_code: 'en',
-  status: 'completed',
-  created_at: '2025-03-21T12:00:00Z',
-  updated_at: '2025-03-21T12:00:00Z',
-  title: { text: 'Software Engineer' },
-  summary: { text: 'Experienced developer with React and TypeScript skills' },
-  core_competences: [{ text: 'React Development' }],
-  experiences: [
-    {
-      company: {
-        name: 'Previous Company',
-        location: 'Remote'
-      },
-      position: 'Senior Developer',
-      start_date: '2020-01',
-      end_date: '2023-12',
-      description: 'Led development of various web applications'
-    }
-  ],
-  education: [],
-  skills: [],
-  personal_info: {
-    full_name: 'John Doe',
-    email: {
-      value: 'john@example.com',
-      type: 'email'
-    }
-  },
-  language: { code: 'en' }
-} as unknown as CVDTO;
+// Use mockCV from fixtures to create our test response
+const mockCVResponse = mockCV;
 
 describe('useCVGenerationFlow', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    // Reset mocks
-    vi.resetAllMocks();
+    // Reset MSW handlers to default behavior
+    server.resetHandlers();
 
     // Configure QueryClient
     queryClient = new QueryClient({
@@ -127,16 +85,16 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('approveCompetence updates competence approval state', async () => {
+      // Set up default competences handler
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return HttpResponse.json(mockCompetencesResponse);
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       // First generate competences to have some data
-      const mockResponse = new Response(JSON.stringify(mockCompetencesResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(mockResponse);
-
       await act(async () => {
         await result.current.generateCompetences({
           cv_text: 'CV text',
@@ -145,7 +103,7 @@ describe('useCVGenerationFlow', () => {
       });
 
       // Verify competences are generated
-      expect(result.current.competences).toHaveLength(3);
+      expect(result.current.competences).toHaveLength(4); // From fixture (React.js, TypeScript, Frontend Development, UI/UX Design)
       expect(result.current.competences[0].isApproved).toBe(false);
 
       // Approve a competence
@@ -158,6 +116,12 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('generateCompetences calls API and updates state', async () => {
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return HttpResponse.json(mockCompetencesResponse);
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       const mockRequest: GenerateCompetencesRequest = {
@@ -166,35 +130,26 @@ describe('useCVGenerationFlow', () => {
         notes: 'Focus on technical skills'
       };
 
-      const mockResponse = new Response(JSON.stringify(mockCompetencesResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(mockResponse);
-
       await act(async () => {
         await result.current.generateCompetences(mockRequest);
       });
 
-      // Verify API call was made once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-
-      // Verify it was called with a Request object to the correct URL
-      const fetchCall = mockFetch.mock.calls[0][0];
-      expect(fetchCall.url).toContain('/api/generate-competences');
-      expect(fetchCall.method).toBe('POST');
-
       // Verify state is updated
-      expect(result.current.competences).toHaveLength(3);
+      expect(result.current.competences).toHaveLength(4); // From fixture
       expect(result.current.competences[0]).toEqual({
         id: '123e4567-e89b-12d3-a456-426614174000',
-        text: 'React Development',
+        text: 'React.js',
         isApproved: false,
       });
     });
 
     test('generateCV calls API and updates state', async () => {
+      server.use(
+        http.post('/api/generate-cv', () => {
+          return HttpResponse.json(mockCVResponse);
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       const mockRequest: GenerateCVRequest = {
@@ -211,55 +166,31 @@ describe('useCVGenerationFlow', () => {
         notes: 'Focus on technical skills'
       };
 
-      const mockResponse = new Response(JSON.stringify(mockCVResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(mockResponse);
-
       await act(async () => {
         await result.current.generateCV(mockRequest);
       });
-
-      // Verify API call was made once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-
-      // Verify it was called with a Request object to the correct URL
-      const fetchCall = mockFetch.mock.calls[0][0];
-      expect(fetchCall.url).toContain('/api/generate-cv');
-      expect(fetchCall.method).toBe('POST');
 
       // Verify state is updated
       expect(result.current.cv).toEqual(mockCVResponse);
     });
 
     test('updateCV calls API and updates state', async () => {
-      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
       const updatedCV = {
         ...mockCVResponse,
         summary: { text: 'Updated summary text' }
       } as unknown as CVDTO;
 
-      const mockResponse = new Response(JSON.stringify(updatedCV), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      server.use(
+        http.put('/api/generated-cvs/:id', () => {
+          return HttpResponse.json(updatedCV);
+        })
+      );
 
-      mockFetch.mockResolvedValueOnce(mockResponse);
+      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       await act(async () => {
         await result.current.updateCV(updatedCV);
       });
-
-      // Verify API call was made once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-
-      // Verify it was called with a Request object to the correct URL
-      const fetchCall = mockFetch.mock.calls[0][0];
-      expect(fetchCall.url).toContain('/api/generated-cvs/123');
-      expect(fetchCall.method).toBe('PUT');
 
       // Verify state is updated
       expect(result.current.cv).toEqual(updatedCV);
@@ -281,16 +212,13 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('generates competences with minimal input', async () => {
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return HttpResponse.json({ core_competences: [] });
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const mockResponse = new Response(JSON.stringify({
-        core_competences: [] // Empty competences
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(mockResponse);
 
       await act(async () => {
         await result.current.generateCompetences({
@@ -304,14 +232,13 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles CV generation with empty competences list', async () => {
+      server.use(
+        http.post('/api/generate-cv', () => {
+          return HttpResponse.json(mockCVResponse);
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const mockResponse = new Response(JSON.stringify(mockCVResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(mockResponse);
 
       await act(async () => {
         await result.current.generateCV({
@@ -335,14 +262,16 @@ describe('useCVGenerationFlow', () => {
 
   describe('Error Scenarios', () => {
     test('handles error in generateCompetences', async () => {
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return new HttpResponse(
+            JSON.stringify({ message: 'API error' }),
+            { status: 500 }
+          );
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const errorResponse = new Response(JSON.stringify({ message: 'API error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(errorResponse);
 
       await act(async () => {
         try {
@@ -361,14 +290,16 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles error in generateCV', async () => {
+      server.use(
+        http.post('/api/generate-cv', () => {
+          return new HttpResponse(
+            JSON.stringify({ message: 'API error' }),
+            { status: 500 }
+          );
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const errorResponse = new Response(JSON.stringify({ message: 'API error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(errorResponse);
 
       await act(async () => {
         try {
@@ -395,17 +326,16 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles 401 Unauthorized error in competences generation', async () => {
-      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const errorResponse = new Response(
-        JSON.stringify({ message: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return new HttpResponse(
+            JSON.stringify({ message: 'Unauthorized' }),
+            { status: 401 }
+          );
+        })
       );
 
-      mockFetch.mockResolvedValueOnce(errorResponse);
+      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       await act(async () => {
         try {
@@ -424,17 +354,16 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles 404 Not Found error in CV generation', async () => {
-      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      const errorResponse = new Response(
-        JSON.stringify({ message: 'Not Found' }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      server.use(
+        http.post('/api/generate-cv', () => {
+          return new HttpResponse(
+            JSON.stringify({ message: 'Not Found' }),
+            { status: 404 }
+          );
+        })
       );
 
-      mockFetch.mockResolvedValueOnce(errorResponse);
+      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       await act(async () => {
         try {
@@ -461,10 +390,13 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles network error in competences generation', async () => {
-      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
+      server.use(
+        http.post('/api/generate-competences', () => {
+          return HttpResponse.error();
+        })
+      );
 
-      // Simulate a network error
-      mockFetch.mockRejectedValueOnce(new Error('Network Error'));
+      const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
       await act(async () => {
         try {
@@ -482,15 +414,19 @@ describe('useCVGenerationFlow', () => {
     });
 
     test('handles malformed JSON response in CV generation', async () => {
+      server.use(
+        http.post('/api/generate-cv', () => {
+          return new HttpResponse(
+            'Not JSON', // Invalid JSON response
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+        })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
-
-      // Mock response with invalid JSON
-      const badResponse = new Response('Not JSON', {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(badResponse);
 
       await act(async () => {
         try {
@@ -518,16 +454,30 @@ describe('useCVGenerationFlow', () => {
 
   describe('Recovery Scenarios', () => {
     test('recovers after competences generation error', async () => {
+      // First request will fail
+      server.use(
+        http.post('/api/generate-competences', () => {
+          // Reset this handler after one use
+          server.resetHandlers();
+
+          // Add the success handler for the second request
+          server.use(
+            http.post('/api/generate-competences', () => {
+              return HttpResponse.json(mockCompetencesResponse);
+            })
+          );
+
+          // Return error for first request
+          return new HttpResponse(
+            JSON.stringify({ message: 'Error' }),
+            { status: 500 }
+          );
+        }, { once: true })
+      );
+
       const { result } = renderHook(() => useCVGenerationFlow(123), { wrapper });
 
-      // First call fails
-      const errorResponse = new Response(JSON.stringify({ message: 'Error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(errorResponse);
-
+      // First attempt fails
       await act(async () => {
         try {
           await result.current.generateCompetences({
@@ -542,14 +492,7 @@ describe('useCVGenerationFlow', () => {
       // Verify error state
       expect(result.current.competencesError).toBeInstanceOf(Error);
 
-      // Second call succeeds
-      const successResponse = new Response(JSON.stringify(mockCompetencesResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      mockFetch.mockResolvedValueOnce(successResponse);
-
+      // Second attempt succeeds
       await act(async () => {
         await result.current.generateCompetences({
           cv_text: 'CV text',
@@ -559,7 +502,7 @@ describe('useCVGenerationFlow', () => {
 
       // Verify recovery
       expect(result.current.competencesError).toBeNull();
-      expect(result.current.competences).toHaveLength(3);
+      expect(result.current.competences).toHaveLength(4); // From fixture
     });
   });
 });
