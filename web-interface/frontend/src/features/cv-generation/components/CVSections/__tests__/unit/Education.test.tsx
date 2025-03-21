@@ -128,7 +128,7 @@ describe('Education', () => {
 
     renderEducation({ education: educationWithMultiline });
 
-    const description = screen.getByText((content, element) => {
+    const description = screen.getByText((_content, element) => {
       if (!element) return false;
 
       return (
