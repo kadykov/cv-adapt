@@ -33,16 +33,17 @@ export function useGeneratedCVs(options: UseGeneratedCVsOptions = {}) {
   return useQuery<Schema['PaginatedResponse_GeneratedCVResponse_']>({
     queryKey: [
       ...GENERATED_CVS_QUERY_KEY,
-      { languageCode, offset, limit, status, startDate, endDate }
+      { languageCode, offset, limit, status, startDate, endDate },
     ],
-    queryFn: () => getGeneratedCVs({
-      language_code: languageCode,
-      offset,
-      limit,
-      status,
-      start_date: startDate,
-      end_date: endDate,
-    }),
+    queryFn: () =>
+      getGeneratedCVs({
+        language_code: languageCode,
+        offset,
+        limit,
+        status,
+        start_date: startDate,
+        end_date: endDate,
+      }),
     enabled,
   });
 }
