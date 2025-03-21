@@ -27,29 +27,63 @@ const mockGenerateCVRequest: components['schemas']['GenerateCVRequest'] = {
   notes: "Focus on technical skills",
 };
 
-const mockGeneratedCVResponse = {
-  id: 789,
-  job_id: 123,
-  language_code: 'en',
-  status: 'completed',
-  created_at: '2025-03-21T12:00:00Z',
-  updated_at: '2025-03-21T12:05:00Z',
-  content: {
-    summary: 'Professional software engineer with expertise in React and TypeScript',
-    sections: [
-      {
-        title: 'Experience',
-        items: [
-          {
-            title: 'Senior Developer',
-            organization: 'Tech Company',
-            start_date: '2020-01',
-            end_date: '2023-12',
-            description: 'Led development teams on critical projects',
-          },
-        ],
+// Match the CVDTO structure as defined in the API schema
+const mockGeneratedCVResponse: components['schemas']['CVDTO'] = {
+  personal_info: {
+    full_name: 'John Doe',
+    email: {
+      value: 'john@example.com',
+      type: 'email',
+    },
+  },
+  title: {
+    text: 'Senior Software Engineer',
+  },
+  summary: {
+    text: 'Professional software engineer with expertise in React and TypeScript',
+  },
+  core_competences: [
+    { text: 'React Development' },
+    { text: 'TypeScript' },
+    { text: 'Frontend Architecture' },
+  ],
+  experiences: [
+    {
+      company: {
+        name: 'Tech Company',
+        location: 'San Francisco',
       },
-    ],
+      position: 'Senior Developer',
+      start_date: '2020-01-01',
+      end_date: '2023-12-31',
+      description: 'Led development teams on critical projects',
+      technologies: ['React', 'TypeScript']
+    },
+  ],
+  education: [
+    {
+      university: {
+        name: 'University of Technology',
+        location: 'Boston',
+      },
+      degree: 'Computer Science',
+      start_date: '2015-09-01',
+      end_date: '2019-06-01',
+      description: 'Bachelor\'s degree in Computer Science',
+    },
+  ],
+  skills: [
+    {
+      name: 'Programming Languages',
+      skills: [
+        { text: 'JavaScript' },
+        { text: 'TypeScript' },
+        { text: 'Python' },
+      ],
+    },
+  ],
+  language: {
+    code: 'en',
   },
 };
 
@@ -321,13 +355,12 @@ describe('useGeneratedCVMutations', () => {
     // Create mock data for CV update
     const mockUpdateData: components['schemas']['GeneratedCVUpdate'] = {
       status: 'completed',
-      generation_parameters: {
-        includePersonalProjects: true,
-        highlightTechnicalSkills: true
-      }
+      // The OpenAPI schema defines this as Record<string, never>
+      // which means it shouldn't have any properties
+      generation_parameters: {} // Empty object to match the expected type
     };
 
-    const mockUpdatedCV = {
+    const mockUpdatedCV: components['schemas']['GeneratedCVResponse'] = {
       id: 123,
       user_id: 456,
       job_description_id: 789,
@@ -337,10 +370,9 @@ describe('useGeneratedCVMutations', () => {
       generation_status: 'completed',
       created_at: '2025-03-21T10:00:00Z',
       updated_at: '2025-03-21T11:00:00Z',
-      generation_parameters: {
-        includePersonalProjects: true,
-        highlightTechnicalSkills: true
-      }
+      content: {},
+      // Using an empty object to match the expected type
+      generation_parameters: {}
     };
 
     test('should successfully update a CV and update cache', async () => {
