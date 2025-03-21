@@ -28,7 +28,8 @@ export function useGeneratedCVMutations() {
   });
 
   const generateCompetencesMutation = useMutation({
-    mutationFn: (data: Schema['GenerateCompetencesRequest']) => generateCompetences(data),
+    mutationFn: (data: Schema['GenerateCompetencesRequest']) =>
+      generateCompetences(data),
     onSuccess: (competences: Schema['CoreCompetencesResponse']) => {
       // Just invalidate lists as this is a separate entity
       queryClient.invalidateQueries({ queryKey: GENERATED_CVS_QUERY_KEY });
