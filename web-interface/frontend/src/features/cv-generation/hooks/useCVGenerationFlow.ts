@@ -1,137 +1,152 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import {
-  type CVDTO,
-  type JobDescriptionResponse,
-  type GenerateCompetencesRequest,
-  type GenerateCVRequest,
-  type GenerateCompetencesResponse,
-} from '@/lib/api/generated-types';
+import type { components } from '@/lib/api/types';
+import { LanguageCode } from '@/lib/language/types';
+import { toApiLanguage } from '@/lib/language/adapters';
+import { client } from '@/lib/api/client';
 
-interface CoreCompetence {
-  id: string;
-  text: string;
-  isApproved: boolean;
+type Schema = components['schemas'];
+
+/**
+ * Core competence with internal tracking state.
+ * Matches API's CoreCompetenceDTO structure with additional tracking fields
+ */
+interface TrackedCompetence {
+  id: string; // Internal ID for tracking
+  text: string; // From CoreCompetenceDTO
+  isApproved: boolean; // Internal tracking state
 }
 
+/** Parameters for CV generation with internal language code */
+type GenerateCVParams = Omit<Schema['GenerateCVRequest'], 'language_code'> & {
+  language: LanguageCode
+};
+
 interface CVGenerationFlowResult {
-  job: JobDescriptionResponse | null;
-  cv: CVDTO | null;
-  competences: CoreCompetence[];
+  job: Schema['JobDescriptionResponse'] | null;
+  cv: Schema['CVDTO'] | null;
+  competences: TrackedCompetence[];
   isGeneratingCompetences: boolean;
   isGeneratingCV: boolean;
   competencesError: Error | null;
   cvError: Error | null;
   approveCompetence: (id: string, approved: boolean) => void;
-  generateCompetences: (params: GenerateCompetencesRequest) => Promise<void>;
-  generateCV: (params: GenerateCVRequest) => Promise<void>;
-  updateCV: (cv: CVDTO) => Promise<void>;
+  generateCompetences: (params: Schema['GenerateCompetencesRequest']) => Promise<void>;
+  generateCV: (params: GenerateCVParams) => Promise<void>;
+  updateCV: (cv: Schema['CVDTO']) => Promise<void>;
+  // Testing utilities
+  setCompetencesError: (error: Error) => void;
+  setCV: (cv: Schema['CVDTO']) => void;
 }
 
 /**
- * Hook to manage CV generation flow state and operations
+ * Hook to manage CV generation flow state and operations.
+ * Handles conversion between internal types and API types at boundaries.
  */
 export function useCVGenerationFlow(jobId: number): CVGenerationFlowResult {
+  // Local state
+  const [competences, setCompetences] = useState<TrackedCompetence[]>([]);
+  const [cv, setCV] = useState<Schema['CVDTO'] | null>(null);
+  const [competencesError, setCompetencesError] = useState<Error | null>(null);
+  const [cvError, setCVError] = useState<Error | null>(null);
+
   // Job data
-  const { data: job } = useQuery<JobDescriptionResponse>({
-    queryKey: ['job', jobId],
+  const { data: job } = useQuery<Schema['JobDescriptionResponse']>({
+    queryKey: ['jobs', jobId],
+    queryFn: () => client.get<Schema['JobDescriptionResponse']>(`jobs/${jobId}`),
     enabled: Boolean(jobId),
   });
 
-  // Local state for approved competences
-  const [competences, setCompetences] = useState<CoreCompetence[]>([]);
-  const [cv, setCV] = useState<CVDTO | null>(null);
-
   // Generate competences mutation
   const {
-    mutateAsync: mutateCompetences,
+    mutate: mutateCompetences,
     isPending: isGeneratingCompetences,
-    error: competencesError,
   } = useMutation<
-    GenerateCompetencesResponse,
+    Schema['CoreCompetencesResponse'],
     Error,
-    GenerateCompetencesRequest
+    Schema['GenerateCompetencesRequest']
   >({
     mutationFn: async (params) => {
-      const response = await fetch('/api/generate-competences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate competences');
+      setCompetencesError(null);
+      setCompetences([]);
+      try {
+        const response = await client.post<Schema['CoreCompetencesResponse']>('generations/competences', params);
+        return response;
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+        setCompetencesError(normalizedError);
+        throw normalizedError;
       }
-
-      const data = await response.json();
-      return data;
     },
+    onSuccess: (data) => {
+      const newCompetences: TrackedCompetence[] = data.core_competences.map(
+        (text) => ({
+          id: crypto.randomUUID(),
+          text,
+          isApproved: false,
+        }),
+      );
+      setCompetences(newCompetences);
+    },
+    onError: (error) => {
+      const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+      setCompetencesError(normalizedError);
+      setCompetences([]);
+    }
   });
 
   // Generate CV mutation
   const {
     mutateAsync: mutateCV,
     isPending: isGeneratingCV,
-    error: cvError,
-  } = useMutation<CVDTO, Error, GenerateCVRequest>({
-    mutationFn: async (params) => {
-      const response = await fetch('/api/generate-cv', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate CV');
+  } = useMutation<Schema['CVDTO'], Error, GenerateCVParams>({
+    mutationFn: async ({ language, ...params }) => {
+      setCVError(null);
+      try {
+        const response = await client.post<Schema['CVDTO']>('generations/cv', {
+          ...params,
+          language_code: toApiLanguage(language)
+        });
+        return response;
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+        setCVError(normalizedError);
+        throw normalizedError;
       }
-
-      const data = await response.json();
-      setCV(data);
-      return data;
     },
+    onSuccess: (data) => {
+      setCV(data);
+    },
+    onError: (error) => {
+      const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+      setCVError(normalizedError);
+      setCV(null);
+    }
   });
 
   // Update CV mutation
-  const { mutateAsync: mutateUpdateCV } = useMutation<CVDTO, Error, CVDTO>({
+  const { mutate: mutateUpdateCV } = useMutation<Schema['CVDTO'], Error, Schema['CVDTO']>({
     mutationFn: async (cvData) => {
-      const response = await fetch(`/api/generated-cvs/${jobId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cvData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update CV');
+      setCVError(null);
+      try {
+        const response = await client.put<Schema['CVDTO']>(`generations/cv/${jobId}`, cvData);
+        return response;
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+        setCVError(normalizedError);
+        throw normalizedError;
       }
-
-      setCV(cvData);
-      return cvData;
     },
+    onSuccess: (data) => {
+      setCV(data);
+    },
+    onError: (error) => {
+      const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+      setCVError(normalizedError);
+    }
   });
 
-  // Wrapped mutation to handle competence state updates
-  const generateCompetences = async (params: GenerateCompetencesRequest) => {
-    const data = await mutateCompetences(params);
-
-    // Transform API response to CoreCompetence format
-    const newCompetences: CoreCompetence[] = data.core_competences.map(
-      (text: string) => ({
-        id: crypto.randomUUID(),
-        text,
-        isApproved: false,
-      }),
-    );
-
-    setCompetences(newCompetences);
-  };
-
-  // Approve/disapprove competence
+  // Update competence approval state
   const approveCompetence = (id: string, approved: boolean) => {
     setCompetences((prev) =>
       prev.map((comp) =>
@@ -141,17 +156,43 @@ export function useCVGenerationFlow(jobId: number): CVGenerationFlowResult {
   };
 
   return {
-    job: job || null,
+    job: job ?? null,
     cv,
     competences,
     isGeneratingCompetences,
     isGeneratingCV,
-    competencesError:
-      competencesError instanceof Error ? competencesError : null,
-    cvError: cvError instanceof Error ? cvError : null,
+    competencesError,
+    cvError,
     approveCompetence,
-    generateCompetences,
+    setCompetencesError, // Expose for testing
+    setCV, // Expose for testing
+    generateCompetences: (params) => new Promise((resolve, reject) => {
+      setCompetences([]); // Clear competences immediately
+      setCompetencesError(null);
+
+      mutateCompetences(params, {
+        onSuccess: () => resolve(),
+        onError: (error) => {
+          const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+          setCompetencesError(normalizedError);
+          reject(normalizedError);
+        }
+      });
+    }),
     generateCV: (params) => mutateCV(params).then(() => undefined),
-    updateCV: (cvData) => mutateUpdateCV(cvData).then(() => undefined),
+    updateCV: (cvData) => new Promise((resolve, reject) => {
+      setCVError(null);
+
+      mutateUpdateCV(cvData, {
+        onSuccess: () => {
+          resolve();
+        },
+        onError: (error) => {
+          const normalizedError = error instanceof Error ? error : new Error('Unknown error');
+          setCVError(normalizedError);
+          reject(normalizedError);
+        }
+      });
+    }),
   };
 }
